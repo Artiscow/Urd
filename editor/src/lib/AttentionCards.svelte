@@ -88,7 +88,7 @@
       const section = { left: ir.left + s * r.left, top: ir.top + s * Math.max(r.top, 0), right: ir.left + s * r.right, bottom: ir.top + s * r.bottom };
       const h = heights[card.sectionId] ?? 96;
       // The section's and the block's bars stand beside the phone too (CanvasBar.svelte): the card stands clear of them.
-      const place = placeClearOf(section, { w: 260, h }, canvas, stage, [canvasBarState.sectionPlaced, canvasBarState.placed]);
+      const place = placeClearOf(section, { w: 260, h }, canvas, stage, [canvasBarState.sectionPlaced, canvasBarState.placed, canvasBarState.navPlaced]);
       const top = Math.max(place.top, below + 8);
       below = top + h;
       out.push({ id: card.sectionId, left: place.left, top, text: reasonText(attention, flagged), when: relativeTime(attention.since) });

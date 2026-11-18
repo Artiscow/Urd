@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, launcherVars, LAUNCHER_SIZES, LAUNCHER_BOUNDS, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, announcementHidden, subGrouped, hideMode, HIDE_MODES, tabModel } = await engineImport('nav-model.js');
+const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, launcherVars, LAUNCHER_SIZES, LAUNCHER_BOUNDS, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, announcementHidden, subGrouped, hideMode, HIDE_MODES, tabModel, logoParts, NAV_PRESSES, NAV_PHONE_LOGOS } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -571,8 +571,8 @@ test('navClasses: border side and shadow strength are allowlisted, the shadow is
 });
 
 test('navSizeVars: an empty style gives empty vars and the default logo size', () => {
-  assert.deepEqual(navSizeVars(), { vars: {}, logoSize: 32 });
-  assert.deepEqual(navSizeVars({}, {}, { mobile: true }), { vars: {}, logoSize: 32 });
+  assert.deepEqual(navSizeVars(), { vars: {}, logoSize: 32, logoTextSize: undefined });
+  assert.deepEqual(navSizeVars({}, {}, { mobile: true }), { vars: {}, logoSize: 32, logoTextSize: undefined });
   assert.deepEqual(navSizeVars(null, null).vars, {});
 });
 
@@ -648,8 +648,8 @@ test('effectiveNav: the schema and the engine agree on which keys the phone may 
   const { readFileSync } = await import('node:fs');
   const schema = JSON.parse(readFileSync(new URL('../schema/site.schema.json', import.meta.url), 'utf-8'));
   const inSchema = Object.keys(schema.properties.nav.properties.style.properties.mobile.properties).sort();
-  // padY and textSize are resolved by navSizeVars, the rest by effectiveNav.
-  const handled = ['padY', 'textSize', 'size', 'layout', 'inset', 'overlay', 'tools', 'border'].sort();
+  // padY and textSize are resolved by navSizeVars, logo and press by navClasses, the rest by effectiveNav.
+  const handled = ['padY', 'textSize', 'size', 'layout', 'inset', 'overlay', 'tools', 'border', 'logo', 'press'].sort();
   assert.deepEqual(inSchema, handled);
   const nav = { items: [], style: { mobile: Object.fromEntries(inSchema.map((k) => [k, k === 'border' ? { side: 'none' } : k === 'tools' ? { side: 'start' } : 'x'])) } };
   const m = effectiveNav(nav, { mobile: true });
@@ -1113,4 +1113,35 @@ test('the logo can be taken out of the bar, and the bar keeps its other parts in
   const panel = readFileSync(new URL('../editor/src/panels/nav/NavLogo.svelte', import.meta.url), 'utf8');
   assert.match(panel, /if \(on\) delete siteDraft\.nav\.logo\.show;\s*else siteDraft\.nav\.logo\.show = false;/);
   assert.match(readFileSync(new URL('../editor/src/panels/NavPanel.svelte', import.meta.url), 'utf8'), /<Fold id="logo"[^>]*rows=\{siteDraft\.nav\?\.logo\?\.show === false \? 1 : undefined\}>/);
+});
+
+test('the phone\'s own menu: the logo\'s place in the bar and a link\'s answer to a touch are classes at the mobile breakpoint only', async () => {
+  const { readFileSync } = await import('node:fs');
+  const site = { nav: { logo: { type: 'text', value: 'Urd' }, style: { mobile: { logo: 'center', press: 'tint' } } } };
+  assert.ok(!/urd-nav-logo-|urd-nav-press-/.test(navClasses(site)), 'the desktop draws neither');
+  const phone = navClasses(site, { mobile: true });
+  assert.ok(phone.includes('urd-nav-logo-center') && phone.includes('urd-nav-press-tint'), phone);
+  assert.ok(navClasses({ nav: { style: { mobile: { logo: 'hidden' } } } }, { mobile: true }).includes('urd-nav-logo-off'));
+  assert.ok(!navClasses({ nav: { logo: { type: 'text', value: 'Urd', show: false }, style: { mobile: { logo: 'center' } } } }, { mobile: true }).includes('urd-nav-logo-center'), 'a bar without a logo has none to centre');
+  // The values are allowlisted: a class is never built from a free string.
+  assert.ok(!/urd-nav-press-|urd-nav-logo-/.test(navClasses({ nav: { style: { mobile: { logo: 'x y', press: 'x y' } } } }, { mobile: true })));
+  for (const press of NAV_PRESSES) assert.ok(navClasses({ nav: { style: { mobile: { press } } } }, { mobile: true }).includes(`urd-nav-press-${press}`));
+  assert.deepEqual(NAV_PHONE_LOGOS, ['center', 'hidden']);
+  // The stylesheet has a rule for every class the model can give.
+  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  for (const name of ['urd-nav-logo-center', 'urd-nav-logo-off', ...NAV_PRESSES.map((press) => `urd-nav-press-${press}`)]) assert.ok(css.includes(`.${name} `), name);
+});
+
+test('the logo on the phone: its words have a size of their own there, and a logo of both shows the part chosen', () => {
+  assert.equal(navSizeVars({}, { textSize: 20 }).logoTextSize, 20);
+  assert.equal(navSizeVars({}, { textSize: 20, mobileTextSize: 14 }).logoTextSize, 20, 'the desktop keeps its own');
+  assert.equal(navSizeVars({}, { textSize: 20, mobileTextSize: 14 }, { mobile: true }).logoTextSize, 14);
+  assert.equal(navSizeVars({}, { textSize: 20 }, { mobile: true }).logoTextSize, 20, 'omitted on the phone = the desktop\'s');
+  assert.equal(navSizeVars({}, {}, { mobile: true }).logoTextSize, undefined, 'no size of its own = the bar\'s');
+  assert.equal(navSizeVars({}, { mobileTextSize: 500 }, { mobile: true }).logoTextSize, NAV_SIZE_BOUNDS.logoTextSize[1]);
+  assert.equal(logoParts({ type: 'both', mobileParts: 'image' }), 'both');
+  assert.equal(logoParts({ type: 'both', mobileParts: 'image' }, { mobile: true }), 'image');
+  assert.equal(logoParts({ type: 'both', mobileParts: 'text' }, { mobile: true }), 'text');
+  assert.equal(logoParts({ type: 'both', mobileParts: 'nonsense' }, { mobile: true }), 'both');
+  assert.equal(logoParts(undefined, { mobile: true }), 'both');
 });

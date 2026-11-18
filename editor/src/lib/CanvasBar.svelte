@@ -1,10 +1,14 @@
 <script>
   /* The phone view's bars and menus: drawn over the stage, free of the page's edges and clear of the page; the selected block's bar beside the phone level with the block (0.7.3.19.2), the section's level with the section's top (0.7.3.23), placed by placeTextBar in menu-place.js, and a menu at the point it was opened at or under a bar's ⋮.
-     The tools and the rows are the page's own (state/canvas-bar.svelte.js): a press here is pressed there, so each acts as it does on the page. The block keeps its handles and its drag on the page, and a press on a bar leaves the keyboard's focus there. */
+     The tools and the rows are the page's own (state/canvas-bar.svelte.js): a press here is pressed there, so each acts as it does on the page. The block keeps its handles and its drag on the page, and a press on a bar leaves the keyboard's focus there.
+     The site's menu has a bar of its own there (0.7.3.25), level with the menu while the mouse was last over it or it was last pressed: the bar's thickness, the logo's size and the menu's text size, each stepped down and up from what the phone draws now (nav-size.js phoneSizes, phoneStep) and written as the phone's own value, and a gear to the menu's settings for the phone. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { placeTextBar, placeClearOf, clampPlace } from './menu-place.js';
+  import { phoneSizes, phoneStep } from './nav-size.js';
+  import { navActions } from '../panels/nav/nav-actions.js';
   import { canvasBarState as cb } from '../state/canvas-bar.svelte.js';
+  import { historyState } from '../state/history.svelte.js';
   import { menuMotion } from './motion.svelte.js';
   import { ICONS } from './icons.js';
 
@@ -19,6 +23,8 @@
   let sh = $state(0);
   let mw = $state(0);
   let mh = $state(0);
+  let nw = $state(0);
+  let nh = $state(0);
   /** Counted up when the window or the stage changes size, or the stage is panned, so the places are reckoned again. */
   let resized = $state(0);
   /** The row whose removal waits for its second press, by its action's place. */
@@ -74,9 +80,50 @@
     return placeClearOf(box, { w: bw || 260, h: bh || 34 }, f.canvas, f.stage, [held]);
   });
 
+  const { setNavMobile, setNavLogo } = navActions(ed);
+  /** The sizes the menu's bar steps, as the phone draws them now. */
+  const navSizes = $derived(ed.siteDraft?.nav ? phoneSizes(ed.siteDraft.nav) : null);
+  const navSteps = $derived(navSizes ? [
+    navSizes.padY != null && { what: 'padY', value: navSizes.padY, icon: ICONS.navThickness, name: ta('canvas.navThickness') },
+    navSizes.logo && { what: 'logo', value: navSizes.logoSize, icon: ICONS.navLogo, name: ta('canvas.navLogoSize') },
+    { what: 'textSize', value: navSizes.textSize, icon: ICONS.navText, name: ta('canvas.navTextSize') },
+  ].filter(Boolean) : []);
+
+  /** The menu's bar: beside the phone, level with the menu, clear of the section's bar and the block's where it would meet them; none while the menu stands out of sight. */
+  const navPlace = $derived.by(() => {
+    const f = frameOf();
+    if (!f || !shown || !cb.nav?.rect || !navSizes) return null;
+    const box = toWindow(cb.nav.rect);
+    if (box.bottom <= f.canvas.top || box.top >= f.canvas.bottom) return null;
+    const held = [
+      sectionPlace ? { left: sectionPlace.left, top: sectionPlace.top, w: sw || 200, h: sh || 34 } : null,
+      blockPlace ? { left: blockPlace.left, top: blockPlace.top, w: bw || 260, h: bh || 34 } : null,
+    ];
+    return placeClearOf({ ...box, top: Math.max(box.top, f.canvas.top) }, { w: nw || 130, h: nh || 128 }, f.canvas, f.stage, held);
+  });
+
+  /** One step of a size, written as the phone's own value, an undo step of its own; a step past its bound does nothing. */
+  function navStep(what, dir) {
+    const step = phoneStep(ed.siteDraft.nav, what, dir);
+    if (!step) return;
+    historyState.asOwnStep(() => {
+      if (step.on === 'logo') setNavLogo(step.key, step.value);
+      else setNavMobile(step.key, step.value);
+    });
+  }
+
+  /** The menu's settings for the phone: the Phone panel's fold of them while that panel stands, else the Nav panel's. */
+  function navSettings() {
+    if (ed.activePanel === 'phone') ed.showFold('phone', 'nav-phone-bar');
+    else ed.showFold('nav', 'mobile');
+  }
+
   // Where the bars stand, for the text bar and the review cards to stand clear of them beside the phone.
   $effect(() => {
     cb.placed = blockPlace ? { blockId: cb.block.id, left: blockPlace.left, top: blockPlace.top, w: bw, h: bh, side: blockPlace.side } : null;
+  });
+  $effect(() => {
+    cb.navPlaced = navPlace ? { left: navPlace.left, top: navPlace.top, w: nw, h: nh, side: navPlace.side } : null;
   });
   $effect(() => {
     cb.sectionPlaced = sectionPlace ? { sectionId: cb.section.id, left: sectionPlace.left, top: sectionPlace.top, w: sw, h: sh, side: sectionPlace.side } : null;
@@ -240,6 +287,25 @@
   </div>
 {/if}
 
+{#if navPlace}
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+  <div class="canvas-bar cb-nav" role="toolbar" tabindex="-1" aria-label={ta('canvas.navTools')} data-canvas-tool bind:offsetWidth={nw} bind:offsetHeight={nh}
+    style="left: {navPlace.left}px; top: {navPlace.top}px" onmousedown={keepFocus} transition:menuMotion>
+    <span class="cb-nav-head">
+      <span class="cb-name">{ta('canvas.navBarName')}</span>
+      <button type="button" class="cb-tool" title={ta('canvas.navSettings')} aria-label={ta('canvas.navSettings')} onclick={navSettings}>{@html ICONS.gear}</button>
+    </span>
+    {#each navSteps as step (step.what)}
+      <span class="cb-step" role="group" aria-label={step.name} title={step.name}>
+        <span class="cb-step-mark" aria-hidden="true">{@html step.icon}</span>
+        <button type="button" class="cb-tool" aria-label={ta('canvas.navSmaller', { name: step.name })} disabled={!phoneStep(ed.siteDraft.nav, step.what, -1)} onclick={() => navStep(step.what, -1)}>{@html ICONS.minus}</button>
+        <span class="cb-step-value">{step.value}</span>
+        <button type="button" class="cb-tool" aria-label={ta('canvas.navLarger', { name: step.name })} disabled={!phoneStep(ed.siteDraft.nav, step.what, 1)} onclick={() => navStep(step.what, 1)}>{@html ICONS.plus}</button>
+      </span>
+    {/each}
+  </div>
+{/if}
+
 {#if blockPlace}
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <div class="canvas-bar" role="toolbar" tabindex="-1" aria-label={ta('canvas.blockTools')} data-canvas-tool bind:offsetWidth={bw} bind:offsetHeight={bh}
@@ -324,6 +390,47 @@
     padding: 0 6px 0 4px;
     font-weight: 600;
     opacity: 0.6;
+  }
+
+  /* The menu's bar: its name and its gear, then a size on each line, so it is narrow enough to stand beside the phone on a small window */
+  .cb-nav {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+
+  .cb-nav-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* A size on the menu's bar: its mark, a step down, its value in px and a step up */
+  .cb-step {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding-left: 4px;
+  }
+
+  .cb-step-mark {
+    margin-right: auto;
+  }
+
+  .cb-step-mark {
+    display: inline-flex;
+    opacity: 0.6;
+  }
+
+  .cb-step-value {
+    min-width: 2ch;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .cb-tool:disabled {
+    cursor: default;
+    opacity: 0.35;
   }
 
   /* A tool of words, the «Settings» of the bar with small panels */

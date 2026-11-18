@@ -20,6 +20,7 @@ export const SHRINK_MS = { min: 0, max: 1200, step: 20 };
 export const RADIUS = { min: 0, max: 64, step: 1 };
 export const COL_WIDTH = { min: 180, max: 400, step: 1 };
 export const LOGO_SIZE = { min: 12, max: 128, step: 1 };
+export const LOGO_TEXT_SIZE = { min: 8, max: 96, step: 1 };
 
 /** The four presets in px at a 16 px root: the rem values of base.css. */
 export const SIZE_PRESETS = {
@@ -73,4 +74,58 @@ export function sizePresetOf(style) {
   const free = (style?.padY != null && style.padY !== '') || (style?.textSize != null && style.textSize !== '');
   if (free) return null;
   return SIZE_IDS.includes(style?.size) ? style.size : 'md';
+}
+
+/**
+ * The sizes the phone draws the menu with now, for the menu's size bar beside the phone (lib/CanvasBar.svelte): the bar's thickness (null for the side variant, whose thickness has no setting of its own on the phone, ADR-0023), the menu's text size, and the logo's size with what it is the size of, the picture's height or the words' size (`logo` null where the phone's bar shows no logo).
+ * Each is the phone's own value where it has one, else the desktop's, else what the size step gives.
+ * @param {object} nav site.nav
+ * @returns {{padY: number|null, textSize: number, logo: 'image'|'text'|null, logoSize: number|null}}
+ */
+export function phoneSizes(nav) {
+  const style = nav?.style ?? {};
+  const m = style.mobile && typeof style.mobile === 'object' ? style.mobile : {};
+  const phone = { size: m.size ?? style.size, padY: m.padY ?? style.padY, textSize: m.textSize ?? style.textSize };
+  const side = nav?.variant === 'side-left' || nav?.variant === 'side-right';
+  const textSize = effectiveTextSize(phone);
+  const logo = nav?.logo ?? {};
+  const type = logo.type ?? 'text';
+  const shown = logo.show !== false && m.logo !== 'hidden';
+  const part = !shown ? null : type === 'image' || (type === 'both' && logo.mobileParts !== 'text') ? 'image' : 'text';
+  const logoSize = part === 'image' ? clampRange(logo.mobileSize ?? logo.size, LOGO_SIZE, 32)
+    : part === 'text' ? clampRange(logo.mobileTextSize ?? logo.textSize, LOGO_TEXT_SIZE, textSize) : null;
+  return { padY: side ? null : effectivePadY(phone, nav?.variant), textSize, logo: part, logoSize };
+}
+
+/**
+ * One step of a size on the menu's size bar: the phone's own value to write, a step from what the phone draws now, kept inside the size's bounds; null where the step leads nowhere (the bound is reached, or the size is not there).
+ * @param {object} nav site.nav
+ * @param {'padY'|'textSize'|'logo'} what
+ * @param {1|-1} dir
+ * @returns {{on: 'mobile'|'logo', key: string, value: number}|null} `on` says where the value stands: nav.style.mobile, or nav.logo
+ */
+export function phoneStep(nav, what, dir) {
+  const now = phoneSizes(nav);
+  const to = (value, range, by) => {
+    if (value == null) return null;
+    const next = clampRange(value + dir * by, range, value);
+    return next === value ? null : next;
+  };
+  if (what === 'padY') {
+    const value = to(now.padY, PAD_Y, 2);
+    return value == null ? null : { on: 'mobile', key: 'padY', value };
+  }
+  if (what === 'textSize') {
+    const value = to(now.textSize, TEXT_SIZE, 1);
+    return value == null ? null : { on: 'mobile', key: 'textSize', value };
+  }
+  if (what === 'logo' && now.logo === 'image') {
+    const value = to(now.logoSize, LOGO_SIZE, 2);
+    return value == null ? null : { on: 'logo', key: 'mobileSize', value };
+  }
+  if (what === 'logo' && now.logo === 'text') {
+    const value = to(now.logoSize, LOGO_TEXT_SIZE, 1);
+    return value == null ? null : { on: 'logo', key: 'mobileTextSize', value };
+  }
+  return null;
 }

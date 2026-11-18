@@ -288,6 +288,9 @@
       },
       "sideSubs": "collapsed",
       "sideSubArrow": false,
+      "mobile": {
+        "press": "tint"
+      },
       "mobileMenu": "sheet",
       "sheetMotion": "right",
       "mobileSubs": "expanded",

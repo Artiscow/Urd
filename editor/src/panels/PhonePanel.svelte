@@ -16,7 +16,6 @@
   import EmptyState from '../lib/rows/EmptyState.svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import NavMobile from './nav/NavMobile.svelte';
-  import NavLogoPhone from './nav/NavLogoPhone.svelte';
   import NavLauncherPhone from './nav/NavLauncherPhone.svelte';
   import SitePhoneGap from './site/SitePhoneGap.svelte';
   import { navFolds } from './nav/nav-actions.js';
@@ -113,11 +112,16 @@
 
   <!-- The phone settings of the site's other panels, drawn by the same rows as there, so a change shows in both (0.7.3.24): the menu on the phone from the Nav panel, and the space between blocks for every section from the Site panel -->
   <SubHeading text={ta('phone.wholeSite')} />
-  <Fold id="nav-phone" surface="phone" title={ta('phone.navGroup')} tip={ta('tip.nav.mobileSame')} value={navFold.mobileValue()} group={navFold.phoneGroup()}>
-    <NavMobile />
-    {#if ed.siteDraft.nav?.logo?.show !== false && (ed.siteDraft.nav?.logo?.type ?? 'text') !== 'text'}
-      <NavLogoPhone label={ta('phone.logoHeight')} />
-    {/if}
+  <Fold id="nav-phone-bar" surface="phone" title={ta('phone.navBar')} tip={ta('tip.nav.mobileSame')} value={navFold.phoneBarValue()} group={navFold.phoneBarGroup()}>
+    <NavMobile part="bar" />
+  </Fold>
+  {#if ed.siteDraft.nav?.logo?.show !== false}
+    <Fold id="nav-phone-logo" surface="phone" title={ta('lbl.navPhoneLogo')} value={navFold.phoneLogoValue()} group={navFold.phoneLogoGroup()}>
+      <NavMobile part="logo" />
+    </Fold>
+  {/if}
+  <Fold id="nav-phone" surface="phone" title={ta('phone.navGroup')} value={navFold.mobileValue()} group={navFold.phoneMenuGroup({ launcher: true })}>
+    <NavMobile part="menu" />
     {#if ed.siteDraft.nav?.launcher?.show === true}
       <NavLauncherPhone />
     {/if}

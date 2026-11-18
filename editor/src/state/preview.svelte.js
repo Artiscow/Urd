@@ -272,6 +272,7 @@ function onIframeLoad() {
     onTextState: textBarState.onTextState,
     onBlockBar: canvasBarState.onBlockBar,
     onSectionBar: canvasBarState.onSectionBar,
+    onNavBar: canvasBarState.onNavBar,
     onCtxMenu: canvasBarState.onCtxMenu,
     onCtxClose: canvasBarState.onCtxClose,
     onCtxHold: canvasBarState.onCtxHold,

@@ -19,7 +19,7 @@
  * ghost there, or a pull tab (nav.hideMode).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, launcherVars, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, logoParts, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, launcherVars, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -259,7 +259,7 @@ export function renderNav(site, host, pageId) {
   const nav = document.createElement('nav');
   // layout (additive since v0.5): where the menu items sit; the logo, where
   // it is shown, is first and doubles as the "Home" button.
-  nav.className = navClasses(effSite);
+  nav.className = navClasses(effSite, { mobile: mobileMq.matches });
   // The burger follows the ACTUAL width via its own class on the nav: in
   // preview the editor's viewport choice owns body.urd-mobile (and with it
   // the structure tools), but the menu alone must still go mobile when the
@@ -455,7 +455,7 @@ export function renderNav(site, host, pageId) {
     const span = document.createElement('span');
     span.textContent = logoDef.value || site.site.title;
     if (logoDef.font) span.style.fontFamily = logoDef.font;
-    if (logoDef.textSize) span.style.fontSize = `${logoDef.textSize}px`;
+    if (size.logoTextSize) span.style.fontSize = `${size.logoTextSize}px`;
     if (logoDef.bold === false) span.style.fontWeight = '400';
     if (logoDef.italic) span.style.fontStyle = 'italic';
     return span;
@@ -466,8 +466,13 @@ export function renderNav(site, host, pageId) {
   if (logoDef.type === 'image' && isSafeImage(logoDef.value)) {
     logo.appendChild(logoImg(logoDef.value));
   } else if (logoDef.type === 'both' && isSafeImage(logoDef.image)) {
-    // Image plus text, in the chosen order.
-    if ((logoDef.order ?? 'image-first') === 'image-first') {
+    // Image plus text, in the chosen order; on the phone the one of them the owner chose, where one is chosen (nav.logo.mobileParts).
+    const parts = logoParts(logoDef, { mobile: mobileMq.matches });
+    if (parts === 'image') {
+      logo.appendChild(logoImg(logoDef.image));
+    } else if (parts === 'text') {
+      logo.appendChild(logoText());
+    } else if ((logoDef.order ?? 'image-first') === 'image-first') {
       logo.append(logoImg(logoDef.image), logoText());
     } else {
       logo.append(logoText(), logoImg(logoDef.image));

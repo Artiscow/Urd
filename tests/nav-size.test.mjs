@@ -8,14 +8,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 import {
-  PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, LOGO_SIZE, RADIUS, COL_WIDTH,
+  PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, LOGO_SIZE, LOGO_TEXT_SIZE, RADIUS, COL_WIDTH,
   SIZE_PRESETS, SIZE_IDS, PILL_FACTOR,
   clampRange, effectivePadY, effectiveTextSize, sizePresetOf, isFloatingVariant,
+  phoneSizes, phoneStep,
 } from '../editor/src/lib/nav-size.js';
 const { NAV_SIZE_BOUNDS } = await engineImport('nav-model.js');
 
 test('the bounds equal the engine bounds', () => {
-  const pairs = { padY: PAD_Y, textSize: TEXT_SIZE, padX: PAD_X, gap: GAP, pillWidth: PILL_WIDTH, shrinkTo: SHRINK_TO, logoSize: LOGO_SIZE, radius: RADIUS };
+  const pairs = { padY: PAD_Y, textSize: TEXT_SIZE, padX: PAD_X, gap: GAP, pillWidth: PILL_WIDTH, shrinkTo: SHRINK_TO, logoSize: LOGO_SIZE, logoTextSize: LOGO_TEXT_SIZE, radius: RADIUS };
   for (const [key, range] of Object.entries(pairs)) {
     assert.deepEqual([range.min, range.max], NAV_SIZE_BOUNDS[key], key);
   }
@@ -70,4 +71,30 @@ test('clampRange snaps to the step and stays within the bounds', () => {
   assert.equal(clampRange(0.1, SHRINK_TO, 0.5), SHRINK_TO.min);
   assert.equal(clampRange(250, COL_WIDTH, 250), 250);
   assert.equal(clampRange(50, COL_WIDTH, 250), COL_WIDTH.min);
+});
+
+test('phoneSizes: what the phone draws now, its own value before the desktop\'s before the size step\'s', () => {
+  assert.deepEqual(phoneSizes({}), { padY: 14, textSize: 16, logo: 'text', logoSize: 16 });
+  assert.deepEqual(phoneSizes({ style: { size: 'lg', padY: 30, mobile: { padY: 10, size: 'sm' } } }), { padY: 10, textSize: 14, logo: 'text', logoSize: 14 });
+  assert.equal(phoneSizes({ style: { padY: 30 } }).padY, 30, 'the desktop\'s own value where the phone has none');
+  assert.equal(phoneSizes({ variant: 'side-left' }).padY, null, 'the column has no thickness');
+  // The logo: the picture's height, or the words' size; none where the phone's bar shows no logo.
+  assert.deepEqual([phoneSizes({ logo: { type: 'image', value: '/a.png' } }).logo, phoneSizes({ logo: { type: 'image', value: '/a.png' } }).logoSize], ['image', 32]);
+  assert.equal(phoneSizes({ logo: { type: 'image', value: '/a.png', size: 40, mobileSize: 24 } }).logoSize, 24);
+  assert.equal(phoneSizes({ logo: { type: 'both', value: 'Urd', image: '/a.png', mobileParts: 'text', textSize: 20, mobileTextSize: 18 } }).logo, 'text');
+  assert.equal(phoneSizes({ logo: { type: 'both', value: 'Urd', image: '/a.png', mobileParts: 'text', textSize: 20, mobileTextSize: 18 } }).logoSize, 18);
+  assert.equal(phoneSizes({ logo: { type: 'text', value: 'Urd', show: false } }).logo, null);
+  assert.equal(phoneSizes({ logo: { type: 'text', value: 'Urd' }, style: { mobile: { logo: 'hidden' } } }).logo, null);
+});
+
+test('phoneStep: a step writes the phone\'s own value from what is drawn now, and stops at the bounds', () => {
+  assert.deepEqual(phoneStep({}, 'padY', 1), { on: 'mobile', key: 'padY', value: 16 });
+  assert.deepEqual(phoneStep({ style: { mobile: { padY: 10 } } }, 'padY', -1), { on: 'mobile', key: 'padY', value: 8 });
+  assert.equal(phoneStep({ style: { mobile: { padY: PAD_Y.min } } }, 'padY', -1), null);
+  assert.equal(phoneStep({ variant: 'side-right' }, 'padY', 1), null);
+  assert.deepEqual(phoneStep({}, 'textSize', -1), { on: 'mobile', key: 'textSize', value: 15 });
+  assert.equal(phoneStep({ style: { mobile: { textSize: TEXT_SIZE.max } } }, 'textSize', 1), null);
+  assert.deepEqual(phoneStep({ logo: { type: 'image', value: '/a.png' } }, 'logo', 1), { on: 'logo', key: 'mobileSize', value: 34 });
+  assert.deepEqual(phoneStep({ logo: { type: 'text', value: 'Urd' } }, 'logo', -1), { on: 'logo', key: 'mobileTextSize', value: 15 });
+  assert.equal(phoneStep({ logo: { type: 'text', value: 'Urd', show: false } }, 'logo', 1), null);
 });

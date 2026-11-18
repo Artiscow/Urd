@@ -77,7 +77,7 @@
     const block = { left: ir.left + s * r.left, top: ir.top + s * r.top, right: ir.left + s * r.right, bottom: ir.top + s * r.bottom };
     const canvas = { left: Math.max(ir.left, stage.left), right: Math.min(ir.right, stage.right) };
     // In the phone view the block's and the section's bars stand by the canvas too (CanvasBar.svelte): the text bar stands clear of them.
-    return placeClearOf(block, { w: w || 440, h: h || 120 }, canvas, stage, [canvasBarState.placed, canvasBarState.sectionPlaced]);
+    return placeClearOf(block, { w: w || 440, h: h || 120 }, canvas, stage, [canvasBarState.placed, canvasBarState.sectionPlaced, canvasBarState.navPlaced]);
   });
 
   /** The widest the bar may stand, in px: the room beside the canvas where it stands beside the phone, else the stage's width; within it the bar stands at two lines' width (twoLines). */

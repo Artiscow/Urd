@@ -570,7 +570,13 @@ export function sheetMotion(style = {}) {
   return SHEET_MOTIONS.includes(m) ? m : 'top';
 }
 
-export function navClasses(site) {
+/**
+ * `mobile` says the mobile breakpoint matches: only then do the phone's own classes join, the logo's place in the bar and how a link answers a touch (nav.style.mobile.logo and .press, additive from 0.7.3.25).
+ * @param {{nav: object}} site
+ * @param {{mobile?: boolean}} [state]
+ * @returns {string}
+ */
+export function navClasses(site, { mobile = false } = {}) {
   let classes = `urd-nav urd-nav-${site.nav.layout ?? 'right'}`;
   const variant = site.nav.variant;
   if (isFloating(variant)) {
@@ -622,6 +628,11 @@ export function navClasses(site) {
   // The tool cluster's side (additive since v0.7): end is the default and
   // yields no class.
   if (site.nav.style?.tools?.side === 'start') classes += ' urd-nav-tools-start';
+  // The phone's own (additive from 0.7.3.25): allowlisted, and only at the mobile breakpoint. The logo's place counts only for a bar that shows a logo.
+  const phone = mobile && site.nav.style?.mobile && typeof site.nav.style.mobile === 'object' ? site.nav.style.mobile : {};
+  if (phone.logo === 'center' && site.nav.logo?.show !== false) classes += ' urd-nav-logo-center';
+  if (phone.logo === 'hidden') classes += ' urd-nav-logo-off';
+  if (NAV_PRESSES.includes(phone.press)) classes += ` urd-nav-press-${phone.press}`;
   return classes;
 }
 
@@ -687,8 +698,26 @@ export const NAV_SIZE_BOUNDS = {
   shrinkAt: [0, 400],
   shrinkMs: [0, 1200],
   logoSize: [12, 128],
+  logoTextSize: [8, 96],
   radius: [0, 64],
 };
+
+/** How a link of the menu can answer a touch on the phone (nav.style.mobile.press): a fill in the hover colour around the link, a line under the link, or the link drawn a little smaller. */
+export const NAV_PRESSES = ['tint', 'underline', 'shrink'];
+
+/** Where the logo can stand in the phone's bar besides its start (nav.style.mobile.logo): in the middle, or out of the bar. */
+export const NAV_PHONE_LOGOS = ['center', 'hidden'];
+
+/**
+ * What of a logo with both a picture and words is drawn: both, or on the phone the one nav.logo.mobileParts names.
+ * @param {object} [logo] nav.logo
+ * @param {{mobile?: boolean}} [state] Whether the mobile breakpoint matches
+ * @returns {'both'|'image'|'text'}
+ */
+export function logoParts(logo = {}, { mobile = false } = {}) {
+  const parts = logo?.mobileParts;
+  return mobile && (parts === 'image' || parts === 'text') ? parts : 'both';
+}
 
 /** A number clamped to [min, max] with the given decimals; undefined when the value is not a number. */
 function clampNum(value, [min, max], decimals = 0) {
@@ -710,7 +739,7 @@ function clampNum(value, [min, max], decimals = 0) {
  * @param {object} [style] nav.style
  * @param {object} [logo] nav.logo
  * @param {{mobile?: boolean}} [state] Whether the mobile breakpoint matches
- * @returns {{vars: Record<string, string>, logoSize: number}}
+ * @returns {{vars: Record<string, string>, logoSize: number, logoTextSize: number|undefined}} logoTextSize is the size of the logo's words where they have one of their own
  */
 export function navSizeVars(style = {}, logo = {}, { mobile = false } = {}) {
   const s = style ?? {};
@@ -746,7 +775,8 @@ export function navSizeVars(style = {}, logo = {}, { mobile = false } = {}) {
   if (textSize !== undefined) vars['--urd-nav-text-size'] = `${textSize}px`;
   const l = logo ?? {};
   const logoSize = clampNum(mobile ? (l.mobileSize ?? l.size) : l.size, NAV_SIZE_BOUNDS.logoSize) ?? 32;
-  return { vars, logoSize };
+  const logoTextSize = clampNum(mobile ? (l.mobileTextSize ?? l.textSize) : l.textSize, NAV_SIZE_BOUNDS.logoTextSize, 2);
+  return { vars, logoSize, logoTextSize };
 }
 
 /**

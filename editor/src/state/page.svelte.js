@@ -502,7 +502,7 @@ function menuPlaceFor(rect, small = false, section = false, { keepForm = false }
   const block = phone ? { ...own, left: ir.left, right: ir.right } : own;
   // What the menu keeps clear of: in the phone view the whole phone in sight, so it never stands below the block over the page where the stage has room beside the phone.
   const cover = phone && stage ? { left: ir.left, right: ir.right, top: Math.max(ir.top, stage.top), bottom: Math.min(ir.bottom, stage.bottom) } : block;
-  const bars = [canvasBarState.placed, canvasBarState.sectionPlaced].filter((b) => phone && b && b.w > 0 && b.h > 0);
+  const bars = [canvasBarState.placed, canvasBarState.sectionPlaced, canvasBarState.navPlaced].filter((b) => phone && b && b.w > 0 && b.h > 0);
   // The wide menu opened beside a block gives way to one column where that covers clearly less of the block (givesWay); a menu the owner dragged keeps its form, and so does a section's on the desktop.
   if (!small && !keepForm) {
     menu.cramped = false;

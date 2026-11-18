@@ -1,5 +1,5 @@
 /**
- * The phone view's bars and menus, drawn by the editor beside the phone (lib/CanvasBar.svelte): the selected block's bar (0.7.3.19.2) and the section's (0.7.3.23), each with its box in the canvas and its tools, and a menu's rows, as the preview tells them (urd-block-bar, urd-section-bar, urd-ctx-menu).
+ * The phone view's bars and menus, drawn by the editor beside the phone (lib/CanvasBar.svelte): the selected block's bar (0.7.3.19.2) and the section's (0.7.3.23), each with its box in the canvas and its tools, a menu's rows, and where the site's menu stands while its size bar is drawn (0.7.3.25), as the preview tells them (urd-block-bar, urd-section-bar, urd-ctx-menu, urd-nav-bar).
  * The tools and the rows stay the page's own (preview-edit.js pressPhoneBar, runPhoneMenu): a press here is sent back and acts there, so every tool and row does what it does on the page.
  */
 import { previewState } from './preview.svelte.js';
@@ -10,6 +10,8 @@ const none = () => ({ id: null, rect: null, tools: [] });
 /** The selected block's bar, and the section's. */
 let block = $state(none());
 let section = $state(none());
+/** The site's menu's box in the canvas's own px while its size bar stands, else null. */
+let nav = $state(null);
 /** The menu standing: {label, rows, at, editor, rest}, `editor` the bar whose ⋮ opened it ('block' or 'section') or false, or null. */
 let menu = $state(null);
 /** Whether the pointer is on a ⋮ of the page's that opened the menu by a rest. */
@@ -17,6 +19,7 @@ let pageHover = $state(false);
 /** Where each bar stands in the window, once drawn, for the text bar and the review cards to stand clear of it: {id, left, top, w, h, side}. */
 let placed = $state(null);
 let sectionPlaced = $state(null);
+let navPlaced = $state(null);
 
 /** A bar's word from the preview: where it stands and its tools, or that none stands (its id null). */
 function told(bar, msg, key) {
@@ -31,6 +34,11 @@ function onBlockBar(msg) {
 
 function onSectionBar(msg) {
   section = told(section, msg, 'sectionId');
+}
+
+/** The site's menu's size bar: where the menu stands, or that the bar stands no more. */
+function onNavBar(msg) {
+  nav = msg?.on === true && msg.rect ? { rect: msg.rect } : null;
 }
 
 /** A menu of the phone view to draw. */
@@ -79,14 +87,17 @@ function close(focus = false) {
 function reset() {
   block = none();
   section = none();
+  nav = null;
   menu = null;
   placed = null;
   sectionPlaced = null;
+  navPlaced = null;
 }
 
 export const canvasBarState = {
   get block() { return block; },
   get section() { return section; },
+  get nav() { return nav; },
   /** The selected block's id, for the text bar's place. */
   get blockId() { return block.id; },
   get menu() { return menu; },
@@ -95,8 +106,11 @@ export const canvasBarState = {
   set placed(v) { placed = v; },
   get sectionPlaced() { return sectionPlaced; },
   set sectionPlaced(v) { sectionPlaced = v; },
+  get navPlaced() { return navPlaced; },
+  set navPlaced(v) { navPlaced = v; },
   onBlockBar,
   onSectionBar,
+  onNavBar,
   onCtxMenu,
   onCtxClose,
   onCtxHold,

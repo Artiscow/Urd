@@ -34,6 +34,7 @@
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
  *                  { type: 'urd-block-bar', blockId, rect?, tools? }  (in the phone view, the selected block's box in the canvas and its bar's tools, the tools only when they changed, for the editor to draw the bar beside the phone; blockId null when no block's bar stands, 0.7.3.19.2)
  *                  { type: 'urd-section-bar', sectionId, rect?, tools? }  (the same for the section the mouse was last over, or put at work: its bar beside the phone, 0.7.3.23)
+ *                  { type: 'urd-nav-bar', on, rect? }  (in the phone view, where the site's menu stands in the canvas while the mouse was last over it or it was last pressed: the editor draws the menu's size bar beside the phone, 0.7.3.25; on false takes it away)
  *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest }  (in the phone view, a menu's rows for the editor to draw: at the point `at`, or under the ⋮ of the editor's bar `editor` names, 'block' or 'section'; `rest` leaves the focus where it is)
  *                  { type: 'urd-ctx-close' }, { type: 'urd-ctx-hold' }, { type: 'urd-ctx-hover', over }  (the phone view's menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
  */
@@ -536,6 +537,46 @@ export function watchPhoneBar() {
   phoneBarFrame = requestAnimationFrame(tick);
 }
 
+/** Whether the editor draws the menu's size bar beside the phone: in the phone view the mouse was last over the site's menu on the page, or the menu was last pressed there. */
+let navBarOn = false;
+let navBarFrame = 0;
+let navBarTold = '';
+
+/** Tells the editor, once a frame while the menu's size bar stands, where the site's menu stands in the canvas (urd-nav-bar), and once that it stands no more: outside the phone view, in the Clean view, or with no menu on the page. */
+function watchNavBar() {
+  if (navBarFrame) return;
+  const tick = () => {
+    navBarFrame = 0;
+    const nav = navBarOn && isMobile() && !document.body.classList.contains('urd-chrome-off') ? document.querySelector('.urd-nav') : null;
+    const box = nav?.getBoundingClientRect();
+    if (!box || !(box.width || box.height)) {
+      navBarOn = false;
+      if (navBarTold) post({ type: 'urd-nav-bar', on: false });
+      navBarTold = '';
+      return;
+    }
+    const rect = { left: Math.round(box.left), top: Math.round(box.top), right: Math.round(box.right), bottom: Math.round(box.bottom) };
+    const told = `${rect.left},${rect.top},${rect.right},${rect.bottom}`;
+    if (told !== navBarTold) post({ type: 'urd-nav-bar', on: true, rect });
+    navBarTold = told;
+    navBarFrame = requestAnimationFrame(tick);
+  };
+  navBarFrame = requestAnimationFrame(tick);
+}
+
+/** The pointer on the site's menu brings its size bar, and on anything else of the page takes it away; off the page it stays, so the bar can be reached. */
+function navBarAt(event) {
+  if (!isMobile()) return;
+  const on = Boolean(eventTarget(event)?.closest('.urd-nav'));
+  if (on === navBarOn) return;
+  navBarOn = on;
+  watchNavBar();
+}
+document.addEventListener('pointerover', (event) => {
+  if (event.pointerType === 'mouse') navBarAt(event);
+});
+document.addEventListener('pointerdown', navBarAt);
+
 // In the phone view the section the mouse goes over is the one whose bar the editor draws.
 document.addEventListener('pointerover', (event) => {
   // A menu standing keeps the bar it hangs from, and the section its rows act on.
@@ -775,11 +816,12 @@ function navPartAt(target) {
   return { fold: null };
 }
 
-/** The site's menu's own menu: the settings of the part under the pointer, and each of the Nav panel's folds, opened there. */
+/** The site's menu's own menu: the settings of the part under the pointer, and each of the Nav panel's folds, opened there. In the phone view the bar, its logo and its list lead to the fold of the menu on the phone, which holds their settings for the phone. */
 function openNavContextMenu(nav, target, x, y) {
   if (document.body.classList.contains('urd-chrome-off')) return;
   selectBlock(null);
-  const here = navPartAt(target);
+  const at = navPartAt(target);
+  const here = isMobile() && (!at.fold || at.fold === 'logo' || at.fold === 'items') ? { fold: 'mobile' } : at;
   const open = (fold, part = null) => post({ type: 'urd-open-panel', panel: 'nav', fold, part });
   showContextMenu(nav, x, y, ta('canvas.ctx.navLabel'), (item, sep) => {
     item(ta('canvas.ctx.settings'), 'Enter', () => open(here.fold, here.part)).classList.add('urd-ctx-first');

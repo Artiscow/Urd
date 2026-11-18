@@ -29,6 +29,7 @@
  *                  { type: 'urd-text-state', blockId, rect, state } (the text being written: its block's box in the canvas and what its selection holds; blockId null when none is, lib/TextToolbar.svelte)
  *                  { type: 'urd-block-bar', blockId, rect?, tools? } (in the phone view, the selected block's box and its bar's tools for the bar drawn beside the phone, lib/CanvasBar.svelte; blockId null when none stands)
  *                  { type: 'urd-section-bar', sectionId, rect?, tools? } (the same for the section the mouse was last over, or put at work, 0.7.3.23)
+ *                  { type: 'urd-nav-bar', on, rect? } (in the phone view, where the site's menu stands while its size bar is drawn beside the phone, 0.7.3.25)
  *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest } (in the phone view, a menu's rows for the editor to draw, at the point or under the ⋮ of the bar `editor` names, 'block' or 'section')
  *                  { type: 'urd-ctx-close' } / { type: 'urd-ctx-hold' } / { type: 'urd-ctx-hover', over } (that menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
@@ -111,7 +112,7 @@
  */
 
 /** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. The review cards' places and the phone view's bars and menu pass so the editor holds what the page last sent; it draws none of them while a draft is looked at. */
-const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards', 'urd-block-bar', 'urd-section-bar', 'urd-ctx-close']);
+const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards', 'urd-block-bar', 'urd-section-bar', 'urd-nav-bar', 'urd-ctx-close']);
 
 /**
  * @param {HTMLIFrameElement} iframe The iframe showing the page with ?preview=1
@@ -145,6 +146,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-text-state') handlers.onTextState?.(msg);
     if (msg?.type === 'urd-block-bar') handlers.onBlockBar?.(msg);
     if (msg?.type === 'urd-section-bar') handlers.onSectionBar?.(msg);
+    if (msg?.type === 'urd-nav-bar') handlers.onNavBar?.(msg);
     if (msg?.type === 'urd-ctx-menu') handlers.onCtxMenu?.(msg);
     if (msg?.type === 'urd-ctx-close') handlers.onCtxClose?.(msg);
     if (msg?.type === 'urd-ctx-hold') handlers.onCtxHold?.(msg);

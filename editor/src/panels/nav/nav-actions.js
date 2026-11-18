@@ -2,7 +2,7 @@
    Every function reads the draft and the writes from the editor handle when it is called, so one set serves the panel for as long as it stands. */
 import { ta } from '$engine/i18n.js';
 import { toolOrder } from '$engine/nav-model.js';
-import { isFloatingVariant, sizePresetOf } from '../../lib/nav-size.js';
+import { isFloatingVariant, sizePresetOf, phoneSizes } from '../../lib/nav-size.js';
 import { siteGroup, mergeGroups } from '../../lib/site-groups.js';
 
 /** The column at the left or the right, where the bar's own settings have no say. */
@@ -28,6 +28,29 @@ export function navActions(ed) {
     });
   }
 
+  /** One of the phone's own values (nav.style.mobile); undefined removes it, and an emptied object leaves the file. */
+  function setNavMobile(key, value) {
+    ed.siteMutate(`edit:nav-mobile-${key}`, () => {
+      const nav = ed.siteDraft.nav;
+      nav.style ??= {};
+      const mobile = { ...(nav.style.mobile ?? {}) };
+      if (value === undefined) delete mobile[key];
+      else mobile[key] = value;
+      if (Object.keys(mobile).length) nav.style.mobile = mobile;
+      else delete nav.style.mobile;
+    });
+  }
+
+  /** A field on the logo itself; undefined removes it. */
+  function setNavLogo(key, value) {
+    ed.siteMutate(`edit:nav-logo-${key}`, () => {
+      const next = { type: 'text', value: '', ...ed.siteDraft.nav.logo };
+      if (value === undefined) delete next[key];
+      else next[key] = value;
+      ed.siteDraft.nav.logo = next;
+    });
+  }
+
   /**
    * The marks already uploaded for the launcher, the button's included: the pickers offer them again, so one image can serve several shortcuts and the pull tab.
    */
@@ -39,7 +62,7 @@ export function navActions(ed) {
   /** Whether a tool has a row in the Tools fold: the theme button only with an alt theme to switch to. */
   const toolShown = (id) => id !== 'theme' || Boolean(ed.siteDraft.theme?.alt?.tokens);
 
-  return { setNavStyle, launcherImages, toolShown };
+  return { setNavStyle, setNavMobile, setNavLogo, launcherImages, toolShown };
 }
 
 /**
@@ -121,15 +144,46 @@ export function navFolds(ed) {
   /** The hover style. */
   const coloursValue = () => ta(`opt.hover.${HOVER_WORDS[style()?.hover] ?? 'standard'}`);
 
-  function mobileGroup() {
+  /** The phone's own values (nav.style.mobile) among the keys given. */
+  const phoneOwn = (id, entries) => siteGroup(() => style()?.mobile, write(() => dropEmpty(style(), 'mobile')), id, pick(entries));
+
+  /** The bar on the phone: its sizes, its border, where its items and tools stand, and over the top section and the content width. */
+  function phoneBarGroup() {
     const side = isSideNav(nav());
     const bar = !side && !isFloatingNav(nav());
+    return phoneOwn('nav-mobile', [
+      ['padY', undefined, !side], ['textSize', undefined], ['size', undefined], ['border', undefined], ['layout', undefined], ['tools', undefined],
+      ['overlay', undefined, bar], ['inset', undefined, bar],
+    ]);
+  }
+  /** The thickness and the text size the phone draws the bar with. */
+  const phoneBarValue = () => {
+    const sizes = phoneSizes(nav());
+    return sizes.padY == null ? `${sizes.textSize} px` : `${sizes.padY} · ${sizes.textSize} px`;
+  };
+
+  /** The logo on the phone, while the bar shows one: its place in the bar, and the logo's own values for the phone. */
+  function phoneLogoGroup() {
+    const logo = nav()?.logo ?? {};
+    const type = logo.type ?? 'text';
+    const parts = type === 'both' ? logo.mobileParts : undefined;
+    // As NavPhoneLogo.svelte shows them: what shows and the sizes only while the logo stands somewhere on the phone, each size only for the part shown.
+    const seen = style()?.mobile?.logo !== 'hidden' || (style()?.mobileMenu === 'sheet' && style()?.sheetLogo === true);
+    const picture = type === 'image' || (type === 'both' && parts !== 'text');
+    const words = type === 'text' || (type === 'both' && parts !== 'image');
+    return mergeGroups(
+      phoneOwn('nav-mobile', [['logo', undefined]]),
+      siteGroup(() => nav()?.logo, write(), 'nav-mobile', pick([['mobileSize', undefined, seen && picture], ['mobileTextSize', undefined, seen && words], ['mobileParts', undefined, seen && type === 'both']])),
+    );
+  }
+  /** Where the logo stands in the phone's bar. */
+  const phoneLogoValue = () => ta(`opt.navPhoneLogo.${{ center: 'center', hidden: 'hidden' }[style()?.mobile?.logo] ?? 'start'}`);
+
+  /** The menu the burger opens on the phone: its form, how its links answer a touch, the burger, and the full-screen menu's contents and surface; `launcher` adds the launcher's two for the phone, which the Nav panel keeps in its Tools fold. */
+  function phoneMenuGroup({ launcher = false } = {}) {
     const sheet = style()?.mobileMenu === 'sheet';
     const groups = [
-      siteGroup(() => style()?.mobile, write(() => dropEmpty(style(), 'mobile')), 'nav-mobile', pick([
-        ['padY', undefined, !side], ['textSize', undefined], ['size', undefined], ['border', undefined], ['layout', undefined], ['tools', undefined],
-        ['overlay', undefined, bar], ['inset', undefined, bar],
-      ])),
+      phoneOwn('nav-mobile', [['press', undefined]]),
       siteGroup(style, write(), 'nav-mobile', pick([
         ['mobileMenu', 'dropdown'], ['sheetMotion', 'top', sheet], ['sheetLogo', undefined, sheet && nav()?.logo?.show !== false],
         ['sheetTheme', undefined, sheet && Boolean(ed.siteDraft.theme?.alt?.tokens) && style()?.tools?.theme !== false],
@@ -140,13 +194,14 @@ export function navFolds(ed) {
       siteGroup(() => style()?.burger, write(() => dropEmpty(style(), 'burger')), 'nav-mobile', { icon: 'lines', showLabel: undefined }),
     ];
     if (sheet) groups.push(siteGroup(() => style()?.sheet, write(() => dropEmpty(style(), 'sheet')), 'nav-mobile', { bg: 'surface', bgOpacity: 0.85, blur: undefined, textColor: undefined }));
+    if (launcher && nav()?.launcher?.show === true) groups.push(siteGroup(() => nav()?.launcher, write(), 'nav-mobile', { mobileView: undefined, mobileMax: 6 }));
     return mergeGroups(...groups);
   }
-  /** The Phone panel's fold of the menu on the phone: the Phone fold's settings, with the logo picture's height on the phone and the launcher's two for the phone, which stand in the Logo and Tools folds here. */
-  function phoneGroup() {
-    const groups = [mobileGroup()];
-    if (nav()?.logo?.show !== false && (nav()?.logo?.type ?? 'text') !== 'text') groups.push(siteGroup(() => nav()?.logo, write(), 'nav-mobile', { mobileSize: undefined }));
-    if (nav()?.launcher?.show === true) groups.push(siteGroup(() => nav()?.launcher, write(), 'nav-mobile', { mobileView: undefined, mobileMax: 6 }));
+
+  /** The Nav panel's Phone fold: the three parts as one group. */
+  function mobileGroup() {
+    const groups = [phoneBarGroup(), phoneMenuGroup()];
+    if (nav()?.logo?.show !== false) groups.splice(1, 0, phoneLogoGroup());
     return mergeGroups(...groups);
   }
   /** The menu the burger opens. */
@@ -205,7 +260,7 @@ export function navFolds(ed) {
   const announcementValue = () => (nav()?.announcement?.show ? nav().announcement.text || ta('common.on') : ta('common.off'));
 
   return {
-    itemsGroup, itemsValue, logoGroup, logoValue, layoutGroup, layoutValue, coloursGroup, coloursValue, mobileGroup, mobileValue, phoneGroup,
+    itemsGroup, itemsValue, logoGroup, logoValue, layoutGroup, layoutValue, coloursGroup, coloursValue, mobileGroup, mobileValue, phoneBarGroup, phoneBarValue, phoneLogoGroup, phoneLogoValue, phoneMenuGroup,
     scrollGroup, scrollValue, toolsGroup, toolsValue, announcementGroup, announcementValue,
   };
 }

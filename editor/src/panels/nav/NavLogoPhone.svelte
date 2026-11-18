@@ -1,5 +1,5 @@
 <script>
-  /* The logo picture's height on the phone, empty for the desktop's: in the Nav panel's Logo fold beside the other two sizes, and in the Phone panel's fold of the menu on the phone (0.7.3.24), the same field in both. */
+  /* The logo picture's height on the phone, empty for the desktop's: in the Nav panel's Logo fold beside the other two sizes, and among the logo's settings for the phone (NavPhoneLogo.svelte), the same field in both. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { LOGO_SIZE, clampRange } from '../../lib/nav-size.js';

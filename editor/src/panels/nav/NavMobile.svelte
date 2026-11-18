@@ -1,5 +1,5 @@
 <script>
-  /* The Nav panel's Mobile fold, in two parts: the bar on a phone, where every choice starts on «same as on the desktop» and only then writes a value of its own, and the menu the burger opens, with the burger's drawing and word and the full-screen menu's own contents and surface.
+  /* The Nav panel's Mobile fold, in three parts, which the Phone panel draws as three folds (`part`): the bar on a phone, where every choice starts on «same as on the desktop» and only then writes a value of its own; the logo on a phone (NavPhoneLogo.svelte), while the bar shows one; and the menu the burger opens, with how its links answer a touch, the burger's drawing and word and the full-screen menu's own contents and surface.
      The floating and column fields have no counterpart here: the phone is a bar with a burger, where they do nothing. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
@@ -11,13 +11,16 @@
   import ColourRow from '../../lib/rows/ColourRow.svelte';
   import SubHeading from '../../lib/rows/SubHeading.svelte';
   import { ta } from '$engine/i18n.js';
-  import { burgerModel, BURGER_ICONS } from '$engine/nav-model.js';
+  import { burgerModel, BURGER_ICONS, NAV_PRESSES } from '$engine/nav-model.js';
+  import NavPhoneLogo from './NavPhoneLogo.svelte';
   import { PAD_Y, TEXT_SIZE, SIZE_IDS, clampRange } from '../../lib/nav-size.js';
   import { navActions, isSideNav, isFloatingNav } from './nav-actions.js';
   const ed = getContext('urd-editor');
+  /** @type {{ part?: 'all'|'bar'|'logo'|'menu' }} The whole fold with a heading for each part, or one part alone, its heading on its fold. */
+  let { part = 'all' } = $props();
   const siteDraft = $derived(ed.siteDraft);
   const { siteMutate, themeSwatches } = ed;
-  const { setNavStyle } = navActions(ed);
+  const { setNavStyle, setNavMobile } = navActions(ed);
 
   const sideVariant = $derived(isSideNav(siteDraft?.nav));
   const floatingVariant = $derived(isFloatingNav(siteDraft?.nav));
@@ -44,18 +47,6 @@
       else burger[key] = value;
       if (Object.keys(burger).length) siteDraft.nav.style.burger = burger;
       else delete siteDraft.nav.style.burger;
-    });
-  }
-
-  /** The mobile overrides (nav.style.mobile): an emptied object is removed. */
-  function setNavMobile(key, value) {
-    siteMutate(`edit:nav-mobile-${key}`, () => {
-      siteDraft.nav.style ??= {};
-      const mobile = { ...(siteDraft.nav.style.mobile ?? {}) };
-      if (value === undefined) delete mobile[key];
-      else mobile[key] = value;
-      if (Object.keys(mobile).length) siteDraft.nav.style.mobile = mobile;
-      else delete siteDraft.nav.style.mobile;
     });
   }
 
@@ -101,7 +92,8 @@
   const sheetOpacity = $derived(Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100));
 </script>
 
-<SubHeading text={ta('lbl.navPhoneBar')} />
+{#if part === 'all' || part === 'bar'}
+{#if part === 'all'}<SubHeading text={ta('lbl.navPhoneBar')} />{/if}
 <div class="ctl-pair">
   {#if !sideVariant}
     <div class="ctl-field" title={ta('tip.nav.thickness')}>
@@ -158,7 +150,12 @@
       options={sameOnOff} onchange={(v) => setNavMobileFlag('inset', v)} />
   </Setting>
 {/if}
-<SubHeading text={ta('lbl.navPhoneMenu')} />
+{/if}
+{#if (part === 'all' || part === 'logo') && siteDraft.nav.logo?.show !== false}
+  <NavPhoneLogo heading={part === 'all'} />
+{/if}
+{#if part === 'all' || part === 'menu'}
+{#if part === 'all'}<SubHeading text={ta('lbl.navPhoneMenu')} />{/if}
 <Setting key="mobileMenu">
   <Choice label={ta('lbl.mobileMenu')} title={ta('tip.nav.mobileMenu')} value={siteDraft.nav.style?.mobileMenu ?? 'dropdown'}
     options={[['dropdown', ta('opt.mobileMenu.dropdown')], ['sheet', ta('opt.mobileMenu.sheet')]]}
@@ -171,6 +168,19 @@
       onchange={(v) => setNavStyle('sheetMotion', v === 'top' ? undefined : v)} />
   </Setting>
 {/if}
+{#if siteDraft.nav.items?.some((item) => item.children?.length)}
+  <Setting key="mobileSubs">
+    <Choice label={ta('lbl.mobileSubs')} title={ta('tip.nav.mobileSubs')} value={siteDraft.nav.style?.mobileSubs ?? 'collapsed'}
+      options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
+      onchange={(v) => setNavStyle('mobileSubs', v === 'collapsed' ? undefined : v)} />
+  </Setting>
+{/if}
+<!-- How a link of the menu answers a touch on the phone -->
+<Setting key="press">
+  <Choice label={ta('lbl.navPress')} title={ta('tip.nav.press')} value={siteDraft.nav.style?.mobile?.press ?? ''}
+    options={[['', ta('opt.navPress.none')], ...NAV_PRESSES.map((id) => [id, ta(`opt.navPress.${id}`)])]}
+    onchange={(v) => setNavMobile('press', v || undefined)} />
+</Setting>
 <!-- The burger's drawing and the word beside it; the bare tile only once the word is on -->
 <Setting key="icon">
   <div class="ctl-field" title={ta('tip.nav.burgerIcon')}>
@@ -193,6 +203,7 @@
     oninput={(e) => setNavBurger('label', e.target.value.trim() ? e.target.value : undefined)} />
 {/if}
 {#if siteDraft.nav.style?.mobileMenu === 'sheet'}
+  <SubHeading text={ta('lbl.navSheetPart')} />
   {#if siteDraft.nav.logo?.show !== false}
     <Setting key="sheetLogo">
       <SwitchRow label={ta('lbl.sheetLogo')} title={ta('tip.nav.sheetLogo')} checked={siteDraft.nav.style?.sheetLogo === true}
@@ -242,10 +253,4 @@
       onchange={(hex) => setNavSheet('textColor', hex)} />
   </Setting>
 {/if}
-{#if siteDraft.nav.items?.some((item) => item.children?.length)}
-  <Setting key="mobileSubs">
-    <Choice label={ta('lbl.mobileSubs')} title={ta('tip.nav.mobileSubs')} value={siteDraft.nav.style?.mobileSubs ?? 'collapsed'}
-      options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
-      onchange={(v) => setNavStyle('mobileSubs', v === 'collapsed' ? undefined : v)} />
-  </Setting>
 {/if}

@@ -204,6 +204,10 @@ const iconSite = load('template/content/site.json');
 iconSite.site.icon = '/media/images/icon.webp';
 iconSite.site.iconSource = keptOriginal;
 iconSite.nav.logo = { ...iconSite.nav.logo, type: 'image', value: '/media/images/logo.webp', imageSource: { ...keptOriginal, ratio: '1:1' } };
+// The logo on the phone (nav.logo.mobileParts and mobileTextSize, nav.style.mobile.logo, additive from 0.7.3.25), which the template's own site does not set: a logo of both, the name alone on the phone, in the middle of its bar.
+const phoneLogoSite = load('template/content/site.json');
+phoneLogoSite.nav.logo = { ...phoneLogoSite.nav.logo, type: 'both', value: 'Urd', image: '/media/images/logo.webp', mobileParts: 'text', mobileTextSize: 18 };
+phoneLogoSite.nav.style = { ...phoneLogoSite.nav.style, mobile: { ...(phoneLogoSite.nav.style?.mobile ?? {}), logo: 'center' } };
 iconSite.footer = { ...(iconSite.footer ?? { version: 1 }), brand: { ...(iconSite.footer?.brand ?? {}), mode: 'both', logo: '/media/images/footer-logo.webp', logoSource: keptOriginal }, privacyPage: 'personvern' };
 // The shop's terms of sale page (site.commerce.termsPage, additive from 0.7.24.2.3), which the template does not ship.
 iconSite.site.commerce = { ...(iconSite.site.commerce ?? {}), termsPage: 'kjopsvilkar' };
@@ -212,6 +216,7 @@ sharePage.meta = { ...(sharePage.meta ?? {}), og: { image: '/media/images/share.
 const validatePage = ajv.getSchema(pageSchema.$id);
 for (const [label, ok, errors] of [
   ['synthetic site icon and logos with their kept originals', validateSite(iconSite), validateSite.errors],
+  ['synthetic site with the logo on the phone', validateSite(phoneLogoSite), validateSite.errors],
   ['synthetic share image with its kept original', validatePage(sharePage), validatePage.errors],
 ]) {
   if (ok) {

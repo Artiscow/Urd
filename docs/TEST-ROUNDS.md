@@ -2,6 +2,21 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.25): the navigation bar's sizes beside the phone, and the logo and a link's touch on the phone
+
+- [ ] In the phone view, move the mouse over the navigation bar, or press it: a bar «Nav» stands beside the phone with the thickness, the logo's size and the text size, each with − and +; the mouse over a section takes it away
+- [ ] Step each size: the navigation bar on the phone follows at once, the desktop view keeps its sizes, and each step is one undo; a step past its bound is greyed
+- [ ] The gear on «Nav» opens «Navigation bar» in the Phone panel, or the Nav panel's Phone fold while another panel is open
+- [ ] Right-click the navigation bar in the phone view: «Settings» opens its phone settings
+- [ ] The Phone panel shows «Phone settings» with «Navigation bar», «The logo», «Burger menu» and «Space between blocks», each saying its value while closed and resetting only its own settings
+- [ ] Under «The logo», choose «In the middle»: the logo stands in the middle of the phone's bar, the burger at its edge; «Hidden» takes it out of the bar; the desktop keeps it where it was
+- [ ] With a logo of a picture and a name, «Shows» picks the picture or the name alone on the phone; the name's size on the phone changes only the phone's
+- [ ] Under «Burger menu», choose each of «Tint», «Underline» and «Shrink», and tap a link of the phone's menu on a phone: it answers as chosen, the tint reaching well past the link's words; «Nothing» gives no answer
+- [ ] The same on an iPhone in Safari: a tap draws the answer chosen (the answer reads the link's pressed state, which some touch browsers give only while a page listens for touches)
+- [ ] Step a size on «Nav» five times and undo once: one step goes back
+- [ ] The Nav panel's Phone fold holds the same settings, with the full-screen menu's settings under their own heading
+- [ ] Publish and open the page on a phone: the sizes, the logo's place and the touch answer stand as set
+
 ### Test batch (0.7.3.24): the Phone panel's folds, and the page's block order in a column beside the phone
 
 - [ ] Open the Phone panel: under the section and its gear stand «The whole site» with «The menu» and «Space between blocks», and «This section» with «Space and text», «Phone layout» and «Order on the phone», each fold but «Phone layout» saying its value while closed
