@@ -3500,6 +3500,11 @@
     cursor: pointer;
   }
 
+  .po-card:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: color-mix(in srgb, currentColor 6%, transparent);
+    border-color: rgb(255 255 255 / 26%);
+  }
+
   .po-card.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     border-color: var(--urd-color-accent, #7c5cff);
     box-shadow: inset 0 0 0 1px var(--urd-color-accent, #7c5cff);
@@ -3543,19 +3548,41 @@
     background: var(--urd-color-accent, #7c5cff);
   }
 
-  /* A phone layout preset drawn small (section/PhoneSectionRows.svelte): the eight cell columns, each cell with its blocks' marks as the rule's cards draw them */
+  /* A phone layout preset drawn small (section/PhoneSectionRows.svelte): a phone's screen, its eight cell columns, each cell with its blocks' marks as the rule's cards draw them, from its top and cut where it ends */
+  .po-card:has(> .pl-sketch) {
+    grid-template-rows: auto 1fr;
+    padding: 0.35rem;
+  }
+
+  /* The card's one column is its whole width, whatever its name's length, so every screen is as wide as its card */
+  .po-card:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .pl-sketch {
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
     align-content: start;
-    gap: 2px;
-    min-height: 2.6rem;
+    gap: 3px 2px;
+    box-sizing: border-box;
+    height: 3.4rem;
+    padding: 5px 6px;
+    overflow: hidden;
+    background: color-mix(in srgb, currentColor 6%, transparent);
+    border-radius: 5px;
   }
 
   .pl-sketch > span {
     display: grid;
     align-content: start;
     gap: 2px;
+  }
+
+  /* The name stands centred in the room under the screen, so names of one line and of two stand level */
+  .po-card:has(> .pl-sketch) > .po-name {
+    display: grid;
+    place-items: center;
+    min-height: 2.4em;
   }
 
   .pl-sketch i {
@@ -3602,6 +3629,48 @@
     text-align: center;
     text-wrap: balance;
     overflow-wrap: break-word;
+  }
+
+  /* «Same height» and «Same width» under the phone's presets: two tiles of the cards' own kind, each its drawing beside its name */
+  .po-match {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+  }
+
+  .po-match > button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-width: 0;
+    min-height: 2.4rem;
+    padding: 0.35rem 0.5rem;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .po-match > button:hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: color-mix(in srgb, currentColor 6%, transparent);
+    border-color: rgb(255 255 255 / 26%);
+  }
+
+  .po-match > button:disabled:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .po-match svg {
+    flex: none;
+    color: var(--urd-color-accent, #7c5cff);
   }
 
   /* The phone order's list (panels/phone/PhoneOrder.svelte): one line per block in its phone order, a stack's head over its blocks set in a step, the stack drawn as one tinted card */

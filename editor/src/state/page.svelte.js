@@ -20,7 +20,7 @@ import { flowing, phoneStackOf } from '$engine/phone-moves.js';
 import { createPhoneFit } from '../lib/phone-fit.js';
 import { calDesign, calView, calPhoneView, calCardDesign, calLimitStart } from '$engine/calendar-designs.js';
 import { coreAnimations } from '$engine/animations/core.js';
-import { PAGE_SCHEMA_VERSION, liftPageFile, phoneCells, phoneHeight, MOBILE_ROOM, MOBILE_ROOM_MAX } from '$engine/migrate.js';
+import { PAGE_SCHEMA_VERSION, liftPageFile, phoneCells, phoneHeight, MOBILE_ROOM } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
 import { anchorError, takenAnchors } from '$engine/anchor-model.js';
 import { setLinkOn } from '../lib/link-edit.js';
@@ -1252,7 +1252,7 @@ function setSectionPhoneRoom(side, value, { sectionId = activeSectionId, own = f
   const key = side === 'top' ? 'mobilePadTop' : 'mobilePadBottom';
   historyState.pushHistory(own ? 'section-phone-room' : `edit:section-phone-room-${side}:${sectionId}`);
   const size = { ...(section.size ?? {}) };
-  const px = Number.isFinite(value) ? Math.max(0, Math.min(MOBILE_ROOM_MAX, Math.round(value))) : null;
+  const px = Number.isFinite(value) ? Math.max(0, Math.round(value)) : null;
   if (px === null || px === MOBILE_ROOM) delete size[key]; else size[key] = px;
   section.size = size;
   store.save();

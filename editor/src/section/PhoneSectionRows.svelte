@@ -1,15 +1,17 @@
 <script>
   /* The section's own settings for the phone, in the section menu's «Size and grid» and the Phone panel alike: the space between its blocks, the room above and below them, «Force readable text» on the phone, its rule for their order, its custom order, and the presets that suggest its layout in the phone's cells.
      Each rule is drawn as the section's own blocks in its order (phone-order.js), with its stacks and exceptions; the rule and the custom order stand for every section, whatever its blocks, and while a custom order holds, the rule places a block the list does not hold yet.
-     `part` draws one part alone, in a fold of the Phone panel that carries its name: the space and the text, the order, or the presets. */
+     `part` draws one part alone, in a fold of the Phone panel that carries its name: the space and the text, the order, or the presets.
+     Under the presets stand «Same height» and «Same width», which make the blocks side by side on each line alike at a press; a preset makes them the same height too, in the phone view, where their heights are measured. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
-  import { MOBILE_GAP_MAX, mobileGapOf, MOBILE_ROOM_MAX, phoneRoomOf } from '$engine/migrate.js';
+  import { MOBILE_GAP_MAX, mobileGapOf, MOBILE_ROOM_REACH, phoneRoomOf } from '$engine/migrate.js';
   import { PHONE_ORDERS, stackOrder, phoneSetupOf } from '$engine/phone-order.js';
-  import { phoneMark, phoneLayouts, phoneLayoutChange, phoneLayoutSketch } from '$engine/phone-layouts.js';
+  import { phoneMark, phoneLayouts, phoneLayoutChange, phoneLayoutSketch, phoneSameWidths } from '$engine/phone-layouts.js';
   import Setting from '../lib/rows/Setting.svelte';
   import SliderRow from '../lib/rows/SliderRow.svelte';
   import SwitchRow from '../lib/rows/SwitchRow.svelte';
+  import { ICONS } from '../lib/icons.js';
   const ed = getContext('urd-editor');
   /** @type {{ part?: 'all'|'space'|'order'|'layout' }} */
   let { part = 'all' } = $props();
@@ -38,6 +40,18 @@
   const PRESET_KEYS = { 'two-per-line': 'twoPerLine', pairs: 'pairs', alternate: 'alternate', 'wide-two': 'wideTwo', 'big-two': 'bigTwo', 'one-column': 'oneColumn' };
   function applyPreset(id) {
     const change = phoneLayoutChange(blocks, phoneSetupOf(section), id);
+    if (!change) return;
+    ed.changeSectionPhone(section.id, change, 'phone-layout');
+    // The blocks the preset puts side by side are made the same height, measured in the phone view as part of the preset's step.
+    if (ed.viewMode === 'mobile') ed.bridge?.sendPhoneSameHeight(section.id, true);
+  }
+  /** «Same height»: the preview measures the section's lines on the phone, so it acts in the phone view alone. */
+  function sameHeight() {
+    if (section && ed.viewMode === 'mobile') ed.bridge?.sendPhoneSameHeight(section.id);
+  }
+  /** «Same width»: each line's cells share its span evenly (phone-layouts.js phoneSameWidths). */
+  function sameWidth() {
+    const change = section ? phoneSameWidths(section) : null;
     if (change) ed.changeSectionPhone(section.id, change, 'phone-layout');
   }
 </script>
@@ -50,11 +64,11 @@
 </Setting>
 <!-- The room above the first block and below the last on the phone, each with the way back to the standard; the seams on the canvas drag the same -->
 <Setting own={ed.sectionPhoneRoom.top !== null} reset={() => ed.setSectionPhoneRoom('top', null)}>
-  <SliderRow label={ta('lbl.phoneRoomTop')} title={ta('tip.phoneRoomTop')} value={phoneRoom.top} min={0} max={MOBILE_ROOM_MAX} step={4}
+  <SliderRow label={ta('lbl.phoneRoomTop')} title={ta('tip.phoneRoomTop')} value={phoneRoom.top} min={0} max={Math.max(MOBILE_ROOM_REACH, phoneRoom.top)} step={4}
     shown={`${phoneRoom.top} px`} oninput={(v) => ed.setSectionPhoneRoom('top', v)} />
 </Setting>
 <Setting own={ed.sectionPhoneRoom.bottom !== null} reset={() => ed.setSectionPhoneRoom('bottom', null)}>
-  <SliderRow label={ta('lbl.phoneRoomBottom')} title={ta('tip.phoneRoomBottom')} value={phoneRoom.bottom} min={0} max={MOBILE_ROOM_MAX} step={4}
+  <SliderRow label={ta('lbl.phoneRoomBottom')} title={ta('tip.phoneRoomBottom')} value={phoneRoom.bottom} min={0} max={Math.max(MOBILE_ROOM_REACH, phoneRoom.bottom)} step={4}
     shown={`${phoneRoom.bottom} px`} oninput={(v) => ed.setSectionPhoneRoom('bottom', v)} />
 </Setting>
 <!-- «Force readable text» on the phone (ADR-0034): a block with words never narrower than its words read well, and a drop or a handle that would squeeze it greyed -->
@@ -94,5 +108,10 @@
       </button>
     {/each}
   </div>
+</div>
+<!-- The blocks side by side made alike, once, at a press; the heights are measured as the phone shows them, so «Same height» is greyed in the desktop view -->
+<div class="po-match">
+  <button type="button" disabled={ed.viewMode !== 'mobile'} title={ta(ed.viewMode === 'mobile' ? 'tip.canvas.phoneSameHeight' : 'tip.phoneSameHeightView')} onclick={sameHeight}>{@html ICONS.sameHeight}<span>{ta('canvas.phoneSameHeight')}</span></button>
+  <button type="button" title={ta('tip.canvas.phoneSameWidth')} onclick={sameWidth}>{@html ICONS.sameWidth}<span>{ta('canvas.phoneSameWidth')}</span></button>
 </div>
 {/if}

@@ -62,3 +62,21 @@ export function seamDrag(p) {
 
   return none;
 }
+
+/**
+ * A seam dragged in the phone view (0.7.3.26), as the desktop's seam is dragged (seamDrag): the pill on the line only grows, the room below the section above's blocks as it is dragged down and the room above the section below's as it is dragged up; the tab above the line shrinks the room below the section above's blocks, and the tab below the line the room above the section below's, each down to none.
+ * The room has no upper bound. It goes in steps of 4 px, or 1 px with `fine`.
+ * @param {{part: 'grow'|'shrinkAbove'|'shrinkBelow', dy: number, above: number|null, below: number|null, fine?: boolean}} p `above` and `below` the rooms as the drag found them (the section above's below its blocks, the section below's above them), null where there is no such section
+ * @returns {{side: 'above'|'below'|null, room: number}} Which section's room changes, and to what; side null where nothing changes
+ */
+export function phoneSeamDrag({ part, dy, above, below, fine = false }) {
+  const snap = (value) => Math.max(0, fine ? Math.round(value) : Math.round(value / 4) * 4);
+  if (part === 'grow') {
+    if (dy > 0 && above !== null) return { side: 'above', room: snap(above + dy) };
+    if (dy < 0 && below !== null) return { side: 'below', room: snap(below - dy) };
+    return { side: null, room: 0 };
+  }
+  if (part === 'shrinkAbove' && above !== null) return { side: 'above', room: Math.min(above, snap(above + Math.min(0, dy))) };
+  if (part === 'shrinkBelow' && below !== null) return { side: 'below', room: Math.min(below, snap(below - Math.max(0, dy))) };
+  return { side: null, room: 0 };
+}

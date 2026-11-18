@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { seamDrag } = await engineImport('section-size.js');
+const { seamDrag, phoneSeamDrag } = await engineImport('section-size.js');
 
 const grid = { size: 8 };
 const above = { heightPx: 560, contentBottom: 400 };
@@ -73,4 +73,20 @@ test('Ctrl or Cmd, or a grid without snapping, gives a free height', () => {
 test('no section is ever smaller than three grid steps', () => {
   const r = seamDrag({ part: 'shrinkBelow', dyPointer: 500, above, below: { heightPx: 60, blockYs: [] }, grid });
   assert.equal(r.heightPx, 24);
+});
+
+test('phoneSeamDrag: the pill grows the room above or below as it is dragged, the tabs shrink the room in their own section down to none, and nothing bounds the room above', () => {
+  const at = (part, dy, above = 24, below = 24, fine = false) => phoneSeamDrag({ part, dy, above, below, fine });
+  assert.deepEqual(at('grow', 40), { side: 'above', room: 64 }, 'down: more room below the section above');
+  assert.deepEqual(at('grow', -40), { side: 'below', room: 64 }, 'up: more room above the section below');
+  assert.deepEqual(at('grow', 2000), { side: 'above', room: 2024 }, 'no upper bound');
+  assert.deepEqual(at('grow', 40, null, 24), { side: null, room: 0 }, 'the first seam grows only upward');
+  assert.deepEqual(at('shrinkAbove', -16), { side: 'above', room: 8 });
+  assert.deepEqual(at('shrinkAbove', -100), { side: 'above', room: 0 }, 'down to its last block');
+  assert.deepEqual(at('shrinkAbove', 40), { side: 'above', room: 24 }, 'a tab never grows');
+  assert.deepEqual(at('shrinkBelow', 16), { side: 'below', room: 8 }, 'dragged down, less room above the section below');
+  assert.deepEqual(at('shrinkBelow', -40), { side: 'below', room: 24 }, 'a tab never grows');
+  assert.deepEqual(at('shrinkBelow', 16, 24, null), { side: null, room: 0 }, 'no section below, nothing to shrink');
+  assert.deepEqual(at('grow', 13), { side: 'above', room: 36 }, 'steps of 4 px');
+  assert.deepEqual(at('grow', 13, 24, 24, true), { side: 'above', room: 37 }, 'Shift for 1 px');
 });

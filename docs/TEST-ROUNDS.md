@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.27): «Same height» and «Same width» on the phone, presets that make blocks the same height, and the phone's seam
+
+- [ ] In the phone view, open a section's «Phone layout» (Phone panel or section menu): each preset is a small phone screen as wide as its card, the names stand level, and «Same height» and «Same width» stand under them as tiles with a drawing
+- [ ] Press «Two to a line» in the phone view: the blocks it puts side by side stand as tall as each other on every line, and one undo takes the preset and the heights back together
+- [ ] On a section with blocks side by side of different heights, press «Same height»: every line's blocks end level; in a stack only the last block grows; a text whose words need more still grows
+- [ ] Press «Same width» on a section whose lines hold blocks of different widths: two blocks get half each, three get 3, 3 and 2 columns, four a quarter each; a line not starting at the edge keeps its span
+- [ ] The same two cards stand after the presets on the phone view's section bar strip, and act the same
+- [ ] In the desktop view «Same height» is greyed with its reason in the tooltip, and «Same width» still acts
+- [ ] Drag a phone seam's pill down past 240 px of room: it goes on, and the room's slider in «Space and text» reaches as far
+- [ ] Drag the pill down, then back up past where it began: the line follows the pointer the whole way, and the section below's blocks stand still while it moves up
+- [ ] Rest on the seam: a tab stands above the line and one below; drag the upper tab up and the lower tab down: each takes room away in its own section, stopping at its blocks, and never grows it
+- [ ] The page's first seam has its pill and the tab below, and its last the tab above and its pill
+
 ### Test batch (0.7.3.26.2): a Space block, and the order column's headings that fold and light their section
 
 - [ ] In the phone view, select a block and add «Space» from the Blocks panel's decoration group: a hatched box with «48 px» stands after it on the phone, and the desktop view does not show it

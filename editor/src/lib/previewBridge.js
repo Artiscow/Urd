@@ -24,7 +24,7 @@
  *                  { type: 'urd-phone-unpin', sectionId, blockId } (a block pinned on the phone unpinned, back into the phone's order with its cells kept)
  *                  { type: 'urd-phone-seen', sectionIds } (the sections standing in the phone view's window, looked at on the phone as they stand now: the phone check before publishing, lib/phone-check.js)
  *                  { type: 'urd-too-narrow', screen } (a drag or a handle greys its block as too narrow for its words under the section's «Force readable text», ADR-0034: 'phone' or 'desktop' while it does, null once it does not)
- *                  { type: 'urd-phone-layout', sectionId, change } (a preset of the phone view's «Phone layout» strip: its cells and order, phone-layouts.js)
+ *                  { type: 'urd-phone-layout', sectionId, change, preset?, follow? } (a preset of the phone view's «Phone layout» strip: its cells and order, phone-layouts.js, `preset` asking for «Same height» after it; «Same width»; or «Same height», `follow` where it joins the preset's step)
  *                  { type: 'urd-hover-block', blockId } (the block under the mouse on the canvas, null for none)
  *                  { type: 'urd-text-state', blockId, rect, state } (the text being written: its block's box in the canvas and what its selection holds; blockId null when none is, lib/TextToolbar.svelte)
  *                  { type: 'urd-block-bar', blockId, rect?, tools? } (in the phone view, the selected block's box and its bar's tools for the bar drawn beside the phone, lib/CanvasBar.svelte; blockId null when none stands)
@@ -298,6 +298,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** A block's words written on the page, its props and the phone's own words (null where it has none), for the page's copy of the section, without drawing it again. */
     sendBlockWords(sectionId, blockId, props, phoneProps) {
       draftPost({ type: 'urd-block-words', sectionId, blockId, props, phoneProps });
+    },
+    /** «Same height» for a section on the phone: the preview measures its lines and posts their heights back (urd-phone-layout); `follow` where they belong to a preset's step. */
+    sendPhoneSameHeight(sectionId, follow = false) {
+      post({ type: 'urd-phone-same-height', sectionId, follow });
     },
     /** Pins the block on the phone where it stands now (the Phone panel's row menu). */
     sendPhonePin(blockId) {

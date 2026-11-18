@@ -133,17 +133,17 @@ export function mobileGapOf(section, site) {
 /** The room above a section's first block and below its last on the phone, in px: the standard, which a section's `size.mobilePadTop` and `size.mobilePadBottom` replace. */
 export const MOBILE_ROOM = 24;
 
-/** The most room above or below a section's blocks on the phone that a section can set, in px. */
-export const MOBILE_ROOM_MAX = 240;
+/** How far the room's slider in the section's phone settings reaches, in px; a seam drags the room past it, and the slider then reaches as far as the room. */
+export const MOBILE_ROOM_REACH = 240;
 
 /**
- * The room above a section's first block and below its last on the phone, in px: the section's own (`size.mobilePadTop`, `size.mobilePadBottom`, additive from 0.7.3.26), else MOBILE_ROOM, within 0 to MOBILE_ROOM_MAX.
+ * The room above a section's first block and below its last on the phone, in px: the section's own (`size.mobilePadTop`, `size.mobilePadBottom`, additive from 0.7.3.26), else MOBILE_ROOM, never under 0.
  * Pure function, tested.
  * @param {{size?: {mobilePadTop?: number, mobilePadBottom?: number}}|undefined} section
  * @returns {{top: number, bottom: number}}
  */
 export function phoneRoomOf(section) {
-  const of = (value) => (Number.isFinite(value) ? Math.max(0, Math.min(MOBILE_ROOM_MAX, Math.round(value))) : MOBILE_ROOM);
+  const of = (value) => (Number.isFinite(value) ? Math.max(0, Math.round(value)) : MOBILE_ROOM);
   return { top: of(section?.size?.mobilePadTop), bottom: of(section?.size?.mobilePadBottom) };
 }
 

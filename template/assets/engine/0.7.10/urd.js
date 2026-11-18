@@ -707,6 +707,9 @@ function enablePreview(state, opts) {
         if (msg.phoneProps && typeof msg.phoneProps === 'object') held.phoneProps = msg.phoneProps;
         else delete held.phoneProps;
       }
+    } else if (msg?.type === 'urd-phone-same-height' && typeof msg.sectionId === 'string') {
+      // «Same height» from the section's phone settings, and after a preset: the section's lines measured and posted back.
+      window.UrdPreviewEdit?.matchPhoneHeights?.(msg.sectionId, msg.follow === true);
     } else if (msg?.type === 'urd-phone-pin' && typeof msg.blockId === 'string') {
       // The Phone panel's row menu: the block pinned on the phone where it stands now.
       window.UrdPreviewEdit?.pinOnPhoneAt?.(msg.blockId);

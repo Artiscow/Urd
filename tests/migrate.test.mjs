@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { lift, liftPhoneWords, liftMobileFrame, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW, MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf, MOBILE_ROOM, MOBILE_ROOM_MAX, phoneRoomOf } = await engineImport('migrate.js');
+const { lift, liftPhoneWords, liftMobileFrame, liftSiteFile, liftPageFile, liftMapHeights, liftGalleryBands, liftTermsBlocks, SITE_SCHEMA_VERSION, PAGE_SCHEMA_VERSION, MOBILE_ROW, MOBILE_GAP, MOBILE_GAP_MAX, mobileGapOf, MOBILE_ROOM, phoneRoomOf } = await engineImport('migrate.js');
 const { mapBlock } = await engineImport('blocks/map.js');
 
 const textV3 = {
@@ -547,9 +547,9 @@ test('liftMobileFrame: a placement with a height of its own on the phone is toda
   assert.equal(liftMobileFrame(placement, { x: 0, y: 0, w: 50, h: 120 }), placement);
 });
 
-test('phoneRoomOf: the room above and below a section\'s blocks on the phone, its own or the standard, kept in bounds', () => {
+test('phoneRoomOf: the room above and below a section\'s blocks on the phone, its own or the standard, never under 0', () => {
   assert.deepEqual(phoneRoomOf(undefined), { top: MOBILE_ROOM, bottom: MOBILE_ROOM });
   assert.deepEqual(phoneRoomOf({ size: { mobilePadTop: 0, mobilePadBottom: 80 } }), { top: 0, bottom: 80 }, 'an own zero stands');
-  assert.deepEqual(phoneRoomOf({ size: { mobilePadTop: -5, mobilePadBottom: 9999 } }), { top: 0, bottom: MOBILE_ROOM_MAX });
+  assert.deepEqual(phoneRoomOf({ size: { mobilePadTop: -5, mobilePadBottom: 900 } }), { top: 0, bottom: 900 }, 'never under 0, and no upper bound');
   assert.deepEqual(phoneRoomOf({ size: { mobilePadTop: 'x', mobilePadBottom: 12.6 } }), { top: MOBILE_ROOM, bottom: 13 });
 });

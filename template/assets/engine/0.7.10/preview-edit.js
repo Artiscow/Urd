@@ -19,7 +19,7 @@
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
  *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks, the custom order or blocks taken out of the rule's columns; also a block taken out of its group, or the group undone, from the block's menu; coalesce from the keys, a burst one undo step)
- *                  { type: 'urd-phone-layout', sectionId, change }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js)
+ *                  { type: 'urd-phone-layout', sectionId, change, preset?, follow? }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js, `preset` its id, which asks for «Same height» after it; «Same width» there; or «Same height», the heights its lines are measured to, `follow` where they follow a preset as part of its step)
  *                  { type: 'urd-hover-block', blockId }  (the block under the mouse, null for none: its row in the Phone panel's list is lit)
  *                  { type: 'urd-attention-cards', cards: [{ sectionId, rect }] }  (the sections that need a phone review in the phone view, where each stands in the canvas, for the editor to draw their cards beside the phone; sent when they change)
  *                  { type: 'urd-new-fitted', sectionId, blockId, w, h }  (a new block's box fitted to what it draws, the answer to urd-fit-new, once, as the block is shown: the fitted width in percent and height in px, or null for both where it was not fitted, add-fit.js)
@@ -41,13 +41,13 @@
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX, DRAWS_NOTHING } from './push-model.js';
-import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight, phoneRoomOf, MOBILE_ROOM_MAX } from './migrate.js';
+import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight, phoneRoomOf } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
 import { blocksClipboard, sectionClipboard, readClipboard, pastedSection } from './clipboard-model.js';
 import { loadSearchLanguages, searchLanguagesReady, searchItemsAny } from './search-langs.js';
 import { applicableLayouts, layoutFrames } from './section-layouts.js';
-import { phoneLayouts, phoneLayoutChange, phoneLayoutSketch } from './phone-layouts.js';
+import { phoneLayouts, phoneLayoutChange, phoneLayoutSketch, phoneSameWidths } from './phone-layouts.js';
 import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
@@ -58,7 +58,7 @@ import { closeDropdowns } from './dropdown.js';
 import { clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { TEXT_BLOCKS, unwrap, stripDescendantProp, applyWholeStyle } from './text-whole.js';
 import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
-import { seamDrag } from './section-size.js';
+import { seamDrag, phoneSeamDrag } from './section-size.js';
 import { snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis, gridLookOf, gridLine } from './snap-model.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
@@ -1212,9 +1212,96 @@ const PHONE_LAYOUT_LABEL_KEYS = {
   'one-column': 'canvas.phoneLayout.oneColumn',
 };
 
-/** One card per phone layout preset (phone-layouts.js), the ones that fit the section first: each drawn small with the section's own blocks in the eight cell columns; one that does not fit stands greyed. A press posts urd-phone-layout (ONE undo step in the editor) and calls done(). */
+/**
+ * «Same height» on the phone (0.7.3.27): on each line of the section that holds more than one cell, every cell's last block is given the height that brings its bottom level with the line's lowest, measured as the section stands in the phone view; a block that grows with its words keeps growing past it.
+ * @param {string} sectionId
+ * @returns {{heights: Record<string, number>}|null} The change, null where every line already stands level or the section is not drawn for the phone
+ */
+function phoneSameHeights(sectionId) {
+  if (!isMobile()) return null;
+  const flow = document.querySelector(`.urd-section[data-section-id="${CSS.escape(sectionId)}"] .urd-flow`);
+  if (!flow) return null;
+  /** The cells and the blocks across the row that flow on a line, each with its last block and where its content ends. */
+  const items = [...flow.children].map((el) => {
+    const last = el.classList.contains('urd-cell') ? [...el.querySelectorAll(':scope > .urd-block')].at(-1) : el.classList.contains('urd-block-flow') ? el : null;
+    if (!last || !last.dataset.blockId) return null;
+    return { top: Math.round(el.getBoundingClientRect().top), last, bottom: last.getBoundingClientRect().bottom };
+  }).filter(Boolean);
+  const lines = new Map();
+  for (const item of items) {
+    if (!lines.has(item.top)) lines.set(item.top, []);
+    lines.get(item.top).push(item);
+  }
+  const heights = {};
+  for (const line of lines.values()) {
+    if (line.length < 2) continue;
+    const lowest = Math.max(...line.map((item) => item.bottom));
+    for (const item of line) {
+      const short = lowest - item.bottom;
+      if (short >= 1) heights[item.last.dataset.blockId] = Math.round(item.last.getBoundingClientRect().height + short);
+    }
+  }
+  return Object.keys(heights).length ? { heights } : null;
+}
+
+/**
+ * «Same height» asked for by the editor (the urd-phone-same-height message: the button in the section's phone settings, and after a preset): measured once the section stands drawn anew, and posted as urd-phone-layout; `follow` marks heights that belong to the preset's step.
+ * @param {string} sectionId
+ * @param {boolean} [follow]
+ */
+export function matchPhoneHeights(sectionId, follow = false) {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const change = phoneSameHeights(sectionId);
+    if (change) post({ type: 'urd-phone-layout', sectionId, change, ...(follow ? { follow: true } : {}) });
+  }));
+}
+
+/** The two cards after the presets on the phone's layout strip: «Same height» and «Same width», each drawn as what it does to two blocks side by side, in the presets' own marks. */
+function phoneMatchCards(section, done) {
+  const card = (key, cells, act) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'urd-layout-card';
+    const thumb = document.createElement('span');
+    thumb.className = 'urd-layout-thumb urd-phone-sketch';
+    thumb.setAttribute('aria-hidden', 'true');
+    for (const { col, marks } of cells) {
+      const part = document.createElement('span');
+      part.style.gridColumn = `${col} / span 4`;
+      for (const [mark, height] of marks) {
+        const line = document.createElement('i');
+        line.className = `urd-sketch-${mark}`;
+        if (height) line.style.height = `${height}px`;
+        part.appendChild(line);
+      }
+      thumb.appendChild(part);
+    }
+    const name = document.createElement('span');
+    name.className = 'urd-layout-name';
+    name.textContent = ta(key);
+    button.title = ta(`tip.${key}`);
+    button.append(thumb, name);
+    button.addEventListener('click', () => {
+      act();
+      done();
+    });
+    return button;
+  };
+  return [
+    card('canvas.phoneSameHeight', [{ col: 1, marks: [['pic', 24]] }, { col: 5, marks: [['pic', 24]] }], () => {
+      const change = phoneSameHeights(section.id);
+      if (change) post({ type: 'urd-phone-layout', sectionId: section.id, change });
+    }),
+    card('canvas.phoneSameWidth', [{ col: 1, marks: [['pic', 0]] }, { col: 5, marks: [['head', 0], ['text', 0], ['text', 0]] }], () => {
+      const change = phoneSameWidths(section);
+      if (change) post({ type: 'urd-phone-layout', sectionId: section.id, change });
+    }),
+  ];
+}
+
+/** One card per phone layout preset (phone-layouts.js), the ones that fit the section first: each drawn small with the section's own blocks in the eight cell columns; one that does not fit stands greyed; then «Same height» and «Same width» (phoneMatchCards). A press posts urd-phone-layout (ONE undo step in the editor) and calls done(). */
 function buildPhoneLayoutCards(section, done) {
-  return phoneLayouts(section.blocks, phoneSetupOf(section)).map(({ id, fits }) => {
+  return [...phoneLayouts(section.blocks, phoneSetupOf(section)).map(({ id, fits }) => {
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'urd-layout-card';
@@ -1238,11 +1325,11 @@ function buildPhoneLayoutCards(section, done) {
     card.disabled = !fits;
     card.addEventListener('click', () => {
       const change = phoneLayoutChange(section.blocks, phoneSetupOf(section), id);
-      if (change) post({ type: 'urd-phone-layout', sectionId: section.id, change });
+      if (change) post({ type: 'urd-phone-layout', sectionId: section.id, change, preset: id });
       done();
     });
     return card;
-  });
+  }), ...phoneMatchCards(section, done)];
 }
 
 /**
@@ -2567,8 +2654,9 @@ function wireSeamDrag(btn, part, above, below, grip, index) {
 }
 
 /**
- * A seam in the phone view (0.7.3.26): a pill on the line that drags the room below the section above (or, on the page's first seam, above the section below), and a tab under it that drags the room above the section below.
- * The room is the phone's own (size.mobilePadTop and mobilePadBottom, phoneRoomOf in migrate.js), in steps of 4 px, Shift for 1; the flow's padding follows the pointer, and the release writes one urd-section-phone-room. Escape puts it back, and the arrow keys move it a step at a time.
+ * A seam in the phone view (0.7.3.26), drawn and dragged as the desktop's seam is (seamGrip): a pill on the line that grows, the room below the section above's blocks as it is dragged down and the room above the section below's as it is dragged up, and a tab above and a tab below it that each shrink the room in the section they stand in (phoneSeamDrag in section-size.js). The first seam has only a section below and the last only one above, so they carry one tab.
+ * The room is the phone's own (size.mobilePadTop and mobilePadBottom, phoneRoomOf in migrate.js), with no upper bound, in steps of 4 px, Shift for 1; the flows' padding follows the pointer, and the release writes one urd-section-phone-room. Escape puts it back, and the arrow keys move a part a step at a time.
+ * The line follows the pointer either way: where the room above the section below changes, the page scrolls by as much, so the section below's blocks stand still and the line moves, as the desktop's seam does.
  * @param {number} index Where the seam stands among the page's seams
  * @param {HTMLElement|null} aboveHost The section above, with its data
  * @param {object|null} aboveSection
@@ -2580,7 +2668,9 @@ function phoneSeam(index, aboveHost, aboveSection, belowHost, belowSection) {
   bar.className = 'urd-add-section urd-phone-seam';
   const grip = document.createElement('div');
   grip.className = 'urd-seam-grip';
-  const part = (kind, cls, svg, label, host, section, side) => {
+  const above = aboveHost ? { host: aboveHost, section: aboveSection } : null;
+  const below = belowHost ? { host: belowHost, section: belowSection } : null;
+  const part = (kind, cls, svg, label) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = cls;
@@ -2588,12 +2678,12 @@ function phoneSeam(index, aboveHost, aboveSection, belowHost, belowSection) {
     btn.setAttribute('aria-label', ta(label));
     btn.title = ta(label);
     btn.innerHTML = svg;
-    wirePhoneRoom(btn, host, section, side, grip, index, kind);
+    wirePhoneRoom(btn, kind, above, below, grip, index);
     return btn;
   };
-  if (aboveHost) grip.append(part('roomBelow', 'urd-seam-pill', GRIP_SVG, 'canvas.phoneSeam.below', aboveHost, aboveSection, 'bottom'));
-  else if (belowHost) grip.append(part('roomAbove', 'urd-seam-pill', GRIP_SVG, 'canvas.phoneSeam.above', belowHost, belowSection, 'top'));
-  if (aboveHost && belowHost) grip.append(part('roomAbove', 'urd-seam-tab urd-seam-down', SEAM_DOWN_SVG, 'canvas.phoneSeam.above', belowHost, belowSection, 'top'));
+  if (above) grip.append(part('shrinkAbove', 'urd-seam-tab urd-seam-up', SEAM_UP_SVG, 'canvas.phoneSeam.shrinkAbove'));
+  grip.append(part('grow', 'urd-seam-pill', GRIP_SVG, above && below ? 'canvas.phoneSeam.grow' : above ? 'canvas.phoneSeam.growAbove' : 'canvas.phoneSeam.growBelow'));
+  if (below) grip.append(part('shrinkBelow', 'urd-seam-tab urd-seam-down', SEAM_DOWN_SVG, 'canvas.phoneSeam.shrinkBelow'));
   const readout = document.createElement('span');
   readout.className = 'urd-seam-readout';
   readout.hidden = true;
@@ -2602,18 +2692,36 @@ function phoneSeam(index, aboveHost, aboveSection, belowHost, belowSection) {
   return bar;
 }
 
-/** A part of a phone seam's grip: its drag and its keys set one room of one section (phoneSeam). */
-function wirePhoneRoom(btn, host, section, side, grip, index, kind) {
-  const flow = () => host.querySelector('.urd-flow');
-  const now = () => phoneRoomOf(host._urdSection ?? section)[side];
-  const prop = side === 'top' ? 'paddingTop' : 'paddingBottom';
-  const clamp = (value, fine) => Math.max(0, Math.min(MOBILE_ROOM_MAX, fine ? Math.round(value) : Math.round(value / 4) * 4));
-  const tell = (px) => post({ type: 'urd-section-phone-room', sectionId: (host._urdSection ?? section).id, side, px });
+/** A part of a phone seam's grip: its drag and its keys set the room of the section above or below it (phoneSeam, phoneSeamDrag). */
+function wirePhoneRoom(btn, part, above, below, grip, index) {
+  /** A side's section as drawn now, its flow, its room and the padding the room stands in. */
+  const sideOf = (s, key) => {
+    if (!s) return null;
+    const section = s.host._urdSection ?? s.section;
+    const flow = s.host.querySelector('.urd-flow');
+    const prop = key === 'top' ? 'paddingTop' : 'paddingBottom';
+    return { section, flow, key, prop, room: phoneRoomOf(section)[key], was: flow?.style[prop] ?? '' };
+  };
   const show = (px) => {
     const shown = grip.querySelector('.urd-seam-readout');
     if (!shown) return;
     shown.hidden = px === null;
     if (px !== null) shown.textContent = ta('canvas.phoneSeam.room', { n: String(px) });
+  };
+  /** Draws a result from the drag's start: the side that changes takes its room, the other stands as the drag found it; a change above the section below's blocks scrolls the page by as much, so they stand still under the pointer's line. */
+  const apply = (a, b, r, scrollY) => {
+    for (const [side, name] of [[a, 'above'], [b, 'below']]) {
+      if (!side?.flow) continue;
+      side.flow.style[side.prop] = r.side === name ? `${r.room}px` : side.was;
+    }
+    window.scrollTo({ top: Math.max(0, scrollY + (r.side === 'below' && b ? r.room - b.room : 0)), behavior: 'instant' });
+  };
+  const model = (a, b, dy, fine) => phoneSeamDrag({ part, dy, above: a?.room ?? null, below: b?.room ?? null, fine });
+  /** Writes what the drag ended on: the room of the side that changed. */
+  const commit = (a, b, r) => {
+    const side = r.side === 'above' ? a : r.side === 'below' ? b : null;
+    if (!side || r.room === side.room) return;
+    post({ type: 'urd-section-phone-room', sectionId: side.section.id, side: side.key, px: r.room });
   };
 
   btn.addEventListener('pointerdown', (event) => {
@@ -2623,11 +2731,12 @@ function wirePhoneRoom(btn, host, section, side, grip, index, kind) {
     btn.setPointerCapture(event.pointerId);
     btn.focus({ preventScroll: true });
     const startY = event.clientY;
-    const start = now();
-    const was = flow()?.style[prop] ?? '';
+    const scrollY = window.scrollY;
+    const a = sideOf(above, 'bottom');
+    const b = sideOf(below, 'top');
     // Every pinned block stands at its place in the section while the drag lasts, as for the desktop's seams.
     suspendSticky();
-    let value = start;
+    let result = { side: null, room: 0 };
     let moved = false;
     const cursor = dragCursor();
     grip.classList.add('urd-seam-active');
@@ -2636,10 +2745,9 @@ function wirePhoneRoom(btn, host, section, side, grip, index, kind) {
       if (!moved && Math.abs(ev.clientY - startY) < 4) return;
       moved = true;
       cursor.move(ev.clientY);
-      value = clamp(start + (ev.clientY - startY), ev.shiftKey);
-      const el = flow();
-      if (el) el.style[prop] = `${value}px`;
-      show(value);
+      result = model(a, b, ev.clientY - startY, ev.shiftKey);
+      apply(a, b, result, scrollY);
+      show(result.side ? result.room : null);
     };
     const done = () => {
       btn.removeEventListener('pointermove', onMove);
@@ -2655,13 +2763,12 @@ function wirePhoneRoom(btn, host, section, side, grip, index, kind) {
     };
     const onUp = () => {
       done();
-      if (moved && value !== start) tell(value);
+      if (moved) commit(a, b, result);
     };
     // Escape, or a drag the browser takes away, puts the room back where it began.
     const cancel = () => {
       done();
-      const el = flow();
-      if (el) el.style[prop] = was;
+      apply(a, b, { side: null, room: 0 }, scrollY);
     };
     const onKey = (ev) => {
       if (ev.key !== 'Escape') return;
@@ -2676,16 +2783,18 @@ function wirePhoneRoom(btn, host, section, side, grip, index, kind) {
     window.addEventListener('keydown', onKey, true);
   });
 
-  // The arrow keys move the room a step, Shift a pixel, as one change each; the part takes the focus again once the page stands anew.
+  // The arrow keys move the part a step, Shift a pixel, as one change each, as a drag of that length would; the part takes the focus again once the page stands anew.
   btn.addEventListener('keydown', (event) => {
     if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
     event.preventDefault();
     event.stopPropagation();
     const step = event.shiftKey ? 1 : 4;
-    const value = clamp(now() + (event.key === 'ArrowDown' ? step : -step), true);
-    if (value === now()) return;
-    tell(value);
-    setTimeout(() => document.querySelectorAll('.urd-phone-seam')[index]?.querySelector(`[data-seam="${kind}"]`)?.focus({ preventScroll: true }), 150);
+    const a = sideOf(above, 'bottom');
+    const b = sideOf(below, 'top');
+    const r = model(a, b, event.key === 'ArrowDown' ? step : -step, true);
+    apply(a, b, r, window.scrollY);
+    commit(a, b, r);
+    setTimeout(() => document.querySelectorAll('.urd-phone-seam')[index]?.querySelector(`[data-seam="${part}"]`)?.focus({ preventScroll: true }), 150);
   });
 }
 

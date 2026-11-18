@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { register } from 'node:module';
 
 register('./_svelte-loader.mjs', import.meta.url);
-const { joinsLast, emptyTail, stepKind, walkSteps, stepTyped, stepPage, keptHolds, MERGE_MS, HISTORY_LIMIT, ownStepKey } = await import('../editor/src/lib/history-model.js');
+const { joinsLast, emptyTail, stepKind, walkSteps, stepTyped, stepPage, keptHolds, MERGE_MS, FOLLOW_MS, HISTORY_LIMIT, ownStepKey } = await import('../editor/src/lib/history-model.js');
 import { engineImport } from './_engine.mjs';
 const dict = (await engineImport('locales/admin/en-GB.js')).default.strings;
 const { ICONS } = await import('../editor/src/lib/icons.js');
@@ -137,4 +137,13 @@ test('a setting\'s way back is a step of its own: it joins neither the change be
   assert.deepEqual(stepKind(own), stepKind(key));
   assert.deepEqual(stepKind(ownStepKey('edit:theme-accent', 3)), stepKind('edit:theme-accent'));
   assert.equal(joinsLast({ key: ownStepKey('sticky', 4), at: 0 }, ownStepKey('sticky', 4), MERGE_MS * 10), true, 'the changes of one step of its own join it, whatever their key began as and however long they take');
+});
+
+test('a change that follows another as part of it joins its step shortly after, and only that one', () => {
+  const last = { key: 'phone-layout', at: 1000 };
+  assert.equal(joinsLast(last, 'phone-layout:then', 1000 + FOLLOW_MS - 1), true, 'a preset\'s heights join the preset');
+  assert.equal(joinsLast(last, 'phone-layout:then', 1000 + FOLLOW_MS + 1), false, 'too late, a step of its own');
+  assert.equal(joinsLast({ key: 'phone-order', at: 1000 }, 'phone-layout:then', 1001), false, 'it follows its own change only');
+  assert.equal(joinsLast(last, 'phone-layout', 1001), false, 'a second preset is a step of its own');
+  assert.equal(stepKind('phone-layout:then').labelKey, stepKind('phone-layout').labelKey);
 });

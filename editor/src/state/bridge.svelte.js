@@ -250,7 +250,9 @@ function handlePhoneOrder(msg) {
 
 /** A preset of the phone view's «Phone layout» strip (phone-layouts.js): its cells, and the order it reads, one undo step. */
 function handlePhoneLayout(msg) {
-  pageState.changeSectionPhone(msg.sectionId, msg.change, 'phone-layout');
+  pageState.changeSectionPhone(msg.sectionId, msg.change, msg.follow ? 'phone-layout:then' : 'phone-layout');
+  // A preset makes the blocks it puts side by side the same height, as part of its step.
+  if (msg.preset) previewState.bridge?.sendPhoneSameHeight(msg.sectionId, true);
 }
 
 /** ✓ in mobile view: the mobile layout has been reviewed. */

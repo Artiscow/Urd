@@ -9,6 +9,9 @@ export const HISTORY_LIMIT = 50;
 /** How long after a change the same kind of change still joins its step, in ms: a slider dragged across its range, or the same setting changed in a burst, is one step. */
 export const MERGE_MS = 500;
 
+/** How long after a change a change that follows it as part of it (`<key>:then`) still joins its step, in ms: the preview's measuring after a redraw. */
+export const FOLLOW_MS = 3000;
+
 /** The keys a burst joins within MERGE_MS: the panels' settings, where a slider writes on every tick. An action (a block added or deleted, a section moved, a page renamed, a collection's change) is one step each however fast they come. */
 const TIME_JOINED = new Set(['nav', 'footer', 'theme', 'site', 'legal', 'section-size', 'section-theme', 'section-hover', 'section-anim']);
 const TIME_JOINED_PREFIX = ['section-divider-', 'sticky-group:', 'sticky-dock:', 'page-meta:'];
@@ -21,6 +24,8 @@ const TIME_JOINED_PREFIX = ['section-divider-', 'sticky-group:', 'sticky-dock:',
  * @param {number} now The time of the change, in ms
  */
 export function joinsLast(last, key, now) {
+  // A change that follows another as part of it (`<key>:then`: a preset's heights, measured once it stands drawn) joins it shortly after.
+  if (last && key === `${last.key}:then`) return now - last.at < FOLLOW_MS;
   if (!last || last.key !== key) return false;
   if (key.startsWith('edit:') || key.startsWith('grid:') || OWN_STEP.test(key)) return true;
   if (!TIME_JOINED.has(key) && !TIME_JOINED_PREFIX.some((prefix) => key.startsWith(prefix))) return false;
@@ -69,7 +74,7 @@ export function stepKind(key, { typed = false } = {}) {
   if (k === 'add-block' || k === 'add-blocks' || k.endsWith('-item') || k === 'form-field' || k === 'gallery-add') return kind('addBlock', 'plus', true);
   if (k === 'delete-block' || k === 'gallery-remove') return kind('deleteBlock', 'cross', true);
   if (k === 'move-block' || k === 'gallery-move' || /^edit:(z-|multi-|place-|align-|nudge)/.test(k)) return kind('moveBlock', 'fit', true);
-  if (k === 'mobile-reset' || k === 'phone-unpin' || k === 'mobile-order' || k.startsWith('edit:mobile-order-') || k === 'phone-place' || k.startsWith('edit:phone-place-') || k.startsWith('edit:phone-order:') || k === 'phone-order' || k === 'phone-follows' || k === 'phone-custom' || k === 'phone-layout' || k.startsWith('edit:phone-step-') || k.startsWith('edit:phone-cells-') || k.startsWith('edit:phone-height-') || k.startsWith('edit:phone-words-') || k === 'review-done' || k === 'hide-mobile' || k === 'hide-desktop' || k.startsWith('edit:entrance-mobile-') || k.startsWith('edit:sticky-phone-')) return kind('phone', 'phone', true);
+  if (k === 'mobile-reset' || k === 'phone-unpin' || k === 'mobile-order' || k.startsWith('edit:mobile-order-') || k === 'phone-place' || k.startsWith('edit:phone-place-') || k.startsWith('edit:phone-order:') || k === 'phone-order' || k === 'phone-follows' || k === 'phone-custom' || k === 'phone-layout' || k === 'phone-layout:then' || k.startsWith('edit:phone-step-') || k.startsWith('edit:phone-cells-') || k.startsWith('edit:phone-height-') || k.startsWith('edit:phone-words-') || k === 'review-done' || k === 'hide-mobile' || k === 'hide-desktop' || k.startsWith('edit:entrance-mobile-') || k.startsWith('edit:sticky-phone-')) return kind('phone', 'phone', true);
   return kind('block', 'pencil', true);
 }
 

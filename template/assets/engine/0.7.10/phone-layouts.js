@@ -4,8 +4,9 @@
  * Its change writes the cells of each unit's blocks (`frames.mobile.col` and `cols`), and for «Alternate sides» the order that puts the picture first on every other line, since a block later in the order never stands left of an earlier one on its line.
  */
 import { phoneTree, settle, flowing } from './phone-moves.js';
-import { phoneSetupOf, stackOrder } from './phone-order.js';
-import { phoneCells } from './migrate.js';
+import { phoneSetupOf, phoneParts, stackOrder } from './phone-order.js';
+import { phoneCells, phoneHeight, PHONE_COLUMNS } from './migrate.js';
+import { pinsOnPhone, stickyLeads } from './sticky-model.js';
 
 /** The presets, in the order they stand where none fits better. */
 export const PHONE_LAYOUTS = ['two-per-line', 'pairs', 'alternate', 'wide-two', 'big-two', 'one-column'];
@@ -130,7 +131,8 @@ function written(blocks, setup, change) {
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {string} id A preset of PHONE_LAYOUTS
- * @returns {{cells: Record<string, {col: number, cols: number}|null>, places?: Record<string, object|null>, stacks?: string[][], list?: string[]}|null} The change, a block's cells null for the full row (where a width set by hand stays); null where the press would change nothing
+ * A preset is a fresh start: it also takes away the own phone heights of the blocks it places (`heights`), which «Same height» and an earlier preset left, so the heights a preset asks for after it are measured anew.
+ * @returns {{cells: Record<string, {col: number, cols: number}|null>, heights?: Record<string, null>, places?: Record<string, object|null>, stacks?: string[][], list?: string[]}|null} The change, a block's cells null for the full row (where a width set by hand stays); null where the press would change nothing
  */
 export function phoneLayoutChange(blocks, rawSetup, id) {
   if (!PHONE_LAYOUTS.includes(id)) return null;
@@ -168,14 +170,87 @@ export function phoneLayoutChange(blocks, rawSetup, id) {
     }
   }
   units.forEach((unit, i) => { for (const bid of unit.ids) change.cells[bid] = cells[i] ? { ...cells[i] } : null; });
-  // A press that changes nothing is none.
   const byId = new Map(blocks.map((b) => [b.id, b]));
+  const heighted = Object.keys(change.cells).filter((bid) => phoneHeight(byId.get(bid)?.frames?.mobile));
+  if (heighted.length) change.heights = Object.fromEntries(heighted.map((bid) => [bid, null]));
+  // A press that changes nothing is none.
   const sameCells = Object.entries(change.cells).every(([bid, want]) => {
     const now = phoneCells(byId.get(bid)?.frames?.mobile);
     return want ? now?.col === want.col && now?.cols === want.cols : !now;
   });
   const placed = Object.entries(change.places ?? {}).some(([bid, place]) => JSON.stringify(place ?? null) !== JSON.stringify(byId.get(bid)?.phonePlace ?? null));
-  return sameCells && !placed && !change.stacks && !change.list ? null : change;
+  return sameCells && !placed && !heighted.length && !change.stacks && !change.list ? null : change;
+}
+
+/**
+ * The section's lines on the phone, as the row grid draws them (render.js): the flowing blocks in the phone's order, those one after another in the same cells standing in one cell (a stack in its first block's cells), each cell placed on the line it fits after the one before it and on the next where it does not; a block across the row stands on a line of its own. A block pinned on the phone while the page scrolls stands in its own cells through its slot, apart from the blocks before and after it; a block pinned to rows, and a block hidden on phones, stands on no line.
+ * Pure, tested.
+ * @param {object} section The section, its blocks and its phone order
+ * @returns {Array<Array<{ids: string[], col: number, cols: number}>>} Each line's cells, left to right; a block across the row as a line of one cell of the full row
+ */
+export function phoneLines(section) {
+  const blocks = section?.blocks ?? [];
+  const parts = phoneParts(blocks, phoneSetupOf(section));
+  const byId = new Map(blocks.map((b) => [b.id, b]));
+  const head = new Map(parts.stacks.flatMap((ids) => ids.map((id) => [id, byId.get(ids[0])])));
+  const leads = stickyLeads(blocks);
+  const items = [];
+  let open = null;
+  for (const block of parts.order) {
+    if (!flowing(block) || block.hideMobile) continue;
+    const lead = head.get(block.id);
+    const cells = lead && lead !== block && flowing(lead) ? phoneCells(lead.frames?.mobile) : phoneCells(block.frames?.mobile);
+    // Pinned while the page scrolls on the phone: its slot is a grid item of its own in its cells.
+    if (block.sticky && pinsOnPhone(leads.get(block.sticky.group || `solo-${block.id}`))) {
+      open = null;
+      items.push(cells ? { ids: [block.id], col: cells.col, cols: cells.cols } : { ids: [block.id], col: 1, cols: PHONE_COLUMNS, row: true });
+      continue;
+    }
+    if (cells && open && open.col === cells.col && open.cols === cells.cols) {
+      open.ids.push(block.id);
+      continue;
+    }
+    open = cells ? { ids: [block.id], col: cells.col, cols: cells.cols } : null;
+    items.push(open ?? { ids: [block.id], col: 1, cols: PHONE_COLUMNS, row: true });
+  }
+  const lines = [];
+  let line = null;
+  let next = 1;
+  for (const item of items) {
+    if (item.row || !line || item.col < next) {
+      line = [];
+      lines.push(line);
+    }
+    line.push({ ids: item.ids, col: item.col, cols: item.cols });
+    next = item.row ? PHONE_COLUMNS + 1 : item.col + item.cols;
+  }
+  return lines;
+}
+
+/**
+ * «Same width»: the cells on each line of the phone that holds more than one share the line's span, from its first cell's left edge to its last cell's right, as evenly as the eight columns allow, the columns left over going to the first cells, left to right without gaps.
+ * Pure, tested.
+ * @param {object} section The section, its blocks and its phone order
+ * @returns {{cells: Record<string, {col: number, cols: number}>}|null} The change, every block of a cell given the cell's new columns; null where every line already stands so
+ */
+export function phoneSameWidths(section) {
+  const change = { cells: {} };
+  let moved = false;
+  for (const line of phoneLines(section)) {
+    if (line.length < 2) continue;
+    const first = line[0].col;
+    const span = line.at(-1).col + line.at(-1).cols - first;
+    const base = Math.floor(span / line.length);
+    const extra = span - base * line.length;
+    let col = first;
+    line.forEach((cell, i) => {
+      const cols = base + (i < extra ? 1 : 0);
+      if (cols !== cell.cols || col !== cell.col) moved = true;
+      for (const id of cell.ids) change.cells[id] = { col, cols };
+      col += cols;
+    });
+  }
+  return moved ? change : null;
 }
 
 /**

@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { phoneLayouts, phoneLayoutChange, phoneLayoutSketch, phoneMark, PHONE_LAYOUTS } = await engineImport('phone-layouts.js');
+const { phoneLayouts, phoneLayoutChange, phoneLayoutSketch, phoneMark, phoneLines, phoneSameWidths, PHONE_LAYOUTS } = await engineImport('phone-layouts.js');
 const { stackOrder } = await engineImport('phone-order.js');
 
 const blk = (id, type, y, x = 0, extra = {}) => ({ id, type, props: {}, ...extra, frames: { desktop: { x, y, w: extra.w ?? 40, h: extra.h ?? 60 }, mobile: extra.mobile ?? null } });
@@ -101,4 +101,56 @@ test('phoneLayoutChange: a pair that cannot be read the other way round stands s
 test('phoneLayoutSketch: each block in its own cells, as the page draws it', () => {
   const sketch = phoneLayoutSketch({ blocks: stories() }, 'alternate');
   assert.deepEqual(sketch.map((c) => `${c.col}/${c.cols}:${c.marks.join(',')}`), ['1/4:text', '5/4:pic', '1/4:pic', '5/4:text']);
+});
+
+test('phoneLines: the cells on each line of the phone as the row grid places them, a block across the row on a line of its own', () => {
+  const blocks = [
+    blk('a', 'text', 0, 0, { mobile: { col: 1, cols: 4 } }), blk('b', 'image', 0, 50, { mobile: { col: 5, cols: 4 } }),
+    blk('c', 'text', 100),
+    blk('d', 'text', 200, 0, { mobile: { col: 1, cols: 2 } }), blk('e', 'text', 200, 30, { mobile: { col: 3, cols: 6 } }),
+    blk('f', 'text', 300, 0, { mobile: { col: 5, cols: 4 } }), blk('g', 'text', 400, 0, { mobile: { col: 1, cols: 4 } }),
+    blk('h', 'text', 500, 0, { hideMobile: true, mobile: { col: 5, cols: 4 } }),
+  ];
+  const lines = phoneLines({ blocks, phoneOrder: 'top' }).map((line) => line.map((c) => `${c.ids.join('+')}@${c.col}/${c.cols}`).join(' '));
+  assert.deepEqual(lines, ['a@1/4 b@5/4', 'c@1/8', 'd@1/2 e@3/6', 'f@5/4', 'g@1/4'], 'a cell left of the one before it opens a line, a hidden block stands nowhere');
+  // Blocks one after another in the same cells stand in one cell, a stack in its first block's cells.
+  const stacked = [blk('x', 'text', 0, 0, { mobile: { col: 1, cols: 4 } }), blk('y', 'text', 100, 0, { mobile: { col: 1, cols: 4 } }), blk('z', 'image', 0, 50, { mobile: { col: 5, cols: 4 } })];
+  assert.deepEqual(phoneLines({ blocks: stacked, phoneOrder: 'top' }).map((line) => line.map((c) => c.ids.join('+'))), [['x', 'z'], ['y']], 'read top first, the picture stands beside the first text and the second text on a line of its own');
+  const stack = { blocks: stacked, phoneOrder: 'top', phoneStacks: [['x', 'y']] };
+  assert.deepEqual(phoneLines(stack).map((line) => line.map((c) => c.ids.join('+'))), [['x+y', 'z']]);
+});
+
+test('phoneSameWidths: each line of several cells shares its span evenly, the columns left over to the first, and a line that stands so changes nothing', () => {
+  const blocks = [
+    blk('a', 'text', 0, 0, { mobile: { col: 1, cols: 2 } }), blk('b', 'image', 0, 50, { mobile: { col: 3, cols: 6 } }),
+    blk('c', 'text', 100),
+    blk('d', 'text', 200, 0, { mobile: { col: 1, cols: 2 } }), blk('e', 'text', 200, 30, { mobile: { col: 3, cols: 2 } }), blk('f', 'text', 200, 60, { mobile: { col: 5, cols: 4 } }),
+  ];
+  const change = phoneSameWidths({ blocks, phoneOrder: 'top' });
+  assert.deepEqual(change.cells, { a: { col: 1, cols: 4 }, b: { col: 5, cols: 4 }, d: { col: 1, cols: 3 }, e: { col: 4, cols: 3 }, f: { col: 7, cols: 2 } });
+  assert.ok(!('c' in change.cells), 'a block across the row is left alone');
+  // A line that does not start at the edge keeps its span.
+  const inset = [blk('a', 'text', 0, 0, { mobile: { col: 3, cols: 2 } }), blk('b', 'text', 0, 50, { mobile: { col: 5, cols: 4 } })];
+  assert.deepEqual(phoneSameWidths({ blocks: inset, phoneOrder: 'top' }).cells, { a: { col: 3, cols: 3 }, b: { col: 6, cols: 3 } });
+  const even = [blk('a', 'text', 0, 0, { mobile: { col: 1, cols: 4 } }), blk('b', 'text', 0, 50, { mobile: { col: 5, cols: 4 } })];
+  assert.equal(phoneSameWidths({ blocks: even, phoneOrder: 'top' }), null);
+});
+
+test('phoneLayoutChange: a preset takes away the own phone heights of the blocks it places, so the heights after it are measured anew', () => {
+  const blocks = [blk('t', 'text', 0, 0, { mobile: { col: 1, cols: 4, height: 500 } }), blk('i', 'image', 0, 50, { mobile: { col: 5, cols: 4, height: 500 } })];
+  const change = phoneLayoutChange(blocks, 'top', 'one-column');
+  assert.deepEqual(change.heights, { t: null, i: null });
+  // The same cells with heights still change: the heights go.
+  const same = [blk('t', 'text', 0, 0, { mobile: { col: 1, cols: 4, height: 300 } }), blk('i', 'image', 100, 0, { mobile: { col: 5, cols: 4 } })];
+  assert.deepEqual(phoneLayoutChange(same, 'top', 'two-per-line')?.heights, { t: null });
+  assert.equal(phoneLayoutChange(stories(), 'top', 'two-per-line').heights, undefined, 'no heights, nothing to take away');
+});
+
+test('phoneLines: a block pinned while the page scrolls on the desktop alone flows in its cells; one pinned on the phone stands apart in its own cells', () => {
+  const desktopPin = { offset: 16 };
+  const phonePin = { offset: 16, phone: true };
+  const run = (sticky) => phoneLines({ blocks: [blk('a', 'text', 0, 0, { mobile: { col: 1, cols: 2 } }), blk('b', 'text', 0, 20, { sticky, mobile: { col: 3, cols: 3 } }), blk('c', 'text', 0, 60, { mobile: { col: 6, cols: 3 } })], phoneOrder: 'top' })
+    .map((line) => line.map((cell) => `${cell.ids.join('+')}@${cell.col}/${cell.cols}`).join(' '));
+  assert.deepEqual(run(desktopPin), ['a@1/2 b@3/3 c@6/3']);
+  assert.deepEqual(run(phonePin), ['a@1/2 b@3/3 c@6/3'], 'its slot keeps its columns on the line');
 });
