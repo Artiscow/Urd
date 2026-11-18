@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.28): your own phone layout saved for the site, and the folds kept over a reload
+
+- [ ] In the phone view, open a section's «Phone layout» (Phone panel or section menu): «New layout» stands last among the cards, a dashed card with a plus
+- [ ] Press «New layout»: a composer opens under the cards with the section's blocks drawn in it, two rows («Across», «Two halves»), «Add a row», a name field and «Use» and «Save and use» side by side as even halves
+- [ ] Pick another shape for a row, add a row and remove one with its bin: the drawing follows at once, the rows repeating until every block has a place; with one row left, its bin is greyed
+- [ ] Press «Use»: the section's blocks stand in the drawn cells in their phone order, one undo takes it back, and no new card joins the presets
+- [ ] Draw a layout, name it and press «Save and use»: the section takes it, and a card with its name stands after Urd's presets in this and every other section's «Phone layout», on the phone view's layout strip too
+- [ ] Press the saved card on another section: its blocks fill the same rows in its phone order
+- [ ] After «Save and use», undo once: the section's cells go back and the saved card stays; undo again: the card goes
+- [ ] On a section of one block, «New layout» and the saved cards are greyed; with the composer open, pick such a section: «Use» and «Save and use» grey
+- [ ] Press the bin on the saved card (a screen reader names it with the layout's name): it is gone from every section's cards, and the sections that used it keep their layout
+- [ ] Open a few folds in the Phone panel, a group in the element menu and fold a section's heading in the order column, then reload: the same folds stand open and the heading stays folded; a new tab starts with them as at first
+- [ ] With «Folds» on «All open» in Urd settings, close a fold and reload: it stays closed; choose «All open» again: every fold opens
+
 ### Test batch (0.7.3.27): «Same height» and «Same width» on the phone, presets that make blocks the same height, and the phone's seam
 
 - [ ] In the phone view, open a section's «Phone layout» (Phone panel or section menu): each preset is a small phone screen as wide as its card, the names stand level, and «Same height» and «Same width» stand under them as tiles with a drawing

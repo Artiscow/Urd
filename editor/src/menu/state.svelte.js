@@ -5,6 +5,7 @@
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
 import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, CAP_LISTS, CAP_ADD_FORMS } from './forms.js';
 import { earlierDefaultWrites } from '../lib/admin-designs.js';
+import { folds } from '../lib/folds.svelte.js';
 
 /**
  * The form a menu opens in (Urd settings «Where the menu opens»), kept in the browser under `urd-admin-menu-width`, where «narrow» is the form one column beside the block: beside the block in two columns or one, docked in the panel column in one column or with tabs, or beside the block with tabs.
@@ -53,8 +54,6 @@ export const menu = $state({
   shortcutsPref: stored(SHORTCUTS_KEY, SHORTCUTS_MODES),
   capListPref: stored(CAP_LIST_KEY, CAP_LISTS),
   capAddPref: stored(CAP_ADD_KEY, CAP_ADD_FORMS),
-  /** How many times «All open» has been chosen this session, so each choice opens every fold again (lib/rows/Fold.svelte). */
-  foldsRound: 0,
   /** The area in view in a menu with tabs, for the session. */
   tab: 'content',
   /** The room for the floating menu: from the right edge of the admin's own panels to the window's edge. */
@@ -88,7 +87,7 @@ export function setMenuFormPref(v) {
 
 export function setFoldsPref(v) {
   menu.foldsPref = FOLDS_MODES.includes(v) ? v : FOLDS_MODES[0];
-  if (menu.foldsPref === 'all') menu.foldsRound += 1;
+  if (menu.foldsPref === 'all') folds.forget('all');
   keep(FOLDS_KEY, menu.foldsPref, FOLDS_MODES);
 }
 

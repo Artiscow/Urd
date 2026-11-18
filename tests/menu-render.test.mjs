@@ -27,7 +27,7 @@ const { keepCapability, dropCapability } = await import('../editor/src/menu/capa
 const { default: CapabilityAdd } = await import('../editor/src/menu/CapabilityAdd.svelte');
 const { default: ElementMenu } = await import('../editor/src/menu/ElementMenu.svelte');
 const { default: FloatingMenu } = await import('../editor/src/menu/FloatingMenu.svelte');
-const { setQuickChoice, setCapAddPref, setShortcutsPref, menu: menuState } = await import('../editor/src/menu/state.svelte.js');
+const { setQuickChoice, setCapAddPref, setShortcutsPref, setFoldsPref, menu: menuState } = await import('../editor/src/menu/state.svelte.js');
 const { CAP_ADD_FORMS, SHORTCUTS_MODES } = await import('../editor/src/menu/forms.js');
 // With nothing stored the menu opens on its search field and adds a capability from the quiet line of names (Minimal); these tests draw Pinned and the head's «+», so they choose those two, as an owner would.
 assert.equal(menuState.shortcutsPref, 'search', 'the search field is the default');
@@ -750,4 +750,20 @@ test('the menu\'s head offers what the block can take, and nothing when the bloc
   assert.equal(find(full, (n) => hasClass(n, 'cap-add-head')).length, 0, 'a block that uses every capability is offered none');
   // Delete in the head draws a bin, never the cross that closes things.
   assert.match(readFileSync(new URL('../editor/src/menu/BlockActions.svelte', import.meta.url), 'utf8'), /<IconButton icon=\{ICONS\.bin\} danger label=\{ta\('canvas\.ctx\.delete'\)\}/);
+});
+
+test('a fold opens once for what asked, stays as the owner leaves it, and opens again as «All open» is chosen again', () => {
+  const pref = menuState.foldsPref;
+  folds.openOnce('probe', 'fold', 'all');
+  assert.equal(folds.isOpen('probe', 'fold'), true, 'opened on its first showing');
+  folds.set('probe', 'fold', false);
+  folds.openOnce('probe', 'fold', 'all');
+  assert.equal(folds.isOpen('probe', 'fold'), false, 'closed by the owner, it stays closed when drawn again');
+  setFoldsPref('all');
+  folds.openOnce('probe', 'fold', 'all');
+  assert.equal(folds.isOpen('probe', 'fold'), true, '«All open» chosen again opens it again');
+  folds.set('probe', 'fold', false);
+  setFoldsPref(pref);
+  // The folds are kept for the tab's life, so a reload opens the same folds.
+  assert.match(readFileSync(new URL('../editor/src/lib/folds.svelte.js', import.meta.url), 'utf8'), /sessionStorage\.setItem\(KEY, JSON\.stringify\(\{ open: \[\.\.\.open\], seen: \[\.\.\.seen\] \}\)\)/);
 });

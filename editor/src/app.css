@@ -3631,6 +3631,177 @@
     overflow-wrap: break-word;
   }
 
+  /* An own layout's card with the bin that takes it away from the site in its corner */
+  .po-own {
+    position: relative;
+    display: grid;
+    min-width: 0;
+  }
+
+  .po-own-bin {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.2rem;
+  }
+
+  /* «New layout»: the card the composer opens from, its screen holding a plus */
+  .po-card.po-new:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    border-style: dashed;
+  }
+
+  .pl-sketch.po-new-mark {
+    grid-template-columns: 1fr;
+    place-items: center;
+    align-content: center;
+    opacity: 0.7;
+  }
+
+  /* The composer of an own layout: the section's blocks drawn in it, its rows, its name and its use */
+  .po-compose {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.35rem;
+    padding: 0.5rem;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 8px;
+  }
+
+  .pl-sketch.po-compose-sketch {
+    height: 6rem;
+  }
+
+  .po-rows {
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .po-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .po-row-n {
+    flex: none;
+    width: 1rem;
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    opacity: 0.6;
+  }
+
+  .po-row-shapes {
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.25rem;
+  }
+
+  .po-row-shapes > button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    display: grid;
+    place-items: center;
+    height: 2rem;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 6px;
+    opacity: 0.7;
+    cursor: pointer;
+  }
+
+  .po-row-shapes > button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: color-mix(in srgb, currentColor 6%, transparent);
+    opacity: 1;
+  }
+
+  .po-row-shapes > button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    color: var(--urd-color-accent, #7c5cff);
+    border-color: var(--urd-color-accent, #7c5cff);
+    opacity: 1;
+  }
+
+  /* «Add a row»: a slim dashed row under the rows, lined up with their shapes between the number and the bin */
+  .po-compose .po-add-row.ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 2rem;
+    margin-inline: 1.4rem 1.9rem;
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: transparent;
+    border: 1px dashed rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    opacity: 0.8;
+  }
+
+  .po-compose .po-add-row.ghost:is(:hover, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: color-mix(in srgb, currentColor 6%, transparent);
+    border-color: rgb(255 255 255 / 32%);
+    opacity: 1;
+  }
+
+  .po-add-row svg {
+    flex: none;
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .po-compose-name {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* «Use» and «Save and use», two even halves at the name field's height: «Use» outlined as the field, «Save and use» on a tint of the accent with its border */
+  .po-compose-act {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .po-compose .po-compose-act > button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 2.2rem;
+    padding: 0.3rem 0.6rem;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: inherit;
+    text-align: center;
+    text-wrap: balance;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .po-compose .po-compose-act > button:is(:hover, :focus-visible):not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: color-mix(in srgb, currentColor 6%, transparent);
+    border-color: rgb(255 255 255 / 32%);
+  }
+
+  .po-compose .po-compose-act > .po-save:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent);
+    border-color: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 60%, transparent);
+  }
+
+  .po-compose .po-compose-act > .po-save:is(:hover, :focus-visible):not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 30%, transparent);
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .po-compose .po-compose-act > button:disabled:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    opacity: 0.4;
+    cursor: default;
+  }
+
   /* «Same height» and «Same width» under the phone's presets: two tiles of the cards' own kind, each its drawing beside its name */
   .po-match {
     display: grid;

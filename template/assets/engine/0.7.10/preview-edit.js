@@ -1299,16 +1299,16 @@ function phoneMatchCards(section, done) {
   ];
 }
 
-/** One card per phone layout preset (phone-layouts.js), the ones that fit the section first: each drawn small with the section's own blocks in the eight cell columns; one that does not fit stands greyed; then «Same height» and «Same width» (phoneMatchCards). A press posts urd-phone-layout (ONE undo step in the editor) and calls done(). */
+/** One card per phone layout preset (phone-layouts.js), the ones that fit the section first: each drawn small with the section's own blocks in the eight cell columns; one that does not fit stands greyed; the site's own layouts after Urd's, by their names; then «Same height» and «Same width» (phoneMatchCards). A press posts urd-phone-layout (ONE undo step in the editor) and calls done(). */
 function buildPhoneLayoutCards(section, done) {
-  return [...phoneLayouts(section.blocks, phoneSetupOf(section)).map(({ id, fits }) => {
+  return [...phoneLayouts(section.blocks, phoneSetupOf(section), siteNow?.phoneLayouts).map(({ id, fits, own }) => {
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'urd-layout-card';
     const thumb = document.createElement('span');
     thumb.className = 'urd-layout-thumb urd-phone-sketch';
     thumb.setAttribute('aria-hidden', 'true');
-    for (const cell of phoneLayoutSketch(section, id)) {
+    for (const cell of phoneLayoutSketch(section, own ?? id)) {
       const part = document.createElement('span');
       part.style.gridColumn = `${cell.col} / span ${cell.cols}`;
       for (const mark of cell.marks) {
@@ -1320,11 +1320,11 @@ function buildPhoneLayoutCards(section, done) {
     }
     const name = document.createElement('span');
     name.className = 'urd-layout-name';
-    name.textContent = ta(PHONE_LAYOUT_LABEL_KEYS[id] ?? id);
+    name.textContent = own ? (own.name || ta('phone.ownLayout.unnamed')) : ta(PHONE_LAYOUT_LABEL_KEYS[id] ?? id);
     card.append(thumb, name);
     card.disabled = !fits;
     card.addEventListener('click', () => {
-      const change = phoneLayoutChange(section.blocks, phoneSetupOf(section), id);
+      const change = phoneLayoutChange(section.blocks, phoneSetupOf(section), own ?? id);
       if (change) post({ type: 'urd-phone-layout', sectionId: section.id, change, preset: id });
       done();
     });

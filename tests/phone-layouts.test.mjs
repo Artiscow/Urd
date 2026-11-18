@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { phoneLayouts, phoneLayoutChange, phoneLayoutSketch, phoneMark, phoneLines, phoneSameWidths, PHONE_LAYOUTS } = await engineImport('phone-layouts.js');
+const { phoneLayouts, phoneLayoutChange, phoneLayoutSketch, phoneMark, phoneLines, phoneSameWidths, ownLayoutOf, ownLayoutFits, PHONE_LAYOUTS, PHONE_ROWS } = await engineImport('phone-layouts.js');
 const { stackOrder } = await engineImport('phone-order.js');
 
 const blk = (id, type, y, x = 0, extra = {}) => ({ id, type, props: {}, ...extra, frames: { desktop: { x, y, w: extra.w ?? 40, h: extra.h ?? 60 }, mobile: extra.mobile ?? null } });
@@ -153,4 +153,28 @@ test('phoneLines: a block pinned while the page scrolls on the desktop alone flo
     .map((line) => line.map((cell) => `${cell.ids.join('+')}@${cell.col}/${cell.cols}`).join(' '));
   assert.deepEqual(run(desktopPin), ['a@1/2 b@3/3 c@6/3']);
   assert.deepEqual(run(phonePin), ['a@1/2 b@3/3 c@6/3'], 'its slot keeps its columns on the line');
+});
+
+test('own layouts: kept for the site, offered after Urd\'s presets, their rows filling the units\' cells in turn and from the first row again', () => {
+  assert.deepEqual(PHONE_ROWS, ['full', 'two', 'big-left', 'big-right']);
+  assert.equal(ownLayoutOf({ id: 'x', rows: [] }), null, 'a layout of no rows is none');
+  assert.deepEqual(ownLayoutOf({ id: 'x', name: 'Mine', rows: ['two', 'nonsense', 'full'] }), { id: 'x', name: 'Mine', rows: ['two', 'full'] });
+  const own = [{ id: 'm1', name: 'Mine', rows: ['full', 'two'] }, { id: 'bad', rows: ['x'] }];
+  const list = phoneLayouts(stories(), 'top', own);
+  assert.deepEqual(list.slice(-1), [{ id: 'own:m1', fits: true, own: { id: 'm1', name: 'Mine', rows: ['full', 'two'] } }], 'after Urd\'s, and a broken one left out');
+  // A layout whose id stands twice (a hand-edited site.json) is offered once, the first kept, so the cards' keys stay apart.
+  const twice = phoneLayouts(stories(), 'top', [{ id: 'x', rows: ['two'] }, { id: 'x', rows: ['full'] }]).filter((l) => l.own);
+  assert.deepEqual(twice.map((l) => `${l.id}:${l.own.rows}`), ['own:x:two']);
+  // A section of one unit has nothing to stand beside: its own cards, «New layout» and the composer's buttons are greyed.
+  const lone = [blk('a', 'text', 0)];
+  assert.equal(ownLayoutFits(lone, 'top'), false);
+  assert.equal(ownLayoutFits(stories(), 'top'), true);
+  assert.equal(phoneLayouts(lone, 'top', own).at(-1).fits, false);
+  const five = [blk('a', 'text', 0), blk('b', 'image', 100), blk('c', 'text', 200), blk('d', 'image', 300), blk('e', 'text', 400)];
+  // One across, then two halves, then the first row again.
+  assert.deepEqual(applied(five, 'top', phoneLayoutChange(five, 'top', own[0])), ['a', 'b@1/4', 'c@5/4', 'd', 'e@1/4']);
+  // A tall half beside two stacked halves.
+  const tall = phoneLayoutChange(five, 'top', { id: 't', rows: ['big-left'] });
+  assert.deepEqual(applied(five, 'top', tall), ['a@1/4', 'b@5/4', 'c@5/4', 'd@1/4', 'e@5/4']);
+  assert.deepEqual(phoneLayoutSketch({ blocks: five, phoneOrder: 'top' }, { id: 't', rows: ['big-left'] }, 3).map((cell) => `${cell.col}/${cell.cols}:${cell.marks.length}`), ['1/4:1', '5/4:2']);
 });

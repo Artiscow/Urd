@@ -27,10 +27,10 @@
   const area = getContext('menu-area');
   /** Whether the element menu's own choices reach this fold: a fold in an area of a menu drawn for a block or a section. */
   const inMenu = $derived(surface === 'menu' && Boolean(area));
-  // Before the fold is drawn, so a fold that starts open is drawn open; with «All open» every fold does, again after each choice of it.
+  // Before the fold is drawn, so a fold that starts open is drawn open; with «All open» every fold does, again after each choice of it (setFoldsPref forgets its first showings).
   $effect.pre(() => {
     if (defaultOpen) folds.openOnce(surface, id);
-    if (inMenu && menu.foldsPref === 'all') folds.openOnce(surface, id, `all-${menu.foldsRound}`);
+    if (inMenu && menu.foldsPref === 'all') folds.openOnce(surface, id, 'all');
   });
   // A small window of one group (ElementMenu.svelte `only`, menu/FloatingMenu.svelte) leaves the folds apart, so a group left open in the full menu never closes the one the window opens.
   const onlyPanel = getContext('menu-only');

@@ -11,6 +11,11 @@ import { pinsOnPhone, stickyLeads } from './sticky-model.js';
 /** The presets, in the order they stand where none fits better. */
 export const PHONE_LAYOUTS = ['two-per-line', 'pairs', 'alternate', 'wide-two', 'big-two', 'one-column'];
 
+/**
+ * The rows an owner's own layout is made of (site.phoneLayouts, additive from 0.7.3.28), each a part of the phone's two columns: one cell across the row, two halves, a tall half on the left beside two stacked on the right, or two stacked on the left beside a tall half on the right.
+ */
+export const PHONE_ROWS = ['full', 'two', 'big-left', 'big-right'];
+
 /** The block types that are words: a text beside a picture reads as a pair. */
 const WORD_TYPES = new Set(['text', 'terms', 'button', 'faq', 'timeline', 'quote', 'stats', 'table']);
 /** The block types that are pictures. */
@@ -18,6 +23,28 @@ const PICTURE_TYPES = new Set(['image', 'video', 'gallery']);
 
 const LEFT = { col: 1, cols: 4 };
 const RIGHT = { col: 5, cols: 4 };
+
+/** Each row's cells in reading order, one per unit: the tall half is read first, then the halves stacked beside it. */
+const ROW_CELLS = { full: [null], two: [LEFT, RIGHT], 'big-left': [LEFT, RIGHT, RIGHT], 'big-right': [LEFT, LEFT, RIGHT] };
+
+/**
+ * An own layout as kept for the site, cleaned: its id, its name, and its rows of PHONE_ROWS, at least one; null for anything that is no layout.
+ * Pure, tested.
+ * @param {unknown} layout
+ * @returns {{id: string, name: string, rows: string[]}|null}
+ */
+export function ownLayoutOf(layout) {
+  if (!layout || typeof layout !== 'object' || typeof layout.id !== 'string' || !layout.id) return null;
+  const rows = Array.isArray(layout.rows) ? layout.rows.filter((row) => PHONE_ROWS.includes(row)) : [];
+  if (!rows.length) return null;
+  return { id: layout.id, name: typeof layout.name === 'string' ? layout.name : '', rows };
+}
+
+/** Each unit's cells under an own layout: its rows' cells one after another, from the first row again once the last is filled. */
+function ownCells(units, layout) {
+  const pattern = layout.rows.flatMap((row) => ROW_CELLS[row]);
+  return units.map((_, i) => pattern[i % pattern.length]);
+}
 
 /**
  * A block's mark in the pictures of the phone's order and layout: a picture, a heading, a button, a space, or text.
@@ -59,12 +86,23 @@ function pairsOf(units) {
 }
 
 /**
- * The presets for a section, the ones that fit first and the best of those first, each saying whether it fits; one that does not fit is shown greyed, never left out.
+ * Whether a layout of the site's own fits the section: one of two units or more, since a single unit has nothing to stand beside.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} setup The section's rule, or its setup (phoneSetupOf)
- * @returns {Array<{id: string, fits: boolean}>}
+ * @returns {boolean}
  */
-export function phoneLayouts(blocks, setup) {
+export function ownLayoutFits(blocks, setup) {
+  return unitsOf(blocks, setupFrom(setup)).length >= 2;
+}
+
+/**
+ * The presets for a section, the ones that fit first and the best of those first, each saying whether it fits; one that does not fit is shown greyed, never left out. The site's own layouts follow Urd's, in the order they were kept, each fitting a section of two units or more (ownLayoutFits), and a layout whose id stands twice is offered once, the first kept.
+ * @param {object[]} blocks The section's blocks
+ * @param {string|object} setup The section's rule, or its setup (phoneSetupOf)
+ * @param {unknown[]} [own] The site's own layouts (site.phoneLayouts)
+ * @returns {Array<{id: string, fits: boolean, own?: {id: string, name: string, rows: string[]}}>} An own layout's entry carries the layout, which phoneLayoutChange and phoneLayoutSketch take in place of an id
+ */
+export function phoneLayouts(blocks, setup, own = []) {
   const units = unitsOf(blocks, setupFrom(setup));
   const pairs = pairsOf(units).length;
   const cards = units.filter((u) => u.ids.length > 1).length;
@@ -87,7 +125,13 @@ export function phoneLayouts(blocks, setup) {
     'one-column': 1,
   };
   const fitting = PHONE_LAYOUTS.filter((id) => fits[id]).sort((a, b) => score[b] - score[a]);
-  return [...fitting.map((id) => ({ id, fits: true })), ...PHONE_LAYOUTS.filter((id) => !fits[id]).map((id) => ({ id, fits: false }))];
+  const ids = new Set();
+  const owned = (Array.isArray(own) ? own : []).map(ownLayoutOf).filter((layout) => {
+    if (!layout || ids.has(layout.id)) return false;
+    ids.add(layout.id);
+    return true;
+  }).map((layout) => ({ id: `own:${layout.id}`, fits: units.length >= 2, own: layout }));
+  return [...fitting.map((id) => ({ id, fits: true })), ...PHONE_LAYOUTS.filter((id) => !fits[id]).map((id) => ({ id, fits: false })), ...owned];
 }
 
 /**
@@ -130,15 +174,16 @@ function written(blocks, setup, change) {
  * A preset's change for a section: the cells of every block of every unit (null for the full row), and for «Alternate sides» the exceptions, stacks or custom order that read every other pair the other way round.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
- * @param {string} id A preset of PHONE_LAYOUTS
+ * @param {string|object} id A preset of PHONE_LAYOUTS, or an own layout (ownLayoutOf), whose rows fill the units' cells in turn
  * A preset is a fresh start: it also takes away the own phone heights of the blocks it places (`heights`), which «Same height» and an earlier preset left, so the heights a preset asks for after it are measured anew.
  * @returns {{cells: Record<string, {col: number, cols: number}|null>, heights?: Record<string, null>, places?: Record<string, object|null>, stacks?: string[][], list?: string[]}|null} The change, a block's cells null for the full row (where a width set by hand stays); null where the press would change nothing
  */
 export function phoneLayoutChange(blocks, rawSetup, id) {
-  if (!PHONE_LAYOUTS.includes(id)) return null;
+  const own = typeof id === 'object' ? ownLayoutOf(id) : null;
+  if (!own && !PHONE_LAYOUTS.includes(id)) return null;
   const setup = setupFrom(rawSetup);
   const units = unitsOf(blocks, setup);
-  const { cells, flip, pairs } = plan(units, id);
+  const { cells, flip, pairs } = own ? { cells: ownCells(units, own), flip: [], pairs: [] } : plan(units, id);
   const change = { cells: {} };
   // Each pair to flip: its second unit moved before its first, one move at a time on the order as the moves before it left it.
   let work = { blocks, setup };
@@ -256,7 +301,7 @@ export function phoneSameWidths(section) {
 /**
  * A preset drawn small: the section's blocks after its change, a cell per run of blocks in the same cells, each with its blocks' marks, at most `max` blocks; a preset that changes nothing draws the section as it stands.
  * @param {object} section The section, its blocks and its phone order
- * @param {string} id A preset of PHONE_LAYOUTS
+ * @param {string|object} id A preset of PHONE_LAYOUTS, or an own layout (ownLayoutOf)
  * @param {number} [max]
  * @returns {Array<{col: number, cols: number, marks: string[]}>}
  */
