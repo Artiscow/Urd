@@ -11,7 +11,7 @@
   import ColourRow from '../../lib/rows/ColourRow.svelte';
   import SubHeading from '../../lib/rows/SubHeading.svelte';
   import { ta } from '$engine/i18n.js';
-  import { burgerModel, BURGER_ICONS, NAV_PRESSES } from '$engine/nav-model.js';
+  import { burgerModel, BURGER_ICONS, NAV_PRESSES, MOBILE_ALIGNS, phoneMenuModel } from '$engine/nav-model.js';
   import NavPhoneLogo from './NavPhoneLogo.svelte';
   import { PAD_Y, TEXT_SIZE, SIZE_IDS, clampRange } from '../../lib/nav-size.js';
   import { navActions, isSideNav, isFloatingNav } from './nav-actions.js';
@@ -88,6 +88,18 @@
     });
   }
 
+  /** The phone menu's look as the engine draws it: the alignment, the submenu arrow, and whether the bar keeps its tools beside the full-screen menu. */
+  const phoneMenu = $derived(phoneMenuModel(siteDraft?.nav?.style ?? {}));
+  /** The tools the phone's bar can show: the theme button where the theme has a dark counterpart and the cluster keeps it, and the cart where the shop shows one. */
+  const themeTool = $derived(Boolean(siteDraft?.theme?.alt?.tokens) && siteDraft?.nav?.style?.tools?.theme !== false);
+  const cartTool = $derived(Boolean(siteDraft?.nav?.cart?.show));
+  /** The site's links as a tool in the bar. */
+  const linksTool = $derived(siteDraft?.nav?.style?.tools?.links === true);
+  /** The phone's own placement as the bar shows it: beside a centred logo the middle is not offered, and the buttons stand at the edge as with «Same». */
+  const phoneLayoutShown = $derived(siteDraft?.nav?.style?.mobile?.logo === 'center' && siteDraft?.nav?.style?.mobile?.layout === 'center' ? '' : siteDraft?.nav?.style?.mobile?.layout ?? '');
+  /** The side the burger and its buttons take on the phone: the phone's own, or the desktop's. */
+  const phoneToolsSide = $derived(siteDraft?.nav?.style?.mobile?.tools?.side ?? siteDraft?.nav?.style?.tools?.side ?? 'end');
+
   const sameOnOff = $derived([['', ta('lbl.navSameAsDesktop')], ['on', ta('common.on')], ['off', ta('common.off')]]);
   const sheetOpacity = $derived(Math.round((siteDraft.nav.style?.sheet?.bgOpacity ?? 0.85) * 100));
 </script>
@@ -129,11 +141,14 @@
   <ColourRow label={ta('lbl.navBorderColor')} title={ta('tip.nav.borderColorPick')} value={siteDraft.nav.style.mobile.border.color ?? 'text'} tokens={themeSwatches()}
     onchange={(hex) => setNavMobile('border', { ...siteDraft.nav.style.mobile.border, color: hex })} />
 {/if}
-<Setting key="layout">
-  <Choice label={ta('lbl.navPlacement')} title={ta('tip.nav.mobileLayout')} value={siteDraft.nav.style?.mobile?.layout ?? ''}
-    options={[['', ta('lbl.navSameAsDesktop')], ['left', ta('common.left')], ['center', ta('common.center')], ['right', ta('common.right')]]}
-    onchange={(v) => setNavMobile('layout', v || undefined)} />
-</Setting>
+<!-- Where the burger and its buttons stand, while they stand after the logo; the middle only beside a logo at the start -->
+{#if phoneToolsSide !== 'start'}
+  <Setting key="layout">
+    <Choice label={ta('lbl.navPlacement')} title={ta('tip.nav.mobileLayout')} value={phoneLayoutShown}
+      options={[['', ta('lbl.navSameAsDesktop')], ['left', ta('common.left')], ...(siteDraft.nav.style?.mobile?.logo === 'center' ? [] : [['center', ta('common.center')]]), ['right', ta('common.right')]]}
+      onchange={(v) => setNavMobile('layout', v || undefined)} />
+  </Setting>
+{/if}
 <Setting key="tools">
   <Choice label={ta('lbl.navToolButtons')} title={ta('tip.nav.mobileTools')} value={siteDraft.nav.style?.mobile?.tools?.side ?? ''}
     options={[['', ta('lbl.navSameAsDesktop')], ['start', ta('common.left')], ['end', ta('common.right')]]}
@@ -168,11 +183,21 @@
       onchange={(v) => setNavStyle('sheetMotion', v === 'top' ? undefined : v)} />
   </Setting>
 {/if}
+<!-- Where the items stand in both phone menus -->
+<Setting key="mobileAlign">
+  <Choice label={ta('lbl.textAlign')} title={ta('tip.nav.mobileAlign')} value={phoneMenu.align}
+    options={MOBILE_ALIGNS.map((id) => [id, ta(`common.${id}`)])}
+    onchange={(v) => setNavStyle('mobileAlign', v === 'left' ? undefined : v)} />
+</Setting>
 {#if siteDraft.nav.items?.some((item) => item.children?.length)}
   <Setting key="mobileSubs">
     <Choice label={ta('lbl.mobileSubs')} title={ta('tip.nav.mobileSubs')} value={siteDraft.nav.style?.mobileSubs ?? 'collapsed'}
       options={[['collapsed', ta('opt.mobileSubs.collapsed')], ['expanded', ta('opt.mobileSubs.expanded')]]}
       onchange={(v) => setNavStyle('mobileSubs', v === 'collapsed' ? undefined : v)} />
+  </Setting>
+  <Setting key="mobileSubArrow">
+    <SwitchRow label={ta('lbl.mobileSubArrow')} title={ta('tip.nav.mobileSubArrow')} checked={phoneMenu.arrow}
+      onchange={(on) => setNavStyle('mobileSubArrow', on ? undefined : false)} />
   </Setting>
 {/if}
 <!-- How a link of the menu answers a touch on the phone -->
@@ -210,13 +235,20 @@
         onchange={(on) => setNavStyle('sheetLogo', on ? true : undefined)} />
     </Setting>
   {/if}
-  {#if siteDraft.theme?.alt?.tokens && siteDraft.nav.style?.tools?.theme !== false}
+  <!-- Only with a tool in the phone's bar; with the bar alone the theme button and the cart stand in the menu without asking -->
+  {#if themeTool || cartTool || linksTool}
+    <Setting key="sheetBarTools">
+      <SwitchRow label={ta('lbl.sheetBarTools')} title={ta('tip.nav.sheetBarTools')} checked={phoneMenu.barTools}
+        onchange={(on) => setNavStyle('sheetBarTools', on ? undefined : false)} />
+    </Setting>
+  {/if}
+  {#if themeTool && phoneMenu.barTools}
     <Setting key="sheetTheme">
       <SwitchRow label={ta('lbl.sheetTheme')} title={ta('tip.nav.sheetTheme')} checked={siteDraft.nav.style?.sheetTheme === true}
         onchange={(on) => setNavStyle('sheetTheme', on ? true : undefined)} />
     </Setting>
   {/if}
-  {#if siteDraft.nav.cart?.show}
+  {#if cartTool && phoneMenu.barTools}
     <Setting key="sheetCart">
       <SwitchRow label={ta('lbl.sheetCart')} title={ta('tip.nav.sheetCart')} checked={siteDraft.nav.style?.sheetCart === true}
         onchange={(on) => setNavStyle('sheetCart', on ? true : undefined)} />
@@ -229,7 +261,7 @@
         onchange={(on) => setNavStyle('sheetAnnounce', on ? true : undefined)} />
     </Setting>
   {/if}
-  {#if siteDraft.nav.style?.sheetTheme || siteDraft.nav.style?.sheetCart}
+  {#if phoneMenu.barTools ? siteDraft.nav.style?.sheetTheme || siteDraft.nav.style?.sheetCart : themeTool || cartTool || linksTool}
     <Setting key="sheetToolLabels">
       <SwitchRow label={ta('lbl.sheetToolLabels')} title={ta('tip.nav.sheetToolLabels')} checked={siteDraft.nav.style?.sheetToolLabels === true}
         onchange={(on) => setNavStyle('sheetToolLabels', on ? true : undefined)} />

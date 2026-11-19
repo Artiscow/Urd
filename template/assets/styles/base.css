@@ -14664,6 +14664,103 @@ body.urd-mobile .urd-nav-sub,
   box-shadow: none;
 }
 
+/* Text alignment of the items in both phone menus (nav.style.mobileAlign).
+   The arrow follows it as in the side column: on the left of right-aligned
+   text, and at the edge beside centred text, so it never pushes the words
+   off the middle. The submenus give up their indent from the left, and the
+   launcher's tiles keep the design of their own. */
+body.urd-mobile .urd-nav-malign-center .urd-nav-list a:not(.urd-nav-launcher-link),
+body.urd-mobile .urd-nav-malign-center .urd-nav-toggle,
+.urd-nav-mobile.urd-nav-malign-center .urd-nav-list a:not(.urd-nav-launcher-link),
+.urd-nav-mobile.urd-nav-malign-center .urd-nav-toggle {
+  text-align: center;
+  justify-content: center;
+}
+
+body.urd-mobile .urd-nav-malign-right .urd-nav-list a:not(.urd-nav-launcher-link),
+body.urd-mobile .urd-nav-malign-right .urd-nav-toggle,
+.urd-nav-mobile.urd-nav-malign-right .urd-nav-list a:not(.urd-nav-launcher-link),
+.urd-nav-mobile.urd-nav-malign-right .urd-nav-toggle {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+body.urd-mobile .urd-nav-malign-center .urd-nav-has-sub,
+.urd-nav-mobile.urd-nav-malign-center .urd-nav-has-sub {
+  position: relative;
+  justify-content: center;
+}
+
+body.urd-mobile .urd-nav-malign-center .urd-nav-has-sub > a,
+.urd-nav-mobile.urd-nav-malign-center .urd-nav-has-sub > a {
+  flex: 0 0 auto;
+}
+
+body.urd-mobile .urd-nav-malign-center .urd-nav-has-sub > .urd-nav-caret,
+.urd-nav-mobile.urd-nav-malign-center .urd-nav-has-sub > .urd-nav-caret {
+  position: absolute;
+  right: 0;
+  top: 0.1rem;
+}
+
+body.urd-mobile .urd-nav-malign-right .urd-nav-has-sub,
+.urd-nav-mobile.urd-nav-malign-right .urd-nav-has-sub {
+  justify-content: flex-end;
+}
+
+body.urd-mobile .urd-nav-malign-right .urd-nav-has-sub > .urd-nav-caret,
+body.urd-mobile .urd-nav-malign-right .urd-nav-toggle svg,
+.urd-nav-mobile.urd-nav-malign-right .urd-nav-has-sub > .urd-nav-caret,
+.urd-nav-mobile.urd-nav-malign-right .urd-nav-toggle svg {
+  order: -1;
+}
+
+body.urd-mobile .urd-nav-malign-center .urd-nav-sub,
+.urd-nav-mobile.urd-nav-malign-center .urd-nav-sub {
+  padding-left: 0;
+}
+
+/* An item's description is a box of its own width (max-width in the menu
+   item options below), so the box moves with the text, not only the text. */
+body.urd-mobile .urd-nav-malign-center .urd-nav-desc,
+.urd-nav-mobile.urd-nav-malign-center .urd-nav-desc {
+  margin-inline: auto;
+}
+
+body.urd-mobile .urd-nav-malign-right .urd-nav-desc,
+.urd-nav-mobile.urd-nav-malign-right .urd-nav-desc {
+  margin-left: auto;
+}
+
+body.urd-mobile .urd-nav-malign-right .urd-nav-sub,
+.urd-nav-mobile.urd-nav-malign-right .urd-nav-sub {
+  padding-left: 0;
+  padding-right: 1rem;
+}
+
+/* No arrow on a submenu in the phone menus (nav.style.mobileSubArrow false):
+   a closed submenu opens from its item, and an opener whose submenu stands
+   open from the start reads as a heading (nav.js marks it aria-disabled). */
+body.urd-mobile .urd-nav-msub-arrow-off .urd-nav-has-sub > .urd-nav-caret,
+body.urd-mobile .urd-nav-msub-arrow-off .urd-nav-has-sub > .urd-nav-toggle svg,
+.urd-nav-mobile.urd-nav-msub-arrow-off .urd-nav-has-sub > .urd-nav-caret,
+.urd-nav-mobile.urd-nav-msub-arrow-off .urd-nav-has-sub > .urd-nav-toggle svg {
+  display: none;
+}
+
+body.urd-mobile .urd-nav-msub-arrow-off .urd-nav-has-sub > .urd-nav-toggle[aria-disabled="true"],
+.urd-nav-mobile.urd-nav-msub-arrow-off .urd-nav-has-sub > .urd-nav-toggle[aria-disabled="true"] {
+  cursor: default;
+}
+
+/* The bar alone beside the full-screen menu (nav.style.sheetBarTools false):
+   the theme button, the cart and the site's links leave the phone's bar and
+   stand in the menu's foot, which nav.js moves them into while it is open. */
+body.urd-mobile .urd-nav-sheet-bar-bare > .urd-nav-tools > :is(.urd-nav-theme, .urd-nav-cart, .urd-nav-links),
+.urd-nav-mobile.urd-nav-sheet-bar-bare > .urd-nav-tools > :is(.urd-nav-theme, .urd-nav-cart, .urd-nav-links) {
+  display: none;
+}
+
 /* The link launcher in the mobile menu: the grid is a section at the foot of
    the list, since the mobile view hides the cluster's button along with the
    rest of the desktop menu. The section travels into the full-screen sheet
@@ -15278,6 +15375,15 @@ body.urd-side-right {
   justify-content: flex-end;
 }
 
+/* An item's description is a box of its own width, so it moves with the text. */
+.urd-nav-side-host .urd-nav-salign-center .urd-nav-desc {
+  margin-inline: auto;
+}
+
+.urd-nav-side-host .urd-nav-salign-right .urd-nav-desc {
+  margin-left: auto;
+}
+
 /* The submenu caret follows the text alignment in the column: right-aligned
    text puts the caret on the LEFT side; centered text is centered without the
    caret pushing it (the caret is placed absolutely at the edge). */
@@ -15423,6 +15529,28 @@ body.urd-mobile .urd-nav-var-floating.urd-nav-open,
 .urd-nav-logo-center:not(.urd-nav-tools-start) .urd-nav-tools,
 .urd-nav-logo-off:not(.urd-nav-tools-start) .urd-nav-tools {
   margin-left: auto;
+}
+
+/* On the phone the links wait behind the burger, so the burger and its
+   buttons stand at the bar's edge, as the desktop keeps its buttons, whatever
+   the desktop's placement; the phone's own placement (nav.style.mobile.layout,
+   urd-nav-mplace-* from navClasses at the breakpoint) puts them right after
+   the logo (at the bar's start where no logo stands in the row) or in the
+   middle of the room beside it. A centred logo keeps them off the middle, and
+   buttons before the logo keep their own place. */
+body.urd-mobile .urd-nav:not(.urd-nav-tools-start) > .urd-nav-tools,
+.urd-nav-mobile:not(.urd-nav-tools-start) > .urd-nav-tools {
+  margin-left: auto;
+}
+
+body.urd-mobile .urd-nav-mplace-left:not(.urd-nav-tools-start) > .urd-nav-tools,
+.urd-nav-mobile.urd-nav-mplace-left:not(.urd-nav-tools-start) > .urd-nav-tools {
+  margin-left: 0;
+}
+
+body.urd-mobile .urd-nav-mplace-center:not(.urd-nav-tools-start, .urd-nav-logo-center) > .urd-nav-tools,
+.urd-nav-mobile.urd-nav-mplace-center:not(.urd-nav-tools-start, .urd-nav-logo-center) > .urd-nav-tools {
+  margin-inline: auto;
 }
 
 /* How a link of the menu answers a touch on the phone (nav.style.mobile.press; the class comes from navClasses at the mobile breakpoint only): drawn at once while the link is pressed and let go of slowly, so a short tap is seen; the nav's own class in each selector puts the answer's timing over a hover style's. */

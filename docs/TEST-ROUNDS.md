@@ -2,6 +2,21 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.13.17): the phone menu kept open while it is set, and its own look
+
+- [ ] In the phone view, open the full-screen menu and a submenu, then change settings in the Nav panel's Phone fold (the text alignment, the burger's word typed letter by letter, the menu's opacity): the menu and the submenu stay open, the entrance does not play again, and every typed letter lands in the field
+- [ ] The same with «Panel below the bar»: the open panel and its submenu stay open through a change
+- [ ] Close the full-screen menu by its cross after a change: the links go back to the bar, and the keyboard focus to the burger
+- [ ] Switch the preview to «Screen» with the phone menu open: it closes
+- [ ] Switch «Phone menu» between the two kinds with the menu open: the other kind stands open
+- [ ] «Text alignment» Left, Centred and Right: the items, their descriptions and the submenu arrows follow, in both phone menus, in the editor and on the published page
+- [ ] «Submenu arrow» off: no arrow in the phone menu; a closed submenu opens when its item is pressed, and with «Always open» the item reads as a heading that does not fold
+- [ ] With «Full screen», «Tools in the bar» off: the phone's bar shows the logo and the burger alone, and the theme button, the cart and the site's links stand at the bottom of the open menu; the menu's own «Theme button» and «Cart» switches are hidden
+- [ ] The phone's «Menu placement»: «Left» puts the burger and its buttons right after the logo, «Centred» in the middle of the room beside it, «Right» and «Same» at the edge; the row is gone with «Tool buttons» on the left, and «Centred» is not offered with the logo in the middle
+- [ ] The side column with centred or right-aligned text: the items' descriptions follow the text
+- [ ] The «Back to top» fold's «Icon» cell: the standard arrow stands in the middle, as large as a chosen icon
+- [ ] In Firefox: the full-screen menu stays open, and the typed letters land in the panel's field (checked in Brave only)
+
 ### Test batch (0.7.0.91): Svelte 5.58.0 and Vite 8.3.8
 
 - [ ] The admin loads, and the element menu, the panels, the dialogs, undo and the canvas work as before

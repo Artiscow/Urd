@@ -623,10 +623,13 @@
               }
             },
             "mobileSubs": { "enum": ["collapsed", "expanded"], "default": "collapsed", "description": "Submenus in the mobile menu (additive from v0.7): collapsed = a tap on the item opens the submenu instead of navigating, with the item's own page listed first in it; expanded = every submenu is open from the start and the item is a plain link. Both mobile menus." },
+            "mobileAlign": { "enum": ["left", "center", "right"], "default": "left", "description": "Where the items' text stands in the mobile menu (additive from 0.7.13.17); the submenu arrow follows it. Both mobile menus." },
+            "mobileSubArrow": { "type": "boolean", "default": true, "description": "The arrow that marks a submenu in the mobile menu (additive from 0.7.13.17); false hides it: a closed submenu still opens from its item, and a submenu open from the start (mobileSubs expanded) reads as a heading. Both mobile menus." },
+            "sheetBarTools": { "type": "boolean", "default": true, "description": "The tools stay in the phone's bar beside the full-screen menu (additive from 0.7.13.17); false leaves the logo and the burger alone there, the theme button, the cart and the site's links standing in the menu's foot. mobileMenu sheet only." },
             "sheetMotion": { "enum": ["top", "bottom", "left", "right", "fade", "none"], "default": "top", "description": "The full-screen sheet's entrance (additive from v0.7): a slide from an edge, a fade, or none; cut under reduced motion. mobileMenu sheet only." },
             "sheetLogo": { "type": "boolean", "default": false, "description": "The logo moves into the top of the full-screen sheet while it is open (additive from v0.7). mobileMenu sheet only." },
             "sheetTheme": { "type": "boolean", "default": false, "description": "The theme button moves into the bottom of the full-screen menu as a labelled button while it is open (additive from v0.7). mobileMenu sheet only." },
-            "sheetToolLabels": { "type": "boolean", "default": false, "description": "The theme button and the cart in the full-screen menu's foot show their text beside the icon (additive from v0.7); omitted = icons only." },
+            "sheetToolLabels": { "type": "boolean", "default": false, "description": "The theme button, the cart and the site's links in the full-screen menu's foot show their text beside the icon (additive from v0.7); omitted = icons only." },
             "sheetCart": { "type": "boolean", "default": false, "description": "The cart moves into the bottom of the full-screen menu as a labelled button while it is open (additive from v0.7). mobileMenu sheet only." },
             "sheetAnnounce": { "type": "boolean", "default": false, "description": "The announcement strip moves into the top of the full-screen menu while it is open, and back to the bar on close (additive from v0.7). Without it the strip is behind the menu and cannot even be dismissed." },
             "tools": {
@@ -664,7 +667,7 @@
                 "padY": { "type": "number", "minimum": 0, "maximum": 64, "description": "Thickness in px at the mobile breakpoint" },
                 "textSize": { "type": "number", "minimum": 12, "maximum": 28, "description": "Menu text size in px at the mobile breakpoint" },
                 "size": { "type": "string", "enum": ["sm", "md", "lg", "xl"], "description": "The size preset at the mobile breakpoint" },
-                "layout": { "type": "string", "enum": ["left", "center", "right"], "description": "Where the items sit at the mobile breakpoint" },
+                "layout": { "type": "string", "enum": ["left", "center", "right"], "description": "Where the burger and its buttons stand at the mobile breakpoint, where the items wait behind the burger: left right after the logo, center in the middle of the room beside it, right (or omitted) at the edge" },
                 "logo": { "type": "string", "enum": ["center", "hidden"], "description": "Where the logo stands in the bar at the mobile breakpoint (additive from 0.7.3.25): center = in the middle of the bar, hidden = out of the bar (the full-screen sheet still takes it with sheetLogo); omitted = at the bar's start, as on the desktop" },
                 "press": { "type": "string", "enum": ["tint", "underline", "shrink"], "description": "How a link of the menu answers a touch at the mobile breakpoint (additive from 0.7.3.25): tint = a fill in the hover colour, underline = a line under the link, shrink = the link drawn a little smaller; omitted = no answer of its own" },
                 "inset": { "type": "boolean", "description": "Whether the bar's contents follow the content width at the mobile breakpoint" },

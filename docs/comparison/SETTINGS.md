@@ -359,11 +359,11 @@ Urd: the menu, set in the Nav panel (ELEMENTS.md #80 to #83).
 | A description or title per item | WP, KB | Has: a one-line description, shown in the submenus and the mobile menus (0.7.13.21) | - |
 | Submenus that open on hover or on a click | WP, WS, KB | Has: hover, hover closed by a click, or click only | - |
 | More than one submenu level | WP, KB | Has: two levels, the second beside the panel or as a headed group in columns and the flyout (0.7.13.21) | - |
-| A phone menu behind a button | WP, PL | Has: a panel below the bar or a full-screen sheet; the button's drawing and word chosen (0.7.13.21) | - |
+| A phone menu behind a button | WP, PL | Has: a panel below the bar or a full-screen sheet; the button's drawing and word chosen (0.7.13.21); the items' alignment, the submenu arrow, and the bar alone beside the sheet with its tools in the sheet's foot (0.7.13.17) | - |
 | The current page marked | WS, KB | Missing | 0.7.11 (the current page marked) |
 | The gap between items | KB, PL | Has: the item spacing | - |
 
-Only Kadence offers a highlighted label on an item and a mega menu with media; only Gutenberg sets the overlay's colours and a limit on nesting.
+Only Kadence offers a highlighted label on an item and a mega menu with media; only Gutenberg sets the overlay's colours and a limit on nesting. Gutenberg's «Show arrow» for submenus has its counterpart in the phone menu's «Submenu arrow» (0.7.13.17).
 
 ### Header and footer
 

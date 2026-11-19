@@ -775,6 +775,8 @@ function enablePreview(state, opts) {
       state.viewport = msg.mode;
       document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
       renderPage(state.page, state.site, root, vp());
+      // The menu follows the view as well: a phone menu left open closes on the desktop, and its submenus take the view's own form.
+      if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
     } else if (msg?.type === 'urd-site' && msg.site) {
       // Site draft from the editor (grid, theme, nav): everything that
       // depends on site.json is rerendered. Same truncation guard as in

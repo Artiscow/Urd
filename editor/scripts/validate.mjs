@@ -208,6 +208,8 @@ iconSite.nav.logo = { ...iconSite.nav.logo, type: 'image', value: '/media/images
 const phoneLogoSite = load('template/content/site.json');
 phoneLogoSite.nav.logo = { ...phoneLogoSite.nav.logo, type: 'both', value: 'Urd', image: '/media/images/logo.webp', mobileParts: 'text', mobileTextSize: 18 };
 phoneLogoSite.nav.style = { ...phoneLogoSite.nav.style, mobile: { ...(phoneLogoSite.nav.style?.mobile ?? {}), logo: 'center' } };
+// The phone menu's own look (nav.style.mobileAlign, mobileSubArrow and sheetBarTools, additive from 0.7.13.17), which the template's own site does not set: centred text, no submenu arrow, and the full-screen menu with the bar alone.
+phoneLogoSite.nav.style = { ...phoneLogoSite.nav.style, mobileMenu: 'sheet', mobileAlign: 'center', mobileSubArrow: false, sheetBarTools: false };
 // The owner's own phone layouts kept for the site (site.phoneLayouts, additive from 0.7.3.28), which the template does not ship.
 phoneLogoSite.phoneLayouts = [{ id: 'own-1', name: 'Picture then pairs', rows: ['full', 'two', 'big-left'] }];
 phoneLogoSite.layout = { ...phoneLogoSite.layout, toTop: { design: 'words', place: 'content', side: 'left', size: 'xl', phoneSize: 'l', colors: { bg: 'accent', ring: 'text', arrow: '#ffffff', words: 'text', line: 'accent', effect: 'accent' }, after: 'screen', phone: false, text: 'Opp', waves: 40, count: 8, hover: 'lift', press: 'tint', line: 'dashed', lineWidth: 2, glyph: '★', icon: 'heart', image: '/media/images/totop-icon-1a2b3c4d.webp', iconSize: 140, fill: 'whole', shape: { sides: 6, corners: 28, cornerStyle: 'cut', bulge: -20, turn: 30, stretch: 10, waves: 20, count: 8, sharp: 60, waveStyle: 'cog', alt: 40, swirl: -30, point: 30, dir: 2, wobble: 25, seed: 7, points: [[50, 4, 0, 'round'], [96, 50, 60, 'cut'], [50, 96, 100, 'scoop'], [4, 50, 45, 'round']], icon: [52, 58] } } };
@@ -221,7 +223,7 @@ sharePage.meta = { ...(sharePage.meta ?? {}), og: { image: '/media/images/share.
 const validatePage = ajv.getSchema(pageSchema.$id);
 for (const [label, ok, errors] of [
   ['synthetic site icon and logos with their kept originals', validateSite(iconSite), validateSite.errors],
-  ['synthetic site with the logo on the phone, own phone layouts and a back to top button of its own', validateSite(phoneLogoSite), validateSite.errors],
+  ['synthetic site with the logo and the menu\'s own look on the phone, own phone layouts and a back to top button of its own', validateSite(phoneLogoSite), validateSite.errors],
   ['synthetic share image with its kept original, and a section\'s room on the phone', validatePage(sharePage), validatePage.errors],
 ]) {
   if (ok) {

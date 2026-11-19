@@ -151,8 +151,10 @@ export function navFolds(ed) {
   function phoneBarGroup() {
     const side = isSideNav(nav());
     const bar = !side && !isFloatingNav(nav());
+    // As NavMobile.svelte shows it: the burger and its buttons are placed while they stand after the logo.
+    const toolsAfterLogo = (style()?.mobile?.tools?.side ?? style()?.tools?.side ?? 'end') !== 'start';
     return phoneOwn('nav-mobile', [
-      ['padY', undefined, !side], ['textSize', undefined], ['size', undefined], ['border', undefined], ['layout', undefined], ['tools', undefined],
+      ['padY', undefined, !side], ['textSize', undefined], ['size', undefined], ['border', undefined], ['layout', undefined, toolsAfterLogo], ['tools', undefined],
       ['overlay', undefined, bar], ['inset', undefined, bar],
     ]);
   }
@@ -182,14 +184,20 @@ export function navFolds(ed) {
   /** The menu the burger opens on the phone: its form, how its links answer a touch, the burger, and the full-screen menu's contents and surface; `launcher` adds the launcher's two for the phone, which the Nav panel keeps in its Tools fold. */
   function phoneMenuGroup({ launcher = false } = {}) {
     const sheet = style()?.mobileMenu === 'sheet';
+    const hasSubs = Boolean(nav()?.items?.some((item) => item.children?.length));
+    // As NavMobile.svelte shows them: the bar's tools on the phone, and with the bar alone beside the full-screen menu, the theme button and the cart in the menu without asking.
+    const themeTool = Boolean(ed.siteDraft.theme?.alt?.tokens) && style()?.tools?.theme !== false;
+    const cartTool = Boolean(nav()?.cart?.show);
+    const barTools = !(sheet && style()?.sheetBarTools === false);
     const groups = [
       phoneOwn('nav-mobile', [['press', undefined]]),
       siteGroup(style, write(), 'nav-mobile', pick([
-        ['mobileMenu', 'dropdown'], ['sheetMotion', 'top', sheet], ['sheetLogo', undefined, sheet && nav()?.logo?.show !== false],
-        ['sheetTheme', undefined, sheet && Boolean(ed.siteDraft.theme?.alt?.tokens) && style()?.tools?.theme !== false],
-        ['sheetCart', undefined, sheet && Boolean(nav()?.cart?.show)], ['sheetAnnounce', undefined, sheet && Boolean(nav()?.announcement?.show)],
-        ['sheetToolLabels', undefined, sheet && Boolean(style()?.sheetTheme || style()?.sheetCart)],
-        ['mobileSubs', 'collapsed', Boolean(nav()?.items?.some((item) => item.children?.length))],
+        ['mobileMenu', 'dropdown'], ['sheetMotion', 'top', sheet], ['mobileAlign', 'left'], ['sheetLogo', undefined, sheet && nav()?.logo?.show !== false],
+        ['sheetBarTools', true, sheet && (themeTool || cartTool || style()?.tools?.links === true)],
+        ['sheetTheme', undefined, sheet && barTools && themeTool],
+        ['sheetCart', undefined, sheet && barTools && cartTool], ['sheetAnnounce', undefined, sheet && Boolean(nav()?.announcement?.show)],
+        ['sheetToolLabels', undefined, sheet && (barTools ? Boolean(style()?.sheetTheme || style()?.sheetCart) : themeTool || cartTool || style()?.tools?.links === true)],
+        ['mobileSubs', 'collapsed', hasSubs], ['mobileSubArrow', true, hasSubs],
       ])),
       siteGroup(() => style()?.burger, write(() => dropEmpty(style(), 'burger')), 'nav-mobile', { icon: 'lines', showLabel: undefined }),
     ];

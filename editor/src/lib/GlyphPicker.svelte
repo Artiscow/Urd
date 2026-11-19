@@ -389,10 +389,18 @@
     padding: 5px 0;
   }
 
+  /* Every drawing fills the same square in the middle of the button, whatever size its own markup names */
   .gp-svg {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 17px;
     height: 17px;
+  }
+
+  .gp-svg :global(svg) {
+    width: 100%;
+    height: 100%;
   }
 
   .gp-own {

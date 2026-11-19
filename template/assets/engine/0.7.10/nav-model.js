@@ -552,6 +552,24 @@ export function sideSubMode(style = {}) {
   return style?.sideSubs === 'expanded' ? 'expanded' : 'collapsed';
 }
 
+/** The phone menu's text alignments (nav.style.mobileAlign); the first is the default. */
+export const MOBILE_ALIGNS = ['left', 'center', 'right'];
+
+/**
+ * The phone menu's own look (additive from 0.7.13.17): where its items' text stands in both phone menus (nav.style.mobileAlign), whether a submenu shows its arrow there (nav.style.mobileSubArrow), and whether the bar keeps its tools beside the full-screen menu (nav.style.sheetBarTools).
+ * Unknown values fall back to the defaults: the text on the left, the arrow shown, and the tools in the bar.
+ * @param {{mobileAlign?: string, mobileSubArrow?: boolean, sheetBarTools?: boolean, mobileMenu?: string}} [style]
+ * @returns {{align: 'left'|'center'|'right', arrow: boolean, barTools: boolean}}
+ */
+export function phoneMenuModel(style = {}) {
+  return {
+    align: MOBILE_ALIGNS.includes(style?.mobileAlign) ? style.mobileAlign : 'left',
+    arrow: style?.mobileSubArrow !== false,
+    // The tools leave the bar only for the full-screen menu, which has a foot to take them.
+    barTools: !(mobileMenuMode(style) === 'sheet' && style?.sheetBarTools === false),
+  };
+}
+
 /** The tool cluster's alignments in the side column (nav.style.tools.align); the default is center. */
 export const TOOLS_ALIGNS = ['start', 'center', 'end', 'spread'];
 
@@ -633,6 +651,13 @@ export function navClasses(site, { mobile = false } = {}) {
   if (phone.logo === 'center' && site.nav.logo?.show !== false) classes += ' urd-nav-logo-center';
   if (phone.logo === 'hidden') classes += ' urd-nav-logo-off';
   if (NAV_PRESSES.includes(phone.press)) classes += ` urd-nav-press-${phone.press}`;
+  // The phone's own placement (nav.style.mobile.layout): its links wait behind the burger, so it places the burger and its buttons, right after the logo or in the middle of the room beside it; at the edge, the default, it needs no class.
+  if (['left', 'center'].includes(phone.layout)) classes += ` urd-nav-mplace-${phone.layout}`;
+  // The phone menu's look (additive from 0.7.13.17): set at every width, since the preview's phone view is not the breakpoint; the CSS reads them only in the phone state.
+  const phoneMenu = phoneMenuModel(site.nav.style);
+  if (phoneMenu.align !== 'left') classes += ` urd-nav-malign-${phoneMenu.align}`;
+  if (!phoneMenu.arrow) classes += ' urd-nav-msub-arrow-off';
+  if (!phoneMenu.barTools) classes += ' urd-nav-sheet-bar-bare';
   return classes;
 }
 

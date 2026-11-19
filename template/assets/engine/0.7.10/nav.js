@@ -19,7 +19,7 @@
  * ghost there, or a pull tab (nav.hideMode).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, logoParts, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, sheetMotion, announcementModel, launcherModel, launcherVars, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, logoParts, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, phoneMenuModel, sheetMotion, announcementModel, launcherModel, launcherVars, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -35,6 +35,10 @@ const HOVER_CLOSE_DELAY = 250;
 // detaches the previous render's listeners (including those on document) so
 // there is never more than one active set.
 let navController = null;
+
+// The current render's phone menu as the next render finds it: the bar, its full-screen dialog, whether the menu is open, its open submenus and its scroll.
+// The next render reads it before it clears anything, so a menu open in the editor's preview stays open through a change of a setting.
+let readMenu = null;
 
 // The current render's scroll-state pass, so a switch between the editor's
 // views can apply the top-zone state at once instead of at the next scroll.
@@ -173,19 +177,40 @@ function placeStripAlone(el) {
  * @param {string} [pageId] The page being rendered; the menu stays off the pages listed in nav.hideOn, the strip off those in nav.announcement.hideOn
  */
 export function renderNav(site, host, pageId) {
+  const was = readMenu?.() ?? null;
+  readMenu = null;
   navController?.abort();
   navController = new AbortController();
   const signal = navController.signal;
   navScrollRefresh = null;
   lastRender = { site, host, pageId };
+  // The site's own breakpoint; the listener and the burger class are wired
+  // further down, where the nav element exists.
+  const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
 
-  host.replaceChildren();
+  // An open full-screen menu stays open through the render: its dialog and the bar holding it are kept and filled with this render's contents.
+  // A dialog that stays open keeps the focus where it is, in the preview in the field the owner is typing in.
+  // It is kept while this render also wants the full-screen menu and the phone state holds: the breakpoint, the preview's phone view, or a bar folded to the burger.
+  const keep = Boolean(was?.sheet?.open && was.nav.parentNode === host && mobileMenuMode(site.nav.style) === 'sheet'
+    && (mobileMq.matches || document.body.classList.contains('urd-mobile') || was.folded));
+  const keptNav = keep ? was.nav : null;
+  const keptSheet = keep ? was.sheet : null;
+  // The host is emptied but for a kept bar, which in turn keeps only its open dialog; the bar's own style is written again below.
+  for (const child of [...host.childNodes]) if (child !== keptNav) child.remove();
+  if (keptNav) {
+    for (const child of [...keptNav.childNodes]) if (child !== keptSheet) child.remove();
+    keptNav.removeAttribute('style');
+  }
   // A strip placed outside the nav host by the previous render leaves with it.
   document.getElementById('urd-announce')?.remove();
   // A page the menu stays off (nav.hideOn): with hideMode hidden the host is hidden with its classes and clearances cleared, so the page starts at the top with nothing parked above it.
   // The other modes tuck the menu above the top edge as a fixed bar (tuckNav below), where the page starts at the top the same way.
   const tucked = navHidden(site.nav, pageId) ? hideMode(site.nav) : 'hidden';
   if (navHidden(site.nav, pageId) && tucked === 'hidden') {
+    if (keptNav) {
+      keptSheet.close();
+      keptNav.remove();
+    }
     host.style.display = 'none';
     host.classList.remove(...HOST_CLASSES, 'urd-nav-sticky', 'urd-nav-announce-scroll', 'urd-nav-announce-keep', 'urd-nav-scroll', 'urd-nav-compact', 'urd-nav-hidden', 'urd-nav-scrolled');
     document.body.classList.remove('urd-side-left', 'urd-side-right');
@@ -206,9 +231,6 @@ export function renderNav(site, host, pageId) {
   // A tucked menu is always a plain top bar, out of the flow and without the scroll behaviours and the clear top: the modes below the bar's variant have no meaning above the edge.
   const isTucked = tucked !== 'hidden';
   const wantsSide = !isTucked && (site.nav.variant === 'side-left' || site.nav.variant === 'side-right');
-  // The site's own breakpoint; the listener and the burger class are wired
-  // further down, where the nav element exists.
-  const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
   const baseNav = isTucked
     ? { ...site.nav, variant: 'bar', overlay: false, sticky: true, scroll: undefined, style: { ...(site.nav.style ?? {}), atTop: undefined } }
     : wantsSide && narrowMq.matches ? { ...site.nav, variant: 'bar' } : site.nav;
@@ -246,7 +268,8 @@ export function renderNav(site, host, pageId) {
       const root = document.getElementById('urd-root');
       if (root) root.before(announceEl); else document.body.prepend(announceEl);
     } else {
-      host.appendChild(announceEl);
+      // Before a kept bar, where a new bar would follow it.
+      host.insertBefore(announceEl, keptNav);
     }
   }
   // Whether the strip actually scrolls away: the host must be in the flow
@@ -256,7 +279,7 @@ export function renderNav(site, host, pageId) {
     && !hostClasses(effSite).host.some((cls) => cls === 'urd-nav-float' || cls === 'urd-nav-overlay' || cls === 'urd-nav-side-host');
   host.classList.toggle('urd-nav-announce-scroll', announceScrolls);
 
-  const nav = document.createElement('nav');
+  const nav = keptNav ?? document.createElement('nav');
   // layout (additive since v0.5): where the menu items sit; the logo, where
   // it is shown, is first and doubles as the "Home" button.
   nav.className = navClasses(effSite, { mobile: mobileMq.matches });
@@ -293,6 +316,9 @@ export function renderNav(site, host, pageId) {
   } else {
     document.body.style.removeProperty('--urd-nav-side-width');
   }
+  // Whether the bar is folded to the burger by its content, not by the breakpoint (evalFold below). A bar the previous render had folded stays folded until the fold is measured again, so a menu open in it is still the phone's.
+  let contentFolded = Boolean(was?.folded && !isSide && !mobileMq.matches);
+  if (contentFolded) nav.classList.add('urd-nav-mobile');
 
   // Scroll behavior (nav.scroll, additive since v0.6): 'shrink' shrinks the
   // menu after some scrolling, 'hide' hides it on scroll down and shows it
@@ -368,7 +394,7 @@ export function renderNav(site, host, pageId) {
     const backdrop = document.createElement('div');
     backdrop.className = 'urd-nav-bg';
     renderBackgroundLayers(backdrop, navBg);
-    nav.appendChild(backdrop);
+    nav.insertBefore(backdrop, keptSheet);
     // The layers define the surface: the nav element's own background is
     // made transparent (blur/frosted glass still works through it).
     nav.style.setProperty('--urd-nav-bg', 'transparent');
@@ -481,8 +507,9 @@ export function renderNav(site, host, pageId) {
     logo.appendChild(logoText());
   }
   // The logo stands in the bar unless the owner takes it out (nav.logo.show false); the bar's other parts keep their places without it.
+  // It goes in before a kept full-screen menu, where a new one would follow it; without one this appends.
   const showLogo = logoDef.show !== false;
-  if (showLogo) nav.appendChild(logo);
+  if (showLogo) nav.insertBefore(logo, keptSheet);
   nav.classList.toggle('urd-nav-no-logo', !showLogo);
 
   // The tool cluster at the far right: the launcher, the cart and the
@@ -522,14 +549,15 @@ export function renderNav(site, host, pageId) {
     // The checkout page: a page in the register (cart.page) or a path (cart.href).
     const checkoutLink = resolveLink(cartCfg, site.pages ?? []);
     const drawer = createCartDrawer({ href: checkoutLink.missing ? '' : checkoutLink.href, currency: cartCfg.currency || 'kr' });
-    nav.appendChild(drawer.dialog);
+    nav.insertBefore(drawer.dialog, keptSheet);
     const paintCart = () => {
       const count = cartCount(readCart());
       cartBadge.textContent = String(count);
       cartBadge.hidden = count === 0;
     };
     paintCart();
-    onCartChange(nav, () => {
+    // Tied to the button, which leaves the page with its render, and the listener with it; the bar itself can stay through a render.
+    onCartChange(cartBtn, () => {
       paintCart();
       drawer.refresh();
     });
@@ -618,8 +646,10 @@ export function renderNav(site, host, pageId) {
   list.className = 'urd-nav-list';
   list.id = 'urd-nav-menu';
 
+  // The phone menu's own look: where its text stands, the submenu arrow, and whether the bar keeps its tools beside the full-screen menu (the classes from navClasses carry the first two to the CSS).
+  const phoneMenu = phoneMenuModel(site.nav.style);
   const sheet = mobileMenuMode(site.nav.style) === 'sheet'
-    ? buildSheet(nav, { list, tools, burger, logo: showLogo && site.nav.style?.sheetLogo === true ? logo : null, announce: () => (site.nav.style?.sheetAnnounce === true ? announceEl : null), withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, labels: site.nav.style?.sheetToolLabels === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}) }, signal)
+    ? buildSheet(nav, { list, tools, burger, logo: showLogo && site.nav.style?.sheetLogo === true ? logo : null, announce: () => (site.nav.style?.sheetAnnounce === true ? announceEl : null), withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, barTools: phoneMenu.barTools, labels: site.nav.style?.sheetToolLabels === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}), kept: keptSheet }, signal)
     : null;
   // The announcement comes back to the host on close, so the clearance the
   // guard in setNavH held is measured again. Registered after buildSheet's
@@ -655,6 +685,7 @@ export function renderNav(site, host, pageId) {
   const setOpen = (entry, open) => {
     entry.li.classList.toggle('open', open);
     entry.button.setAttribute('aria-expanded', String(open));
+    markLink(entry);
     // A closing submenu takes its own open second level with it, so the panel never reopens with a stale inner level; a headed group stays as it is.
     if (!open) {
       for (const inner of subs) {
@@ -669,8 +700,19 @@ export function renderNav(site, host, pageId) {
   // A child's own submenu stands as a headed group when the submenu is laid
   // out in columns or as the flyout (navClasses sets the class the CSS reads).
   const grouped = subGrouped(site.nav.style);
-  /** Whether an opener stands open with nothing to close it: the column with every submenu open and no arrow, or a headed group. Only outside the mobile menu, where every submenu is an accordion. */
-  const isFixed = (entry) => (columnFixedOpen || entry.grouped) && !isMobileState();
+  /** Whether an opener stands open with nothing to close it: the column with every submenu open and no arrow, or a headed group; in the phone menu, every submenu open from the start with no arrow (nav.style.mobileSubArrow). */
+  const isFixed = (entry) => (isMobileState() ? subMode === 'expanded' && !phoneMenu.arrow : columnFixedOpen || entry.grouped);
+  /** On a phone with submenus that start closed, a split item's own link opens its submenu, so it carries the opener's state too; elsewhere the link only leads to its page. */
+  const markLink = (entry) => {
+    if (!entry.link) return;
+    if (subMode === 'collapsed' && isMobileState()) {
+      entry.link.setAttribute('aria-expanded', String(entry.li.classList.contains('open')));
+      entry.link.setAttribute('aria-controls', entry.button.getAttribute('aria-controls'));
+    } else {
+      entry.link.removeAttribute('aria-expanded');
+      entry.link.removeAttribute('aria-controls');
+    }
+  };
   /** A fixed opener leaves the tab order and reads as a heading, not as an expanded button that cannot collapse; the state follows the mobile fold, so it is applied again when the bar folds or unfolds. */
   const applyFixed = () => {
     for (const entry of subs) {
@@ -679,6 +721,7 @@ export function renderNav(site, host, pageId) {
       if (fixed) entry.button.setAttribute('aria-disabled', 'true');
       else entry.button.removeAttribute('aria-disabled');
       if (fixed) setOpen(entry, true);
+      markLink(entry);
     }
   };
   const closeAll = (except) => {
@@ -753,8 +796,9 @@ export function renderNav(site, host, pageId) {
     button.setAttribute('aria-expanded', 'false');
     button.setAttribute('aria-controls', subId);
 
+    let link = null;
     if (item.kind === 'split') {
-      const link = makeLink(item);
+      link = makeLink(item);
       // Collapsed submenus on mobile: the whole item opens the submenu
       // instead of navigating (the menu is for touch, and a tap that
       // navigates never shows the submenu); the item's own page is the
@@ -780,7 +824,7 @@ export function renderNav(site, host, pageId) {
     }
     li.appendChild(button);
 
-    const entry = { li, button, grouped: grouped && depth > 0 };
+    const entry = { li, button, link, grouped: grouped && depth > 0 };
     subs.push(entry);
 
     const sub = document.createElement('ul');
@@ -877,12 +921,31 @@ export function renderNav(site, host, pageId) {
 
   nav.appendChild(list);
   nav.appendChild(tools);
-  host.appendChild(nav);
+  // A kept bar is in the host already; moving it would close the dialog inside it.
+  if (nav.parentNode !== host) host.appendChild(nav);
   // The menu height while it is not shrunk, kept across the scroll shrink.
   let navHBase = 0;
   // Measured at once, so the first paint already has the menu's clearance;
   // the observer below keeps it current.
   setNavH();
+
+  // The phone menu comes back as the previous render left it, where the phone state still holds: open, with the same submenus open and the same scroll.
+  // A kept full-screen menu was never closed and takes this render's contents; where the phone state no longer holds, it closes.
+  if (was?.open && isMobileState()) {
+    if (sheet?.kept) sheet.fill();
+    setMobileOpen(true);
+    // The submenus that were open open again; where every submenu stood open from the start before the change and still does, one closed by hand stays closed. A fixed one stays open.
+    for (const entry of subs) {
+      if (isFixed(entry)) continue;
+      const wasOpen = was.subs.includes(entry.button.getAttribute('aria-controls'));
+      if (wasOpen || (was.expanded && expandedSubs())) setOpen(entry, wasOpen);
+    }
+    (sheet ? sheet.body : list).scrollTop = was.scroll;
+    // Focus that stood in the old contents left with them: the new close button takes it, only while the page has the focus, never from the editor around the preview.
+    if (sheet?.kept && was.focusInside && document.hasFocus()) sheet.closeButton.focus();
+  } else if (sheet?.kept) {
+    sheet.dialog.close();
+  }
 
   // The measured menu height as a CSS var on the root element: the nav
   // clearance in base.css (menu out of the flow) and the chrome parking in
@@ -948,11 +1011,13 @@ export function renderNav(site, host, pageId) {
   // hidden and cannot be measured: unfolding happens only once the bar is
   // wider than the need, and then measures again in case the need has grown.
   let foldNeeds = 0;
+  // The bar is measured again when the full-screen menu closes: while it is open, the list stands in the dialog and the bar would measure as fitting.
   const evalFold = () => {
-    if (isSide || mobileMq.matches) return;
+    if (isSide || mobileMq.matches || sheet?.dialog.open) return;
     if (!nav.classList.contains('urd-nav-mobile')) {
       if (nav.scrollWidth > nav.clientWidth + 1) {
         foldNeeds = nav.scrollWidth;
+        contentFolded = true;
         nav.classList.add('urd-nav-mobile');
         // The headed groups are accordions in the folded menu.
         applyFixed();
@@ -966,12 +1031,14 @@ export function renderNav(site, host, pageId) {
       } else {
         // The bar is back: the submenus the expanded mobile mode opened
         // close with the panel, and the headed groups stand open again.
+        contentFolded = false;
         setMobileOpen(false);
         closeAll();
         applyFixed();
       }
     }
   };
+  if (sheet) sheet.dialog.addEventListener('close', () => evalFold(), { signal });
 
   // A ResizeObserver on the nav (not the host: a host out of the flow has
   // no height of its own to observe) catches window width, font loading and
@@ -1057,7 +1124,8 @@ export function renderNav(site, host, pageId) {
     } else if (openSub) {
       event.preventDefault();
       setOpen(openSub, false);
-      openSub.button.focus();
+      // Without the arrow on the phone a split item's link is its opener.
+      (isMobileState() && !phoneMenu.arrow && openSub.link ? openSub.link : openSub.button).focus();
     } else if (!sheet && nav.classList.contains('urd-nav-open')) {
       setMobileOpen(false);
       burger.focus();
@@ -1074,6 +1142,17 @@ export function renderNav(site, host, pageId) {
     setMobileOpen(false);
     tuck?.hide();
   }, { signal });
+
+  readMenu = () => ({
+    nav,
+    sheet: sheet?.dialog ?? null,
+    open: isMobileOpen(),
+    folded: contentFolded,
+    expanded: expandedSubs(),
+    subs: subs.filter((entry) => entry.li.classList.contains('open')).map((entry) => entry.button.getAttribute('aria-controls')),
+    scroll: (sheet?.dialog.open ? sheet.body : list).scrollTop,
+    focusInside: Boolean(sheet?.dialog.open && sheet.dialog.contains(document.activeElement) && document.activeElement !== sheet.dialog),
+  });
 }
 
 /**
@@ -1218,16 +1297,26 @@ function tuckNav(host, nav, mode, site, signal) {
  * the tool cluster on close (the list keeps its id, so the burger's
  * aria-controls stays valid). With `logo` the logo moves along into the
  * head, with `withTheme` and `withCart` the theme button and the cart move
- * into a foot; all return to the bar on close, in their original order. A link click and a
+ * into a foot, and with `barTools` false the theme button, the cart and the
+ * site's links all do, since the bar shows none of them on the phone; all
+ * return to the bar on close, in their original order. A link click and a
  * backdrop click close it; Escape, the focus trap, the focus return to the
  * burger and the scroll lock (body:has(dialog:modal) in base.css) are
  * native. `motion` is the allowlisted entrance from sheetMotion, drawn by
  * base.css. `surface` is the sheet's own surface (nav.style.sheet through
  * navSurface); without choices the sheet follows the bar's veil and blur.
  * `labels` shows the tool buttons' text beside the icons in the foot.
+ * `kept` is the previous render's dialog, still open: it is emptied and
+ * built again in place and never leaves the page, so it stays open and the
+ * focus stays where it is; `fill()` then moves this render's parts into it
+ * where `show()` would also open it.
  */
-function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withCart, labels, motion, surface }, signal) {
-  const dialog = document.createElement('dialog');
+function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withCart, barTools = true, labels, motion, surface, kept = null }, signal) {
+  const dialog = kept ?? document.createElement('dialog');
+  if (kept) {
+    kept.replaceChildren();
+    kept.removeAttribute('style');
+  }
   dialog.className = `urd-nav-sheet urd-nav-sheet-from-${motion}${labels ? ' urd-nav-sheet-labels' : ''}`;
   if (surface.bg) dialog.style.setProperty('--urd-nav-sheet-bg', surface.bg);
   if (surface.blur === false) dialog.style.setProperty('--urd-nav-sheet-blur', 'none');
@@ -1248,7 +1337,7 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
   dialog.appendChild(body);
   const foot = document.createElement('div');
   foot.className = 'urd-nav-sheet-foot';
-  if (withTheme || withCart) dialog.appendChild(foot);
+  if (withTheme || withCart || !barTools) dialog.appendChild(foot);
   // Light dismiss: a click on the ::backdrop hits the dialog element itself.
   // A link click closes too, unless the link's own handler cancelled it (an
   // item with a submenu opens it instead of navigating).
@@ -1270,8 +1359,10 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
     }, { passive: false, signal: touchLock.signal });
   };
   signal.addEventListener('abort', () => touchLock?.abort());
-  const toolSelector = [withCart && '.urd-nav-cart', withTheme && '.urd-nav-theme'].filter(Boolean).join(', ');
+  const toolSelector = [(withCart || !barTools) && '.urd-nav-cart', (withTheme || !barTools) && '.urd-nav-theme', !barTools && '.urd-nav-links'].filter(Boolean).join(', ');
   const toolButtons = () => (toolSelector ? [...tools.querySelectorAll(toolSelector)] : []);
+  // Whether this render's parts stand in the dialog, so a close puts back only what was moved.
+  let filled = false;
   let logoNext = null;
   // Where the announcement came from, so it goes back there on close. The
   // strip is read through a getter: the cross inside the sheet removes it,
@@ -1284,6 +1375,8 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
   dialog.addEventListener('close', () => {
     touchLock?.abort();
     touchLock = null;
+    if (!filled) return;
+    filled = false;
     nav.insertBefore(list, tools);
     if (logo) nav.insertBefore(logo, logoNext);
     const strip = announce?.();
@@ -1295,9 +1388,13 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
       else tools.insertBefore(btn, next.parentNode === tools ? next : null);
     }
     toolHomes = [];
+    // A dialog kept through a render was opened by a burger that render replaced, so the browser had nowhere to return the focus, which is left in the closed dialog or on the page: this burger takes it, while the page has the focus.
+    const lost = !document.activeElement || document.activeElement === document.body || dialog.contains(document.activeElement);
+    if (document.hasFocus() && lost) burger.focus();
   }, { signal });
-  nav.appendChild(dialog);
-  const show = () => {
+  if (!kept) nav.appendChild(dialog);
+  const fill = () => {
+    filled = true;
     if (logo) {
       logoNext = logo.nextSibling;
       head.insertBefore(logo, close);
@@ -1315,9 +1412,12 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
       foot.appendChild(btn);
     }
     lockTouch();
+  };
+  const show = () => {
+    fill();
     dialog.showModal();
   };
-  return { dialog, show };
+  return { dialog, body, closeButton: close, show, fill, kept: Boolean(kept) };
 }
 
 /**

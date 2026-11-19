@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, launcherVars, LAUNCHER_SIZES, LAUNCHER_BOUNDS, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, announcementHidden, subGrouped, hideMode, HIDE_MODES, tabModel, logoParts, NAV_PRESSES, NAV_PHONE_LOGOS } = await engineImport('nav-model.js');
+const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, phoneMenuModel, MOBILE_ALIGNS, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, launcherVars, LAUNCHER_SIZES, LAUNCHER_BOUNDS, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, announcementHidden, subGrouped, hideMode, HIDE_MODES, tabModel, logoParts, NAV_PRESSES, NAV_PHONE_LOGOS } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
 const PAGES = [
@@ -753,6 +753,41 @@ test('mobileSubMode: collapsed is the default, expanded the alternative', () => 
   assert.equal(mobileSubMode({ mobileSubs: 'tap' }), 'collapsed');
 });
 
+test('phoneMenuModel: left text, the arrow and the tools in the bar are the defaults, unknown values fall back to them', () => {
+  assert.deepEqual(phoneMenuModel(), { align: 'left', arrow: true, barTools: true });
+  assert.deepEqual(phoneMenuModel({ mobileAlign: 'justify', mobileSubArrow: 'no', sheetBarTools: 0 }), { align: 'left', arrow: true, barTools: true });
+  for (const align of MOBILE_ALIGNS) assert.equal(phoneMenuModel({ mobileAlign: align }).align, align);
+  assert.equal(phoneMenuModel({ mobileSubArrow: false }).arrow, false);
+  assert.equal(MOBILE_ALIGNS[0], 'left');
+});
+
+test('navClasses: the phone\'s own placement places the burger and its buttons at the breakpoint alone, and the edge needs no class', () => {
+  const site = (layout) => ({ nav: { style: { mobile: { layout } } } });
+  assert.equal(navClasses(site('left'), { mobile: true }), 'urd-nav urd-nav-right urd-nav-inset urd-nav-mplace-left');
+  assert.equal(navClasses(site('center'), { mobile: true }), 'urd-nav urd-nav-right urd-nav-inset urd-nav-mplace-center');
+  assert.equal(navClasses(site('right'), { mobile: true }), 'urd-nav urd-nav-right urd-nav-inset');
+  assert.equal(navClasses(site('left')), 'urd-nav urd-nav-right urd-nav-inset');
+  assert.equal(navClasses(site('middle'), { mobile: true }), 'urd-nav urd-nav-right urd-nav-inset');
+});
+
+test('phoneMenuModel: the tools leave the bar only beside the full-screen menu, which has a foot to take them', () => {
+  assert.equal(phoneMenuModel({ mobileMenu: 'sheet', sheetBarTools: false }).barTools, false);
+  assert.equal(phoneMenuModel({ sheetBarTools: false }).barTools, true);
+  assert.equal(phoneMenuModel({ mobileMenu: 'dropdown', sheetBarTools: false }).barTools, true);
+});
+
+test('navClasses: the phone menu\'s alignment, arrow and bare bar give their classes at every width, and a nav without them none', () => {
+  const site = (style) => ({ nav: { style } });
+  assert.equal(navClasses(site({})), 'urd-nav urd-nav-right urd-nav-inset');
+  assert.equal(navClasses(site({ mobileAlign: 'left', mobileSubArrow: true, sheetBarTools: true })), 'urd-nav urd-nav-right urd-nav-inset');
+  assert.equal(navClasses(site({ mobileAlign: 'center' })), 'urd-nav urd-nav-right urd-nav-inset urd-nav-malign-center');
+  assert.equal(navClasses(site({ mobileAlign: 'right' }), { mobile: true }), 'urd-nav urd-nav-right urd-nav-inset urd-nav-malign-right');
+  assert.equal(navClasses(site({ mobileSubArrow: false })), 'urd-nav urd-nav-right urd-nav-inset urd-nav-msub-arrow-off');
+  assert.equal(navClasses(site({ mobileMenu: 'sheet', sheetBarTools: false })), 'urd-nav urd-nav-right urd-nav-inset urd-nav-sheet-bar-bare');
+  assert.equal(navClasses(site({ sheetBarTools: false })), 'urd-nav urd-nav-right urd-nav-inset');
+  assert.equal(navClasses(site({ mobileAlign: 'center" onclick="x' })), 'urd-nav urd-nav-right urd-nav-inset');
+});
+
 test('sheetMotion: the six entrances are allowlisted, the slide from the top is the default', () => {
   assert.equal(sheetMotion(), 'top');
   for (const m of SHEET_MOTIONS) assert.equal(sheetMotion({ sheetMotion: m }), m);
@@ -1105,7 +1140,7 @@ test('the logo can be taken out of the bar, and the bar keeps its other parts in
   assert.deepEqual(schema.properties.nav.properties.logo.properties.show, { type: 'boolean', default: true, description: schema.properties.nav.properties.logo.properties.show.description });
   const ENGINE = JSON.parse(readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8')).engine;
   const nav = readFileSync(new URL(`../template/assets/engine/${ENGINE}/nav.js`, import.meta.url), 'utf8');
-  assert.match(nav, /const showLogo = logoDef\.show !== false;\s*if \(showLogo\) nav\.appendChild\(logo\);\s*nav\.classList\.toggle\('urd-nav-no-logo', !showLogo\);/);
+  assert.match(nav, /const showLogo = logoDef\.show !== false;\s*if \(showLogo\) nav\.insertBefore\(logo, keptSheet\);\s*nav\.classList\.toggle\('urd-nav-no-logo', !showLogo\);/);
   assert.match(nav, /logo: showLogo && site\.nav\.style\?\.sheetLogo === true \? logo : null/, 'nor does the sheet take it in');
   const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
   assert.match(css, /body\.urd-mobile \.urd-nav-no-logo:not\(\.urd-nav-tools-start\) \.urd-nav-tools,\s*\.urd-nav-mobile\.urd-nav-no-logo:not\(\.urd-nav-tools-start\) \.urd-nav-tools \{\s*margin-left: auto;/, 'the burger keeps its edge on the phone');
