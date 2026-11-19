@@ -8,6 +8,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.91 - Svelte 5.58.0 and Vite 8.3.8, with the editor bundle rebuilt - 19 November 2026
+
+- Svelte 5.58.0 changes the runtime the editor bundles, and Dependabot has no pull request for it yet. It is taken in with the bundle rebuilt, and Dependabot's #36 (vite 8.3.6 → 8.3.8, rolldown 1.2.19 with an optional WebAssembly binding) in the same commit, so #36 closes on its own.
+
+The independent review before the commit found these:
+
+1. The entry said #36 failed CI's check that the bundle matches its source. It passed, since Vite 8.3.8 builds the same bundle; the entry names Svelte as the reason for the rebuild.
+2. The lock file is #36's with three differences: Svelte 5.58.0 with its esrap 2.4.2, `@tybys/wasm-util` 0.10.5 for 0.10.4 under the optional binding, and six `libc` lines gone from rolldown's Linux bindings, which the local npm does not write. `npm ci` and the build are unaffected; the entry no longer calls the lock #36's.
+
 ### 0.7.13.14.2 - The «Back to top» button's own mark and shape: an icon or a picture in place of the arrow, and a shape window with 31 shapes, Custom's sliders and drawing by hand - 19 November 2026
 
 - The button could show only the arrow (BACKLOG 0.7.13.14). The fold's «Icon» row puts a character, a drawn icon or an uploaded and edited picture in its place, with a slider for its size and a bin to go back to the arrow (`markOf` and `iconSize` in totop.js).

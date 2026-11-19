@@ -2,6 +2,10 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.91): Svelte 5.58.0 and Vite 8.3.8
+
+- [ ] The admin loads, and the element menu, the panels, the dialogs, undo and the canvas work as before
+
 ### Test batch (0.7.13.14.2): the «Back to top» button's own mark, the tidier fold and the shape window
 
 - [ ] In the «Back to top» button fold, «Icon» opens the icon picker with «Upload image …» first: pick a character, a drawn icon, and upload a picture, which opens in the image editor; each stands on the button in place of the arrow, and the bin on the icon's corner takes it back to the arrow

@@ -76,7 +76,7 @@ function Ae(e = !0) {
 			if (r === "]") {
 				if (t === 0) return n;
 				--t;
-			} else (r === "[" || r === "[!" || r[0] === "[" && !isNaN(Number(r.slice(1)))) && (t += 1);
+			} else (r === "[" || r === "[!" || r.startsWith("[?") || r[0] === "[" && !isNaN(Number(r.slice(1)))) && (t += 1);
 		}
 		var i = /* @__PURE__ */ bn(n);
 		e && n.remove(), n = i;
@@ -511,6 +511,11 @@ var Pt = null, Ft = null, It = null, Lt = null, Rt = null, zt = !1, Bt = !1, Vt 
 				this.#h(e, t, n);
 			} catch (t) {
 				throw Qt(e), this.#d() || this.discard(), t;
+			}
+			if (this.#a.length > 0) {
+				for (let e of n) this.#a.push(e);
+				for (let e of t) this.#a.push(e);
+				n.length = 0, t.length = 0;
 			}
 		}
 		if (Ft = null, r.length > 0) {
@@ -2049,27 +2054,27 @@ function di(e, t, n) {
 function fi(e, t, n) {
 	t === null ? e.effect.first = n : t.next = n, n === null ? e.effect.last = t : n.prev = t;
 }
-function U(e, t, n = !1, r = !1, i = !1, a = !1) {
-	var o = e, s = "";
+function U(e, t, n = !1, r = !1, i = !1, a = !1, o) {
+	var s = e, c = "";
 	if (n) {
-		var c = e;
-		we && (o = De(/* @__PURE__ */ yn(c)));
+		var l = e;
+		we && (s = De(/* @__PURE__ */ yn(l)));
 	}
 	I(() => {
 		var e = ir;
-		if (s === (s = t() ?? "")) we && Oe();
-		else if (n && !we) e.nodes = null, c.innerHTML = s, s !== "" && Ur(/* @__PURE__ */ yn(c), c.lastChild);
-		else if (e.nodes !== null && (Gn(e.nodes.start, e.nodes.end), e.nodes = null), s !== "") {
+		if (c === (c = t() ?? "")) we && Oe();
+		else if (n && !we) e.nodes = null, l.innerHTML = c, c !== "" && Ur(/* @__PURE__ */ yn(l), l.lastChild);
+		else if (e.nodes !== null && (Gn(e.nodes.start, e.nodes.end), e.nodes = null), c !== "") {
 			if (we) {
-				for (var a = Ee.data, l = Oe(), u = l; l !== null && (l.nodeType !== 8 || l.data !== "");) u = l, l = /* @__PURE__ */ bn(l);
-				if (l === null) throw Se(), ge;
-				Ur(Ee, u), o = De(l);
+				for (var a = Ee.data, o = Oe(), u = o; o !== null && (o.nodeType !== 8 || o.data !== "");) u = o, o = /* @__PURE__ */ bn(o);
+				if (o === null) throw Se(), ge;
+				Ur(Ee, u), s = De(o);
 			} else {
 				var d = Cn(r ? "svg" : i ? "math" : "template", r ? ye : i ? be : void 0);
-				d.innerHTML = s;
+				d.innerHTML = c;
 				var f = r || i ? d : d.content;
-				if (Ur(/* @__PURE__ */ yn(f), f.lastChild), r || i) for (; /* @__PURE__ */ yn(f);) o.before(/* @__PURE__ */ yn(f));
-				else o.before(f);
+				if (Ur(/* @__PURE__ */ yn(f), f.lastChild), r || i) for (; /* @__PURE__ */ yn(f);) s.before(/* @__PURE__ */ yn(f));
+				else s.before(f);
 			}
 		}
 	});
