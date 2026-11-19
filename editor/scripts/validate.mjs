@@ -219,12 +219,17 @@ iconSite.site.commerce = { ...(iconSite.site.commerce ?? {}), termsPage: 'kjopsv
 const sharePage = load('template/content/pages/hjem.json');
 // The room above and below a section's blocks on the phone (size.mobilePadTop and mobilePadBottom, additive from 0.7.3.26), which the template's pages do not set.
 sharePage.sections[0].size = { ...(sharePage.sections[0].size ?? {}), mobilePadTop: 0, mobilePadBottom: 96 };
+// A block's own size on the phone (block.phoneSize, additive from 0.7.36.2), which the template's pages do not set, and the section flagged for the review that names it.
+const sizedBlock = sharePage.sections[0].blocks.find((b) => b.type === 'text') ?? sharePage.sections[0].blocks[0];
+sizedBlock.size = 1.4;
+sizedBlock.phoneSize = 0.8;
+sharePage.sections[0].responsive = { ...(sharePage.sections[0].responsive ?? {}), mobile: { ...(sharePage.sections[0].responsive?.mobile ?? { mode: 'auto' }), attention: { needed: true, reason: 'size-changed', since: '2026-11-19T10:00:00Z', blockId: sizedBlock.id } } };
 sharePage.meta = { ...(sharePage.meta ?? {}), og: { image: '/media/images/share.webp', imageSource: keptOriginal } };
 const validatePage = ajv.getSchema(pageSchema.$id);
 for (const [label, ok, errors] of [
   ['synthetic site icon and logos with their kept originals', validateSite(iconSite), validateSite.errors],
   ['synthetic site with the logo and the menu\'s own look on the phone, own phone layouts and a back to top button of its own', validateSite(phoneLogoSite), validateSite.errors],
-  ['synthetic share image with its kept original, and a section\'s room on the phone', validatePage(sharePage), validatePage.errors],
+  ['synthetic share image with its kept original, a section\'s room on the phone, and a block\'s own size there', validatePage(sharePage), validatePage.errors],
 ]) {
   if (ok) {
     console.log(`OK    ${label}`);

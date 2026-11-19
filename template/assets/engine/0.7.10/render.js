@@ -13,7 +13,7 @@
  *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
  */
 import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, phoneRoomOf, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
-import { forcesReadable, phoneHandoff, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
+import { forcesReadable, phoneHandoff, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, phoneSized, phoneFrame, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
 import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { sectionDivider, dividerSvg } from './divider-model.js';
@@ -473,6 +473,8 @@ const stickWatch = typeof ResizeObserver === 'function' ? new ResizeObserver((en
 function zoomOnPhone(el, block, designW) {
   const child = contentChild(el);
   if (!child) return;
+  // The phone draws the block at its own size where it has one (phoneSized), and its shrink follows that size.
+  block = phoneSized(block);
   if (!shrinksOnPhone(block) || !(designW > 0)) {
     el._urdPhoneFit = null;
     const size = drawnScale(block);
@@ -1189,7 +1191,8 @@ export function renderSection(section, site, host, opts = {}) {
       // A height of its own on the phone: a picture or a film with a shape fills it rather than keeping its shape (base.css).
       if (phoneHeight(placement)) el.dataset.urdPhoneH = '1';
       const place = (autoGrow) => {
-        Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { ...placing, autoGrow }));
+        // The desktop frame with its height at the phone's own size, where the block has one.
+        Object.assign(el.style, mobilePlacementToCss(placement, phoneFrame(block), { ...placing, autoGrow }));
         if (cells && sticks) Object.assign(el.style, phoneCellCss(cells));
       };
       place(autoGrows(block, Urd.blocks.get(block.type)));
@@ -1216,7 +1219,7 @@ export function renderSection(section, site, host, opts = {}) {
       // scale zooms, so it is written in the content's own px; a block
       // that shrinks on the phone writes it again at its zoom (fitOnPhone).
       const loadingH = mobileLoadingHeight(block);
-      if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / drawnScale(block))}px`);
+      if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / drawnScale(phoneSized(block)))}px`);
       // Screen docking applies on mobile too: sticky.js docks the block
       // against its own measured size. Pinning while scrolling is the
       // row grid's own on the phone (stickOnPhone), so it is not marked here.
@@ -1242,7 +1245,7 @@ export function renderSection(section, site, host, opts = {}) {
         el.style.justifySelf = '';
         // A block placed by hand stretches to its rows in the grid, which grow with its content; in the holder it takes their height itself, and more where its content needs it (placeStuck).
         if (pinned && !el.style.height) {
-          const rows = Number.isFinite(block.frames.mobile.rows) ? block.frames.mobile.rows : Math.max(1, Math.ceil(block.frames.desktop.h / MOBILE_ROW));
+          const rows = Number.isFinite(block.frames.mobile.rows) ? block.frames.mobile.rows : Math.max(1, Math.ceil(phoneFrame(block).h / MOBILE_ROW));
           if (autoGrows(block, Urd.blocks.get(block.type))) el.style.minHeight = `${rows * MOBILE_ROW}px`;
           else el._urdStickBase = rows * MOBILE_ROW;
         }
@@ -1408,7 +1411,7 @@ function isNarrowBlock(el, block, ctx, wasNarrow = false) {
   const frameW = block.frames?.desktop?.w;
   const width = block.fit === 'shrink' && designW && frameW && ctx.viewport !== 'mobile'
     ? (designW * frameW) / 100
-    : el.clientWidth / (drawnScale(block) || 1);
+    : el.clientWidth / (drawnScale(ctx.viewport === 'mobile' ? phoneSized(block) : block) || 1);
   if (!(width > 0)) return ctx.viewport === 'mobile';
   // Back from narrow only past a margin, so a block at the line does not flip as the page's scrollbar comes and goes.
   return width < NARROW_PX + (wasNarrow ? 16 : 0);

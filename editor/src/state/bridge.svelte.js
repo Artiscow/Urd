@@ -266,8 +266,8 @@ function handleReviewDone(msg) {
   shellState.updateAttention();
 }
 
-/** A pasted style's block-level fields (block-style.js): animation, hover, size, height and fit, written as one undo step; null clears a field. */
-const STYLE_FIELDS = ['animation', 'hover', 'size', 'sizeMin', 'sizeMax', 'height', 'fit', 'fitMin'];
+/** A pasted style's block-level fields (block-style.js): animation, hover, size and the phone's own, height and fit, written as one undo step; null clears a field. */
+const STYLE_FIELDS = ['animation', 'hover', 'size', 'phoneSize', 'sizeMin', 'sizeMax', 'height', 'fit', 'fitMin'];
 function handleBlockStyle(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);

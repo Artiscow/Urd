@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
-const { forcesReadable, phoneHandoff, READABLE_PX, PHONE_WORDS, phoneWordsOf, phoneWordsChange, propsForViewport, PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
+const { phoneSized, phoneFrame, forcesReadable, phoneHandoff, READABLE_PX, PHONE_WORDS, phoneWordsOf, phoneWordsChange, propsForViewport, PHONE_DESIGNS, NARROW_PX, PUSH_ACROSS_MIN, hasPhoneDesign, propsForWidth, drawnBlock, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, fitMoves, fitMovesAll, typedFrames, followsContent, keepsShape, shapeHeight, heightAlign, FIT_BY_WIDTH, FOLLOWS_CONTENT, STRETCHES, PUSH_GAP_MAX, PUSH_GAP_MIN, PUSH_SECTION_PAD, SIZE, SIZE_BY_FRAME, SIZE_TEXT, TYPE_SCALE, blockSize, drawnScale, sizeBounds, sizeRange, baseTextPx, FETCHES_CONTENT, mobileLoadingHeight } = await engineImport('push-model.js');
 
 const at = (id, y, h, extra = {}) => ({ id, y, h, ...extra });
 /** A block with a desktop frame, the way a section stores it. */
@@ -106,6 +106,33 @@ test('blockSize: the stored size inside the sizes the block may take, 1 for anyt
   assert.equal(blockSize({ type: 'text', size: -1 }), 1);
   assert.equal(blockSize({ type: 'image', size: 1.5 }), 1);
   assert.equal(blockSize(undefined), 1);
+});
+
+test('phoneSized: the phone\'s own size in the size\'s place where it is one inside SIZE, else the block itself, and never on a frame-sized type', () => {
+  const text = { type: 'text', size: 1.4, phoneSize: 0.8 };
+  assert.deepEqual(phoneSized(text), { type: 'text', size: 0.8, phoneSize: 0.8 });
+  assert.equal(drawnScale(phoneSized(text)), 0.8, 'the phone draws its own size');
+  assert.equal(drawnScale(text), 1.4, 'the desktop keeps its own');
+  const follows = { type: 'text', size: 1.4 };
+  assert.equal(phoneSized(follows), follows, 'without a size of its own the phone follows the desktop');
+  for (const phoneSize of [0.2, 3, 'big', null]) {
+    const odd = { type: 'text', size: 1.2, phoneSize };
+    assert.equal(phoneSized(odd), odd, `${phoneSize} is no size of the phone's own`);
+  }
+  const image = { type: 'image', phoneSize: 0.8 };
+  assert.equal(phoneSized(image), image, 'a frame-sized type keeps its frame');
+  // The text bounds stop the phone's size as they stop the desktop's.
+  assert.equal(blockSize(phoneSized({ type: 'text', phoneSize: 0.5, sizeMin: 12 })), 0.75);
+  assert.equal(phoneSized(undefined), undefined);
+});
+
+test('phoneFrame: a box of fixed height stands at the phone\'s own size, scaled against the desktop\'s; without one the frame itself', () => {
+  const frame = { x: 10, y: 0, w: 30, h: 48 };
+  assert.deepEqual(phoneFrame({ type: 'button', size: 1, phoneSize: 2, frames: { desktop: frame } }), { ...frame, h: 96 });
+  assert.deepEqual(phoneFrame({ type: 'button', size: 1.6, phoneSize: 1, frames: { desktop: { ...frame, h: 80 } } }), { ...frame, h: 50 });
+  assert.equal(phoneFrame({ type: 'button', size: 1.2, frames: { desktop: frame } }), frame);
+  assert.equal(phoneFrame({ type: 'image', phoneSize: 0.5, frames: { desktop: frame } }), frame);
+  assert.equal(phoneFrame({ type: 'button', phoneSize: 1, frames: { desktop: frame } }), frame, 'the same size keeps the frame');
 });
 
 test('drawnScale: the size times the type scale, the calendar at its dense base', () => {

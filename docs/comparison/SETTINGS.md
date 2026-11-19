@@ -94,7 +94,7 @@ Urd: the heading levels of the text block (ELEMENTS.md #22).
 |---|---|---|---|
 | Heading level or tag, H1 to H6 | WP, EL, WS, PK, KB, SP, GB | Partial: H1 to H3 in the text toolbar | 0.7.9 (text styles: H4 to H6) |
 | Alignment | WP, EL, PK, KB, SP, GB | Has | - |
-| Size presets | EL, PK | Has: «Size» on the block, and a px size per selection | - |
+| Size presets | EL, PK | Has: «Size» on the block, with a size of the phone's own (0.7.36.2), and a px size per selection | - |
 | Link colour | WP, EL, KB, SP, GB | Missing | 0.7.9 (link styles) |
 | A link on the whole heading, with new tab, nofollow and sponsored | EL, KB | Partial: links on words, through the link editor | v0.8 ER-G (any block as a link) |
 | Text shadow | WP, EL, KB, SP | Missing | 0.7.9 (text shadow) |

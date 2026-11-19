@@ -378,6 +378,34 @@ export function blockSize(block) {
 }
 
 /**
+ * A block as the phone draws it (ADR-0025 decision 6, ADR-0019 decision 1): with the phone's own size (`phoneSize`) in place of the desktop's, where it has one inside SIZE.
+ * Without one, and for the frame-sized types, the block itself, so the phone follows the desktop's size.
+ * The bounds of its base text (sizeMin, sizeMax) bound the phone's size as they bound the desktop's (blockSize).
+ * @param {{type?: string, size?: number, phoneSize?: number}} block
+ * @returns {object}
+ */
+export function phoneSized(block) {
+  if (!block || SIZE_BY_FRAME.has(block.type)) return block;
+  const own = Number(block.phoneSize);
+  if (!Number.isFinite(own) || own < SIZE.min || own > SIZE.max) return block;
+  return { ...block, size: own };
+}
+
+/**
+ * The desktop frame as the phone takes its height from it (ADR-0019 decision 1): a block drawn at a size of the phone's own stands in a box whose height is scaled by that size against the desktop's, as the desktop's size scales the frame.
+ * A block the phone draws at the desktop's size has the frame itself.
+ * @param {{type?: string, size?: number, phoneSize?: number, frames?: {desktop?: {h: number}}}} block
+ * @returns {object|undefined}
+ */
+export function phoneFrame(block) {
+  const frame = block?.frames?.desktop;
+  const sized = phoneSized(block);
+  if (!frame || sized === block) return frame;
+  const ratio = blockSize(sized) / blockSize(block);
+  return ratio === 1 ? frame : { ...frame, h: Math.max(1, Math.round(frame.h * ratio)) };
+}
+
+/**
  * The scale a block's content is drawn at: its size times its type's scale
  * (TYPE_SCALE). The frame follows the size alone.
  * @param {{type?: string, size?: number}} block

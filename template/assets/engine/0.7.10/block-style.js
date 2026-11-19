@@ -32,7 +32,7 @@ export const CONTENT_KEYS = {
 };
 
 /** The block-level fields that are look rather than place or content, and travel with a style to any block type. */
-const SHARED_FIELDS = ['animation', 'hover', 'size', 'sizeMin', 'sizeMax', 'height', 'fit', 'fitMin'];
+const SHARED_FIELDS = ['animation', 'hover', 'size', 'phoneSize', 'sizeMin', 'sizeMax', 'height', 'fit', 'fitMin'];
 
 /**
  * The style of a block: its type, its props without the content, and the

@@ -26,7 +26,9 @@ export function layoutKey(section) {
     const frame = block.frames?.desktop ?? {};
     const grows = GROWS.has(block.type) || followsContent(block);
     return [block.id, block.hideMobile ? 1 : 0, block.frames?.mobile ?? null, block.phonePlace ?? null,
-      grows ? null : round(frame.w), grows ? null : round(frame.h), frame.rot ?? 0];
+      grows ? null : round(frame.w), grows ? null : round(frame.h), frame.rot ?? 0,
+      // A size of the phone's own and the bounds that stop it, only where the block has one, so a block without one keeps the key it had.
+      ...(block.phoneSize !== undefined ? [block.phoneSize, block.sizeMin ?? null, block.sizeMax ?? null] : [])];
   }).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   return JSON.stringify([order, own, setup, section?.size?.mobileGap ?? null, section?.size?.readablePhone ?? null, section?.size?.mobilePadTop ?? null, section?.size?.mobilePadBottom ?? null]);
 }

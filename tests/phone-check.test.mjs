@@ -13,6 +13,15 @@ const image = (id, y = 0, h = 200) => ({ id, type: 'image', props: { src: '', al
 const quote = (id, y = 0, h = 120) => ({ id, type: 'quote', props: { quote: 'Words' }, frames: { desktop: { x: 10, y, w: 40, h } } });
 const section = (id, blocks) => ({ id, blocks });
 
+test('a size of the phone\'s own is part of the phone\'s layout, so one set from the desktop view leaves the section unchecked', () => {
+  const before = section('s1', [text('a')]);
+  const after = section('s1', [{ ...text('a'), phoneSize: 0.8 }]);
+  assert.notEqual(layoutKey(after), layoutKey(before));
+  assert.equal(layoutKey(section('s1', [{ ...text('a'), phoneSize: 0.8 }])), layoutKey(after), 'the same size is the same layout');
+  assert.notEqual(layoutKey(section('s1', [{ ...text('a'), phoneSize: 0.8, sizeMin: 12 }])), layoutKey(after), 'a bound that stops the phone\'s size is part of it');
+  assert.equal(JSON.parse(layoutKey(before))[1][0].length, 7, 'a block without a size of the phone\'s own keeps the key it had, so baselines kept in the browser still match');
+});
+
 test('a section as published is checked', () => {
   const sections = [section('s1', [text('a'), image('b')]), section('s2', [text('c')])];
   assert.deepEqual(uncheckedSections(sections, layoutKeys(sections)), []);

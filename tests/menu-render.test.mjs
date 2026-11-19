@@ -111,7 +111,7 @@ function handleFor(selectedBlock, viewMode = 'desktop') {
     newSeed: () => 1,
     setStatus: noop,
     mutateBlock: noop, setBlockProp: noop, setBlockProps: noop, setBlockFrame: noop, setBlockFit: noop, setBlockFitMin: noop,
-    setBlockSize: noop, endSizeGesture: noop, setBlockSizeBound: noop, setBlockHeightMode: noop, setBlockHeightAlign: noop,
+    setBlockSize: noop, setBlockPhoneSize: noop, endSizeGesture: noop, setBlockSizeBound: noop, setBlockHeightMode: noop, setBlockHeightAlign: noop,
     setBlockAnchor: noop, setSectionAnchor: noop, anchorsTaken: () => new Set(), pageEntry: () => ({ id: 'hjem', path: '/' }),
     canStretch: () => true, setBlockHideMobile: noop, setBlockDecor: noop, setBlockAnimation: noop, setBlockHover: noop, setBlockAnimProp: noop,
     designWidth: () => 1440, shapePx: (p) => Math.round(p * 14.4), setShapeSizePx: noop, setBoxStyle: noop,
@@ -504,6 +504,24 @@ test('a one-switch capability is a card of one line whose chip is its switch', (
   }
   setQuickChoice('text', NO_CHOICE);
   dropCapability('b1', 'decor');
+});
+
+test('«Size on the phone» stands under «Size» for a type that takes a size, as the desktop\'s or its own with its slider, and not for a frame-sized type', () => {
+  const draw = (type, props, extra) => {
+    setQuickChoice(type, { pinned: [], removed: PIN_IDS });
+    const context = new Map([['urd-editor', handleFor(block(type, props, extra))]]);
+    const body = render(ElementMenu, { props: { wide: true, query: '' }, context }).body;
+    setQuickChoice(type, NO_CHOICE);
+    return body;
+  };
+  const follows = draw('text', {}, {});
+  assert.ok(follows.includes('lbl.phoneSize'), 'the row is drawn');
+  assert.ok(follows.indexOf('lbl.scale') < follows.indexOf('lbl.phoneSize'), 'it stands under «Size»');
+  assert.ok(follows.includes('opt.phoneSize.desktop') && follows.includes('opt.phoneSize.own'), 'as on the desktop, or its own');
+  assert.ok(!follows.includes('80 %'), 'no slider while the phone follows the desktop');
+  const own = draw('text', {}, { phoneSize: 0.8 });
+  assert.ok(own.includes('80 %'), 'its own size has its slider');
+  assert.ok(!draw('image', { src: 'x', alt: '' }, {}).includes('lbl.phoneSize'), 'a frame-sized type has no size of the phone\'s own');
 });
 
 test('what belongs to the size and the fit stands under their line, in Placement and in Pinned', () => {

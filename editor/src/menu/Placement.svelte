@@ -26,7 +26,7 @@
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const sections = $derived(ed.sections);
-  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, setStickyPhone, setBlockPhonePlace, setBlockPhoneCells, setBlockPhoneHeight, resetPhoneWords, handlePhoneUnpin } = ed;
+  const { setBlockAnchor, mutateBlock, setBlockFrame, setBlockFit, setBlockSize, setBlockPhoneSize, setBlockHeightMode, setBlockHeightAlign, canStretch, designWidth, setStickyPhone, setBlockPhonePlace, setBlockPhoneCells, setBlockPhoneHeight, resetPhoneWords, handlePhoneUnpin } = ed;
   const RESET_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 103-6.7"/><path d="M3 4v5h5"/></svg>';
 
   /** Sets the pinning's own settings; a setting given as undefined goes back to the standard and is removed. */
@@ -108,6 +108,17 @@
       value={Math.round(blockSize(selectedBlock) * 100)} shown={`${Math.round(blockSize(selectedBlock) * 100)} %`}
       oninput={(v) => setBlockSize(v / 100)} onchange={ed.endSizeGesture} />
     {#snippet more()}<SizeBounds />{/snippet}
+  </Setting>
+  <!-- Its own size on the phone (ADR-0019 decision 1): as on the desktop, or a size of the phone's own in the same steps and bounds; it starts at the desktop's size, so choosing it changes nothing until the slider moves -->
+  <Setting own={selectedBlock.phoneSize !== undefined} reset={() => setBlockPhoneSize(undefined)}>
+    <Choice label={ta('lbl.phoneSize')} title={ta('tip.phoneSize')} value={selectedBlock.phoneSize === undefined ? 'desktop' : 'own'}
+      options={[['desktop', ta('opt.phoneSize.desktop')], ['own', ta('opt.phoneSize.own')]]}
+      onchange={(v) => setBlockPhoneSize(v === 'own' ? blockSize(selectedBlock) : undefined)} />
+    {#if selectedBlock.phoneSize !== undefined}
+      <SliderRow label={ta('lbl.scale')} min={Math.round(sizeRange(selectedBlock).min * 100)} max={Math.round(sizeRange(selectedBlock).max * 100)} step={Math.round(SIZE.step * 100)}
+        value={Math.round(selectedBlock.phoneSize * 100)} shown={`${Math.round(selectedBlock.phoneSize * 100)} %`}
+        oninput={(v) => setBlockPhoneSize(v / 100)} />
+    {/if}
   </Setting>
 {/snippet}
 {#snippet menuFit()}

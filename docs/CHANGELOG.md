@@ -8,6 +8,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.36.2 - The phone's own «Size» for a block, and the phone side of the canvas moved into v0.7 - 19 November 2026
+
+- The phone side of the canvas stood in v0.8. It is milestone 0.7.36 in v0.7 (moved 19 November 2026), each stage with its decision and Done when, and full editing in both canvases stands under «After v1.0»; the roadmap in both languages and the comparison follow.
+- A block's «Size» applied on every screen, so a heading sized for the desktop was as large on the phone (BACKLOG 0.7.36.2, C122). «Size on the phone» under «Size» in Placement gives the phone a size of its own (`block.phoneSize`, `phoneSized` in push-model.js), drawn there in the size's place; ADR-0025 decision 6 and ADR-0019 decisions 1 and 5 are amended.
+- A desktop size changed under a size of the phone's own flags the section for the phone's review, naming the block (`size-changed`), and the phone check before publishing counts the phone's size.
+- C122's source named no text size. The row cites two builders' sizes per breakpoint beside it.
+- SCHEMA.md, the schema and the validation's example hold the field and the reason; the guides, ARCHITECTURE.md and the comparison's rows describe them.
+
+The independent review before the commit found these:
+
+1. A pasted style left the phone's size behind, since the engine's list of a style's fields lacked it. It travels with the size (`SHARED_FIELDS` in block-style.js).
+2. A block of fixed height, such as a button, drew at the phone's size in a box of the desktop's height, its words running out of it. The phone takes the height scaled by its size against the desktop's (`phoneFrame` in push-model.js), checked in the browser at twice the size.
+3. The text bounds that stop the phone's size were taken away when the desktop's size went back to 100 %, and stood only beside a desktop size. They stay and stand while the phone has a size of its own, and the phone check counts them.
+4. The phone check's key gained a field for every block, so a baseline kept in the browser no longer matched. The field stands only on a block with a size of the phone's own.
+5. This entry named one builder alone, a comment broke its sentences across lines, and the roadmap's open milestones, a comparison summary and the side-by-side rows still read as before the decisions. They are set right.
+
 ### 0.7.13.17 - The phone menu kept open while it is set, its text alignment, submenu arrow and the bar alone beside the full-screen menu - 19 November 2026
 
 - The phone menu closed in the preview at every change of a setting (BACKLOG 0.7.13.17). An open drop-down opens again with its submenus and scroll, and an open full-screen menu is never closed: its dialog and the bar holding it are kept and filled with the new render (`readMenu` and `buildSheet`'s `kept` in nav.js), since a dialog opened again takes the focus out of the panel's field (tested 19 November 2026).

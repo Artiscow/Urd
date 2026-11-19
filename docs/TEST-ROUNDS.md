@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.36.2): the phone's own «Size» for a block
+
+- [ ] A text's menu, Placement: «Size on the phone» stands under «Size», «As on the desktop» or «Its own», in the desktop view and the phone view; an image, a video, a shape, an icon and a map have neither row
+- [ ] «Its own» starts at the desktop's size; its slider makes the block larger or smaller on the phone only, and the desktop keeps its size
+- [ ] Publish: on a phone the block stands at its own size, on a wider screen at the desktop's
+- [ ] With a size of the phone's own, change «Size» in the desktop view: the phone keeps its size, and the top bar asks for a phone review, the card beside the phone naming the block
+- [ ] «As on the desktop» gives the phone the desktop's size again, and the review goes where nothing else in the section stands apart on the phone
+- [ ] Copy style from a block with a phone size and paste it on another: both sizes come along
+- [ ] A button given a size of the phone's own stands on the phone in a box at that size, its words inside it
+- [ ] With a size of the phone's own and «Size» at 100 %, the smallest and largest text size stand under «Size» and stop the phone's size
+
 ### Test batch (0.7.13.17): the phone menu kept open while it is set, and its own look
 
 - [ ] In the phone view, open the full-screen menu and a submenu, then change settings in the Nav panel's Phone fold (the text alignment, the burger's word typed letter by letter, the menu's opacity): the menu and the submenu stay open, the entrance does not play again, and every typed letter lands in the field

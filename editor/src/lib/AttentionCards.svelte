@@ -47,14 +47,14 @@
   /** The blocks the flag is about: the block whose desktop words changed under the phone's own, or the blocks pinned on the phone that the desktop changed around. */
   function fellBehind(attention, section) {
     const blocks = section?.blocks ?? [];
-    if (attention.reason === 'words-changed') return blocks.filter((b) => b.id === attention.blockId);
+    if (attention.reason === 'words-changed' || attention.reason === 'size-changed') return blocks.filter((b) => b.id === attention.blockId);
     if (attention.reason === 'pinned-behind') return blocks.filter((b) => Number.isFinite(b.frames?.mobile?.row));
     return [];
   }
 
   /** What happened, from the section's flag: what fell behind, naming the blocks; the general words where none is left to name; a flag of another reason in its own words, and one without a translation (from a newer engine) in the general words. */
   function reasonText(attention, section) {
-    if (attention.reason === 'words-changed' || attention.reason === 'pinned-behind') {
+    if (attention.reason === 'words-changed' || attention.reason === 'size-changed' || attention.reason === 'pinned-behind') {
       const names = fellBehind(attention, section).map(blockName);
       if (!names.length) return ta('canvas.attention.fallback');
       // Several pinned blocks are named in the words for more than one.

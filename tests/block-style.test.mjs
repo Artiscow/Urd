@@ -19,10 +19,16 @@ test('pasteStyle: the same type takes the whole look and keeps its content; anot
   const style = styleOf(BUTTON);
   const same = pasteStyle({ type: 'button', props: { label: 'Kjøp', href: '/shop', style: 'primary' } }, style);
   assert.deepEqual(same.props, { label: 'Kjøp', href: '/shop', style: 'secondary' });
-  assert.deepEqual(same.shared, { animation: { kind: 'fade' }, hover: null, size: 1.2, sizeMin: null, sizeMax: null, height: null, fit: null, fitMin: null });
+  assert.deepEqual(same.shared, { animation: { kind: 'fade' }, hover: null, size: 1.2, phoneSize: null, sizeMin: null, sizeMax: null, height: null, fit: null, fitMin: null });
   const other = pasteStyle({ type: 'image', props: { src: '/media/a.webp', radius: 'md' } }, style);
   assert.equal(other.props, undefined);
   assert.equal(other.shared.size, 1.2);
+});
+
+test('pasteStyle: the phone\'s own size travels with the size, and a style without one clears it', () => {
+  const sized = styleOf({ ...BUTTON, size: 1.4, phoneSize: 0.8 });
+  assert.equal(pasteStyle({ type: 'text', props: {} }, sized).shared.phoneSize, 0.8);
+  assert.equal(pasteStyle({ type: 'text', props: {}, phoneSize: 0.6 }, styleOf(BUTTON)).shared.phoneSize, null);
 });
 
 test('styleOf and pasteStyle never share objects with the source', () => {

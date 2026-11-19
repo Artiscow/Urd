@@ -12,7 +12,7 @@ import { BAR_ICONS } from '$engine/bar-tools.js';
 import { placeBesideBlock, clampPlace, givesWay } from '../lib/menu-place.js';
 import { canvasBarState } from './canvas-bar.svelte.js';
 import { ta } from '$engine/i18n.js';
-import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE_TEXT, STRETCHES, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable } from '$engine/push-model.js';
+import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE, SIZE_TEXT, STRETCHES, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, phoneSized, forcesReadable } from '$engine/push-model.js';
 import { layerChanges } from '$engine/layer-order.js';
 import { wholeStyleHtml } from '$engine/text-whole.js';
 import { phoneOrderOf, phoneSetupOf, stackOrder } from '$engine/phone-order.js';
@@ -61,9 +61,12 @@ function handleApplyLayout(msg) {
 /** A block pinned to rows of its own on the phone (ADR-0019): it stays on its rows whatever the desktop does around it. */
 const pinnedOnPhone = (block) => Number.isFinite(block.frames?.mobile?.row);
 
-/** Can the section fall behind the desktop on the phone: does it hold a block pinned to rows of its own, or a block with words of the phone's own (ADR-0033)? */
+/** A block with a size of the phone's own (ADR-0019 decision 1): the phone draws it at that size whatever the desktop's. */
+const sizedOnPhone = (block) => phoneSized(block) !== block;
+
+/** Can the section fall behind the desktop on the phone: does it hold a block pinned to rows of its own, a block with words of the phone's own (ADR-0033), or one with a size of the phone's own? */
 function canFallBehind(section) {
-  return section?.blocks?.some((b) => pinnedOnPhone(b) || Object.keys(phoneWordsOf(b.type, b.phoneProps)).length) ?? false;
+  return section?.blocks?.some((b) => pinnedOnPhone(b) || Object.keys(phoneWordsOf(b.type, b.phoneProps)).length || sizedOnPhone(b)) ?? false;
 }
 
 /** Flags the section for the phone's review (ADR-0019 decision 5), with what fell behind and, where it is one block's, that block; a section already flagged keeps its first reason. */
@@ -99,6 +102,11 @@ function markPinnedMoved(section, before) {
 /** The desktop's words of a block changed under words of the phone's own (ADR-0033): the section is flagged for the phone's review, naming the block. */
 function markWordsBehind(section, blockId) {
   if (section) flagReview(section, 'words-changed', blockId);
+}
+
+/** The desktop's size of a block changed under a size of the phone's own, outside the phone view: the section is flagged for the phone's review, naming the block. */
+function markSizeBehind(section, block) {
+  if (section && previewState.viewMode !== 'mobile' && sizedOnPhone(block)) flagReview(section, 'size-changed', block.id);
 }
 
 /** A section where nothing can fall behind any more (its pinned blocks back in the flow, the phone's words given back) has nothing left to review: its flag goes too. */
@@ -241,6 +249,8 @@ function syncSelectedBlock() {
     size: typeof block.size === 'number' ? block.size : undefined,
     sizeMin: typeof block.sizeMin === 'number' ? block.sizeMin : undefined,
     sizeMax: typeof block.sizeMax === 'number' ? block.sizeMax : undefined,
+    // The block's own size on the phone, or undefined where the phone follows `size` (ADR-0019 decision 1).
+    phoneSize: typeof block.phoneSize === 'number' ? block.phoneSize : undefined,
     height: block.height ? JSON.parse(JSON.stringify(block.height)) : null,
     props: JSON.parse(JSON.stringify(block.props)),
     frame: { ...block.frames.desktop },
@@ -797,8 +807,11 @@ function sizeStart(b, section) {
 function applySize(b, section, g, value) {
   if (value === 1) {
     delete b.size;
-    delete b.sizeMin;
-    delete b.sizeMax;
+    // The bounds of the base text stay while the phone has a size of its own, which they bound too.
+    if (!sizedOnPhone(b)) {
+      delete b.sizeMin;
+      delete b.sizeMax;
+    }
   } else {
     b.size = value;
   }
@@ -823,8 +836,26 @@ function applySize(b, section, g, value) {
 function setBlockSize(value) {
   mutateBlock(`edit:${selectedBlock.blockId}:size`, (b, section) => {
     if (sizeGesture?.blockId !== b.id) sizeGesture = sizeStart(b, section);
+    const before = blockSize(b);
     const { min, max } = sizeRange(b);
     applySize(b, section, sizeGesture, Math.round(Math.min(max, Math.max(min, value)) * 100) / 100);
+    if (blockSize(b) !== before) markSizeBehind(section, b);
+  });
+}
+
+/* The block's own size on the phone (ADR-0019 decision 1): a factor in the steps and the range of «Size», which the phone draws in place of the desktop's.
+   Undefined gives the phone back to the desktop's size.
+   The stored frame stays as it is: the phone takes a fixed height from it at its own size (phoneFrame in push-model.js). */
+function setBlockPhoneSize(value) {
+  mutateBlock(`edit:${selectedBlock.blockId}:phoneSize`, (b, section) => {
+    if (value === undefined) {
+      delete b.phoneSize;
+      clearReviewWithoutOverrides(section);
+      return;
+    }
+    const { min, max } = sizeRange(b);
+    const step = SIZE.step * 100;
+    b.phoneSize = Math.round(Math.min(max, Math.max(min, Math.round((value * 100) / step) * step / 100)) * 100) / 100;
   });
 }
 
@@ -842,7 +873,10 @@ function setBlockSizeBound(name, value) {
     if (Number.isFinite(n) && n > 0) b[name] = Math.min(SIZE_TEXT.max, Math.max(SIZE_TEXT.min, n));
     else delete b[name];
     const size = blockSize(b);
-    if (size !== g.size) applySize(b, section, g, size);
+    if (size !== g.size) {
+      applySize(b, section, g, size);
+      markSizeBehind(section, b);
+    }
   });
 }
 
@@ -1786,6 +1820,7 @@ export const pageState = {
   get sizeGesture() { return sizeGesture; },
   set sizeGesture(v) { sizeGesture = v; },
   setBlockSize,
+  setBlockPhoneSize,
   setBlockSizeBound,
   setBlockHeightMode,
   setBlockHeightAlign,

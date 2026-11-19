@@ -1,5 +1,5 @@
 <script>
-  /* The bounds the owner may give a block's base text, where the size slider then ends (ADR-0025 decision 6), shown only while a size is set, side by side so the menu keeps its height; empty, each shows the base text's size now.
+  /* The bounds the owner may give a block's base text, where the size slider then ends (ADR-0025 decision 6), shown only while a size is set, on the desktop or the phone's own, side by side so the menu keeps its height; empty, each shows the base text's size now.
      It stands under the size it belongs to: in Placement, or in Pinned while the size is pinned (ElementMenu.svelte). */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -8,7 +8,7 @@
   const block = $derived(ed.selectedBlock);
 </script>
 
-{#if blockSize(block) !== 1}
+{#if blockSize(block) !== 1 || block.phoneSize !== undefined}
   <div class="frame-grid">
     <label title={ta('tip.scaleMin')}>{ta('lbl.scaleMin')}<input type="number" min={SIZE_TEXT.min} max={SIZE_TEXT.max} value={sizeBounds(block).min ?? ''}
       placeholder={String(Math.round(baseTextPx(block) * blockSize(block)))} onchange={(e) => ed.setBlockSizeBound('sizeMin', e.target.value)} /></label>

@@ -28,7 +28,7 @@
  *                  { type: 'urd-phone-seen', sectionIds }  (the sections standing in the phone view's window, at least half of them or half the window, for the editor's phone check before publishing; sent as a section is drawn, and as a scroll changes the sections in sight)
  *                  { type: 'urd-too-narrow', screen }  (a drag, the key carry or a handle greys its block as too narrow for its words, ADR-0034: 'phone' or 'desktop' while it is greyed, null once it is not)
  *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
- *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size, height, fit; null clears one)
+ *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size and the phone's own, height, fit; null clears one)
  *                  { type: 'urd-section-menu', sectionId, rect }  (open the section's settings in the editor's floating menu: the gear on its bar and «Settings» in its right-click menu)
  *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
  *                  { type: 'urd-toggle-grid' }  (G on the page: the editor shows or hides the grid)
