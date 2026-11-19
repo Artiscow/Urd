@@ -2018,7 +2018,7 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Colour palette or swatches | WP, SQ, HO, WN, WH, TI, DU, ST, JI, EL, BR, DV, FS, WS, SH | Site-wide palette | Partial: five theme colours in light and dark as named tiles in every picker, a fixed palette of fifty common colours beside them (delivered 0.7.0.92), six theme suggestions and seven section themes; no own named colours | 0.7.9 (own named colours) |
+| Colour palette or swatches | WP, SQ, HO, WN, WH, TI, DU, ST, JI, EL, BR, DV, FS, WS, SH | Site-wide palette | Partial: five theme colours in light and dark as named tiles in every picker, a palette of twelve hues and a grey in eight even steps in six strengths, 104 in each and 540 different colours, beside them (delivered 0.7.0.92 and 0.7.9.1), six theme suggestions and seven section themes; no own named colours | 0.7.9 (own named colours) |
 | Variables or CSS variables | WF, EL, BR, BD, OX, DV, WT, FS | Typed tokens (colour, size, font and others) | Partial: a fixed set of theme tokens (five colours, two font stacks, two radii); no size or spacing token in use, and no variables of the owner's own | 0.7.9: the type and spacing scales, component tokens and own named colours |
 | Variable modes (light, dark, brand) | WF, BR, FR, FS, WT, SQ, SH | Modes; dark variants; colour-scheme media condition; section themes | Partial: light and dark (the dark derived or own colours) and seven section themes; no brand or seasonal modes | 0.7.9 «save your own theme» |
 | Light/dark toggle element | BR | Toggle-Mode element | Has: the light/dark toggle in the nav | - |

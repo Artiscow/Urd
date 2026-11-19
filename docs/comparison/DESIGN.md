@@ -308,7 +308,7 @@ Hostinger proxies Google Fonts through its own origin, so no request reaches Goo
   - base.css uses `color-mix()` 193 times, and `light-dark()` appears 14 times across base.css (5) and the generated `content/theme.css` (9) (measured).
   - With «Text on accent» on Auto, `contrast-color()` sets the text on the accent behind `@supports` (code: `theme.js`).
   - Theme suggestions, and a dark palette that the Theme panel can derive from the light one (code: `theme.js` and the editor).
-  - OKLCH appears only in the editor's own category colours (code).
+  - OKLCH appears in the editor's own category colours, and the colour picker's palette is worked out in OKLCH and stored as hex codes (code: `lib/colour-grid.js`, 0.7.9.1).
   - See D15 and D16.
 
 ### Dark mode

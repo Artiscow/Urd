@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.9.1): the colour picker's palette in six strengths
+
+- [ ] The colour picker's Palette tab: the grey and twelve hues across, eight steps from light to dark, each row even in lightness
+- [ ] Vivid, Soft, Muted, Deep, Pastel and Neon redraw the grid in place; the strength last used stands at the next opening, also after a reload
+- [ ] A colour from the grid is set at a press and shows on the published page; the pointer over a cell names it (in Vivid «Blue 4: #4499ff»); the Tab key stops once in the grid, and the arrows, Home and End move in it
+- [ ] Open the picker again on a colour taken from the grid: it opens on Palette, in the strength it came from, the cell outlined
+- [ ] In Firefox: the grid's colours and the strengths (checked in Brave only)
+
 ### Test batch (0.7.0.92): the block bar's tools, extras in a column, «Selection settings», a mark over the Back to top picture, and the colour picker's tabs
 
 - [ ] The block's bar on the canvas: a tool under the pointer is lit, and so is one reached with Tab, in each «Toolbar look» (the white capsule too); the bin keeps its red, and a greyed tool stays unlit

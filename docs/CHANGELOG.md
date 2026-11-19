@@ -8,6 +8,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.9.1 - The colour picker's palette in six strengths - 20 November 2026
+
+- The Palette tab held fifty fixed colours in five steps, with no cyan, lime or amber and large jumps between a tint and its full colour (BACKLOG 0.7.9.1). It holds the grey and twelve hues in eight rows of even lightness, worked out in OKLCH, in six strengths: Vivid, Soft, Muted, Deep, Pastel and Neon (`lib/colour-grid.js`).
+- The strength stands in two rows over the grid and is kept in the browser; a cell carries its name and step, and a palette colour reopens the picker on the strength that holds it.
+- A colour stronger than the screen can show, or a grey, comes out as the same code in two strengths, so a Neon pick reopened on Vivid (browser finding during the build). The strength a pick came from is kept and asked first (`pickerStart` in colour-grid.js).
+- The guides' Palette sentence and the comparison's palette row describe the grid.
+
+The independent review before the commit found these:
+
+1. The strength was kept only at a press on a strength, so a pick from the strength the picker opened on reopened elsewhere; 64 codes are shared between strengths, not only Neon's. A pick keeps the strength it came from, and the choice of tab and strength is the pure `pickerStart`, tested with a pick and a reopening.
+2. The tests read the opening choice from the source's text, so they would pass with it broken. They call `pickerStart` itself.
+3. The grid was 104 stops for the Tab key, and the colour in use was outlined but not told. The grid is one stop, the arrows, Home and End moving in it, and each cell says whether it is the colour in use.
+4. The comparison counted 624 colours where 540 are different, the test batch named a cell by a code it does not have in Vivid, this entry named Neon alone, DESIGN.md said OKLCH stood only in the category colours, and the picker's head comment broke its sentences across lines. Each is set right.
+
 ### 0.7.0.92 - Bug Fixes: the block bar's tools lit and centred, extras in a column, «Selection settings», a mark over the Back to top picture, and a colour picker in three tabs - 19 November 2026
 
 - The block's bar on the canvas lit none of its tools under the pointer but the bin (BACKLOG URGENT). A tool takes a veil of its own drawing's colour under the pointer and at the keyboard's focus, in every look of the bar (base.css).

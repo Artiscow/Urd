@@ -1,11 +1,8 @@
 <script>
   /**
    * The colour picker: three tabs over the saved and recent colours.
-   * Theme holds the theme's colours as named tiles; Custom a saturation and
-   * brightness field, hue and opacity, with the numbers in the format chosen
-   * (Hex, RGB or HSL, kept per browser) and the eyedropper; Palette a fixed
-   * grid of common colours, ten hues from light to dark. It opens on the tab
-   * its colour comes from.
+   * Theme holds the theme's colours as named tiles; Custom a saturation and brightness field, hue and opacity, with the numbers in the format chosen (Hex, RGB or HSL, kept per browser) and the eyedropper; Palette twelve hues and a grey in eight rows of even lightness, in six strengths (lib/colour-grid.js).
+   * The strength last pressed or picked from is kept per browser, and the picker opens on the tab its colour comes from, a palette colour in the strength that holds it (pickerStart).
    *
    * The value is EITHER #rrggbb OR a theme color NAME (e.g. 'accent'):
    * picking a theme dot stores the name, so the content is recolored when
@@ -24,6 +21,7 @@
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from './icons.js';
+  import { colourGrid, GRID_HUES, GRID_STRENGTHS, pickerStart } from './colour-grid.js';
 
   let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false, onremove = undefined } = $props();
   /** The colour's removal, the bin on the swatch's corner: the caller's (a setting row taking its own colour back to the standard), else emptying a colour that may be empty. */
@@ -37,22 +35,10 @@
   const TOKEN_WORDS = { bg: 'color.bg', surface: 'color.surface', text: 'color.text', accent: 'color.accent', 'accent-text': 'palette.accentText' };
   const tokenName = (name) => (TOKEN_WORDS[name] ? ta(TOKEN_WORDS[name]) : name);
 
-  /** The palette: the greys, then nine hues from red round to pink, each from light to dark. */
-  const PALETTE = [
-    ['#ffffff', '#d4d4d4', '#8c8c8c', '#4a4a4a', '#000000'],
-    ['#fde2e2', '#f4a3a3', '#e53935', '#b71c1c', '#6d1414'],
-    ['#fde9d7', '#f9bf8a', '#f57c00', '#c25e00', '#6e3500'],
-    ['#fff6cc', '#ffe680', '#fbc02d', '#c79100', '#6b4e00'],
-    ['#dcf2df', '#9fd8a6', '#43a047', '#2e7d32', '#17401a'],
-    ['#d5f2ee', '#8fdcd0', '#15b39a', '#0f7f6e', '#08413a'],
-    ['#dbeafe', '#93c0f5', '#1e88e5', '#1565c0', '#0b3366'],
-    ['#e1e4fa', '#a7b0ee', '#3f51b5', '#283593', '#151c4d'],
-    ['#ede0f7', '#c9a5e9', '#8e44d6', '#6a1b9a', '#36104f'],
-    ['#fce0ec', '#f5a3c7', '#e91e63', '#ad1457', '#5c0b2f'],
-  ];
-  /** The grid row by row, the light steps first, so it reads by hue across and by step down. */
-  const PALETTE_ROWS = PALETTE[0].map((_, step) => PALETTE.map((hue) => hue[step]));
-  const IN_PALETTE = new Set(PALETTE.flat());
+  /** The palette's strength on view, kept in this browser (lib/colour-grid.js). */
+  const STRENGTH_KEY = 'urd-colour-strength';
+  let strength = $state(GRID_STRENGTHS[0]);
+  const grid = $derived(colourGrid(strength));
 
   /** The tabs, Theme only where the picker has the theme's colours. */
   const tabs = $derived(tokens.length ? ['theme', 'custom', 'palette'] : ['custom', 'palette']);
@@ -162,7 +148,16 @@
     seedHsl();
     openedWith = value;
     lastPickedHex = '';
-    tab = linkedToken() || (!value && tokens.length) ? 'theme' : IN_PALETTE.has(String(value).toLowerCase()) ? 'palette' : 'custom';
+    let kept = null;
+    try {
+      kept = localStorage.getItem(STRENGTH_KEY);
+    } catch {
+      // Without storage the palette opens on the standard strength.
+    }
+    const start = pickerStart({ value, kept, linked: Boolean(linkedToken()), themed: tokens.length > 0 });
+    tab = start.tab;
+    strength = start.strength;
+    aimGrid();
     try {
       const kept = localStorage.getItem(FORMAT_KEY);
       format = FORMATS.includes(kept) ? kept : 'hex';
@@ -342,6 +337,38 @@
     }
   }
 
+  /** The palette's strength, kept for the next time the picker opens in this browser; a press on a strength and a pick from the grid both keep it. */
+  function setStrength(id) {
+    if (strength !== id) {
+      strength = id;
+      aimGrid();
+    }
+    try {
+      localStorage.setItem(STRENGTH_KEY, id);
+    } catch {
+      // Without storage the strength holds for this opening only.
+    }
+  }
+
+  /** The grid is one stop for the Tab key, on the colour in use or the first; the arrows move across and down, Home and End along the row. */
+  let gridAt = $state(0);
+  function aimGrid() {
+    gridAt = Math.max(0, colourGrid(strength).flat().findIndex((cell) => cell.code === hexText.toLowerCase()));
+  }
+  function gridKeys(event) {
+    const cols = GRID_HUES.length;
+    const total = grid.length * cols;
+    const moves = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols };
+    const next = event.key in moves ? gridAt + moves[event.key]
+      : event.key === 'Home' ? gridAt - (gridAt % cols)
+        : event.key === 'End' ? gridAt - (gridAt % cols) + cols - 1 : null;
+    if (next === null) return;
+    event.preventDefault();
+    if (next < 0 || next >= total) return;
+    gridAt = next;
+    event.currentTarget.querySelectorAll('.cp-cell')[next]?.focus();
+  }
+
   /** The tabs answer the arrow keys, as a tab list does. */
   function tabKeys(event) {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
@@ -494,12 +521,22 @@
               <input type="number" min="0" max="100" value={Math.round(a * 100)} aria-label={ta('cp.opacity')} onchange={(e) => onOpacity(e.currentTarget)} /><span aria-hidden="true">%</span></label>
           </span>
         {:else}
-          <!-- The palette: ten hues across, light to dark down; a pick stores the colour's code -->
-          <div class="cp-palette">
-            {#each PALETTE_ROWS as row, step (step)}
-              {#each row as hex (hex)}
-                <button type="button" class="cp-cell" class:active={hexText.toLowerCase() === hex} style="background: {hex}"
-                  title={hex} aria-label={hex} onclick={() => pick(hex)}></button>
+          <!-- The palette: the strength over the grid, the grey and twelve hues across and light to dark down; a pick stores the colour's code -->
+          <div class="cp-strengths" role="group" aria-label={ta('cp.strength')}>
+            {#each GRID_STRENGTHS as id (id)}
+              <button type="button" aria-pressed={strength === id} onclick={() => setStrength(id)}>{ta(`cp.strength.${id}`)}</button>
+            {/each}
+          </div>
+          <!-- The group moves the focus among its cells with the arrows, as the tab list does -->
+          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+          <div class="cp-palette" role="group" aria-label={ta(`cp.strength.${strength}`)} onkeydown={gridKeys}>
+            {#each grid as row, step (step)}
+              {#each row as cell, col (cell.hue)}
+                {@const name = ta('cp.cell', { hue: ta(`cp.hues.${cell.hue}`), step: cell.step, code: cell.code })}
+                {@const at = step * row.length + col}
+                <button type="button" class="cp-cell" class:active={hexText.toLowerCase() === cell.code} style="background: {cell.code}"
+                  title={name} aria-label={name} aria-pressed={hexText.toLowerCase() === cell.code} tabindex={at === gridAt ? 0 : -1}
+                  onfocus={() => (gridAt = at)} onclick={() => { setStrength(strength); pick(cell.code); }}></button>
               {/each}
             {/each}
           </div>
@@ -903,18 +940,61 @@
     text-align: right;
   }
 
-  /* Palette: ten hues across, light to dark down, the colour in use outlined */
+  /* Palette: the strengths in two rows of three, then the grey and twelve hues across, light to dark down, the colour in use outlined */
+  .cp-strengths {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 2px;
+    background: rgb(0 0 0 / 22%);
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 8px;
+  }
+
+  .cp-strengths button {
+    flex: 1 0 30%;
+    min-width: 0;
+    height: 22px;
+    padding: 0 4px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    opacity: 0.72;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .cp-strengths button:hover {
+    opacity: 1;
+  }
+
+  .cp-strengths button[aria-pressed='true'] {
+    opacity: 1;
+    background: var(--urd-color-accent, #7c5cff);
+    color: var(--urd-color-accent-text, #fff);
+  }
+
+  .cp-strengths button:focus-visible {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: 2px;
+  }
+
   .cp-palette {
     display: grid;
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-    gap: 3px;
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+    gap: 2px;
   }
 
   .cp-cell {
     aspect-ratio: 1;
+    min-width: 0;
     padding: 0;
     border: 1px solid rgb(255 255 255 / 14%);
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
   }
 
