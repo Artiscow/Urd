@@ -10,7 +10,7 @@
  * block's defaults in the site's language, under block-<type>-<id>.webp, and the phone designs of the blocks that have them at a phone's width,
  * under block-<type>-<id>-phone.webp; the footer's presets (footer-presets.js), each preset's own sample
  * drawn as the site's footer on an empty page, under footer-preset-<id>.webp; and the «Back to top» button's
- * designs (totop.js), the window's bottom right corner with the button in it, under totop-<id>.webp.
+ * designs (totop.js), the button alone on a clear ground in the site's dark mode, cut close round it, under totop-<id>.webp.
  *
  * Run from the repo root with the local server up (python3 dev-server.py 8123) and a Chromium-family browser on the machine:
  *
@@ -359,7 +359,8 @@ try {
     writeFileSync(join(OUT, `footer-preset-${id}.webp`), Buffer.from(data, 'base64'));
     console.log(`footer-preset-${id}: ${box.w}x${box.h} footer, picture written`);
   }
-  // The «Back to top» button's designs (totop.js TOTOP_DESIGNS): the site's own button in each design, large and shown at once, over the top of the front page, the window's bottom right corner close up, under totop-<id>.webp.
+  // The «Back to top» button's designs (totop.js TOTOP_DESIGNS): the site's own button in each design, large and shown at once, alone on a clear ground so it stands on the picker's dark tile,
+  // in the site's dark mode so the words and the ring's fill read on it, cut at 16:9 round the button with the button in its middle, under totop-<id>.webp.
   const toTopDesigns = await cdp.evaluate(`(async () => {
     const { engine } = await (await fetch('/urd.json')).json();
     return (await import('/assets/engine/' + engine + '/totop.js')).TOTOP_DESIGNS;
@@ -378,19 +379,31 @@ try {
         style.id = 'pic-style';
         document.head.appendChild(style);
       }
-      style.textContent = '.urd-nav, #urd-announce, .urd-nav-announce { display: none !important; }';
+      style.textContent = 'html, body { background: transparent !important; } body > :not(.urd-totop) { visibility: hidden !important; } .urd-totop { transition: none !important; }';
+      localStorage.setItem('urd-theme-mode', 'dark');
       window.postMessage({ type: 'urd-site', site }, location.origin);
       await sleep(400);
       window.postMessage({ type: 'urd-preview-full', page }, location.origin);
       await sleep(1500);
       window.postMessage({ type: 'urd-chrome', visible: false }, location.origin);
       await sleep(400);
+      document.documentElement.setAttribute('data-urd-theme', 'dark');
       window.scrollTo(0, 0);
       await sleep(300);
-      return { w: window.innerWidth, h: window.innerHeight };
+      const b = document.querySelector('.urd-totop').getBoundingClientRect();
+      return { x: b.left, y: b.top, w: b.width, h: b.height };
     })()`);
-    const clip = { x: view.w - 360, y: view.h - 220, width: 360, height: 220 };
-    const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 82, clip: { ...clip, scale: 2 } });
+    // The button fills about two fifths of the picture's height, or seven tenths of its width where it is wide.
+    let height = view.h * 2.4;
+    let width = height * 16 / 9;
+    if (view.w > width * 0.7) {
+      width = view.w / 0.7;
+      height = width * 9 / 16;
+    }
+    const clip = { x: view.x + view.w / 2 - width / 2, y: view.y + view.h / 2 - height / 2, width, height };
+    await cdp.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
+    const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 90, clip: { ...clip, scale: Math.min(4, 560 / width) } });
+    await cdp.send('Emulation.setDefaultBackgroundColorOverride', {});
     const data = shot.result?.data;
     if (!data) throw new Error(`totop-${id}: no picture (${JSON.stringify(shot)})`);
     writeFileSync(join(OUT, `totop-${id}.webp`), Buffer.from(data, 'base64'));

@@ -18722,8 +18722,10 @@ body.urd-mobile .urd-totop.urd-totop-nophone {
   align-items: center;
 }
 
+/* The mark's size follows the owner's icon size (--urd-totop-mark-scale), the arrow, a character and a picture alike */
 .urd-totop-mark {
   color: var(--urd-totop-arrow, currentColor);
+  font-size: calc(1em * var(--urd-totop-mark-scale, 1));
 }
 
 .urd-totop-text {
@@ -18734,6 +18736,20 @@ body.urd-mobile .urd-totop.urd-totop-nophone {
   display: block;
   width: 1.05em;
   height: 1.05em;
+}
+
+/* The button's own mark in place of the arrow (site.layout.toTop): a character at the arrow's size, or a picture as tall as the arrow and a little more, keeping its shape */
+.urd-totop-glyph {
+  font-size: calc(1.1em * var(--urd-totop-mark-scale, 1));
+  line-height: 1;
+}
+
+.urd-totop-own img {
+  display: block;
+  width: auto;
+  max-width: 2.4em;
+  height: 1.25em;
+  object-fit: contain;
 }
 
 /* The shaped designs: the outline fills the button's square in the background colour */
@@ -18758,6 +18774,49 @@ body.urd-mobile .urd-totop.urd-totop-nophone {
   border-radius: 24%;
 }
 
+/* On a shaped design the mark stands at the shape's own middle or where the owner put it (--urd-totop-mark-x, -y, a share of the button from its middle, totop.js toTopOutline) */
+.urd-totop-circle .urd-totop-mark,
+.urd-totop-square .urd-totop-mark,
+.urd-totop-ring .urd-totop-mark {
+  position: relative;
+  left: var(--urd-totop-mark-x, 0);
+  top: var(--urd-totop-mark-y, 0);
+}
+
+/* On a shaped design the mark stands inside the button: its label covers the button and is cut to the outline drawn a little smaller (--urd-totop-clip, totop.js toTopClip), so a mark grown large fills the shape and the button keeps its edge.
+   A picture set to fill the whole button is cut to the outline itself and is the button, the shape not drawn under it. Without masks the mark stands uncut. */
+.urd-totop-circle .urd-totop-label,
+.urd-totop-square .urd-totop-label,
+.urd-totop-ring .urd-totop-label {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+  mask-image: var(--urd-totop-clip, none);
+  mask-size: 84% 84%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+}
+
+.urd-totop-whole .urd-totop-label {
+  mask-size: 100% 100%;
+}
+
+.urd-totop-whole .urd-totop-shape {
+  display: none;
+}
+
+.urd-totop-whole .urd-totop-own {
+  position: absolute;
+  inset: 0;
+}
+
+.urd-totop-whole .urd-totop-own img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+}
+
 /* The ring: an outline in the ring's colour over a faint background of its own, the arrow in the ring's colour */
 .urd-totop.urd-totop-ring {
   color: var(--urd-totop-ring, var(--urd-color-accent));
@@ -18769,9 +18828,10 @@ body.urd-mobile .urd-totop.urd-totop-nophone {
   stroke-width: 5;
 }
 
-/* The pill: the arrow and the words on a round-ended background */
+/* The pill: the arrow and the words on a round-ended background, a mark grown large cut at its edge */
 .urd-totop.urd-totop-pill {
   padding: 0 1.05em 0 0.85em;
+  overflow: hidden;
   border-radius: 999px;
   background: var(--urd-totop-bg, color-mix(in srgb, var(--urd-color-accent) 85%, black));
   font-size: calc(var(--urd-totop-size) * 0.34);

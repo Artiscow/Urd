@@ -2,8 +2,10 @@
   /**
    * Glyph/emoji picker: a button showing the current glyph that opens a broad, categorized menu with recent glyphs at the top.
    * The glyph set and the recent-glyph logic live in the engine's glyphs.js (shared with the text editor bar's glyph menu, same localStorage key).
-   * With onicon set, the engine's icon library (drawn SVGs) is shown at the top as well; with onimage set, a custom icon image can be uploaded (webp-compressed);
+   * With onicon set, the engine's icon library (drawn SVGs) is shown at the top as well; with onimage set, a custom icon image can be uploaded (webp-compressed) from the button at the very top, over the search;
    * with iconsOnly the glyphs are left out, so the picker offers the library and an own image alone (the links' icons).
+   * `blank` is a drawing (SVG markup) the button shows while nothing is chosen, such as the arrow a mark of the owner's own replaces; no glyph is then marked as chosen.
+   * With onremove set, the bin on the button's top right corner takes the chosen mark away (`removeLabel` names what it goes back to), as a colour's bin does on its swatch.
    * Two branches (ADR-0011 addendum, anchored.js decides): in the top layer, anchored under the button's right edge with the browser flipping it away from the viewport edge and light dismiss; otherwise position: fixed (the panels clip absolute content), placed by measuring, closing on a click outside, Escape or a scroll outside. The same pattern as ColorPicker.
    */
   import { lingering, menuMotion } from './motion.svelte.js';
@@ -17,8 +19,9 @@
   import { cellWalker } from './cell-walk.js';
   import { tick } from 'svelte';
   import { pictureEditorState } from '../state/picture-editor.svelte.js';
+  import { ICONS } from './icons.js';
 
-  let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage, iconsOnly = false } = $props();
+  let { value = '★', icon = null, image = null, label = ta('gp.pickGlyph'), onpick, onicon, onimage, iconsOnly = false, onremove = undefined, removeLabel = undefined, blank = undefined } = $props();
 
   const native = nativeAnchoring();
   const anchor = anchorName('urd-gp');
@@ -148,8 +151,16 @@
     onclick={native ? undefined : () => (open ? (open = false) : openPicker())}>
     {#if image}<img class="gp-own" src={image} alt={ta('gp.ownIcon')} />
     {:else if icon && ICON_LIBRARY[icon]}<span class="gp-svg">{@html iconSvg(icon)}</span>
+    {:else if !value && blank}<span class="gp-svg">{@html blank}</span>
     {:else}{value || '★'}{/if}
   </button>
+  <!-- The file field stands outside the pop-up: the file dialog takes the window's focus, which closes the picker and takes its contents away before a file is chosen -->
+  {#if onimage}
+    <input type="file" accept="image/*" hidden bind:this={fileEl} onchange={uploadOwn} />
+  {/if}
+  {#if onremove}
+    <button type="button" class="gp-remove danger" title={removeLabel} aria-label={removeLabel} onclick={() => onremove()}>{@html ICONS.bin}</button>
+  {/if}
   {#if native}
     <div class="gp-pop gp-anchored" id={popId} popover="auto" bind:this={popEl}
       style="position-anchor: {anchor}" ontoggle={onToggle}>
@@ -165,6 +176,9 @@
 </span>
 
 {#snippet pickerBody()}
+      {#if onimage}
+        <button type="button" class="gp-upload" onclick={() => fileEl.click()}>{@html ICONS.upload}<span>{ta('gp.upload')}</span></button>
+      {/if}
       <input class="gp-search" type="search" placeholder={ta('gp.search')} aria-label={ta('gp.search')} bind:value={query} bind:this={searchEl} onkeydown={(e) => walker.onKey(e)} {@attach takeFocus} />
       {#if hits}
         {#if !hits.icons.length && !hits.glyphs.length}
@@ -219,12 +233,6 @@
           </div>
         {/each}
       {/if}
-      {#if onimage}
-        <div class="gp-group">{ta('gp.ownIcon')}</div>
-        <button type="button" class="ghost gp-upload" onclick={() => fileEl.click()}>{ta('gp.upload')}</button>
-        <input type="file" accept="image/*" hidden bind:this={fileEl} onchange={uploadOwn} />
-        <p class="gp-hint">{ta('gp.uploadHint')}</p>
-      {/if}
       {/if}
 {/snippet}
 
@@ -247,6 +255,37 @@
     border-radius: 6px;
     background: rgb(255 255 255 / 7%);
     cursor: pointer;
+  }
+
+  /* The mark's removal: the bin on the dark red every removal draws (app.css .icon-btn.danger), small on the button's top right corner, as on a colour's swatch (ColorPicker.svelte) */
+  .gp-remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    z-index: 1;
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    color: #ffd4d4;
+    background: #5e1c22;
+    border: 1px solid #7d2a31;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .gp-remove:is(:hover, :focus-visible) {
+    background: #7a222a;
+    border-color: #9a3a42;
+  }
+
+  .gp-remove :global(svg) {
+    width: 10px;
+    height: 10px;
   }
 
   .gp-pop {
@@ -363,9 +402,28 @@
     border-radius: 4px;
   }
 
+  /* The own picture's upload, first in the picker: a full-width button in the search field's frame */
   .gp-upload {
     width: 100%;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    gap: 7px;
+    margin-bottom: 6px;
+    padding: 7px 9px;
+    border: 1px solid rgb(255 255 255 / 22%);
+    border-radius: 7px;
+    background: rgb(255 255 255 / 9%);
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .gp-upload:is(:hover, :focus-visible) {
+    background: rgb(255 255 255 / 15%);
+    border-color: rgb(255 255 255 / 32%);
   }
 
   .gp-hint {

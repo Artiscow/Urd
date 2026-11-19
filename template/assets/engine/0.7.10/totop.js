@@ -1,15 +1,18 @@
 /**
  * The site's «Back to top» button (0.7.13.14): an element of the site, set in the Site panel's «Back to top» button fold and stored in `site.layout.toTop`, with nothing stored for the standard, so a site that sets nothing shows the round button it always had.
- * The settings are read by toTopOf, the shaped designs' outline is drawn by toTopShape (pure, node-tested), and renderToTop draws or updates the one button the page has (urd.js, at the start and as the editor sends the site).
+ * The settings are read by toTopOf, a shaped design's outline is the owner's shape (shape-model.js) or the design's own drawn by toTopShape (toTopOutline, pure, node-tested), and renderToTop draws or updates the one button the page has (urd.js, at the start and as the editor sends the site).
  * The button scrolls to the page's top, smoothly only where motion is welcome; it shows after the scrolling the owner chose, and its look is set by classes and custom properties that base.css reads (.urd-totop).
  */
 import { t } from './i18n.js';
 import { resolveColor } from './theme.js';
+import { iconSvg, ICON_LIBRARY } from './icons.js';
+import { isSafeImage } from './nav-model.js';
+import { shapeOf, shapeOutline, outlinePath, outlineMiddle } from './shape-model.js';
 
 /** The designs, the first the standard: a circle, a rounded square, a pill with words, a ring and the words alone. */
 export const TOTOP_DESIGNS = ['circle', 'square', 'pill', 'ring', 'words'];
 
-/** The designs drawn in a shape, whose edge the shape editor's waves act on. */
+/** The designs drawn in a shape: the owner's own (`shape`), or without one the design's own outline with the waves of `waves` and `count`. */
 export const TOTOP_SHAPED = ['circle', 'square', 'ring'];
 
 /** The designs that show words, which may be the owner's own. */
@@ -43,13 +46,25 @@ export const TOTOP_COUNT = { min: 4, max: 16, step: 1, standard: 10 };
 /** The longest words the button takes. */
 export const TOTOP_TEXT_MAX = 40;
 
+/** The longest character of its own the button takes in place of the arrow (an emoji of several code points included). */
+export const TOTOP_GLYPH_MAX = 8;
+
+/** The size of the arrow or the button's own mark, in percent of its size in the design. */
+export const TOTOP_ICON_SIZE = { min: 50, max: 200, step: 5, standard: 100 };
+
+/** How a picture of the owner's own fills a shaped design, the first the standard: inside the button's edge, at the mark's size, or the whole button. */
+export const TOTOP_FILLS = ['edge', 'whole'];
+
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 const colourOf = (value) => (typeof value === 'string' && value.trim() ? value.trim() : null);
 
 /**
  * The button's settings as they apply, each read from `site.layout.toTop` or its standard.
  * @param {object|null|undefined} site site.json
- * @returns {{show: boolean, design: string, place: 'corner'|'content', side: 'left'|'right', size: string, phoneSize: string|null, colors: Record<string, string|null>, after: string, phone: boolean, text: string, waves: number, count: number, hover: string, press: string|null, line: string, lineWidth: number}}
+ * The button's own mark in place of the arrow, as the icon block draws its own: a picture uploaded and edited (`image`), else a drawn icon from Urd's set (`icon`), else a character (`glyph`); none of them, the arrow.
+ * A shaped design's outline is the shape the owner chose or drew (`shape`, shape-model.js), or without one the design's own: the circle, the rounded square or the ring, with the waves of `waves` and `count`.
+ * The mark's size (`iconSize`) is a percent of its size in the design, the arrow's alike; a picture on a shaped design stands inside the button's edge or fills the whole button (`fill`).
+ * @returns {{show: boolean, design: string, place: 'corner'|'content', side: 'left'|'right', size: string, phoneSize: string|null, colors: Record<string, string|null>, after: string, phone: boolean, text: string, waves: number, count: number, hover: string, press: string|null, line: string, lineWidth: number, glyph: string, icon: string|null, image: string|null, iconSize: number, fill: string, shape: ReturnType<typeof shapeOf>|null}}
  */
 export function toTopOf(site) {
   const raw = site?.layout?.toTop && typeof site.layout.toTop === 'object' ? site.layout.toTop : {};
@@ -57,6 +72,7 @@ export function toTopOf(site) {
   // An emptied amount reads as the standard, not as the fewest waves.
   const count = raw.count == null || raw.count === '' ? NaN : Math.round(Number(raw.count));
   const lineWidth = Math.round(Number(raw.lineWidth));
+  const iconSize = Math.round(Number(raw.iconSize) / TOTOP_ICON_SIZE.step) * TOTOP_ICON_SIZE.step;
   return {
     show: raw.show !== false,
     design: TOTOP_DESIGNS.includes(raw.design) ? raw.design : TOTOP_DESIGNS[0],
@@ -74,7 +90,96 @@ export function toTopOf(site) {
     press: TOTOP_PRESSES.includes(raw.press) ? raw.press : null,
     line: TOTOP_LINES.includes(raw.line) ? raw.line : 'solid',
     lineWidth: Number.isFinite(lineWidth) ? clamp(lineWidth, TOTOP_LINE_WIDTH.min, TOTOP_LINE_WIDTH.max) : TOTOP_LINE_WIDTH.standard,
+    glyph: typeof raw.glyph === 'string' ? [...raw.glyph.trim()].slice(0, TOTOP_GLYPH_MAX).join('') : '',
+    icon: typeof raw.icon === 'string' && Object.hasOwn(ICON_LIBRARY, raw.icon) ? raw.icon : null,
+    image: isSafeImage(raw.image) ? raw.image : null,
+    iconSize: raw.iconSize != null && raw.iconSize !== '' && Number.isFinite(iconSize) ? clamp(iconSize, TOTOP_ICON_SIZE.min, TOTOP_ICON_SIZE.max) : TOTOP_ICON_SIZE.standard,
+    fill: TOTOP_FILLS.includes(raw.fill) ? raw.fill : TOTOP_FILLS[0],
+    shape: raw.shape && typeof raw.shape === 'object' && !Array.isArray(raw.shape) ? shapeOf(raw.shape) : null,
   };
+}
+
+/**
+ * The shape a shaped design shows, as a shape's values: the owner's own, or without one the nearest to what the design draws by itself (the circle, the rounded square, and the waves of `waves` and `count`), which the shape window starts from.
+ * @param {ReturnType<typeof toTopOf>} set
+ * @returns {ReturnType<typeof shapeOf>}
+ */
+export function toTopShapeOf(set) {
+  if (set.shape) return set.shape;
+  const share = set.waves / 100;
+  const waves = share ? { waves: Math.round(68 * share ** 0.8), count: set.count, sharp: Math.round(100 * share * share) } : {};
+  return shapeOf(set.design === 'square' ? (share ? { square: 33, ...waves } : { sides: 4, corners: 55, turn: 45 }) : waves);
+}
+
+/** How far inside the box the ring's outline stands, so its line is drawn whole. */
+const RING_MARGIN = 4;
+
+/**
+ * A shaped design's outline as an SVG path in the 100 by 100 box, and where its mark stands in it: the owner's shape where there is one, the mark at the shape's own middle or where the owner put it; else the design's own outline, the mark in the box's middle.
+ * `whole` is the outline a picture filling the whole button is cut to, the ring's reaching the box's edge as the circle's does.
+ * @param {ReturnType<typeof toTopOf>} set
+ * @param {boolean} [whole]
+ * @returns {{d: string, mark: [number, number]}}
+ */
+export function toTopOutline(set, whole = false) {
+  const ring = set.design === 'ring' && !whole;
+  if (!set.shape) return { d: toTopShape(ring || set.design !== 'ring' ? set.design : 'circle', set.waves, set.count), mark: [50, 50] };
+  const pts = shapeOutline(set.shape, ring ? RING_MARGIN : 0);
+  return { d: outlinePath(pts), mark: set.shape.icon ?? outlineMiddle(pts) };
+}
+
+/**
+ * Whether the button's own picture covers the whole of a shaped design.
+ * @param {ReturnType<typeof toTopOf>} set
+ * @returns {boolean}
+ */
+export function toTopFillsWhole(set) {
+  return TOTOP_SHAPED.includes(set.design) && Boolean(set.image) && set.fill === 'whole';
+}
+
+/**
+ * The outline the mark of a shaped design is cut to, as a CSS image of the shape in a 100 by 100 box (base.css draws it a little smaller, so the button keeps its edge); none for the pill and the words alone.
+ * A picture that fills the whole button is cut to the whole box's outline, the ring's included, so it covers the ring's line.
+ * @param {ReturnType<typeof toTopOf>} set
+ * @returns {string|null}
+ */
+export function toTopClip(set) {
+  if (!TOTOP_SHAPED.includes(set.design)) return null;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${toTopOutline(set, toTopFillsWhole(set)).d}"/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
+/**
+ * The button's mark: its own picture, drawn icon or character, or the arrow.
+ * A picture that fails to load gives way to what would stand without it, on the button's own shape where the picture filled it.
+ * @param {ReturnType<typeof toTopOf>} set
+ * @returns {HTMLElement}
+ */
+function markOf(set) {
+  const mark = document.createElement('span');
+  mark.className = 'urd-totop-mark';
+  if (set.image) {
+    const img = document.createElement('img');
+    img.alt = '';
+    img.decoding = 'async';
+    img.addEventListener('error', () => {
+      mark.closest('.urd-totop')?.classList.remove('urd-totop-whole');
+      mark.replaceWith(markOf({ ...set, image: null }));
+    }, { once: true });
+    img.src = set.image;
+    mark.classList.add('urd-totop-own');
+    mark.appendChild(img);
+  } else if (set.icon) {
+    mark.innerHTML = iconSvg(set.icon);
+  } else if (set.glyph) {
+    // The button is named by its words or its label, never by the character's own name.
+    mark.classList.add('urd-totop-glyph');
+    mark.setAttribute('aria-hidden', 'true');
+    mark.textContent = set.glyph;
+  } else {
+    mark.innerHTML = ARROW;
+  }
+  return mark;
 }
 
 /**
@@ -155,11 +260,23 @@ export function renderToTop(site, host = document.body) {
     words ? `urd-totop-hover-${set.hover}` : '',
     words && set.press ? `urd-totop-press-${set.press}` : '',
     words ? `urd-totop-line-${set.line}` : '',
+    toTopFillsWhole(set) ? 'urd-totop-whole' : '',
   ].filter(Boolean).join(' ');
   button.style.setProperty('--urd-totop-h', `${TOTOP_SIZES[set.size]}px`);
   if (set.phoneSize) button.style.setProperty('--urd-totop-h-phone', `${TOTOP_SIZES[set.phoneSize]}px`);
   else button.style.removeProperty('--urd-totop-h-phone');
   button.style.setProperty('--urd-totop-line-w', `${set.lineWidth}px`);
+  if (set.iconSize !== TOTOP_ICON_SIZE.standard) button.style.setProperty('--urd-totop-mark-scale', String(set.iconSize / 100));
+  else button.style.removeProperty('--urd-totop-mark-scale');
+  const clip = toTopClip(set);
+  if (clip) button.style.setProperty('--urd-totop-clip', clip);
+  else button.style.removeProperty('--urd-totop-clip');
+  // The mark stands at the shape's own middle, or where the owner put it, as a share of the button from its middle.
+  const outline = TOTOP_SHAPED.includes(set.design) ? toTopOutline(set) : null;
+  for (const [name, at] of [['x', outline?.mark[0]], ['y', outline?.mark[1]]]) {
+    if (outline && Math.abs(at - 50) > 0.05) button.style.setProperty(`--urd-totop-mark-${name}`, `${(at - 50).toFixed(1)}%`);
+    else button.style.removeProperty(`--urd-totop-mark-${name}`);
+  }
   for (const key of TOTOP_COLOURS) {
     if (set.colors[key]) button.style.setProperty(`--urd-totop-${key}`, resolveColor(set.colors[key]));
     else button.style.removeProperty(`--urd-totop-${key}`);
@@ -173,14 +290,16 @@ export function renderToTop(site, host = document.body) {
     button.setAttribute('aria-label', t('nav.toTopFull'));
     button.title = t('nav.toTop');
   }
-  const shape = shaped ? `<svg class="urd-totop-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="${toTopShape(set.design, set.waves, set.count)}"/></svg>` : '';
-  // The arrow and the words stand in a label of their own, which the line under the words alone runs along, whatever the hover does to the button.
-  button.innerHTML = `${shape}<span class="urd-totop-label"><span class="urd-totop-mark">${ARROW}</span></span>`;
+  const shape = shaped ? `<svg class="urd-totop-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="${outline.d}"/></svg>` : '';
+  // The mark and the words stand in a label of their own, which the line under the words alone runs along, whatever the hover does to the button.
+  button.innerHTML = `${shape}<span class="urd-totop-label"></span>`;
+  const label = button.querySelector('.urd-totop-label');
+  label.appendChild(markOf(set));
   if (worded) {
     const span = document.createElement('span');
     span.className = 'urd-totop-text';
     span.textContent = shownWords;
-    button.querySelector('.urd-totop-label').appendChild(span);
+    label.appendChild(span);
   }
   // Shown after the scrolling chosen: a little, one screen, or at once.
   listening?.abort();

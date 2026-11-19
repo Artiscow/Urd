@@ -394,7 +394,7 @@ OKLCH reaches the P3 gamut directly, and `@media (color-gamut: p3)` can raise th
   `corner-shape` and `superellipse()` are in Chrome 139 only. Firefox has them behind a pref in Nightly and Safari in Technology Preview ([MDN data](https://github.com/mdn/browser-compat-data/blob/main/css/properties/corner-shape.json), primary; [Smashing Magazine](https://www.smashingmagazine.com/2026/03/beyond-border-radius-css-corner-shape-property-ui/), March 2026, secondary). The end state is a plain `border-radius`.
 - **Cost.** None.
 - **Lasting or fad.** Lasting.
-- **Urd today.** Two radius tokens in the theme (small and large corners), plus radius steps inside some components such as the gallery (code). See D20.
+- **Urd today.** Two radius tokens in the theme (small and large corners), plus radius steps inside some components such as the gallery (code). The «Back to top» button takes a shape of its own (`shape-model.js`, ADR-0035, Delivered 0.7.13.14.2): 31 shapes and the values they are made of, a polygon's corners round, cut or scooped, drawn by Urd as one outline, so they are the same in every browser without `corner-shape`. See D20.
 
 ### Soft shadows, hairlines and style presets
 - **What.** Layered soft shadows and hairline borders are the quiet default of 2025-2026. Builders sell them as presets, together with the states of a button.

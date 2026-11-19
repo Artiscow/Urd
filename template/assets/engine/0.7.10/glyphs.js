@@ -28,6 +28,19 @@ export const GLYPH_CATEGORIES = [
   ['glyphCat.hearts', '❤ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💗 💓 💕 💖 💘 💝 💞 💟'],
 ];
 
+/** What an emoji is drawn with: a character presented as emoji by default, one asked to be with U+FE0F, a pictograph above the basic plane (which text fonts do not draw), and the joiners, skin tones, keycaps, flags and tags that build a sequence. */
+const EMOJI_PARTS = /\p{Emoji_Presentation}|[^️]️|(?=\p{Extended_Pictographic})[\u{10000}-\u{10FFFF}]|\p{Emoji_Modifier}|\p{Regional_Indicator}|[‍︎️⃣\u{E0020}-\u{E007F}]/gu;
+
+/**
+ * Whether a glyph takes a colour: true when it holds a character drawn as text (★ ♥ →), false when it is emoji alone, which is drawn in its own colours.
+ * Follows each character's default presentation in Unicode, so ❤ takes a colour and ❤️ (with U+FE0F) does not; a pictograph above the basic plane counts as emoji, as text fonts do not draw it.
+ * @param {string} glyph
+ * @returns {boolean}
+ */
+export function glyphTakesColour(glyph) {
+  return typeof glyph === 'string' && glyph.replace(EMOJI_PARTS, '').trim() !== '';
+}
+
 /**
  * Puts a chosen glyph at the front of the recents list: no duplicates, capped.
  * Pure function (the list logic is tested without localStorage).

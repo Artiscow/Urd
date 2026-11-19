@@ -429,7 +429,6 @@ export default {
     'gp.ownIcon': 'Eige ikon',
     'gp.pickGlyph': 'Vel teikn',
     'gp.upload': 'Last opp bilete …',
-    'gp.uploadHint': 'Biletet skalerer til storleiken på blokka og erstattar teiknet til du fjernar det.',
     'group.appearance': 'Utsjånad',
     'group.baseline': 'Botnlinje',
     'group.brand': 'Merkevare',

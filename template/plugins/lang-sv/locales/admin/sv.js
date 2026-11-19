@@ -471,7 +471,6 @@ export default {
     'gp.ownIcon': 'Egen ikon',
     'gp.pickGlyph': 'Välj tecken',
     'gp.upload': 'Ladda upp bild …',
-    'gp.uploadHint': 'Bilden skalas till blockets storlek och ersätter tecknet tills du tar bort den.',
     'group.appearance': 'Utseende',
     'group.baseline': 'Bottenrad',
     'group.brand': 'Varumärke',

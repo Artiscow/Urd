@@ -8,6 +8,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.13.14.2 - The «Back to top» button's own mark and shape: an icon or a picture in place of the arrow, and a shape window with 31 shapes, Custom's sliders and drawing by hand - 19 November 2026
+
+- The button could show only the arrow (BACKLOG 0.7.13.14). The fold's «Icon» row puts a character, a drawn icon or an uploaded and edited picture in its place, with a slider for its size and a bin to go back to the arrow (`markOf` and `iconSize` in totop.js).
+- «Icon colour» did nothing for an emoji (test finding). The colour stands only for a mark that takes one (`glyphTakesColour` in glyphs.js).
+- A mark grown large stood over the button's edge (test finding). On the shaped designs it is cut to the outline drawn a little smaller (`toTopClip`), and «Picture fills» lets a picture cover the whole button (`fill`).
+- With «Whole», the background colour showed as a rim round the picture (test finding). The shape is not drawn under a whole picture, and its colours are hidden.
+- The shaped designs had three outlines and one wave slider (decided 19 November 2026, ADR-0035). The «Shape» row opens the shape window (`lib/ShapeWindow.svelte`, `shape-model.js`, `site.layout.toTop.shape`) with 31 shapes, «Custom»'s sliders, «Shape manually» for points, and a mark that can be dragged.
+- The fold had grown long and mixed two heading styles (test finding). It stands under «Look», «Size», «Placement» and «Showing», with the colours in one row (`lib/rows/ColoursRow.svelte`) and the dropdowns beside their labels (`SelectRow` `inline`).
+- Once any colour was set, every swatch showed a bin that cleared all the colours. Each bin stands only on a set colour and clears that one.
+- Uploading a picture from the icon picker did nothing, in the icon block too (test finding). The file field stands outside the pop-up that closes when the file dialog opens, and «Upload image …» stands first in the picker.
+- The design pictures showed a small button on a large white page (test finding). They show the button alone on a clear ground in the site's dark mode (scripts/design-pictures.mjs).
+- The row kit's slider gains a one-line form that fills from its middle where it goes both ways (`SliderRow` `inline`).
+- SCHEMA.md, the schema and the validation's example hold the new fields; the shells preload the shape model and carry the stylesheet's new stamp; the guides, ARCHITECTURE.md, the comparison's rows and ADR-0035 describe them.
+
+The independent review before the commit found these:
+
+1. A drawing whose edge crossed itself put its middle, and the icon with it, far outside the button, so the button showed no arrow. The middle of such a drawing is the middle of the room it takes, never outside it (`outlineMiddle`).
+2. Two drags in a row, of different points or of the icon, were one undo step. Each press's drag is a step of its own, and a run of arrow keys on one point one step.
+3. The window's starting shape for waves set before this round differed from the button by up to 4 px on deep waves. The wave sharpness reaches the old slider's, so an even number of waves matches within about a pixel; an odd number is centred in its box once changed in the window.
+4. On a drawn shape the window opened with «Remove the drawing» in focus. It opens with «Done» in focus.
+5. The points were 15 px targets named as pictures. Each is pressed in a ring of about 30 px, named as a button with how it moves.
+6. A character in place of the arrow became part of the worded button's name. The character is hidden from screen readers.
+7. The icon picker showed the standard arrow as the character «↑», and choosing that cell stored it. The picker draws the arrow while no mark is chosen, with no cell marked.
+8. The drawn points' schema drew a warning from the validator, and four words of the removed wave sliders were left in the dictionaries. The points are four-entry tuples, and the words are gone.
+9. The shipped shapes are offered outside the shared design picker, which the panel rules had no exception for. AGENTS.md's design picker rule names a shape as the exception, and its ADR list names ADR-0035.
+
 ### 0.7.13.14.1 - The «Back to top» button as an element of the site: five designs, a shape editor, and its placement, sizes and colours - 19 November 2026
 
 - Every page had a fixed round «↑» in the window's bottom right corner after 400 px of scrolling, with no settings (BACKLOG 0.7.13.14, decided 19 November 2026). The button is an element of the site, set in the Site panel's «Back to top» button fold and stored in `site.layout.toTop` with nothing for the standard, so a site that sets nothing shows today's button (`totop.js`, `panels/site/SiteToTop.svelte`).

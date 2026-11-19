@@ -2,6 +2,25 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.13.14.2): the «Back to top» button's own mark, the tidier fold and the shape window
+
+- [ ] In the «Back to top» button fold, «Icon» opens the icon picker with «Upload image …» first: pick a character, a drawn icon, and upload a picture, which opens in the image editor; each stands on the button in place of the arrow, and the bin on the icon's corner takes it back to the arrow
+- [ ] Upload a picture from the icon block's picker too: the image editor opens and the block shows it
+- [ ] The colours row names «Arrow» for the arrow and «Icon» for ★ or a drawn icon, and that colour paints it; for an emoji or a picture the icon's colour is not offered
+- [ ] The slider beside «Icon» makes the arrow or the mark smaller and larger from 50 to 200 %; on «Circle», «Rounded square» and «Ring» a large mark stays inside the button with a rim of the button round it
+- [ ] With a picture on a shaped design, «Picture fills» shows: «Whole» covers the button edge to edge with no background colour at its edge, and hides the size slider and the background colour
+- [ ] The fold stands under «Look», «Size», «Placement» and «Showing»; the colours stand side by side, a bin only on a colour that is set, clearing that colour alone; «Size on phones» and «Shows after» stand beside their labels, the label breaking onto two lines on a narrow panel
+- [ ] «Design» opens the design picker with the five buttons drawn alone on the dark tiles
+- [ ] On a shaped design, the «Shape» row shows the shape's picture and name; it opens the shape window with 31 shapes beside «Custom»; picking one changes the button on the canvas, and the row takes its name
+- [ ] Under «Custom», each slider shows only where it changes something (Corners on a polygon, Amount with waves, Direction with a point); on 3 sides «Depth» stops earlier than on a round shape; Stretch, Bulge and Swirl fill from their middle; any change names the shape «Custom»
+- [ ] Drag the arrow in the window's preview, or focus it and use the arrow keys: the icon moves on the button; «Centre the icon» puts it back; picking another shape centres it
+- [ ] «Shape manually» opens «Draw» with the shape as points: drag a point, or move it with the arrow keys; with «Mirror» on its partner follows; set a point's corner size and style, or all points alike with «All points alike»; «Start from» and «Shuffle» give new points; the row reads «Your own drawing»
+- [ ] «Remove the drawing» goes back to the shape the drawing came from
+- [ ] Undo takes back a whole slider's run, a point's drag and the icon's drag in one step each; «Done», Escape and a press beside the window close it
+- [ ] Publish: the published page draws the shape, the icon where it was put, and a picture cut to the shape
+- [ ] A site set with «Waves» before this round shows the same button until the shape window changes it
+- [ ] On «Ring» with a shape, the ring's line is drawn whole round the shape
+
 ### Test batch (0.7.13.14.1): the «Back to top» button as an element of the site
 
 - [ ] A site that has set nothing shows the round button in the window's bottom right corner after a little scrolling, as before, in the editor and on the published page

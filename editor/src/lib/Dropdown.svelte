@@ -5,6 +5,7 @@
    * admin use this one. options is [[value, label], …]; values are
    * compared as strings, so '' and null can be used as "none".
    * An option may carry a third entry, a note drawn as a smaller line under its label in the list.
+   * With `fit` the button is as wide as the chosen option and takes no more of its row than that.
    * A fourth entry is a face `{ font, sample? }`: the label is drawn in that font, or with `sample` in the UI's font with the sample beside it in that font, in the list and in the closed field alike (fontChoices in the engine's fonts.js); a fourth entry without a font name is no face.
    *
    * Two branches (ADR-0011 addendum, anchored.js decides): with the Popover
@@ -21,7 +22,7 @@
   import { lingering, menuMotion } from './motion.svelte.js';
   import { nativeAnchoring, anchorName } from '$engine/anchored.js';
 
-  let { value = null, options = [], onchange, title = null, disabled = false, filled = false, compact = false, labelledby = null } = $props();
+  let { value = null, options = [], onchange, title = null, disabled = false, filled = false, compact = false, labelledby = null, fit = false } = $props();
 
   const native = nativeAnchoring();
   const anchor = anchorName('urd-dd');
@@ -109,7 +110,7 @@
   </span>
 {/snippet}
 
-<span class="dd" bind:this={rootEl}>
+<span class="dd" class:dd-fit-root={fit} bind:this={rootEl}>
   {#if native}
     <button type="button" class="dd-btn" class:dd-filled={filled} class:dd-compact={compact} {title} {disabled} id={labelledby ? btnId : undefined} aria-labelledby={labelledby ? `${labelledby} ${btnId}` : undefined} popovertarget={popId} style="anchor-name: {anchor}">
       <span class="dd-value">{@render named(current()?.[1] ?? '', current()?.[3])}</span>
@@ -196,6 +197,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* The button as wide as the chosen option */
+  .dd.dd-fit-root {
+    flex: 0 1 auto;
   }
 
   .dd-caret {

@@ -36,13 +36,15 @@ test('a page: every upload lands in the folder of its kind, and the field takes 
   assert.equal(page.meta.og.imageSource.zoom, 2);
 });
 
-test('the site: the logo, the favicon, the tab\'s mark and the shortcuts; a path already published is left as it is', () => {
+test('the site: the logo, the favicon, the tab\'s mark, the shortcuts and the «Back to top» button\'s own picture; a path already published is left as it is', () => {
   const site = {
     site: { icon: PNG, iconSource: { src: PNG, look: 'mono' }, links: [{ url: 'https://x.no', image: PNG }] },
     nav: { logo: { type: 'image', value: PNG, imageSource: { src: PNG, ratio: '1:1' } }, tab: { image: PNG }, launcher: { image: PNG, links: [{ image: '/media/images/old-1a2b3c4d.webp' }] } },
     footer: { brand: { logo: PNG, logoSource: { src: PNG } } },
+    layout: { toTop: { design: 'ring', image: PNG } },
   };
   const files = materializeSiteImages(site);
+  assert.match(site.layout.toTop.image, /^\/media\/images\/totop-icon-/, 'the back to top button\'s own picture');
   assert.match(site.nav.tab.image, /^\/media\/images\/tab-/, 'the tab\'s mark');
   assert.match(site.site.icon, /^\/media\/images\/icon-/);
   assert.match(site.site.iconSource.src, /^\/media\/images\/icon-original-/, 'the icon\'s kept original');

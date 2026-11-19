@@ -356,7 +356,6 @@ export default {
     'gp.ownIcon': 'Iežas ikona',
     'gp.pickGlyph': 'Vállje mearkka',
     'gp.upload': 'Viečča gova bajás …',
-    'gp.uploadHint': 'Govva heivehuvvo blohka sturrodahkii ja buhtte mearkka dassážii go válddát dan eret.',
     'group.appearance': 'Hápmi',
     'group.baseline': 'Vuolimuš linnjá',
     'group.brand': 'Mearka',

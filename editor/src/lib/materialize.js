@@ -98,6 +98,8 @@ export function materializeSiteImages(site) {
   }
   if (site.nav?.tab) materializeField(site.nav.tab, 'image', 'tab', files);
   materializeField(site.site, 'icon', 'icon', files);
+  // The «Back to top» button's own picture in place of its arrow.
+  if (site.layout?.toTop) materializeField(site.layout.toTop, 'image', 'totop-icon', files);
   if (site.site?.iconSource) materializeField(site.site.iconSource, 'src', 'icon-original', files);
   // The PDFs the menu's, the footer's and the site's links go to.
   publishHeldFiles(site, files);

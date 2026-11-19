@@ -234,7 +234,42 @@
             "hover": { "enum": ["standard", "underline", "pill", "liftPlain", "lift"], "description": "How the words alone answer the mouse, as the menu's links do. Absence = standard." },
             "press": { "enum": ["tint", "underline", "shrink"], "description": "How the words alone answer a touch on a phone, as the menu's links do. Absence = none." },
             "line": { "enum": ["none", "solid", "dashed", "dotted", "double"], "description": "The line under the words alone. Absence = solid." },
-            "lineWidth": { "type": "integer", "minimum": 1, "maximum": 4, "description": "The line's thickness in px. Absence = 1." }
+            "lineWidth": { "type": "integer", "minimum": 1, "maximum": 4, "description": "The line's thickness in px. Absence = 1." },
+            "glyph": { "type": "string", "maxLength": 32, "description": "A character of the owner's own in place of the arrow (an emoji included). Absence = the arrow." },
+            "icon": { "type": "string", "description": "A drawn icon from Urd's set (icons.js) in place of the arrow; it wins over a character." },
+            "image": { "type": "string", "description": "A picture of the owner's own in place of the arrow, uploaded and edited in the admin: a data URL in the draft, a /media/ path once published; it wins over an icon and a character." },
+            "iconSize": { "type": "integer", "minimum": 50, "maximum": 200, "multipleOf": 5, "description": "The size of the arrow or the own mark in percent of its size in the design. Absence = 100." },
+            "fill": { "enum": ["edge", "whole"], "description": "How a picture of the owner's own fills a shaped design: inside the button's edge at the mark's size, or the whole button. Absence = edge." },
+            "shape": {
+              "type": "object",
+              "description": "A shaped design's outline as a shape (shape-model.js, ADR-0035, additive from 0.7.13.14.2): its values, each stored only where it differs from the circle, or its points. Absence = the design's own outline with waves and count.",
+              "additionalProperties": false,
+              "properties": {
+                "sides": { "enum": [0, 3, 4, 5, 6, 8, 10, 12], "description": "A polygon's sides; 0 or absent = the round outline." },
+                "square": { "type": "integer", "minimum": 0, "maximum": 100, "description": "The round outline's squareness, from a circle towards a square." },
+                "corners": { "type": "integer", "minimum": 0, "maximum": 100, "description": "A polygon's corner size. Absence = 40." },
+                "cornerStyle": { "enum": ["round", "cut", "scoop"], "description": "A polygon's corners. Absence = round." },
+                "bulge": { "type": "integer", "minimum": -100, "maximum": 100, "description": "A polygon's sides curved inward (negative) or outward." },
+                "turn": { "type": "integer", "minimum": 0, "maximum": 60, "description": "A polygon turned, in degrees, at most half a side." },
+                "stretch": { "type": "integer", "minimum": -60, "maximum": 60, "description": "Taller (negative) or wider." },
+                "waves": { "type": "integer", "minimum": 0, "maximum": 100, "description": "The depth of the edge's waves; 0 or absent = a smooth edge." },
+                "count": { "type": "integer", "minimum": 3, "maximum": 18, "description": "How many waves. Absence = 8." },
+                "sharp": { "type": "integer", "minimum": 0, "maximum": 100, "description": "How narrow the waves' crests are. Absence = 30." },
+                "waveStyle": { "enum": ["round", "cog", "scoop"], "description": "A wave, a flat-topped cog, or scooped inward between points. Absence = round." },
+                "alt": { "type": "integer", "minimum": 0, "maximum": 100, "description": "Every other wave shorter." },
+                "swirl": { "type": "integer", "minimum": -100, "maximum": 100, "description": "The waves leaning left (negative) or right." },
+                "point": { "type": "integer", "minimum": 0, "maximum": 100, "description": "A point drawn out of one side." },
+                "dir": { "enum": [0, 1, 2, 3], "description": "The point's side: up, right, down or left. Absence = up." },
+                "wobble": { "type": "integer", "minimum": 0, "maximum": 100, "description": "An irregularity on the whole outline." },
+                "seed": { "type": "integer", "minimum": 1, "maximum": 9999, "description": "The wobble's number: the same number gives the same wobble." },
+                "points": {
+                  "type": "array", "minItems": 3, "maxItems": 40,
+                  "description": "A shape drawn by hand: its points in the 100 by 100 box, each [x, y, corner size 0-100, corner style]. A shape with points is drawn from them, its values kept beside them.",
+                  "items": { "type": "array", "minItems": 4, "maxItems": 4, "prefixItems": [{ "type": "number", "minimum": 0, "maximum": 100 }, { "type": "number", "minimum": 0, "maximum": 100 }, { "type": "integer", "minimum": 0, "maximum": 100 }, { "enum": ["round", "cut", "scoop"] }] }
+                },
+                "icon": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number", "minimum": 0, "maximum": 100 }, "description": "Where the mark stands in the 100 by 100 box. Absence = the shape's own middle." }
+              }
+            }
           }
         }
       }
