@@ -33,6 +33,6 @@ At the same time the field study ([ELEMENTS.md](../../comparison/ELEMENTS.md), p
 - A row that the kit has no part for is added to the kit first, then used.
 - The element menu's areas, groups and settings require UI keys in the core languages (nb, en-GB, tr) (ADR-0012).
 
-[AGENTS.md]: ../../AGENTS.md
-[ADR-0009]: 0009-themed-ui-rule.md
-[ADR-0012]: 0012-multilingual.md
+[AGENTS.md]: ../../../AGENTS.md
+[ADR-0009]: ../0009-themed-ui-rule.md
+[ADR-0012]: ../0012-multilingual.md

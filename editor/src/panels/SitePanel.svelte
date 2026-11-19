@@ -174,7 +174,7 @@
   const toTopGroup = () => siteGroup(() => siteDraft.layout?.toTop, (name, change) => siteMutate(name, () => {
     change();
     if (siteDraft.layout?.toTop && !Object.keys(siteDraft.layout.toTop).length) delete siteDraft.layout.toTop;
-  }), 'site-totop', { show: true, design: 'circle', text: undefined, waves: 0, count: TOTOP_COUNT.standard, hover: 'standard', press: undefined, line: 'solid', lineWidth: 1, place: 'corner', side: 'right', size: 'm', phoneSize: undefined, colors: undefined, after: 'little', phone: true, glyph: undefined, icon: undefined, image: undefined, iconSize: TOTOP_ICON_SIZE.standard, fill: 'edge', shape: undefined });
+  }), 'site-totop', { show: true, design: 'circle', text: undefined, waves: 0, count: TOTOP_COUNT.standard, hover: 'standard', press: undefined, line: 'solid', lineWidth: 1, place: 'corner', side: 'right', size: 'm', phoneSize: undefined, colors: undefined, after: 'little', phone: true, glyph: undefined, icon: undefined, image: undefined, iconSize: TOTOP_ICON_SIZE.standard, fill: 'edge', over: undefined, shape: undefined });
   /** The fold's value while closed: the design, or that the button is hidden. */
   const toTopValue = () => {
     const set = toTopOf(siteDraft);

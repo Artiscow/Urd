@@ -2008,7 +2008,7 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 | Value nudging in inputs | WT | ⇧/⌥ arrows ±10 / ±0.1 | Missing | Not taken: low value |
 | Advanced units | DV, WP, WS, OX | rem, vw, clamp, px\* scale unit; default unit preference | Partial: theme space | 0.7.9 fluid type |
 | Relative HSL colours | DV | Shades derived from a base colour | Partial: hex and pipette | 0.7.9 OKLCH theme |
-| Colour picker formats | WP, BR, FR, SQ | HEX/RGB/HSL; P3 | Partial: hex, RGB and an HSV field with alpha, and the pipette; no HSL entry or P3 | 0.7.9 OKLCH theme |
+| Colour picker formats | WP, BR, FR, SQ | HEX/RGB/HSL; P3 | Partial: hex, RGB and HSL entry (HSL delivered 0.7.0.92), an HSV field with alpha, and the pipette; no P3 | 0.7.9 OKLCH theme |
 | Semantic HTML tags | DV, EL, FR, RM, WS | Set nav, main, header, h1/h2 tags | Partial: a text block is a paragraph or H1-H3; no H4-H6, and the section tag is fixed | 0.7.9 text styles (H4-H6); Not taken: a landmark tag per section (low value) |
 | Custom HTML wrappers | DV | HTML Before / After | n/a: free placement | - |
 | Text selection colour | FR | Highlight colour | Missing | 0.7.9 |
@@ -2018,7 +2018,7 @@ Urd places blocks freely on a grid, so the flex, grid and selector controls of t
 
 | Function | Builders | How it works | Urd | Where |
 |---|---|---|---|---|
-| Colour palette or swatches | WP, SQ, HO, WN, WH, TI, DU, ST, JI, EL, BR, DV, FS, WS, SH | Site-wide palette | Partial: five theme colours in light and dark as swatches in every picker, six theme suggestions and seven section themes; no own named colours | 0.7.9 (own named colours) |
+| Colour palette or swatches | WP, SQ, HO, WN, WH, TI, DU, ST, JI, EL, BR, DV, FS, WS, SH | Site-wide palette | Partial: five theme colours in light and dark as named tiles in every picker, a fixed palette of fifty common colours beside them (delivered 0.7.0.92), six theme suggestions and seven section themes; no own named colours | 0.7.9 (own named colours) |
 | Variables or CSS variables | WF, EL, BR, BD, OX, DV, WT, FS | Typed tokens (colour, size, font and others) | Partial: a fixed set of theme tokens (five colours, two font stacks, two radii); no size or spacing token in use, and no variables of the owner's own | 0.7.9: the type and spacing scales, component tokens and own named colours |
 | Variable modes (light, dark, brand) | WF, BR, FR, FS, WT, SQ, SH | Modes; dark variants; colour-scheme media condition; section themes | Partial: light and dark (the dark derived or own colours) and seven section themes; no brand or seasonal modes | 0.7.9 «save your own theme» |
 | Light/dark toggle element | BR | Toggle-Mode element | Has: the light/dark toggle in the nav | - |

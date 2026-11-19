@@ -240,6 +240,7 @@
             "image": { "type": "string", "description": "A picture of the owner's own in place of the arrow, uploaded and edited in the admin: a data URL in the draft, a /media/ path once published; it wins over an icon and a character." },
             "iconSize": { "type": "integer", "minimum": 50, "maximum": 200, "multipleOf": 5, "description": "The size of the arrow or the own mark in percent of its size in the design. Absence = 100." },
             "fill": { "enum": ["edge", "whole"], "description": "How a picture of the owner's own fills a shaped design: inside the button's edge at the mark's size, or the whole button. Absence = edge." },
+            "over": { "type": "object", "additionalProperties": false, "description": "A mark over a picture that fills the whole button (additive from 0.7.0.92): the arrow, or a drawn icon or a character in its place. Absence = nothing over the picture.", "properties": { "icon": { "type": "string", "description": "A drawn icon from Urd's set (icons.js) in place of the arrow; it wins over a character." }, "glyph": { "type": "string", "maxLength": 32, "description": "A character in place of the arrow (an emoji included)." } } },
             "shape": {
               "type": "object",
               "description": "A shaped design's outline as a shape (shape-model.js, ADR-0035, additive from 0.7.13.14.2): its values, each stored only where it differs from the circle, or its points. Absence = the design's own outline with waves and count.",

@@ -1400,12 +1400,16 @@
     color: var(--urd-color-accent, #7c5cff);
   }
 
-  /* A line of names (folded cards): what an area can take as one quiet line of names at its foot, lit in the accent under the pointer or the keys */
+  /* A column of names (folded cards): what an area can take as a quiet column of names at its foot, lit in the accent under the pointer or the keys; a card added stands in its name's place across the column */
   .cap-names {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.15rem 0.9rem;
+    display: grid;
+    justify-items: start;
+    gap: 0.15rem;
     margin-top: 0.4rem;
+  }
+
+  .cap-names > .cap-placed {
+    justify-self: stretch;
   }
 
   .emenu-area .cap-add-name:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {

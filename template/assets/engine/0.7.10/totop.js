@@ -63,8 +63,8 @@ const colourOf = (value) => (typeof value === 'string' && value.trim() ? value.t
  * @param {object|null|undefined} site site.json
  * The button's own mark in place of the arrow, as the icon block draws its own: a picture uploaded and edited (`image`), else a drawn icon from Urd's set (`icon`), else a character (`glyph`); none of them, the arrow.
  * A shaped design's outline is the shape the owner chose or drew (`shape`, shape-model.js), or without one the design's own: the circle, the rounded square or the ring, with the waves of `waves` and `count`.
- * The mark's size (`iconSize`) is a percent of its size in the design, the arrow's alike; a picture on a shaped design stands inside the button's edge or fills the whole button (`fill`).
- * @returns {{show: boolean, design: string, place: 'corner'|'content', side: 'left'|'right', size: string, phoneSize: string|null, colors: Record<string, string|null>, after: string, phone: boolean, text: string, waves: number, count: number, hover: string, press: string|null, line: string, lineWidth: number, glyph: string, icon: string|null, image: string|null, iconSize: number, fill: string, shape: ReturnType<typeof shapeOf>|null}}
+ * The mark's size (`iconSize`) is a percent of its size in the design, the arrow's alike; a picture on a shaped design stands inside the button's edge or fills the whole button (`fill`), where a mark can stand over it (`over`): the arrow, else a drawn icon or a character, at the mark's size.
+ * @returns {{show: boolean, design: string, place: 'corner'|'content', side: 'left'|'right', size: string, phoneSize: string|null, colors: Record<string, string|null>, after: string, phone: boolean, text: string, waves: number, count: number, hover: string, press: string|null, line: string, lineWidth: number, glyph: string, icon: string|null, image: string|null, iconSize: number, fill: string, over: {icon: string|null, glyph: string}|null, shape: ReturnType<typeof shapeOf>|null}}
  */
 export function toTopOf(site) {
   const raw = site?.layout?.toTop && typeof site.layout.toTop === 'object' ? site.layout.toTop : {};
@@ -95,6 +95,10 @@ export function toTopOf(site) {
     image: isSafeImage(raw.image) ? raw.image : null,
     iconSize: raw.iconSize != null && raw.iconSize !== '' && Number.isFinite(iconSize) ? clamp(iconSize, TOTOP_ICON_SIZE.min, TOTOP_ICON_SIZE.max) : TOTOP_ICON_SIZE.standard,
     fill: TOTOP_FILLS.includes(raw.fill) ? raw.fill : TOTOP_FILLS[0],
+    over: raw.over && typeof raw.over === 'object' && !Array.isArray(raw.over) ? {
+      icon: typeof raw.over.icon === 'string' && Object.hasOwn(ICON_LIBRARY, raw.over.icon) ? raw.over.icon : null,
+      glyph: typeof raw.over.glyph === 'string' ? [...raw.over.glyph.trim()].slice(0, TOTOP_GLYPH_MAX).join('') : '',
+    } : null,
     shape: raw.shape && typeof raw.shape === 'object' && !Array.isArray(raw.shape) ? shapeOf(raw.shape) : null,
   };
 }
@@ -164,6 +168,7 @@ function markOf(set) {
     img.decoding = 'async';
     img.addEventListener('error', () => {
       mark.closest('.urd-totop')?.classList.remove('urd-totop-whole');
+      mark.parentElement?.querySelector(':scope > .urd-totop-over')?.remove();
       mark.replaceWith(markOf({ ...set, image: null }));
     }, { once: true });
     img.src = set.image;
@@ -295,6 +300,12 @@ export function renderToTop(site, host = document.body) {
   button.innerHTML = `${shape}<span class="urd-totop-label"></span>`;
   const label = button.querySelector('.urd-totop-label');
   label.appendChild(markOf(set));
+  // A mark over a picture that fills the whole button: the arrow, or a drawn icon or a character in its place.
+  if (toTopFillsWhole(set) && set.over) {
+    const over = markOf({ ...set, image: null, icon: set.over.icon, glyph: set.over.glyph });
+    over.classList.add('urd-totop-over');
+    label.appendChild(over);
+  }
   if (worded) {
     const span = document.createElement('span');
     span.className = 'urd-totop-text';

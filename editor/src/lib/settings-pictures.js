@@ -182,7 +182,7 @@ const SHORTCUTS = {
   chips: menuBox() + acc(17, 6, 8, 3.5, 1.75) + dim(27, 6, 8, 3.5, 0.35) + dim(37, 6, 9, 3.5, 0.35) + line(17, 13, 10, 1.5) + groupsBelow(17),
 };
 
-/** The way to add a capability: a «+» in the menu's head, a dashed chip for each at an area's foot, or one dashed add button there, each over the groups of the menu. */
+/** The way to add a capability: a «+» in the menu's head, a dashed chip for each at an area's foot, one dashed add button there, a column of names with a card added in its name's place, or drawings in the heading, each over the groups of the menu. */
 const groupLines = (y, n) => Array.from({ length: n }, (_, i) => line(17, y + i * 5, 28, 3, 1)).join('');
 const plusMark = (x, y) => acc(x, y + 1.5, 4, 1, 0.3) + acc(x + 1.5, y, 1, 4, 0.3);
 const dashed = (x, y, w, h, r) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" stroke="${ACCENT}" stroke-width="0.6" stroke-dasharray="1.2 0.8"/>`;
@@ -190,7 +190,7 @@ const CAP_ADD_PICS = {
   head: menuBox() + line(17, 5.5, 14, 2) + plusMark(43, 4.5) + groupLines(11, 5),
   chips: menuBox() + line(17, 5.5, 14, 2) + groupLines(10, 3) + line(17, 25.5, 10, 1.2) + dashed(17, 28.5, 8.5, 3.6, 1.8) + dashed(27, 28.5, 8.5, 3.6, 1.8) + dashed(37, 28.5, 8.5, 3.6, 1.8),
   button: menuBox() + line(17, 5.5, 14, 2) + groupLines(10, 3) + dashed(17, 27.5, 28, 5, 1) + plusMark(19, 28),
-  folded: menuBox() + line(17, 5.5, 14, 2) + groupLines(10, 2) + `<rect x="17" y="20" width="28" height="4" rx="1" stroke="${ACCENT}" stroke-width="0.6"/>` + line(19, 21.2, 9, 1.6) + line(37, 21.2, 6, 1.6) + line(17, 28, 7, 1.2) + line(27, 28, 7, 1.2) + line(37, 28, 7, 1.2),
+  folded: menuBox() + line(17, 5.5, 14, 2) + groupLines(10, 2) + line(17, 20.5, 10, 1.2) + `<rect x="17" y="23.5" width="28" height="4" rx="1" stroke="${ACCENT}" stroke-width="0.6"/>` + line(19, 24.7, 9, 1.6) + line(37, 24.7, 6, 1.6) + line(17, 30.5, 8, 1.2) + line(17, 34, 11, 1.2),
   icons: menuBox() + line(17, 5.5, 10, 2) + dashed(32, 4.5, 4, 4, 0.8) + dashed(37.5, 4.5, 4, 4, 0.8) + acc(43, 4.5, 4, 4, 0.8) + groupLines(11, 5),
 };
 

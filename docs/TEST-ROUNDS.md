@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.92): the block bar's tools, extras in a column, «Selection settings», a mark over the Back to top picture, and the colour picker's tabs
+
+- [ ] The block's bar on the canvas: a tool under the pointer is lit, and so is one reached with Tab, in each «Toolbar look» (the white capsule too); the bin keeps its red, and a greyed tool stays unlit
+- [ ] The bar's icons stand in the middle of their buttons at each «Toolbar size», in the desktop view and the phone view, at the canvas zoom you use
+- [ ] A text's menu: the extras at the foot of Style and Placement («+ Text box», «+ Pin while scrolling» …) stand one under another; a press on one opens its settings in its place, the focus in them, and its bin puts the name back
+- [ ] The panel tab beside Pages and Blocks reads «Selection settings» (nb «Utvalgets innstillinger», tr «Seçim ayarları»)
+- [ ] Site panel, «Back to top» button: with a picture that fills the whole button, «Over the picture» on «Arrow or icon» shows the arrow over it; pick a drawn icon or a character, size it, colour it, and the bin takes it back to the arrow; «Nothing» shows the picture alone, and the published page draws the same
+- [ ] The colour picker, from any colour setting and from the text bar's colours: three tabs; Theme shows the theme's colours by name, the one in use outlined, and a pick follows the theme; Custom has the field, the hue, the opacity, the eyedropper and Hex, RGB or HSL, the format kept after a reload; Palette's fifty colours are picked at a press
+- [ ] The picker opens on the tab its colour comes from: a theme colour on Theme, a palette colour on Palette with its cell outlined, any other on Custom; the arrow keys move between the tabs, and Saved and Recent stand under every tab
+- [ ] In Firefox: the bar's tools lit under the pointer, and the colour picker's tabs and HSL numbers (checked in Brave only)
+
 ### Test batch (0.7.36.3): several blocks selected, grouped, aligned and layered on the phone
 
 - [ ] In the phone view, Shift+click two or three blocks, and draw a frame round blocks from a section's empty ground: each selects several, and the set bar shows how many

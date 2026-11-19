@@ -721,10 +721,26 @@ test('«Adding extras» draws one way to add at a time: the head\'s «+», chips
     assert.equal(button.length, 1);
     assert.equal(button[0].attrs.title, undefined, 'a button that opens on hover has no tooltip');
     assert.equal(named(draw({ form: 'chips', area: 'placement' }), 'cap-add-chip').length, 0);
-    // Folded cards: the area's capabilities as one quiet line of names at its foot.
+    // Folded cards: the area's capabilities as a quiet column of names at its foot.
     setCapAddPref('folded');
     assert.deepEqual(offeredIn(draw({ form: 'folded', area: 'style' })), ['motion']);
     assert.ok(named(draw({ form: 'folded', area: 'style' }), 'cap-add-name').every((n) => n.attrs.title), 'each name says what it does');
+    // A column in the catalogue's order, where a capability added from it stands as its card in its name's place.
+    const names = offeredIn(draw({ form: 'folded', area: 'placement' }));
+    assert.ok(names.length >= 3, 'the text\'s Placement offers several');
+    const picked = names[1];
+    keepCapability('b1', picked);
+    try {
+      const context = new Map([['urd-editor', handleFor(block('text', {}))]]);
+      const tree = parseHtml(render(CapabilityAdd, { context, props: { form: 'folded', area: 'placement', cards: new Map([[picked, { group: null, children: undefined }]]) } }).body);
+      const column = named(tree, 'cap-names')[0];
+      const order = column.children.filter((n) => n.tag !== '#text').map((n) => n.attrs['data-cap-add'] ?? find(n, (x) => x.attrs?.['data-cap'])[0]?.attrs['data-cap']);
+      assert.deepEqual(order, names, 'the card stands where its name stood');
+      assert.ok(!offeredIn(tree).includes(picked), 'and its name is gone');
+    } finally {
+      dropCapability('b1', picked);
+    }
+    assert.match(readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8'), /\.cap-names \{\s*display: grid;/, 'the names stand under each other');
     // Icons in the headings: every capability of the area as its drawing, dashed and added at a press while unused, lit and leading to its card while used.
     setCapAddPref('icons');
     const icons = named(draw({ form: 'icons', area: 'placement' }), 'cap-icon-btn');

@@ -1,6 +1,6 @@
 <script>
   /* The site's «Back to top» button (0.7.13.14, the engine's totop.js), in the Site panel's fold of the same name: shown or not, and under four subheadings
-     its look (the design from the shared design picker, the owner's words on the worded designs, the shape on the shaped ones, set in the shape window, the mark in place of the arrow with its size, how the words alone answer the mouse and a touch and the line under them, and the colours of the parts the design shows, side by side),
+     its look (the design from the shared design picker, the owner's words on the worded designs, the shape on the shaped ones, set in the shape window, the mark in place of the arrow with its size, a mark over a picture that fills the whole button, how the words alone answer the mouse and a touch and the line under them, and the colours of the parts the design shows, side by side),
      its size on the desktop and on phones, its placement and side, and its showing (how far a visitor scrolls before it shows, and whether phones show it).
      Each choice is written into `site.layout.toTop` as one undo step, a value at its standard taken away, so a site that sets nothing stores nothing; a slider's run and a typing session are one step each (`edit:`). */
   import { getContext } from 'svelte';
@@ -52,16 +52,26 @@
       delete top.glyph;
       delete top.icon;
       delete top.image;
-      // How a picture fills the button goes with the picture.
-      if (!mark.image) delete top.fill;
+      // How a picture fills the button, and the mark over it, go with the picture.
+      if (!mark.image) {
+        delete top.fill;
+        delete top.over;
+      }
       for (const [key, value] of Object.entries(mark)) if (value) top[key] = value;
       if (Object.keys(top).length) layout.toTop = top;
       else delete layout.toTop;
     });
   }
   const ownMark = $derived(Boolean(set.image || set.icon || set.glyph));
-  /** The mark takes a colour: the arrow, a drawn icon, or a character drawn as text; a picture and emoji keep their own colours. */
-  const markColoured = $derived(!set.image && (Boolean(set.icon) || !set.glyph || glyphTakesColour(set.glyph)));
+  /** A picture that fills the whole button, and the mark over it where the owner puts one: the arrow, or a drawn icon or a character. */
+  const whole = $derived(toTopFillsWhole(set));
+  const over = $derived(whole ? set.over : null);
+  /** The mark the size and the colour act on: the one over a whole picture, else the button's own. */
+  const markOwn = $derived(whole ? Boolean(over?.icon || over?.glyph) : ownMark);
+  /** The mark takes a colour: the arrow, a drawn icon, or a character drawn as text; a picture and emoji keep their own colours, and a whole picture with nothing over it has none. */
+  const markColoured = $derived(whole
+    ? Boolean(over) && (Boolean(over.icon) || !over.glyph || glyphTakesColour(over.glyph))
+    : !set.image && (Boolean(set.icon) || !set.glyph || glyphTakesColour(set.glyph)));
 
   /** One of the button's colours, the others kept; none takes it back to the design's own. */
   function writeColour(which, value) {
@@ -96,7 +106,7 @@
   const colourItems = $derived([
     set.design !== 'words' && !toTopFillsWhole(set) && { key: 'bg', caption: ta('lbl.toTopBg'), name: ta('lbl.toTopBg') },
     set.design === 'ring' && !toTopFillsWhole(set) && { key: 'ring', caption: ta('toTopColour.ring'), name: ta('lbl.toTopRingColour') },
-    markColoured && (ownMark ? { key: 'arrow', caption: ta('lbl.toTopIcon'), name: ta('lbl.toTopIconColour') } : { key: 'arrow', caption: ta('toTopColour.arrow'), name: ta('lbl.toTopArrow') }),
+    markColoured && (markOwn ? { key: 'arrow', caption: ta('lbl.toTopIcon'), name: ta('lbl.toTopIconColour') } : { key: 'arrow', caption: ta('toTopColour.arrow'), name: ta('lbl.toTopArrow') }),
     worded && { key: 'words', caption: ta('lbl.toTopWords'), name: ta('lbl.toTopWordsColour') },
     wordsAlone && set.line !== 'none' && { key: 'line', caption: ta('toTopColour.line'), name: ta('lbl.toTopLineColour') },
     wordsAlone && effectColoured && { key: 'effect', caption: effectCaption, name: effectLabel },
@@ -128,10 +138,10 @@
   }
 
   /** The mark's size, named by what stands: the arrow or the own mark. */
-  const sizeLabel = $derived(ownMark ? ta('lbl.toTopIconSize') : ta('lbl.toTopArrowSize'));
+  const sizeLabel = $derived(markOwn ? ta('lbl.toTopIconSize') : ta('lbl.toTopArrowSize'));
   /** A picture on a shaped design stands inside the button's edge or fills the whole button; filling it, it has no size of its own. */
   const fillShown = $derived(shaped && Boolean(set.image));
-  const sizeShown = $derived(!toTopFillsWhole(set));
+  const sizeShown = $derived(!whole);
 </script>
 
 <Setting key="show">
@@ -187,6 +197,31 @@
         options={TOTOP_FILLS.map((id) => [id, ta(`opt.toTopFill.${id}`), ta(`tip.toTopFill.${id}`)])}
         onchange={(v) => write('fill', v, TOTOP_FILLS[0])} />
     </Setting>
+  {/if}
+  {#if whole}
+    <!-- Over a picture that fills the whole button: nothing, or a mark, the arrow until a drawn icon or a character takes its place, with its size -->
+    <Setting key="over">
+      <Choice label={ta('lbl.toTopOver')} value={over ? 'mark' : 'none'}
+        options={[['none', ta('opt.toTopOver.none')], ['mark', ta('opt.toTopOver.mark')]]}
+        onchange={(v) => write('over', v === 'mark' ? {} : null, null)} />
+    </Setting>
+    {#if over}
+      <Setting key="iconSize">
+        <div class="ctl-row totop-mark">
+          <span class="row-label">{ta('lbl.toTopIcon')}</span>
+          <span class="totop-mark-line">
+            <GlyphPicker value={over.glyph} blank={ICONS.up} icon={over.icon}
+              onpick={(glyph) => write('over', { glyph }, null)}
+              onicon={(id) => write('over', { icon: id }, null)}
+              onremove={markOwn ? () => write('over', {}, null) : undefined} removeLabel={ta('ui.toTopArrowBack')} />
+            <span class="totop-mark-size" title={sizeLabel}>
+              <SliderRow compact label={sizeLabel} value={set.iconSize} min={TOTOP_ICON_SIZE.min} max={TOTOP_ICON_SIZE.max} step={TOTOP_ICON_SIZE.step}
+                shown={`${set.iconSize} %`} oninput={(v) => write('iconSize', v, TOTOP_ICON_SIZE.standard, 'edit:site-totop-icon-size')} />
+            </span>
+          </span>
+        </div>
+      </Setting>
+    {/if}
   {/if}
   {#if wordsAlone}
     <!-- The words alone answer the mouse and a touch as the menu's links do, and stand over a line of the owner's choosing -->

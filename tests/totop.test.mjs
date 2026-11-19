@@ -4,13 +4,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { engineImport } from './_engine.mjs';
+import { engineImport, ENGINE_DIR } from './_engine.mjs';
 
 const { toTopOf, toTopShape, toTopClip, toTopFillsWhole, toTopOutline, toTopShapeOf, TOTOP_FILLS, TOTOP_ICON_SIZE, TOTOP_DESIGNS, TOTOP_SHAPED, TOTOP_WORDED, TOTOP_SIZES, TOTOP_COUNT, TOTOP_COLOURS, TOTOP_HOVERS, TOTOP_PRESSES, TOTOP_LINES } = await engineImport('totop.js');
 
 test('a site that sets nothing shows today\'s button: a circle in the window\'s right corner after a little scrolling, on phones too', () => {
   const none = { bg: null, ring: null, arrow: null, words: null, line: null, effect: null };
-  assert.deepEqual(toTopOf(null), { show: true, design: 'circle', place: 'corner', side: 'right', size: 'm', phoneSize: null, colors: none, after: 'little', phone: true, text: '', waves: 0, count: TOTOP_COUNT.standard, hover: 'standard', press: null, line: 'solid', lineWidth: 1, glyph: '', icon: null, image: null, iconSize: 100, fill: 'edge', shape: null });
+  assert.deepEqual(toTopOf(null), { show: true, design: 'circle', place: 'corner', side: 'right', size: 'm', phoneSize: null, colors: none, after: 'little', phone: true, text: '', waves: 0, count: TOTOP_COUNT.standard, hover: 'standard', press: null, line: 'solid', lineWidth: 1, glyph: '', icon: null, image: null, iconSize: 100, fill: 'edge', over: null, shape: null });
   assert.deepEqual(toTopOf({ layout: { contentWidth: 1440 } }), toTopOf({}));
   assert.equal(TOTOP_DESIGNS[0], 'circle');
   assert.deepEqual(TOTOP_SIZES, { m: 44, l: 56, xl: 68, xxl: 84 }, 'the standard is the smallest, and the sizes grow from it');
@@ -22,7 +22,7 @@ test('a site that sets nothing shows today\'s button: a circle in the window\'s 
 
 test('each setting is read within what it takes, and anything else falls back to the standard', () => {
   const set = toTopOf({ layout: { toTop: { show: false, design: 'words', place: 'content', side: 'left', size: 'xl', phoneSize: 'l', colors: { bg: 'accent', arrow: ' #fff ', words: 'text', line: 'accent', effect: '#c00' }, after: 'screen', phone: false, text: '  Opp  ', waves: 63.6, count: 8, hover: 'lift', press: 'tint', line: 'double', lineWidth: 3 } } });
-  assert.deepEqual(set, { show: false, design: 'words', place: 'content', side: 'left', size: 'xl', phoneSize: 'l', colors: { bg: 'accent', ring: null, arrow: '#fff', words: 'text', line: 'accent', effect: '#c00' }, after: 'screen', phone: false, text: 'Opp', waves: 64, count: 8, hover: 'lift', press: 'tint', line: 'double', lineWidth: 3, glyph: '', icon: null, image: null, iconSize: 100, fill: 'edge', shape: null });
+  assert.deepEqual(set, { show: false, design: 'words', place: 'content', side: 'left', size: 'xl', phoneSize: 'l', colors: { bg: 'accent', ring: null, arrow: '#fff', words: 'text', line: 'accent', effect: '#c00' }, after: 'screen', phone: false, text: 'Opp', waves: 64, count: 8, hover: 'lift', press: 'tint', line: 'double', lineWidth: 3, glyph: '', icon: null, image: null, iconSize: 100, fill: 'edge', over: null, shape: null });
   const odd = toTopOf({ layout: { toTop: { design: 'star', place: 'middle', side: 'up', size: 's', phoneSize: 'huge', colors: { bg: '' }, after: 'later', text: 'x'.repeat(60), waves: 400, count: 99, hover: 'spin', press: 'flash', line: 'wavy', lineWidth: 9 } } });
   assert.equal(odd.design, 'circle');
   assert.equal(odd.place, 'corner');
@@ -134,6 +134,19 @@ test('on a shaped design the mark is cut to the button\'s outline, and a picture
   assert.match(css, /\.urd-totop-ring \.urd-totop-label \{[^}]*mask-image: var\(--urd-totop-clip, none\);\s*mask-size: 84% 84%;/, 'inside the edge, the outline drawn a little smaller');
   assert.match(css, /\.urd-totop-whole \.urd-totop-label \{\s*mask-size: 100% 100%;/);
   assert.match(css, /\.urd-totop-whole \.urd-totop-shape \{\s*display: none;/, 'a whole picture is the button, no background seen at its edge');
+});
+
+test('a mark can stand over a picture that fills the whole button: the arrow, or a drawn icon or a character in its place', () => {
+  const set = (raw) => toTopOf({ layout: { toTop: raw } });
+  assert.equal(set({}).over, null, 'nothing over the picture by default');
+  assert.deepEqual(set({ over: {} }).over, { icon: null, glyph: '' }, 'an empty mark is the arrow');
+  assert.deepEqual(set({ over: { icon: 'star' } }).over, { icon: 'star', glyph: '' });
+  assert.deepEqual(set({ over: { icon: 'no-such-icon', glyph: '  ↑  ' } }).over, { icon: null, glyph: '↑' }, 'an unknown icon is dropped, a character trimmed');
+  for (const odd of [true, 'arrow', ['star']]) assert.equal(set({ over: odd }).over, null, `${JSON.stringify(odd)} is no mark`);
+  // Drawn in a mark of its own over the picture, and taken away with the picture when it fails to load.
+  const js = readFileSync(new URL('totop.js', ENGINE_DIR), 'utf8');
+  assert.match(js, /if \(toTopFillsWhole\(set\) && set\.over\) \{\s*const over = markOf\(\{ \.\.\.set, image: null, icon: set\.over\.icon, glyph: set\.over\.glyph \}\);\s*over\.classList\.add\('urd-totop-over'\);/);
+  assert.match(js, /mark\.parentElement\?\.querySelector\(':scope > \.urd-totop-over'\)\?\.remove\(\);/);
 });
 
 test('a shaped design draws the owner\'s shape where there is one, and its own outline exactly as before without it', async () => {

@@ -1,5 +1,5 @@
 <script>
-  /* An area's own closing control (the calendar's «Reset texts»): drawn at the foot of its area, under the cards added from the add list and above the add list (MenuArea.svelte), so the eye, the Tab key and a screen reader meet it in the same place.
+  /* An area's own closing control (the calendar's «Reset texts»): drawn at the foot of its area, under the cards added from the add list and above the add list, or above the column of names that holds the cards added where the cards fold (MenuArea.svelte), so the eye, the Tab key and a screen reader meet it in the same place.
      Outside an area it stands where it is written. */
   import { getContext } from 'svelte';
   let { children } = $props();

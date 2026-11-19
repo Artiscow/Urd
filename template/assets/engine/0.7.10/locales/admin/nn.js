@@ -7,7 +7,7 @@ export default {
   strings: {
     'panel.pages': 'Sider',
     'panel.blocks': 'Blokker',
-    'panel.properties': 'Eigenskapar',
+    'panel.properties': 'Utvalets innstillingar',
     'panel.grid': 'Grid',
     'panel.site': 'Nettstad',
     'panel.theme': 'Tema',
