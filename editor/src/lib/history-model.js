@@ -58,7 +58,7 @@ export function stepKind(key, { typed = false } = {}) {
   if (k === 'pages') return kind('pages', 'panel_pages', false);
   if (k === 'nav' || k.startsWith('nav-') || k.startsWith('edit:nav-')) return kind('nav', 'panel_nav', false);
   if (k === 'footer' || k.startsWith('footer-')) return kind('footer', 'panel_footer', false);
-  if (k === 'theme' || k.startsWith('edit:theme-')) return kind('theme', 'panel_theme', false);
+  if (k === 'theme' || k.startsWith('edit:theme-') || k.startsWith('theme-colour-set')) return kind('theme', 'panel_theme', false);
   if (k === 'legal' || k.startsWith('edit:legal-')) return kind('legal', 'panel_legal', false);
   if (k === 'site' || k === 'setup' || k.startsWith('site-') || k === 'grid:site' || k.startsWith('edit:site-')) return kind('site', 'panel_site', false);
   if (k === 'collections') return kind('collections', 'panel_collections', false);

@@ -3,6 +3,7 @@
    * The colour picker: three tabs over the saved and recent colours.
    * Theme holds the theme's colours as named tiles; Custom a saturation and brightness field, hue and opacity, with the numbers in the format chosen (Hex, RGB or HSL, kept per browser) and the eyedropper; Palette twelve hues and a grey in eight rows of even lightness, in six strengths (lib/colour-grid.js).
    * The strength last pressed or picked from is kept per browser, and the picker opens on the tab its colour comes from, a palette colour in the strength that holds it (pickerStart).
+   * Under the palette stand the site's colour sets (theme.colorSets, lib/colour-sets.js), the same in every picker and for everyone who edits the site: «On this site» first, the colours the pages use, gathered at each opening and never changed here; then the site's own sets, each renamed, given the colour in use, a colour taken out, or deleted, each change one undo step.
    *
    * The value is EITHER #rrggbb OR a theme color NAME (e.g. 'accent'):
    * picking a theme dot stores the name, so the content is recolored when
@@ -17,13 +18,65 @@
    * on a click outside or Escape. Both close on a window blur (a click in
    * the preview iframe never reaches this document).
    */
-  import { lingering, menuMotion } from './motion.svelte.js';
+  import { getContext, tick } from 'svelte';
+  import { lingering, menuMotion, rowMotion } from './motion.svelte.js';
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from './icons.js';
   import { colourGrid, GRID_HUES, GRID_STRENGTHS, pickerStart } from './colour-grid.js';
+  import { setsOf, newSetId, colourCode, SET_LIMITS } from './colour-sets.js';
 
   let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false, onremove = undefined } = $props();
+  const ed = getContext('urd-editor');
+
+  /** The site's sets (theme.colorSets), the live set gathered at each opening, the set pressed open under the grid (LIVE for the live set, a key no set's id can be), and whether the open set is being changed. */
+  const LIVE = ':live';
+  const sets = $derived(ed?.siteDraft ? setsOf(ed.siteDraft.theme) : []);
+  let onSite = $state([]);
+  let openSet = $state(LIVE);
+  let changing = $state(false);
+  /** The set shown: the one pressed, or the live set where the one pressed has gone (an undo took it away). */
+  const opened = $derived(sets.find((set) => set.id === openSet) ?? null);
+  const showing = $derived(openSet === null ? null : openSet === LIVE || opened ? openSet : LIVE);
+  /** The name typed, held apart from the stored name while it is typed, so the field never jumps under the caret. */
+  let nameText = $state('');
+  let nameField = $state(null);
+  let liveChip = $state(null);
+  let pencil = $state(null);
+  /** Whether «+» has something to add: a colour the set lacks, and room for it. */
+  const canAdd = $derived(Boolean(opened) && opened.colors.length < SET_LIMITS.colours && !opened.colors.some((c) => c.code === colourCode(hexText)));
+  function toggleSet(id) {
+    openSet = showing === id ? null : id;
+    changing = false;
+  }
+  function startChanging(on) {
+    changing = on;
+    if (on && opened) nameText = opened.name;
+  }
+  /** A new set holding the colour in use, named «Set n», its name field open with the focus in it. */
+  async function newSet() {
+    const id = newSetId(sets);
+    if (ed?.addColourSet?.({ id, name: ta('cp.setDefault', { n: sets.length + 1 }), colors: [{ code: currentColor() }] })) {
+      openSet = id;
+      startChanging(true);
+      await tick();
+      nameField?.select();
+    }
+  }
+  /** The set deleted, the focus on «On this site», which opens. */
+  async function deleteSet(set) {
+    ed?.deleteColourSet?.(set.id);
+    openSet = LIVE;
+    changing = false;
+    await tick();
+    liveChip?.focus();
+  }
+  /** A colour taken out, the focus left on the set's pencil rather than on nothing. */
+  async function takeOut(set, i) {
+    ed?.removeSetColour?.(set.id, i);
+    await tick();
+    pencil?.focus();
+  }
   /** The colour's removal, the bin on the swatch's corner: the caller's (a setting row taking its own colour back to the standard), else emptying a colour that may be empty. */
   const remove = $derived(onremove ?? (allowClear && value ? () => onchange?.('') : null));
 
@@ -146,6 +199,8 @@
   function prepare() {
     setFromHex(displayHex()) || setFromHex('#000000');
     seedHsl();
+    changing = false;
+    ed?.readSiteColours?.().then((list) => { onSite = list; }).catch(() => { onSite = []; });
     openedWith = value;
     lastPickedHex = '';
     let kept = null;
@@ -540,6 +595,58 @@
               {/each}
             {/each}
           </div>
+          {#if ed?.siteDraft}
+            <!-- The site's sets: «On this site» first, the site's own after it, and a new set at the end; the one pressed slides open under the row -->
+            <div class="cp-sets" role="group" aria-label={ta('cp.sets')}>
+              <button type="button" class="cp-chip" aria-pressed={showing === LIVE} title={ta('tip.cp.onSite')} bind:this={liveChip} onclick={() => toggleSet(LIVE)}>{ta('cp.onSite')}</button>
+              {#each sets as set (set.id)}
+                <button type="button" class="cp-chip" aria-pressed={showing === set.id} onclick={() => toggleSet(set.id)}>{set.name}</button>
+              {/each}
+              <button type="button" class="cp-chip cp-chip-add" disabled={sets.length >= SET_LIMITS.sets} onclick={newSet}>{@html ICONS.plus}<span>{ta('cp.newSet')}</span></button>
+            </div>
+            {#if showing === LIVE}
+              <div class="cp-set-open" transition:rowMotion>
+                {#if onSite.length}
+                  <div class="cp-set-row">
+                    {#each onSite as c (c.code)}
+                      <button type="button" class="cp-cell" class:active={hexText.toLowerCase() === c.code} style="background: {c.code}"
+                        title={c.code} aria-label={c.code} aria-pressed={hexText.toLowerCase() === c.code} onclick={() => pick(c.code)}></button>
+                    {/each}
+                  </div>
+                {:else}
+                  <span class="cp-set-none">{ta('cp.onSiteNone')}</span>
+                {/if}
+              </div>
+            {:else if opened}
+              <div class="cp-set-open" transition:rowMotion>
+                <div class="cp-set-head">
+                  {#if changing}
+                    <input class="cp-set-name" bind:this={nameField} value={nameText} aria-label={ta('cp.setName')} maxlength="40"
+                      oninput={(e) => { nameText = e.currentTarget.value; ed.renameColourSet(opened.id, nameText); }}
+                      onchange={() => { nameText = opened.name; }} />
+                  {:else}
+                    <span class="cp-set-title">{opened.name}</span>
+                  {/if}
+                  <button type="button" class="cp-tool" bind:this={pencil} aria-pressed={changing} title={ta('cp.changeSet')} aria-label={ta('cp.changeSet')} onclick={() => startChanging(!changing)}>{@html ICONS.pencil}</button>
+                  <button type="button" class="cp-tool" disabled={!canAdd} title={ta('cp.addToSet')} aria-label={ta('cp.addToSet')} onclick={() => ed.addSetColour(opened.id, currentColor())}>{@html ICONS.plus}</button>
+                  <button type="button" class="cp-tool danger" title={ta('cp.deleteSet', { name: opened.name })} aria-label={ta('cp.deleteSet', { name: opened.name })} onclick={() => deleteSet(opened)}>{@html ICONS.bin}</button>
+                </div>
+                <div class="cp-set-row">
+                  {#each opened.colors as c, i (i)}
+                    {@const name = c.name ? `${c.name}: ${c.code}` : c.code}
+                    <span class="cp-set-cell">
+                      <button type="button" class="cp-cell" class:active={hexText.toLowerCase() === c.code} style="background: {c.code}"
+                        title={name} aria-label={name} aria-pressed={hexText.toLowerCase() === c.code} onclick={() => pick(c.code)}></button>
+                      {#if changing}
+                        <button type="button" class="cp-cell-del danger" title={ta('cp.takeOut', { name: c.name || c.code })} aria-label={ta('cp.takeOut', { name: c.name || c.code })}
+                          onclick={() => takeOut(opened, i)}>{@html ICONS.bin}</button>
+                      {/if}
+                    </span>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          {/if}
         {/if}
       </div>
       <div class="cp-sep"></div>
@@ -645,6 +752,10 @@
     border-radius: 10px;
     box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
     color: var(--urd-color-text, #e8eaf0);
+    /* A site with many sets makes a tall card: it scrolls within the window, never past it */
+    max-height: calc(100dvh - 16px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   /* The anchored branch: under the swatch, right edges aligned (the card
@@ -1005,6 +1116,172 @@
   .cp-cell.active {
     outline: 2px solid var(--urd-color-accent, #7c5cff);
     outline-offset: 1px;
+  }
+
+  /* The site's sets under the grid: a row of chips, the open set's head with its tools, and its colours in the grid's columns */
+  .cp-sets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .cp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 22px;
+    padding: 2px 8px;
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .cp-chip:hover {
+    border-color: rgb(255 255 255 / 34%);
+  }
+
+  .cp-chip[aria-pressed='true'] {
+    border-color: var(--urd-color-accent, #7c5cff);
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 18%, transparent);
+  }
+
+  .cp-chip-add {
+    border-style: dashed;
+  }
+
+  .cp-chip:disabled,
+  .cp-tool:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .cp-set-open {
+    display: grid;
+    gap: 8px;
+  }
+
+  .cp-chip :global(svg) {
+    width: 10px;
+    height: 10px;
+  }
+
+  .cp-chip:focus-visible,
+  .cp-tool:focus-visible {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: 2px;
+  }
+
+  .cp-set-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .cp-set-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    overflow-wrap: anywhere;
+  }
+
+  .cp-set-name {
+    flex: 1;
+    min-width: 0;
+    height: 24px;
+    box-sizing: border-box;
+    padding: 0 6px;
+    font: inherit;
+    font-size: 12px;
+    color: inherit;
+    background: rgb(0 0 0 / 22%);
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+  }
+
+  .cp-tool {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: inherit;
+    background: rgb(0 0 0 / 22%);
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .cp-tool[aria-pressed='true'] {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+
+  .cp-tool.danger {
+    color: #ffd4d4;
+    background: #5e1c22;
+    border-color: #7d2a31;
+  }
+
+  .cp-tool.danger:is(:hover, :focus-visible) {
+    background: #7a222a;
+  }
+
+  .cp-tool :global(svg) {
+    width: 12px;
+    height: 12px;
+  }
+
+  .cp-set-row {
+    display: grid;
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+    gap: 2px;
+  }
+
+  .cp-set-cell {
+    position: relative;
+    display: grid;
+  }
+
+  /* A colour of a set being changed: the bin on the dark red of every removal, on its corner */
+  .cp-cell-del {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    z-index: 1;
+    width: 13px;
+    height: 13px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid #7d2a31;
+    border-radius: 50%;
+    background: #5e1c22;
+    color: #ffd4d4;
+    cursor: pointer;
+  }
+
+  .cp-cell-del:is(:hover, :focus-visible) {
+    background: #7a222a;
+  }
+
+  .cp-cell-del :global(svg) {
+    width: 7px;
+    height: 7px;
+  }
+
+  .cp-set-none {
+    font-size: 11px;
+    opacity: 0.6;
   }
 
   .cp-sep {

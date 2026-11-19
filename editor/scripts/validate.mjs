@@ -206,6 +206,7 @@ iconSite.site.iconSource = keptOriginal;
 iconSite.nav.logo = { ...iconSite.nav.logo, type: 'image', value: '/media/images/logo.webp', imageSource: { ...keptOriginal, ratio: '1:1' } };
 // The logo on the phone (nav.logo.mobileParts and mobileTextSize, nav.style.mobile.logo, additive from 0.7.3.25), which the template's own site does not set: a logo of both, the name alone on the phone, in the middle of its bar.
 const phoneLogoSite = load('template/content/site.json');
+phoneLogoSite.theme = { ...phoneLogoSite.theme, colorSets: [{ id: 'set-1a2b3c4d', name: 'Brand', colors: [{ code: '#15b39a', name: 'Teal' }, { code: '#04241d' }, { code: '#ffc85780', name: 'Sun, half seen' }] }, { id: 'set-5e6f7a8b', name: 'Christmas market', colors: [] }] };
 phoneLogoSite.nav.logo = { ...phoneLogoSite.nav.logo, type: 'both', value: 'Urd', image: '/media/images/logo.webp', mobileParts: 'text', mobileTextSize: 18 };
 phoneLogoSite.nav.style = { ...phoneLogoSite.nav.style, mobile: { ...(phoneLogoSite.nav.style?.mobile ?? {}), logo: 'center' } };
 // The phone menu's own look (nav.style.mobileAlign, mobileSubArrow and sheetBarTools, additive from 0.7.13.17), which the template's own site does not set: centred text, no submenu arrow, and the full-screen menu with the bar alone.
@@ -228,7 +229,7 @@ sharePage.meta = { ...(sharePage.meta ?? {}), og: { image: '/media/images/share.
 const validatePage = ajv.getSchema(pageSchema.$id);
 for (const [label, ok, errors] of [
   ['synthetic site icon and logos with their kept originals', validateSite(iconSite), validateSite.errors],
-  ['synthetic site with the logo and the menu\'s own look on the phone, own phone layouts and a back to top button of its own', validateSite(phoneLogoSite), validateSite.errors],
+  ['synthetic site with the logo and the menu\'s own look on the phone, own phone layouts, a back to top button of its own and colour sets', validateSite(phoneLogoSite), validateSite.errors],
   ['synthetic share image with its kept original, a section\'s room on the phone, and a block\'s own size there', validatePage(sharePage), validatePage.errors],
 ]) {
   if (ok) {

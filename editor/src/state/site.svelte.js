@@ -28,6 +28,7 @@ import { clonePageForInsert } from '$engine/templates-model.js';
 import { liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
 import { termsSeed } from '../lib/site-seed.js';
+import { setsOf, setsAfter, siteColours } from '../lib/colour-sets.js';
 import { tick } from 'svelte';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -136,6 +137,48 @@ function siteMutate(key, fn, { pages } = {}) {
   siteStore.save();
   historyState.updateDirty();
   pushSiteToPreview();
+}
+
+/** The site's colour sets (theme.colorSets, lib/colour-sets.js), which every colour picker offers: each change one undo step, a name typed one step for the typing (`edit:`). */
+function changeColourSets(key, change) {
+  if (!siteDraft?.theme) return false;
+  const now = setsOf(siteDraft.theme);
+  const next = setsAfter(now, change);
+  if (next === now) return false;
+  siteMutate(key, () => {
+    if (next.length) siteDraft.theme.colorSets = next;
+    else delete siteDraft.theme.colorSets;
+  });
+  return true;
+}
+const addColourSet = (set) => changeColourSets('theme-colour-set-add', { kind: 'add', set });
+const renameColourSet = (id, name) => changeColourSets(`edit:theme-colour-set-name:${id}`, { kind: 'rename', id, name });
+const addSetColour = (id, code) => changeColourSets('theme-colour-set-colour', { kind: 'addColour', id, code });
+const removeSetColour = (id, index) => changeColourSets('theme-colour-set-colour', { kind: 'removeColour', id, index });
+const deleteColourSet = (id) => changeColourSets('theme-colour-set-delete', { kind: 'delete', id });
+
+/** The pages' files read for the live set: a page with a draft or a file a publish holds is read each time, a published one fetched once. */
+const pagesRead = new Map();
+function pageForColours(entry) {
+  if (localStorage.getItem(`urd-draft-${entry.id}`) !== null || pageState.held.has(entry.file)) {
+    pagesRead.delete(entry.file);
+    return pageState.readPageDraft(entry);
+  }
+  if (!pagesRead.has(entry.file)) pagesRead.set(entry.file, pageState.readPageDraft(entry));
+  return pagesRead.get(entry.file);
+}
+
+/** The live set «On this site»: the colours the pages and the site's settings use, the most used first, the theme's own left out (the Theme tab holds them). */
+async function readSiteColours() {
+  if (!siteDraft) return [];
+  const docs = await Promise.all((siteDraft.pages ?? []).map((entry) => {
+    if (entry.id !== pageState.pageId) return Promise.resolve(pageForColours(entry)).catch(() => null);
+    // The open page is read from the store; its file, which may change by a publish from it, is read anew once it is left.
+    pagesRead.delete(entry.file);
+    return $state.snapshot(pageState.store?.data ?? null);
+  }));
+  const { theme: _theme, ...settings } = $state.snapshot(siteDraft);
+  return siteColours([settings, ...docs.filter(Boolean)]);
 }
 
 /** Pins a command into the site's shared shortcuts, or takes it out (site.shortcuts, the command palette's first group for everyone who edits the site); a pin the list cannot take (lib/command-palette.js togglePinned) changes nothing. */
@@ -974,6 +1017,12 @@ export const siteState = {
   themeSwatches,
   setGrid,
   siteMutate,
+  addColourSet,
+  renameColourSet,
+  addSetColour,
+  removeSetColour,
+  deleteColourSet,
+  readSiteColours,
   toggleShortcut,
   setUpdateNotice,
   get newPageTitle() { return newPageTitle; },

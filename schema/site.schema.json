@@ -313,6 +313,33 @@
           "enum": ["hyphenate", "whole"],
           "description": "«Long words» in the site's texts (additive from 0.7.3.20, ADR-0034): kept whole, or hyphenated at the page's language and broken where a word still does not fit. Omitted = whole. A text block's props.words overrides it."
         },
+        "colorSets": {
+          "type": "array",
+          "maxItems": 40,
+          "description": "The site's colour sets (additive from 0.7.9.2, lib/colour-sets.js): named sets of colour codes that every colour picker in the admin offers under its palette, the same for everyone who edits the site. Read by the admin only; the published site draws nothing from them.",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "colors"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9-]{1,40}$", "description": "The set's id, made by the editor (set-<eight hex digits>)." },
+              "name": { "type": "string", "minLength": 1, "maxLength": 40, "description": "The set's name, the owner's own." },
+              "colors": {
+                "type": "array",
+                "maxItems": 48,
+                "items": {
+                  "type": "object",
+                  "required": ["code"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": { "type": "string", "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$", "description": "The colour as #rrggbb, or #rrggbbaa where it is not opaque." },
+                    "name": { "type": "string", "maxLength": 40, "description": "The colour's name, where it was given one." }
+                  }
+                }
+              }
+            }
+          }
+        },
         "scheme": {
           "enum": ["light", "dark"],
           "default": "light",

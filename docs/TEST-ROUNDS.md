@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.9.2): the site's colour sets and the colours the pages use
+
+- [ ] The colour picker's Palette tab: under the grid a row of chips, «On this site» first; open it: the colours your pages use, the most used first, a press setting one
+- [ ] Give a block a colour of its own, then open a colour picker anywhere: «On this site» holds the new colour with no press of its own
+- [ ] «+ New set» makes a set holding the colour in use, its name field open; type a name, add colours with «+», take one out by its bin, and delete the set by the bin in its head
+- [ ] Each change of a set is undone in one step, the name typed in one step for the typing
+- [ ] The set stands in every colour picker: the Theme panel, a block's colours, the text bar's colours, the Site panel's
+- [ ] Save the site (or publish), open the admin on another device or browser: the sets are there
+- [ ] A colour picked from a set and the set changed or deleted afterwards: what was coloured keeps its colour
+- [ ] In Firefox: the sets row, the live set and a new set (checked in Brave only)
+
 ### Test batch (0.7.9.1): the colour picker's palette in six strengths
 
 - [ ] The colour picker's Palette tab: the grey and twelve hues across, eight steps from light to dark, each row even in lightness

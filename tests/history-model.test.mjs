@@ -44,6 +44,8 @@ test('stepKind: each kind of change named in words with an icon, a page change m
   assert.equal(stepKind('nav').labelKey, 'history.step.nav');
   assert.equal(stepKind('edit:nav-style-padY').labelKey, 'history.step.nav');
   assert.equal(stepKind('theme').onPage, false);
+  for (const key of ['theme-colour-set-add', 'theme-colour-set-colour', 'theme-colour-set-delete', 'edit:theme-colour-set-name:set-1a2b3c4d']) assert.deepEqual(stepKind(key), { labelKey: 'history.step.theme', icon: 'panel_theme', onPage: false }, `${key}: the site's colour sets are the theme's`);
+  for (const key of ['theme-colour-set-add', 'theme-colour-set-colour', 'theme-colour-set-delete']) assert.equal(joinsLast({ key, at: 0 }, key, 1), false, `${key}: each change a step of its own`);
   assert.equal(stepKind('edit:site-title').labelKey, 'history.step.site');
   assert.deepEqual(stepKind('legal'), { labelKey: 'history.step.legal', icon: 'panel_legal', onPage: false });
   assert.equal(stepKind('edit:legal-contact-email').labelKey, 'history.step.legal');

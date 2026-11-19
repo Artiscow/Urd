@@ -8,6 +8,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.9.2 - The site's colour sets in every colour picker, and the colours the pages use - 20 November 2026
+
+- A colour chosen for one block had to be found again by hand for the next, and no picker knew the colours the site already used (BACKLOG 0.7.9.2). Under the palette stand the site's colour sets, kept in the site's theme (`theme.colorSets`, `lib/colour-sets.js`) and the same in every colour picker for everyone who edits the site.
+- «On this site» stands first: the colours the pages and the site's settings use, the most used first, gathered from every page at each opening of a picker (`readSiteColours` in site.svelte.js) and never stored.
+- «+ New set» makes a set of the colour in use; a set is renamed, given the colour in use, has a colour taken out, or is deleted, each change one undo step; a colour picked from a set is stored as its code.
+- The schema, SCHEMA.md and the validation's example hold the field; the guides, ARCHITECTURE.md and the comparison's palette row describe the sets.
+
+The independent review before the commit found these:
+
+1. A change of a set stood in the undo list as «Changed a block» and was counted to the open page's changes. Its keys begin `theme-colour-set` and are read as the theme's, each still a step of its own (`stepKind` in history-model.js).
+2. The name field took the stored, trimmed name back at each letter, so «Our » and a «t» gave «Ourt». The field holds the name typed, apart from the stored one.
+3. A page published from itself was read as it stood before for the rest of the session once it was left. The open page's file is read anew once it is left.
+4. A link to a spot named like a code («#decade») counted as a colour of the site. Fields that hold a link, a place or a name are passed by.
+5. A set taken away by an undo left nothing under the row, and a set with the id `site` would have opened the live set. The live set stands in a set's place where the set has gone, under a key no set's id can be.
+6. A set opened and closed at once, the card could run past the window with many sets, «+» and «+ New set» did nothing without a sign where nothing could be added, a new set's name field opened without the focus, and a deletion left the focus on nothing. The set slides open and shut, the card scrolls within the window, the two are greyed where they can add nothing, the name field takes the focus, and the focus goes to «On this site» or the set's pencil.
+7. The comment on reading the sets said a set without colours is left out, where it is kept. It says what is left out.
+
 ### 0.7.9.1 - The colour picker's palette in six strengths - 20 November 2026
 
 - The Palette tab held fifty fixed colours in five steps, with no cyan, lime or amber and large jumps between a tint and its full colour (BACKLOG 0.7.9.1). It holds the grey and twelve hues in eight rows of even lightness, worked out in OKLCH, in six strengths: Vivid, Soft, Muted, Deep, Pastel and Neon (`lib/colour-grid.js`).
