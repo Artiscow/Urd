@@ -41,6 +41,7 @@
   import PanelNav from './shell/PanelNav.svelte';
   import PanelStrip from './shell/PanelStrip.svelte';
   import PreviewStage from './shell/PreviewStage.svelte';
+  import LivePhone from './shell/LivePhone.svelte';
   import PhoneDock from './panels/phone/PhoneDock.svelte';
   import ConfirmDialog from './shell/ConfirmDialog.svelte';
   import PictureEditor from './lib/PictureEditor.svelte';
@@ -127,6 +128,11 @@
     },
   });
   setContext('urd-editor', ed);
+
+  /** A table standing over the whole stage: the CSV import's, page settings' or a collection's in its table layout, as drawn below. */
+  const stageTable = $derived(ed.chromeVisible && Boolean(ed.csvImport?.view === 'table' || (ed.pageSettingsFor && ed.pageSettingsPref === 'table')
+    || (ed.activePanel === 'collections' && ed.collectionsLayout === 'table' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection)
+      && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded))));
   for (const part of parts) part.effects?.();
   /** The two columns name the open collection in the panel's heading (panels/collections/CollectionHeading.svelte). */
   const collectionHeading = $derived(ed.activePanel === 'collections' && ed.collectionsLayout === 'columns' && ed.collectionIds.includes(ed.panelCollection) && ed.csvImport?.view !== 'panel');
@@ -224,6 +230,10 @@
       <!-- The stage, with the collections table standing over it while a collection is open in that layout, and a CSV import's table over both while it waits; the preview stays mounted underneath -->
       <div class="stage-area">
         <PreviewStage />
+        <!-- The live phone beside the desktop canvas (0.7.36.1): in the desktop view alone, not in Clean view, not while a saved draft is looked at, which the canvas shows in the drafts' place, and not under a table that stands over the stage -->
+        {#if ed.livePhoneOn && ed.viewMode === 'desktop' && ed.chromeVisible && !ed.looking && !stageTable}
+          <LivePhone />
+        {/if}
         <!-- The Phone panel's blocks in their order in a column of their own at the stage's right edge, while the panel stands (Urd settings «Phone panel») -->
         {#if ed.activePanel === 'phone' && ed.phonePanelPref === 'dock' && ed.chromeVisible && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)}
           <PhoneDock />

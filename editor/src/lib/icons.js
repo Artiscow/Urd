@@ -78,6 +78,15 @@ export const ICONS = {
   // A block unpinned on the phone: the canvas's pin for a block pinned to rows, crossed out.
   unpin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M3 3l18 18"/></svg>',
   pinOn: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3l7 7-3 1-4 4 1 4-3 1-3-5-5 5v-2l4-4-5-3 1-3 4 1 4-4z"/></svg>',
+  // The live phone beside the desktop canvas: a phone with the waves of something live beside it.
+  livePhone: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="9" height="18" rx="2"/><path d="M8.5 17.5h2"/><path d="M17.5 9a4 4 0 0 1 0 6"/><path d="M20 6.5a8 8 0 0 1 0 11"/></svg>',
+  // Two pages scrolling together: an arrow up and down beside another.
+  scrollTogether: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4v16"/><path d="M5 7l3-3 3 3"/><path d="M5 17l3 3 3-3"/><path d="M16 4v16"/><path d="M13 7l3-3 3 3"/><path d="M13 17l3 3 3-3"/></svg>',
+  // A grip that something is dragged by: six dots.
+  grip: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+  // The live phone lifted out to float over the canvas, and docked back into its column.
+  liveFloat: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="15" rx="2"/><rect x="12.5" y="10.5" width="6" height="6" rx="1" fill="currentColor"/></svg>',
+  liveDock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="15" rx="2"/><path d="M15 4v15"/><path d="M15 4h4a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-4z" fill="currentColor"/></svg>',
   cross: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>',
   download: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg>',
   upload: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M4 20h16"/></svg>',

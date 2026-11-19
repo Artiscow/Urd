@@ -299,7 +299,7 @@
 
         {#if ed.folded.view}
           <span class="toolmenu">
-            <button class="ghost" class:active={ed.toolMenu === 'view' || ed.gridOn || ed.guidesOn}
+            <button class="ghost" class:active={ed.toolMenu === 'view' || ed.gridOn || ed.guidesOn || ed.livePhoneOn}
               title={ta('lbl.group.view')}
               onclick={() => (ed.toolMenu = ed.toolMenu === 'view' ? null : 'view')}
               >{@html ICONS.gridToggle}{@html ICONS.caret}</button>
@@ -309,6 +309,8 @@
                   title={ta('tip.gridToggle')}>{@html ICONS.gridToggle} {ta('lbl.view.grid')}</button>
                 <button class="ghost" class:active={ed.guidesOn} onclick={ed.toggleGuides}
                   title={ta('tip.guides')}>{@html ICONS.guides} {ta('lbl.view.guides')}</button>
+                <button class="ghost" class:active={ed.livePhoneOn} aria-pressed={ed.livePhoneOn} disabled={ed.viewMode !== 'desktop' || Boolean(ed.looking)} onclick={ed.toggleLivePhone}
+                  title={ta('tip.livePhone')}>{@html ICONS.livePhone} {ta('lbl.view.livePhone')}</button>
               </div>
             {/if}
           </span>
@@ -319,6 +321,8 @@
               title={ta('tip.gridToggle')}>{@html ICONS.gridToggle}</button>
             <button class="ghost" class:active={ed.guidesOn} onclick={ed.toggleGuides}
               title={ta('tip.guides')}>{@html ICONS.guides}</button>
+            <button class="ghost" class:active={ed.livePhoneOn} aria-pressed={ed.livePhoneOn} aria-label={ta('lbl.view.livePhone')} disabled={ed.viewMode !== 'desktop' || Boolean(ed.looking)} onclick={ed.toggleLivePhone}
+              title={ta('tip.livePhone')}>{@html ICONS.livePhone}</button>
           </span>
         {/if}
       </span>

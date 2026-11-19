@@ -76,10 +76,11 @@ function readPhonePref() {
 
 let phonePref = $state(readPhonePref());
 
-function setPhonePref(patch) {
+/** The Phone's size; `keepWidth` leaves a canvas width dragged by hand as it is (the live phone's size, picked while the canvas shows the desktop). */
+function setPhonePref(patch, { keepWidth = false } = {}) {
   phonePref = phoneSetting({ ...$state.snapshot(phonePref), ...patch });
   try { localStorage.setItem(PHONE_PREF_KEY, JSON.stringify(phonePref)); } catch { /* blocked storage: the choice lasts the session */ }
-  freeWidth = null;
+  if (!keepWidth) freeWidth = null;
 }
 
 let phoneTarget = $derived(phoneViewport(phonePref));

@@ -618,6 +618,15 @@ async function checkAuth() {
  *  localStorage (not page data) and re-established in onReady. */
 let guidesOn = $state(localStorage.getItem('urd-guides') === '1');
 
+/** The live phone beside the desktop canvas (0.7.36.1, shell/LivePhone.svelte): a personal workspace preference, remembered in localStorage only while it is on. */
+let livePhoneOn = $state(localStorage.getItem('urd-live-phone') === '1');
+
+function toggleLivePhone() {
+  livePhoneOn = !livePhoneOn;
+  if (livePhoneOn) localStorage.setItem('urd-live-phone', '1');
+  else localStorage.removeItem('urd-live-phone');
+}
+
 /** Whether Urd's own settings stand open over the admin (settings/SettingsDialog.svelte): the dialog or the sheet, by `settingsPlace`; the panel form is the panel id `settings` in activePanel instead. */
 let settingsOpen = $state(false);
 
@@ -1157,6 +1166,7 @@ export const shellState = {
   set attentionCount(v) { attentionCount = v; },
   updateAttention,
   jumpToAttention,
+  toPhoneView,
   lookOnPhone,
   onPointerdownWindow,
   onKeydown,
@@ -1216,6 +1226,8 @@ export const shellState = {
   checkAuth,
   get guidesOn() { return guidesOn; },
   set guidesOn(v) { guidesOn = v; },
+  get livePhoneOn() { return livePhoneOn; },
+  toggleLivePhone,
   get settingsOpen() { return settingsOpen; },
   get spellcheckPref() { return spellcheckPref; },
   setSpellcheck,

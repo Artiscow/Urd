@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.36.1): the live phone beside the desktop canvas
+
+- [ ] «Live phone» in the top bar (the phone with waves beside Grid and Guides) shows the page as a phone draws it beside the desktop canvas; off, the canvas takes its full width again, and the choice is kept over a reload
+- [ ] A change on the canvas or in a panel (words typed, a colour, a block moved) shows in the live phone within a second
+- [ ] A press on a block in the live phone opens the phone view with that block selected; a link or a picture in it opens nothing
+- [ ] The pointer over a block in it rings the block, the block selected on the canvas is ringed and brought into its view, and the wheel scrolls it as smoothly as the canvas
+- [ ] The column: the phone stands whole in its frame on the dotted ground, the phone's size shows whole and changes the phone, «Edit phone» opens the phone view, and the column's edge is dragged wider or narrower
+- [ ] The float button lifts the phone out over the canvas without loading it again; S, M and L change its size, it stays where its bar drags it, also after a reload, and the dock button puts it back in the column
+- [ ] «Scroll together with the canvas»: scrolling the canvas scrolls the phone and scrolling the phone scrolls the canvas, smoothly, the same section reaching the top of both; off, each scrolls alone
+- [ ] The live phone is gone in the phone view, in Clean view and while a saved draft is looked at
+- [ ] Clean view shows no pin mark and no own-words mark on blocks, on the canvas and in the live phone
+- [ ] In Firefox: the live phone follows, scrolls together and opens a block at a press (checked in Brave only)
+
 ### Test batch (0.7.36.2): the phone's own «Size» for a block
 
 - [ ] A text's menu, Placement: «Size on the phone» stands under «Size», «As on the desktop» or «Its own», in the desktop view and the phone view; an image, a video, a shape, an icon and a map have neither row

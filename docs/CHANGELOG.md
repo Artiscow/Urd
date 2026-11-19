@@ -8,6 +8,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.36.1 - A live phone beside the desktop canvas, docked or floating, scrolling together with it - 19 November 2026
+
+- Seeing a desktop change on the phone took a switch of the view (BACKLOG 0.7.36.1, E14, C38). «Live phone» in the top bar shows the page as a phone draws it beside the desktop canvas, following every change after a short pause, and a press on a block opens it in the phone view (`shell/LivePhone.svelte`).
+- It stands as a column with the phone whole in its frame, the phone's size, «Edit phone» and an edge dragged wider, or floats over the canvas wherever it is dragged, small, middle or large, switched from its bar and kept in the browser (decided from four layouts drawn the same day).
+- «Scroll together with the canvas» scrolls each as the other is scrolled, read off a curve through where each section starts in both pages (`lib/scroll-map.js`), so both move in the same frame.
+- The first column drew a grey layer under the pointer, scrolled the phone slowly by hand and showed a light line round it (test finding). The phone's own page takes the wheel and the presses, and draws its own edge.
+- Clean view showed the marks of a block pinned on the phone and of its own words there. Clean view hides them, in the live phone and on the canvas alike.
+- The guides, ARCHITECTURE.md and the comparison's side-by-side rows describe it; the shells carry the stylesheet's new stamp.
+
+The independent review before the commit found these:
+
+1. Every edit of the selected block scrolled the phone back to it, smoothly, and with «Scroll together» on that dragged the canvas under the caret. The phone scrolls only when the selection changes, at once, and not while it scrolls together.
+2. A touch or pen drag of the column's edge or the floating phone could be taken over by the browser, leaving the phone stuck and its listeners attached. Both drags end on `pointercancel` and take no text selection or pan.
+3. The floating phone covered the collections, page settings and import tables on the stage. It stands aside while one of them is open.
+4. The size field stood empty when the phone's size was not a preset, and picking one put back the canvas's own dragged width. The current size stands in the list, and picking one from the desktop view keeps the canvas's width (`setPhonePref` in preview.svelte.js).
+5. The live phone came and went with no motion. The column slides in as the phone dock does and the floating phone as a menu does.
+6. «Live phone» in the top bar stood active where it does nothing. It is greyed in the phone view and while a saved draft is looked at.
+7. A page switch left the phone part-way down the new page. It starts at the top.
+8. A video or map that loads at once took presses inside the live phone. Embedded players there take no pointer.
+9. A plugin switched off kept drawing in the live phone. Its page reloads when a plugin is taken away, as the canvas does.
+10. A full redraw of the canvas handed its brief jump to the phone. The canvas's redraws pass a short quiet time before they are handed over.
+11. The scroll tests never reached the limit that keeps the curve from running backwards. A case with steep and flat sections side by side does, and the round trip's test says it comes near, not back.
+12. The column's ground and the phone's edge kept fixed colours in the gold, aurora and dusk admin themes. They mix from the theme's colours as the canvas's do.
+13. Small, Medium and Large read as single letters to a screen reader and took the bar's drag tip, and the column's edge was a focusable span. They carry their full names, and the edge is a button.
+
 ### 0.7.36.2 - The phone's own «Size» for a block, and the phone side of the canvas moved into v0.7 - 19 November 2026
 
 - The phone side of the canvas stood in v0.8. It is milestone 0.7.36 in v0.7 (moved 19 November 2026), each stage with its decision and Done when, and full editing in both canvases stands under «After v1.0»; the roadmap in both languages and the comparison follow.
