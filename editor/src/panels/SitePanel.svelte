@@ -5,6 +5,8 @@
   import { WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, WIDTH_DEFAULT, GUTTER_MIN, GUTTER_MAX, GUTTER_STEP, GUTTER_DEFAULT, WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS, clampWidth, clampGutter, contentBand, presetOf } from '../lib/content-width.js';
   import { MOBILE_GAP, mobileGapOf } from '$engine/migrate.js';
   import SitePhoneGap from './site/SitePhoneGap.svelte';
+  import SiteToTop from './site/SiteToTop.svelte';
+  import { toTopOf, TOTOP_COUNT } from '$engine/totop.js';
   import Choice from '../lib/Choice.svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import Setting from '../lib/rows/Setting.svelte';
@@ -168,6 +170,16 @@
   /** The groups of settings with a value of their own to go back from: the title's form, the place, the content width and the shop. */
   const identityGroup = () => siteGroup(() => siteDraft.site, siteMutate, 'site-identity', { titleFormat: 'page-site' });
   // A reset takes the field's error line away with the value it was about.
+  /** The «Back to top» button's settings (site.layout.toTop): a reset takes them all away, and the object with them once it stands empty. */
+  const toTopGroup = () => siteGroup(() => siteDraft.layout?.toTop, (name, change) => siteMutate(name, () => {
+    change();
+    if (siteDraft.layout?.toTop && !Object.keys(siteDraft.layout.toTop).length) delete siteDraft.layout.toTop;
+  }), 'site-totop', { show: true, design: 'circle', text: undefined, waves: 0, count: TOTOP_COUNT.standard, hover: 'standard', press: undefined, line: 'solid', lineWidth: 1, place: 'corner', side: 'right', size: 'm', phoneSize: undefined, colors: undefined, after: 'little', phone: true });
+  /** The fold's value while closed: the design, or that the button is hidden. */
+  const toTopValue = () => {
+    const set = toTopOf(siteDraft);
+    return set.show ? ta(`toTopDesign.${set.design}`) : ta('opt.showHide.hide');
+  };
   const regionGroup = () => siteGroup(() => siteDraft.site, (name, change) => { siteMutate(name, change); ed.siteZoneBad = false; }, 'site-region', { timeZone: undefined, mapService: 'osm' });
   const widthGroup = () => siteGroup(() => siteDraft.layout, (name, change) => siteMutate(name, () => {
     change();
@@ -301,6 +313,11 @@
     </Setting>
     <!-- The space between the blocks on the phone, for every section that has none of its own -->
     <SitePhoneGap />
+  </Fold>
+
+  <!-- The «Back to top» button on every page (site.layout.toTop, the engine's totop.js) -->
+  <Fold id="totop" surface={S} title={ta('group.siteToTop')} tip={ta('tip.site.toTop')} value={toTopValue()} group={toTopGroup()}>
+    <SiteToTop />
   </Fold>
 
   <!-- The site's calendars (site.calendars): registered once with their settings, picked by the calendar blocks as references.

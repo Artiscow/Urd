@@ -13,6 +13,7 @@ export const PANEL_FOLDS = {
     { id: 'identity', key: 'group.siteIdentity', group: 'about' },
     { id: 'region', key: 'group.siteRegion', group: 'about' },
     { id: 'width', key: 'lbl.contentWidth', group: 'look' },
+    { id: 'totop', key: 'group.siteToTop', group: 'look' },
     { id: 'calendars', key: 'group.siteCalendars', group: 'content' },
     { id: 'links', key: 'group.siteLinks', group: 'content' },
     { id: 'shop', key: 'group.siteShop', group: 'shop' },

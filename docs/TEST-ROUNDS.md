@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.13.14.1): the «Back to top» button as an element of the site
+
+- [ ] A site that has set nothing shows the round button in the window's bottom right corner after a little scrolling, as before, in the editor and on the published page
+- [ ] The Site panel has a «Back to top» button fold after «Content width», its closed value the design; turned off, the button is gone from every page and the fold's other rows are hidden
+- [ ] «Design» opens the design picker with five designs, each with its picture, its description and a live preview of the page with the button in its corner; picking one changes the button
+- [ ] On «Circle», «Rounded square» and «Ring», drag «Waves»: the edge becomes waves that grow deeper and pointier, and «Amount» appears and sets how many; one crest points straight up
+- [ ] On «Pill with words» and «Words only», type your own words: the button shows them; empty, it shows the site language's own
+- [ ] «By the content» on a wide window puts the button at the content's edge; «Left» moves it to the left; on a narrow window it stands in the corner
+- [ ] The four sizes grow from «Standard» to «Giga»; «Size on phones» gives the phone view a size of its own
+- [ ] Each design shows only the colours it draws: background, ring and arrow on «Ring», background, arrow and words on the pill, arrow, words, line and the effect's colour on «Words only»
+- [ ] On «Words only», each «On hover» style answers the mouse as the menu's links do, «When touched» answers a press in the phone view, and «Line under the words» draws none, solid, dashed, dotted or double, with its thickness and colour, straight under the words whatever the hover does
+- [ ] «Shows after»: «Always» shows the button at the page's top, «A full screen of scrolling» after a screen's height; «On phones» on «Hide» hides it in the phone view only
+- [ ] Undo takes back a whole slider's run or typing session in one step, and «Reset this group» takes the button back to the standard
+
 ### Test batch (0.7.3.30): the phone editor's look, the bars in both places, and the dragged width kept over a reload
 
 - [ ] In the phone view the phone stands on a dotted ground in a frame with round corners all round, a thin bezel and room above it; zoom out and in: the frame keeps its look, and no light line shows at its edges

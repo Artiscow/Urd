@@ -29,7 +29,7 @@
   import UpdatePanel from './panels/UpdatePanel.svelte';
   import DesignPicker from './lib/DesignPicker.svelte';
   import { calDesign, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
-  import { calendarDesignSource, blockDesignSource, blockDesigns, footerPresetSource, blockPhoneDesignSource, SAME_DESIGN } from './lib/design-sources.js';
+  import { calendarDesignSource, blockDesignSource, blockDesigns, footerPresetSource, toTopDesignSource, blockPhoneDesignSource, SAME_DESIGN } from './lib/design-sources.js';
   import ColorPicker from './lib/ColorPicker.svelte';
   import FloatingMenu from './menu/FloatingMenu.svelte';
   import TextToolbar from './lib/TextToolbar.svelte';
@@ -267,7 +267,15 @@
       place="footer"
       onpick={(id) => { ed.applyFooterPreset(id); ed.designPicker = null; }}
       onclose={() => (ed.designPicker = null)} />
-  {:else if ed.designPicker && ed.designPicker.kind !== 'block'}
+  {:else if ed.designPicker?.kind === 'totop'}
+    <!-- The «Back to top» button's designs: the picked one is the site's button's design (site.layout.toTop) -->
+    <DesignPicker source={toTopDesignSource({ site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null })}
+      site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
+      plugins={$state.snapshot(ed.pluginsView)?.enabled ?? []} collections={$state.snapshot(ed.collectionsView) ?? null}
+      place="totop"
+      onpick={(id) => { ed.setToTopDesign(id); ed.designPicker = null; }}
+      onclose={() => (ed.designPicker = null)} />
+  {:else if ed.designPicker && ed.designPicker.kind !== 'block' && ed.designPicker.kind !== 'totop'}
     <DesignPicker source={calendarDesignSource({ mode: ed.designPicker.mode,
       current: ed.designPicker.mode === 'set' ? calDesign(ed.selectedBlock?.props.design).id : ed.designPicker.mode === 'phone' ? calPhoneView(ed.selectedBlock?.props) : ed.designPicker.mode === 'card' ? calCardDesign(ed.selectedBlock?.props) : null,
       design: calDesign(ed.selectedBlock?.props.design).id, props: ed.selectedBlock ? $state.snapshot(ed.selectedBlock.props) : {} })}

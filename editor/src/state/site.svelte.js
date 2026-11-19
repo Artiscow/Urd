@@ -22,6 +22,7 @@ import { activeTokens } from '$engine/theme.js';
 import { ta } from '$engine/i18n.js';
 import { slugify } from '$engine/imageTools.js';
 import { buildPagePreset } from '$engine/page-presets.js';
+import { TOTOP_DESIGNS } from '$engine/totop.js';
 import { presetSample, applyPreset } from '$engine/footer-presets.js';
 import { clonePageForInsert } from '$engine/templates-model.js';
 import { liftPageFile } from '$engine/migrate.js';
@@ -764,6 +765,19 @@ function footerMutate(key, fn) {
   });
 }
 
+/** The «Back to top» button's design (site.layout.toTop.design, the engine's totop.js), picked in the design picker, one undo step; the standard is stored as nothing. */
+function setToTopDesign(id) {
+  if (!TOTOP_DESIGNS.includes(id)) return;
+  siteMutate('site-totop', () => {
+    const layout = (siteDraft.layout ??= {});
+    const top = { ...(layout.toTop ?? {}) };
+    if (id === TOTOP_DESIGNS[0]) delete top.design;
+    else top.design = id;
+    if (Object.keys(top).length) layout.toTop = top;
+    else delete layout.toTop;
+  });
+}
+
 /** A preset of the footer (footer-presets.js), one undo step: its look and the parts it shows, the footer's own content kept in each part it shows. */
 function applyFooterPreset(id) {
   footerMutate('footer-preset', (f) => {
@@ -1036,6 +1050,7 @@ export const siteState = {
   clearLauncherImage,
   footerMutate,
   applyFooterPreset,
+  setToTopDesign,
   moveNavItemTo,
   moveNavChildTo,
   invertLightness,

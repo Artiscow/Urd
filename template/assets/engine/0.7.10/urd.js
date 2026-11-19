@@ -16,6 +16,7 @@ import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrame
 import { renderNav, refreshNavScroll, clearAnnounceDismissal, holdNavForJump } from './nav.js';
 import { isSafeImage, hashTarget, samePageHash, jumpOnArrival } from './nav-model.js';
 import { renderFooter } from './footer.js';
+import { renderToTop } from './totop.js';
 import { textBlock, termsBlock } from './blocks/text.js';
 import { imageBlock } from './blocks/image.js';
 import { buttonBlock } from './blocks/button.js';
@@ -155,25 +156,6 @@ async function engineVersion() {
   } catch {
     return '0.0.0';
   }
-}
-
-/**
- * "To top" arrow: appears at the bottom right after some scrolling.
- */
-function mountToTop() {
-  const btn = document.createElement('button');
-  btn.className = 'urd-totop';
-  btn.textContent = '↑';
-  btn.title = t('nav.toTop');
-  btn.setAttribute('aria-label', t('nav.toTopFull'));
-  btn.addEventListener('click', () => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
-  });
-  document.body.appendChild(btn);
-  const toggle = () => btn.classList.toggle('visible', window.scrollY > 400);
-  window.addEventListener('scroll', toggle, { passive: true });
-  toggle();
 }
 
 /** The jump being followed now: a newer jump, or the visitor's own scrolling, ends it. */
@@ -812,6 +794,7 @@ function enablePreview(state, opts) {
         applyFavicon(state.site.site?.icon);
         if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
         if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
+        renderToTop(state.site);
         renderPage(state.page, state.site, root, vp());
       }));
       // Changed site.lang in the draft: reload the visitor locale BEFORE the
@@ -925,7 +908,8 @@ export async function boot(opts) {
   opts.footer = document.createElement('footer');
   opts.footer.id = 'urd-footer';
   opts.root.insertAdjacentElement('afterend', opts.footer);
-  mountToTop();
+  // The site's «Back to top» button, as site.layout.toTop sets it (totop.js).
+  renderToTop(site);
 
   // Version lifting at file level: older page files are lifted to the
   // current format in memory (disk is written first at the next publish).

@@ -8,8 +8,9 @@
  * 4:5 from the top; then the card designs (the neutral card, every design's card, and the card designs designs lend, calCardCandidates), each
  * the card open over a plain list, under card-<id>.webp; then every other block's designs (block-designs.js), each drawn from its sample over the
  * block's defaults in the site's language, under block-<type>-<id>.webp, and the phone designs of the blocks that have them at a phone's width,
- * under block-<type>-<id>-phone.webp; and the footer's presets (footer-presets.js), each preset's own sample
- * drawn as the site's footer on an empty page, under footer-preset-<id>.webp.
+ * under block-<type>-<id>-phone.webp; the footer's presets (footer-presets.js), each preset's own sample
+ * drawn as the site's footer on an empty page, under footer-preset-<id>.webp; and the «Back to top» button's
+ * designs (totop.js), the window's bottom right corner with the button in it, under totop-<id>.webp.
  *
  * Run from the repo root with the local server up (python3 dev-server.py 8123) and a Chromium-family browser on the machine:
  *
@@ -357,6 +358,43 @@ try {
     if (!data) throw new Error(`footer-preset-${id}: no picture (${JSON.stringify(shot)})`);
     writeFileSync(join(OUT, `footer-preset-${id}.webp`), Buffer.from(data, 'base64'));
     console.log(`footer-preset-${id}: ${box.w}x${box.h} footer, picture written`);
+  }
+  // The «Back to top» button's designs (totop.js TOTOP_DESIGNS): the site's own button in each design, large and shown at once, over the top of the front page, the window's bottom right corner close up, under totop-<id>.webp.
+  const toTopDesigns = await cdp.evaluate(`(async () => {
+    const { engine } = await (await fetch('/urd.json')).json();
+    return (await import('/assets/engine/' + engine + '/totop.js')).TOTOP_DESIGNS;
+  })()`);
+  const chosenToTop = ONLY.length ? toTopDesigns.filter((id) => ONLY.includes(`totop-${id}`)) : toTopDesigns;
+  for (const id of chosenToTop) {
+    const view = await cdp.evaluate(`(async () => {
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      const site = await (await fetch('/content/site.json')).json();
+      site.layout = { ...(site.layout ?? {}), toTop: { design: ${JSON.stringify(id)}, size: 'l', after: 'always' } };
+      const page = await (await fetch('/content/pages/hjem.json')).json();
+      page.sections = page.sections.slice(0, 1);
+      let style = document.getElementById('pic-style');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'pic-style';
+        document.head.appendChild(style);
+      }
+      style.textContent = '.urd-nav, #urd-announce, .urd-nav-announce { display: none !important; }';
+      window.postMessage({ type: 'urd-site', site }, location.origin);
+      await sleep(400);
+      window.postMessage({ type: 'urd-preview-full', page }, location.origin);
+      await sleep(1500);
+      window.postMessage({ type: 'urd-chrome', visible: false }, location.origin);
+      await sleep(400);
+      window.scrollTo(0, 0);
+      await sleep(300);
+      return { w: window.innerWidth, h: window.innerHeight };
+    })()`);
+    const clip = { x: view.w - 360, y: view.h - 220, width: 360, height: 220 };
+    const shot = await cdp.send('Page.captureScreenshot', { format: 'webp', quality: 82, clip: { ...clip, scale: 2 } });
+    const data = shot.result?.data;
+    if (!data) throw new Error(`totop-${id}: no picture (${JSON.stringify(shot)})`);
+    writeFileSync(join(OUT, `totop-${id}.webp`), Buffer.from(data, 'base64'));
+    console.log(`totop-${id}: picture written`);
   }
 } finally {
   cdp?.close();

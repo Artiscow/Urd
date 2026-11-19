@@ -6,6 +6,7 @@ import { ta, adminLang } from '$engine/i18n.js';
 import { CAL_VIEWS, calDesign, calDesignFamilies, calOptionDefs, calPhoneDesignDef, calPhoneFamilies, calCardDesignDef, calCardFamilies } from '$engine/calendar-designs.js';
 import { calendarThumb } from '$engine/calendar-thumb.js';
 import { FOOTER_PRESETS, presetSample, applyPreset } from '$engine/footer-presets.js';
+import { TOTOP_DESIGNS, toTopOf } from '$engine/totop.js';
 import { BLOCK_DESIGNS, blockDesignOf, blockDesignFamilies, designLabelKey, designAboutKey, designPicture, designPhonePicture, blockDesignSample, blockDesignEmpty, designPreviewFrame } from '$engine/block-designs.js';
 import { PHONE_DESIGNS } from '$engine/push-model.js';
 
@@ -368,3 +369,56 @@ export function footerPresetSource({ site = null }) {
     },
   };
 }
+
+/**
+ * The «Back to top» button's designs (the engine's totop.js): the site's own button drawn in each design over the top of the page at work, with the owner's other settings (size, colours, waves, words) kept, shown at once rather than after scrolling.
+ * The picker keeps the button in its preview for this source and sends the site anew at every choice, since the button is the site's.
+ * @param {{site: object|null}} opts the site as a snapshot
+ */
+export function toTopDesignSource({ site = null }) {
+  const name = (d) => ta(`toTopDesign.${d.id}`);
+  const current = toTopOf(site).design;
+  return {
+    title: ta('picker.title', { block: ta('group.siteToTop') }),
+    label: ta('picker.title', { block: ta('group.siteToTop') }),
+    searchLabel: ta('picker.search'),
+    countText: (n) => ta('picker.count', { n }),
+    noneText: ta('picker.none'),
+    currentText: ta('picker.current'),
+    aboutHead: ta('picker.aboutHead'),
+    yoursHead: '',
+    useLabel: ta('picker.use'),
+    previewTitle: (n) => ta('picker.preview', { name: n }),
+    current,
+    initial: current,
+    filters: null,
+    families: () => [{ family: 'totop', label: ta('group.siteToTop'), designs: TOTOP_DESIGNS.map((id) => ({ id })) }],
+    name,
+    searchText: name,
+    def: (id) => ({ id }),
+    sideTag: () => '',
+    picture: (id) => `/admin/designs/totop-${id}.webp`,
+    thumb: () => '',
+    about: (d) => ta(`design.toTop.${d.id}`),
+    yours: () => [],
+    previewWidth: 560,
+    viewport: 'desktop',
+    blockId: 'design-picker-totop',
+    /** The page's first section behind the button, as the owner's own content. */
+    previewPage: (id, page) => ({ ...page, sections: (page?.sections ?? []).slice(0, 1) }),
+    /** The site with the chosen design on its button, shown at once and wherever the owner hid it. */
+    previewSite(siteNow, id) {
+      const layout = siteNow?.layout ?? {};
+      return { ...siteNow, layout: { ...layout, toTop: { ...(layout.toTop ?? {}), design: id, show: true, after: 'always' } } };
+    },
+    siteVaries: true,
+    showsToTop: true,
+    findEl: (doc) => doc.querySelector('.urd-totop'),
+    extraBottom: () => 0,
+    /** The button is fixed 16 px above the frame's foot, so a room of 16 px measures the frame at its own height and it stands still. */
+    room: 16,
+    stays: true,
+    afterDraw: null,
+  };
+}
+

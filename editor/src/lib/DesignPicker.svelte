@@ -109,13 +109,13 @@
   function onMessage(event) {
     if (event.origin !== location.origin || event.source !== iframeEl?.contentWindow) return;
     if (event.data?.type !== 'urd-ready') return;
-    // The preview shows the design alone: the site's header, announcement strip, footer and scroll-top button stay out of it, unless the footer is what the source shows.
+    // The preview shows the design alone: the site's header, announcement strip, footer and scroll-top button stay out of it, unless the footer or the button is what the source shows.
     // The frame is as tall as the drawn block (measure) and as wide as the view it shows, so the page in it never scrolls, and keeps no room for a scrollbar it never shows.
     const doc = iframeEl?.contentDocument;
     if (doc && !doc.getElementById('design-picker-style')) {
       const style = doc.createElement('style');
       style.id = 'design-picker-style';
-      style.textContent = `.urd-nav, #urd-announce, .urd-nav-announce, .urd-totop${source.showsFooter ? '' : ', #urd-footer'} { display: none !important; } html { overflow: hidden !important; scrollbar-gutter: auto !important; }`;
+      style.textContent = `.urd-nav, #urd-announce, .urd-nav-announce${source.showsToTop ? '' : ', .urd-totop'}${source.showsFooter ? '' : ', #urd-footer'} { display: none !important; } html { overflow: hidden !important; scrollbar-gutter: auto !important; }`;
       doc.head.appendChild(style);
     }
     if (site) post({ type: 'urd-site', site: source.previewSite(site, shown) });

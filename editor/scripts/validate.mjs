@@ -210,6 +210,7 @@ phoneLogoSite.nav.logo = { ...phoneLogoSite.nav.logo, type: 'both', value: 'Urd'
 phoneLogoSite.nav.style = { ...phoneLogoSite.nav.style, mobile: { ...(phoneLogoSite.nav.style?.mobile ?? {}), logo: 'center' } };
 // The owner's own phone layouts kept for the site (site.phoneLayouts, additive from 0.7.3.28), which the template does not ship.
 phoneLogoSite.phoneLayouts = [{ id: 'own-1', name: 'Picture then pairs', rows: ['full', 'two', 'big-left'] }];
+phoneLogoSite.layout = { ...phoneLogoSite.layout, toTop: { design: 'words', place: 'content', side: 'left', size: 'xl', phoneSize: 'l', colors: { bg: 'accent', ring: 'text', arrow: '#ffffff', words: 'text', line: 'accent', effect: 'accent' }, after: 'screen', phone: false, text: 'Opp', waves: 40, count: 8, hover: 'lift', press: 'tint', line: 'dashed', lineWidth: 2 } };
 iconSite.footer = { ...(iconSite.footer ?? { version: 1 }), brand: { ...(iconSite.footer?.brand ?? {}), mode: 'both', logo: '/media/images/footer-logo.webp', logoSource: keptOriginal }, privacyPage: 'personvern' };
 // The shop's terms of sale page (site.commerce.termsPage, additive from 0.7.24.2.3), which the template does not ship.
 iconSite.site.commerce = { ...(iconSite.site.commerce ?? {}), termsPage: 'kjopsvilkar' };
@@ -220,7 +221,7 @@ sharePage.meta = { ...(sharePage.meta ?? {}), og: { image: '/media/images/share.
 const validatePage = ajv.getSchema(pageSchema.$id);
 for (const [label, ok, errors] of [
   ['synthetic site icon and logos with their kept originals', validateSite(iconSite), validateSite.errors],
-  ['synthetic site with the logo on the phone and own phone layouts', validateSite(phoneLogoSite), validateSite.errors],
+  ['synthetic site with the logo on the phone, own phone layouts and a back to top button of its own', validateSite(phoneLogoSite), validateSite.errors],
   ['synthetic share image with its kept original, and a section\'s room on the phone', validatePage(sharePage), validatePage.errors],
 ]) {
   if (ok) {

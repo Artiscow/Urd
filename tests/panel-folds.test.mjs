@@ -102,7 +102,7 @@ test('the groups: each group\'s folds stand together, its label is in the dictio
   ]);
   assert.deepEqual(foldGroups(panelFolds('site')).map((g) => [g.label, g.folds.map((f) => f.id)]), [
     ['menuGroup.about', ['identity', 'region']],
-    ['menuGroup.look', ['width']],
+    ['menuGroup.look', ['width', 'totop']],
     ['menuGroup.content', ['calendars', 'links']],
     ['menuGroup.shop', ['shop']],
   ]);
