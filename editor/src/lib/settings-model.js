@@ -176,7 +176,7 @@ export const SETTINGS_GROUPS = [
       { id: 'toolbarPhone', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarPhone', tipKey: 'tip.adminPart.toolbarPhone', kind: 'seg',
         when: (c) => c.ed.toolbarPref !== 'full',
         options: (c) => [['on', c.ta('opt.showHide.show')], ['off', c.ta('opt.showHide.hide')]], get: (c) => c.ed.toolbarPhonePref, set: (c, v) => c.ed.setToolbarPhone(v) },
-      // Where the bars stand in the phone view: on the page as on the desktop, by default, or beside the phone.
+      // Where the bars stand in the phone view: on the page as on the desktop, by default, beside the phone, or in both places at once.
       { id: 'toolbarPhonePlace', part: true, parent: 'toolbar', labelKey: 'adminPart.toolbarPhonePlace', tipKey: 'tip.adminPart.toolbarPhonePlace', kind: 'seg',
         options: (c) => TOOLBAR_PHONE_PLACES.map((id) => [id, c.ta(`opt.toolbarPhonePlace.${id}`)]), get: (c) => c.ed.toolbarPhonePlacePref, set: (c, v) => c.ed.setToolbarPhonePlace(v) },
       { id: 'addBlockMenu', part: true, labelKey: 'settings.addBlockMenu', tipKey: 'tip.settings.addBlockMenu', kind: 'choice', look: 'addBlock',

@@ -8,6 +8,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.3.30 - The phone editor's look: a framed phone on a dotted ground, named bars, smaller marks, and the bars in both places at once - 19 November 2026
+
+- The phone view's tools had been added stage by stage and read as loose parts: the phone flush at the stage's top on a near black ground, the bars beside it unnamed, the marks over the blocks' words, a review card naming no section (BACKLOG 0.7.3.30, decided 19 November 2026 from three directions). The stage's ground is the admin's own surface with a faint dot grid in both views, and the phone stands in a frame with round corners, a bezel and room above and below it, which the fit's measure leaves out (`frameW`, `frameH` in state/preview.svelte.js).
+- The bars beside the phone open with what they act on, on a line of their own: the section's name, or the block's kind and words (`lib/CanvasBar.svelte`). The review card names its section (`lib/AttentionCards.svelte`).
+- The order numbers, the pin and the words mark on the blocks are 13 px and stand half over the block's top edge by its corners, off its words (base.css).
+- «Bars in the phone view» in Urd settings gains «Both»: the page keeps its own bars on the blocks, and the editor's stand beside the phone where the stage has room for them.
+- The width handle is a pill with a grip of dots.
+- A hairline of the canvas's white ground showed between the page and the bezel at a zoom like 75 % (test finding). The canvas's ground takes the bezel's colour.
+- The grip's dots stood off the pill's middle (test finding). They are drawn as a column of their own, centred.
+- The handle's full-height strip took the admin's button fill and press feel under the mouse (test finding). It takes none, and the pill alone is lit.
+- A reload went back to the device's width, dropping a width dragged at the canvas's edge (test finding). The dragged width is kept for the tab's life with the rest of where the admin stood (`lib/reload-place.js`).
+- The guides and ARCHITECTURE.md describe the look, «Both» and the kept width, and the shells carry the stylesheet's new stamp.
+
+The independent review before the commit found these:
+
+1. The marks, set half over the block's corners, covered the corner resize handles, and the words mark took the press meant for the top left one. They stand half over the top edge beside the corners, clear of the handles.
+2. With «Both», a bar that did not fit beside the phone was left out, so its width was never measured again, and a narrower bar could stay hidden where it would fit. It stays drawn unseen and is measured as its tools change.
+3. The width handle's keyboard focus showed only as the pill's colour. The pill takes a focus ring.
+4. On a stage narrower than the phone's frame the bezel's sides were cut off, and the dots stood still while a zoomed canvas was panned. The phone keeps room for its bezel at the sides too, and the dots move with the canvas.
+
 ### 0.7.3.29 - Readable text between the phone and the desktop: a section shows its phone layout where its text would be too narrow - 19 November 2026
 
 - On a tablet or a narrow window the desktop layout narrowed with the window, and a column of text could fall under the 140 px readable floor with nothing to hand it over (BACKLOG 0.7.3.29, decided 18 November 2026). A section shows its phone layout under the window width where one of its plain texts would stand narrower than the floor, while the desktop's «Force readable text» is on, and the rest of the page and the navigation bar keep the desktop's (`phoneHandoff` in push-model.js, `watchHandoff` in render.js).

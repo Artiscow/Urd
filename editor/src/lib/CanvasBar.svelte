@@ -4,6 +4,7 @@
      The site's menu has a bar of its own there (0.7.3.25), level with the menu while the mouse was last over it or it was last pressed: the bar's thickness, the logo's size and the menu's text size, each stepped down and up from what the phone draws now (nav-size.js phoneSizes, phoneStep) and written as the phone's own value, and a gear to the menu's settings for the phone. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
+  import { sectionWords, blockWords } from '$engine/anchor-model.js';
   import { placeTextBar, placeClearOf, clampPlace } from './menu-place.js';
   import { phoneSizes, phoneStep } from './nav-size.js';
   import { navActions } from '../panels/nav/nav-actions.js';
@@ -61,17 +62,41 @@
     return { stage, canvas: { left: Math.max(ir.left, stage.left), right: Math.min(ir.right, stage.right), top: Math.max(ir.top, stage.top), bottom: Math.min(ir.bottom, stage.bottom) } };
   }
 
+  /** With the bars in both places (Urd settings «Bars in the phone view»), the page shows its own over the canvas, so the editor's is shown only beside the phone; one placed elsewhere stays drawn but unseen, so it is measured again as its tools change. */
+  const besideOnly = $derived(ed.toolbarPhonePlacePref === 'both');
+  const beside = (place) => (place && besideOnly && place.side !== 'left' && place.side !== 'right' ? null : place);
+
+  /** What the bars act on, named as the order's column names it: the section by its first words, or its place on the page where it has none. */
+  const sectionName = $derived.by(() => {
+    void ed.edits;
+    void ed.restores;
+    const i = ed.sections.findIndex((s) => s.id === cb.section.id);
+    if (i < 0) return ta('lbl.section');
+    return sectionWords(ed.sections[i]) || ta('diff.section', { n: i + 1 });
+  });
+  /** The block by its kind and its first words. */
+  const blockName = $derived.by(() => {
+    void ed.edits;
+    void ed.restores;
+    const block = ed.sections.flatMap((s) => s.blocks).find((b) => b.id === cb.block.id);
+    if (!block) return '';
+    const words = blockWords(block);
+    return words ? `${ed.blockLabel(block.type)}: ${words}` : ed.blockLabel(block.type);
+  });
+
   /** The section's bar: beside the phone, level with the section's top, or with the top of the canvas where the section begins above it; none while the section stands out of sight. */
-  const sectionPlace = $derived.by(() => {
+  const sectionAt = $derived.by(() => {
     const f = frameOf();
     if (!f || !shown || !cb.section.id || !cb.section.rect || !cb.section.tools.length) return null;
     const box = toWindow(cb.section.rect);
     if (box.bottom <= f.canvas.top || box.top >= f.canvas.bottom) return null;
     return placeTextBar({ ...box, top: Math.max(box.top, f.canvas.top) }, { w: sw || 200, h: sh || 34 }, f.canvas, f.stage);
   });
+  /** The section's bar where it is shown. */
+  const sectionPlace = $derived(beside(sectionAt));
 
   /** The block's bar: beside the phone, level with the block, where the stage has room, else above the block or below it, clear of the section's bar where the two would meet (placeClearOf); none while the block stands out of sight. */
-  const blockPlace = $derived.by(() => {
+  const blockAt = $derived.by(() => {
     const f = frameOf();
     if (!f || !shown || !cb.block.id || !cb.block.rect || !cb.block.tools.length) return null;
     const box = toWindow(cb.block.rect);
@@ -79,6 +104,8 @@
     const held = sectionPlace ? { left: sectionPlace.left, top: sectionPlace.top, w: sw || 200, h: sh || 34 } : null;
     return placeClearOf(box, { w: bw || 260, h: bh || 34 }, f.canvas, f.stage, [held]);
   });
+  /** The block's bar where it is shown. */
+  const blockPlace = $derived(beside(blockAt));
 
   const { setNavMobile, setNavLogo } = navActions(ed);
   /** The sizes the menu's bar steps, as the phone draws them now. */
@@ -278,11 +305,11 @@
 {/snippet}
 
 <!-- The bars hold the mouse's press so the page keeps the focus; their tools are buttons of their own -->
-{#if sectionPlace}
+{#if sectionAt}
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <div class="canvas-bar" role="toolbar" tabindex="-1" aria-label={ta('canvas.sectionTools')} data-canvas-tool bind:offsetWidth={sw} bind:offsetHeight={sh}
-    style="left: {sectionPlace.left}px; top: {sectionPlace.top}px" onmousedown={keepFocus} transition:menuMotion>
-    <span class="cb-name">{ta('lbl.section')}</span>
+  <div class="canvas-bar" class:cb-off={!sectionPlace} role="toolbar" tabindex="-1" aria-label={ta('canvas.sectionTools')} aria-hidden={sectionPlace ? undefined : 'true'} inert={!sectionPlace} data-canvas-tool bind:offsetWidth={sw} bind:offsetHeight={sh}
+    style="left: {sectionAt.left}px; top: {sectionAt.top}px" onmousedown={keepFocus} transition:menuMotion>
+    <span class="cb-name" title={sectionName}>{sectionName}</span>
     {@render tools('section', cb.section.tools)}
   </div>
 {/if}
@@ -306,10 +333,11 @@
   </div>
 {/if}
 
-{#if blockPlace}
+{#if blockAt}
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <div class="canvas-bar" role="toolbar" tabindex="-1" aria-label={ta('canvas.blockTools')} data-canvas-tool bind:offsetWidth={bw} bind:offsetHeight={bh}
-    style="left: {blockPlace.left}px; top: {blockPlace.top}px" onmousedown={keepFocus} transition:menuMotion>
+  <div class="canvas-bar" class:cb-off={!blockPlace} role="toolbar" tabindex="-1" aria-label={ta('canvas.blockTools')} aria-hidden={blockPlace ? undefined : 'true'} inert={!blockPlace} data-canvas-tool bind:offsetWidth={bw} bind:offsetHeight={bh}
+    style="left: {blockAt.left}px; top: {blockAt.top}px" onmousedown={keepFocus} transition:menuMotion>
+    {#if blockName}<span class="cb-name" title={blockName}>{blockName}</span>{/if}
     {@render tools('block', cb.block.tools)}
   </div>
 {/if}
@@ -385,11 +413,31 @@
     opacity: 0.8;
   }
 
-  /* The section's bar names what it is for, faint, before its tools */
+  /* A bar drawn unseen, kept for its measure (the bars in both places, where it stands over the page): it fades out and takes no pointer */
+  .canvas-bar.cb-off {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The menu's bar names what it is for, faint, beside its gear */
   .cb-name {
     padding: 0 6px 0 4px;
     font-weight: 600;
     opacity: 0.6;
+  }
+
+  /* The section's and the block's bars open with what they act on, the section's name or the block's kind and words, on a line of their own above the tools, so the bar stays as narrow as its tools and keeps to the room beside the phone; one line, cut short with an ellipsis */
+  .canvas-bar > .cb-name {
+    flex: 1 0 100%;
+    box-sizing: border-box;
+    contain: inline-size;
+    padding: 2px 6px 3px;
+    overflow: hidden;
+    font-size: 11px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: 0.75;
   }
 
   /* The menu's bar: its name and its gear, then a size on each line, so it is narrow enough to stand beside the phone on a small window */

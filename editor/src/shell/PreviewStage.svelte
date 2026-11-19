@@ -68,7 +68,7 @@
   <LookBanner />
   <!-- .stage has the SCALED size, so scrolling/centering gets a real
        box (a transformed iframe alone does not expand its parent's scroll). -->
-  <div class="stage" class:dragging style="width:{ed.stageW}px; height:{ed.stageH}px" bind:this={stageEl}>
+  <div class="stage" class:dragging style="width:{ed.stageW}px; height:{ed.stageH}px; --stage-scale:{ed.scale}" bind:this={stageEl}>
     <iframe
       bind:this={ed.iframeEl}
       title={ta('ui.previewTitle')}

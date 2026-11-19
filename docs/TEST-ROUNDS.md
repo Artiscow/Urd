@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.3.30): the phone editor's look, the bars in both places, and the dragged width kept over a reload
+
+- [ ] In the phone view the phone stands on a dotted ground in a frame with round corners all round, a thin bezel and room above it; zoom out and in: the frame keeps its look, and no light line shows at its edges
+- [ ] The desktop view has the same dotted ground wherever the canvas is narrower than the stage
+- [ ] The width handle is a pill with a grip of dots centred in it; under the mouse and while dragged its border and dots turn to the accent, and no bar shows along the stage
+- [ ] With «Bars in the phone view» on «Beside the phone», the section's bar and the selected block's bar beside the phone each open with a line naming what they act on («Categories», «Text: Clothing»), a long name cut short with an ellipsis
+- [ ] With «Both», the page keeps its own bar on the selected block while the named bars stand beside the phone; on a window too narrow for them beside it, only the page's own bar shows, and widening the window brings the named bars back
+- [ ] Tab to the width handle: its pill takes a focus ring
+- [ ] The order numbers, the pin and the words mark on the blocks are small and stand half over the block's top edge by its corners, off its words; select a block with its own words on the phone and drag its top left corner handle: it resizes the block
+- [ ] A phone review card beside the phone names its section above its text
+- [ ] Drag the canvas's width handle to a width of your own and reload: the canvas comes back at that width; choose a device and reload: the device's size stands; a new tab starts at the device's size
+
 ### Test batch (0.7.3.29): a section shows its phone layout where its text would be too narrow
 
 - [ ] On the published Shop FP page, narrow the browser window from 1440 to 700 px: «Categories» shows its phone layout below about 760 to 775 px (the scrollbar's width counts) and its desktop layout above, while the other sections and the navigation bar keep the desktop's down to 640 px

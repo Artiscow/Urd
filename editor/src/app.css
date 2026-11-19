@@ -4947,6 +4947,20 @@
       display: none;
     }
   }
+
+  /* The canvas's width handle shows itself by its pill alone (.stage-handle): the full-height strip it is pressed on takes no button fill, press feel or focus ring of its own, its pill turning to the accent instead */
+  .frame-wrap .stage .stage-handle:is(:hover, :active, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    filter: none;
+    outline: none;
+    scale: none;
+    translate: none;
+  }
+  .frame-wrap .stage-handle .urd-ripple {
+    display: none;
+  }
   /* End of the press feel */
 
   /* Controls must not inherit the page's airy line-height (1.6 from
@@ -4999,7 +5013,11 @@
        centered away. */
     justify-content: safe center;
     align-items: safe center;
-    background: #08090d;            /* letterbox surface around the canvas */
+    /* The ground around the canvas, in both views: the admin's own surface, deeper, with a faint grid of dots, so the page is the brightest thing on it */
+    background-color: color-mix(in srgb, var(--urd-color-bg, #0f1419) 70%, black);
+    background-image: radial-gradient(color-mix(in srgb, var(--urd-color-text, #e8eaf0) 9%, transparent) 1px, transparent 1.4px);
+    background-size: 16px 16px;
+    background-attachment: local;
     /* The surface around the canvas takes no selection, so a double press on it never selects the canvas whole; the page inside keeps its own. */
     user-select: none;
   }
@@ -5038,23 +5056,46 @@
     cursor: ew-resize;
     z-index: 3;
   }
-  .stage-handle::before {
+  /* The handle is drawn as a pill (::before) with a grip of dots (::after), a column two px wide centred in it */
+  .stage-handle::before,
+  .stage-handle::after {
     content: '';
     position: absolute;
     top: 50%;
-    left: 3px;
-    width: 4px;
-    height: 48px;
-    margin-top: -24px;
-    border-radius: 2px;
-    background: rgb(255 255 255 / 35%);
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .stage-handle::before {
+    box-sizing: border-box;
+    width: 10px;
+    height: 44px;
+    border: 1px solid color-mix(in srgb, var(--urd-color-text, #e8eaf0) 24%, transparent);
+    border-radius: 999px;
+    background: var(--urd-color-surface, #151a23);
+  }
+  .stage-handle::after {
+    width: 2px;
+    height: 26px;
+    background: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--urd-color-text, #e8eaf0) 60%, transparent) 1px, transparent 1px) 0 0 / 2px 6px repeat-y;
   }
   .stage-handle.out:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
-    right: -14px;
+    right: -18px;
   }
   .stage-handle:hover::before,
   .stage-handle:focus-visible::before,
-  .stage.dragging .stage-handle::before { background: var(--urd-color-accent, #7c5cff); }
+  .stage.dragging .stage-handle::before {
+    border-color: var(--urd-color-accent, #7c5cff);
+  }
+  /* The keyboard's focus rings the pill */
+  .stage-handle:focus-visible::before {
+    outline: 2px solid var(--urd-color-accent, #7c5cff);
+    outline-offset: 2px;
+  }
+  .stage-handle:hover::after,
+  .stage-handle:focus-visible::after,
+  .stage.dragging .stage-handle::after {
+    background-image: radial-gradient(circle at 1px 1px, var(--urd-color-accent, #7c5cff) 1px, transparent 1px);
+  }
   .stage.dragging iframe { pointer-events: none; }
   .stage-readout {
     position: absolute;
@@ -5184,18 +5225,30 @@
   }
 
   /* Mobile view: the iframe stands at 390px (the engine's matchMedia is
-     driven by urd-viewport, not the width) and is scaled to fit; dark backdrop. */
+     driven by urd-viewport, not the width) and is scaled to fit. The phone stands framed on the ground with room around it for its bezel, more above and below, which the frame's measure leaves out (preview.svelte.js), so the fit scale keeps the frame in sight. */
   .frame-wrap.mobile {
-    background: #08090d;
+    padding: 20px 8px;
+  }
+
+  /* The frame: corners round all round, a thin bezel in the admin's surface with a faint edge, and a soft shadow, drawn on the stage, which has the canvas's scaled size, so it keeps its thickness at any zoom; the radius follows the zoom (--stage-scale) */
+  .frame-wrap.mobile .stage {
+    --phone-bezel: color-mix(in srgb, var(--urd-color-surface, #151a23) 85%, black);
+    border-radius: calc(28px * var(--stage-scale, 1));
+    box-shadow:
+      0 0 0 6px var(--phone-bezel),
+      0 0 0 7px color-mix(in srgb, var(--urd-color-text, #e8eaf0) 14%, transparent),
+      0 18px 48px rgb(0 0 0 / 55%);
   }
 
   .frame-wrap.mobile.looking .stage::after {
-    border-radius: 12px;
+    border-radius: calc(28px * var(--stage-scale, 1));
   }
 
-  /* The phone's rounded corners are the canvas's own, so the stage clips nothing and the width handle can stand beside it; the radius is drawn before the canvas's scale, so it is set a little larger */
+  /* The phone's rounded corners are the canvas's own, so the stage clips nothing and the width handle can stand beside it; the radius is the canvas's own px, scaled with it.
+     The canvas's own ground is the bezel's colour, so where the scaled page leaves a fraction of a pixel at its edge (a zoom like 75 %) no hairline of white shows against the frame */
   .frame-wrap.mobile .stage iframe {
-    border-radius: 15px;
+    border-radius: 28px;
+    background: var(--phone-bezel);
   }
 
   .viewswitch,

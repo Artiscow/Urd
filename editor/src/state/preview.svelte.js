@@ -95,7 +95,7 @@ const screenIcon = $derived(screenIconOf(screenPref));
 /** The icon the Phone button shows: a tablet while a tablet size is chosen. */
 const phoneIcon = $derived(phoneTarget.width > (siteState.siteDraft?.breakpoints?.mobile ?? 640) ? 'device_tablet' : 'device_mobile');
 
-/** A width dragged at the canvas's edge, in canvas px; null while a device stands. Not remembered: the sizes to come back to are the devices'. */
+/** A width dragged at the canvas's edge, in canvas px; null while a device stands. Kept for a reload of the tab with where the admin stood (lib/reload-place.js), and read back below. */
 let freeWidth = $state(null);
 
 /** The widths a dragged edge snaps to: the devices', the screen and phone sizes' and the site's phone breakpoint. */
@@ -143,6 +143,8 @@ function deviceTip(d) {
 let stood = stoodOf(readStood(), ['desktop', 'mobile']);
 
 let deviceId = $state(stood.device ?? 'desktop');
+// A width dragged before the reload stands again.
+if (stood.width) freeWidth = stood.width;
 
 /** Where the canvas is scrolled on its page, measured a moment after each scroll, and kept as the admin is left. */
 let canvasPlace = null;
@@ -531,6 +533,7 @@ export function effects() {
     const keep = () => keepStood({
       page: pageState.pageId,
       device: deviceId,
+      width: freeWidth,
       sectionId: pageState.activeSectionId ?? null,
       blockId: pageState.selectedBlock?.blockId ?? null,
       top: canvasPlace?.page === pageState.pageId ? { sectionId: canvasPlace.sectionId, offset: canvasPlace.offset } : null,
@@ -583,8 +586,11 @@ export function effects() {
     // box and includes any scrollbars, while the content box is the surface
     // the canvas can actually use. The content box also yields integers, so
     // float rounding cannot make a canvas a fraction of a pixel too wide.
+    // The room the phone view keeps around its frame (app.css .frame-wrap.mobile) is left out.
     const measure = () => {
-      frameW = el.clientWidth; frameH = el.clientHeight;
+      const pad = getComputedStyle(el);
+      frameW = el.clientWidth - (parseFloat(pad.paddingLeft) || 0) - (parseFloat(pad.paddingRight) || 0);
+      frameH = el.clientHeight - (parseFloat(pad.paddingTop) || 0) - (parseFloat(pad.paddingBottom) || 0);
     };
     measure(); // immediately, so the first frame does not flash at scale 1
     const ro = new ResizeObserver(measure);

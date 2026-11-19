@@ -22,7 +22,7 @@ export const BAR_CHOICES = {
   phone: { key: 'urd-toolbar-phone', options: ['on', 'off'] },
   size: { key: 'urd-toolbar-size', options: ['regular', 'small', 'medium', 'large'] },
   design: { key: 'urd-toolbar-design', options: ['small', 'full'] },
-  place: { key: 'urd-toolbar-phone-place', options: ['canvas', 'beside'] },
+  place: { key: 'urd-toolbar-phone-place', options: ['canvas', 'beside', 'both'] },
 };
 
 /** The forms whose tools belong to the menu's areas, which the area looks set apart. */

@@ -18687,23 +18687,23 @@ body:not(.urd-mobile) .urd-phone-seam,
    over the mobile layout. The flag is told by the top bar's badge and the
    review card in the mobile view; the section itself is never outlined. */
 
-/* The phone view's numbers (preview-edit.js enhanceSection): each block's place in the reading order, on the block's top right corner, shown on the section under the pointer and on the section at work; a block placed by its own exception in amber */
+/* The phone view's numbers (preview-edit.js enhanceSection): each block's place in the reading order, small and half over the block's top edge by its right corner, off its words and clear of the corner's handle, shown on the section under the pointer and on the section at work; a block placed by its own exception in amber */
 .urd-preview .urd-phone-num {
   position: absolute;
   top: 0;
-  right: 0;
+  right: calc(15px * var(--urd-chrome-scale, 1));
   z-index: 100000;
   display: none;
   box-sizing: border-box;
-  min-width: calc(18px * var(--urd-chrome-scale, 1));
-  height: calc(18px * var(--urd-chrome-scale, 1));
-  padding: 0 calc(4px * var(--urd-chrome-scale, 1));
+  min-width: calc(13px * var(--urd-chrome-scale, 1));
+  height: calc(13px * var(--urd-chrome-scale, 1));
+  padding: 0 calc(3px * var(--urd-chrome-scale, 1));
   border-radius: 999px;
   background: var(--urd-admin-accent, #2cc7a8);
   color: var(--urd-admin-accent-text, #052620);
-  font: 600 calc(10px * var(--urd-chrome-scale, 1)) / calc(18px * var(--urd-chrome-scale, 1)) system-ui, sans-serif;
+  font: 700 calc(8px * var(--urd-chrome-scale, 1)) / calc(13px * var(--urd-chrome-scale, 1)) system-ui, sans-serif;
   text-align: center;
-  transform: translate(35%, -35%) rotate(calc(-1 * var(--urd-block-rot, 0deg)));
+  transform: translate(50%, -50%) rotate(calc(-1 * var(--urd-block-rot, 0deg)));
   pointer-events: none;
 }
 
@@ -18748,19 +18748,18 @@ body:not(.urd-mobile) .urd-phone-seam,
 }
 
 /* The pin marker on a block pinned on the phone: it keeps its own spot while the other blocks flow around it.
-   The same shape as the sticky pin, yellow like the review flag. */
+   The same shape as the sticky pin, yellow like the review flag, small and half over the block's top edge by its left corner, off its words and clear of the corner's handle. */
 .urd-preview .urd-mobile-pin {
   /* Upright on a rotated block, like the handles above. */
-  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg)));
-  transform-origin: top left;
+  transform: translate(-50%, -50%) rotate(calc(-1 * var(--urd-block-rot, 0deg)));
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 0;
+  left: calc(15px * var(--urd-chrome-scale, 1));
   z-index: 100000;
   display: grid;
   place-items: center;
-  width: calc(18px * var(--urd-chrome-scale, 1));
-  height: calc(18px * var(--urd-chrome-scale, 1));
+  width: calc(13px * var(--urd-chrome-scale, 1));
+  height: calc(13px * var(--urd-chrome-scale, 1));
   border-radius: 50%;
   background: #e2b84a;
   color: #1a1508;
@@ -18768,23 +18767,22 @@ body:not(.urd-mobile) .urd-phone-seam,
 }
 
 .urd-preview .urd-mobile-pin svg {
-  width: calc(11px * var(--urd-chrome-scale, 1));
-  height: calc(11px * var(--urd-chrome-scale, 1));
+  width: calc(8px * var(--urd-chrome-scale, 1));
+  height: calc(8px * var(--urd-chrome-scale, 1));
 }
 
-/* A block with words of its own on the phone (ADR-0033): the same amber round mark as the pin, with lines of text, beside the pin where the block has one.
+/* A block with words of its own on the phone (ADR-0033): the same amber round mark as the pin, with lines of text, half over the block's top edge by its left corner, clear of the corner's handle, beside the pin where the block has one.
    It takes the pointer for its tooltip; a press on it reaches the block it stands on. */
 .urd-preview .urd-phone-words {
-  transform: rotate(calc(-1 * var(--urd-block-rot, 0deg)));
-  transform-origin: top left;
+  transform: translate(-50%, -50%) rotate(calc(-1 * var(--urd-block-rot, 0deg)));
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 0;
+  left: calc(15px * var(--urd-chrome-scale, 1));
   z-index: 100000;
   display: grid;
   place-items: center;
-  width: calc(18px * var(--urd-chrome-scale, 1));
-  height: calc(18px * var(--urd-chrome-scale, 1));
+  width: calc(13px * var(--urd-chrome-scale, 1));
+  height: calc(13px * var(--urd-chrome-scale, 1));
   border-radius: 50%;
   background: #e2b84a;
   color: #1a1508;
@@ -18793,12 +18791,12 @@ body:not(.urd-mobile) .urd-phone-seam,
 }
 
 .urd-preview .urd-phone-words-beside {
-  left: calc(2px + 21px * var(--urd-chrome-scale, 1));
+  left: calc(30px * var(--urd-chrome-scale, 1));
 }
 
 .urd-preview .urd-phone-words svg {
-  width: calc(11px * var(--urd-chrome-scale, 1));
-  height: calc(11px * var(--urd-chrome-scale, 1));
+  width: calc(8px * var(--urd-chrome-scale, 1));
+  height: calc(8px * var(--urd-chrome-scale, 1));
 }
 
 /* The list of a section's blocks hidden in the view (hidden on phones in the phone view, shown on phones only on the desktop): a floating panel below the section toolbar, with

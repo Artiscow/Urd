@@ -187,8 +187,8 @@ const barGear = () => barChoice(BAR_CHOICES.gear) === 'on';
 const barPhone = () => barChoice(BAR_CHOICES.phone) === 'on';
 /** How large the bar is drawn (Urd settings «Toolbar size»): its class, which base.css sizes the bar by. */
 const barSize = () => barChoice(BAR_CHOICES.size);
-/** Whether the phone view's bars and their menus are drawn by the editor beside the phone (Urd settings «Bars in the phone view»), or stand on the page as on the desktop, as they do by default. */
-const phoneBars = () => isMobile() && barChoice(BAR_CHOICES.place) === 'beside';
+/** Whether the phone view's bars and their menus are drawn by the editor beside the phone (Urd settings «Bars in the phone view»: beside the phone, or both, where the page keeps its own bars as well), or stand on the page alone as on the desktop, as they do by default. */
+const phoneBars = () => isMobile() && barChoice(BAR_CHOICES.place) !== 'canvas';
 
 /**
  * The bar's look (Urd settings «Toolbar look», kept in the shared localStorage and read at every draw): the class `urd-bar-<look>` on the toolbar, which base.css draws.
@@ -1643,6 +1643,7 @@ export function closeMenus() {
 export function enhanceSection(host, section, grid) {
   host._urdGrid = grid;
   // Where the phone view's bars stand, read at every drawing as the bar's other choices are: base.css leaves the page's own bars unseen while the editor draws them beside the phone.
+  // With the bars in both places the page keeps its own in sight.
   document.body.classList.toggle('urd-bars-beside', barChoice(BAR_CHOICES.place) === 'beside');
   // The section's data on its element, for the right-click menu on its surface.
   host._urdSection = section;

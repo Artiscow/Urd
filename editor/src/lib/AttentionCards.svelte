@@ -3,7 +3,7 @@
      The preview reports where the sections stand (preview-edit.js reportAttention); what happened is read from the draft. Where the stage has no room beside the canvas, a card stands above its section (placeTextBar). */
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
-  import { blockWords } from '$engine/anchor-model.js';
+  import { blockWords, sectionWords } from '$engine/anchor-model.js';
   import { placeClearOf } from './menu-place.js';
   import { canvasBarState } from '../state/canvas-bar.svelte.js';
   import { ICONS } from './icons.js';
@@ -91,7 +91,9 @@
       const place = placeClearOf(section, { w: 260, h }, canvas, stage, [canvasBarState.sectionPlaced, canvasBarState.placed, canvasBarState.navPlaced]);
       const top = Math.max(place.top, below + 8);
       below = top + h;
-      out.push({ id: card.sectionId, left: place.left, top, text: reasonText(attention, flagged), when: relativeTime(attention.since) });
+      // The card names its section, as the order's column does: its first words, or its place on the page.
+      const name = sectionWords(flagged) || ta('diff.section', { n: ed.sections.indexOf(flagged) + 1 });
+      out.push({ id: card.sectionId, left: place.left, top, name, text: reasonText(attention, flagged), when: relativeTime(attention.since) });
     }
     return out;
   });
@@ -122,6 +124,7 @@
 
 {#each cards as card (card.id)}
   <div class="review-card" role="status" style="left: {card.left}px; top: {card.top}px" use:measure={card.id} transition:menuMotion>
+    <span class="rc-name" title={card.name}>{card.name}</span>
     <span class="rc-text">{card.text}</span>
     {#if card.when}<span class="rc-when">{card.when}</span>{/if}
     <button type="button" class="rc-done" title={ta('canvas.mobileReviewed')} onclick={() => ed.reviewSection(card.id)}>
@@ -147,6 +150,19 @@
     color: var(--urd-color-text, #e6e8ea);
     font: 500 12.5px/1.35 system-ui, sans-serif;
     box-shadow: 0 8px 22px rgb(0 0 0 / 35%);
+  }
+
+  /* The section the card is about, in the review flag's amber, one line cut short with an ellipsis */
+  .rc-name {
+    max-width: 100%;
+    overflow: hidden;
+    color: #e2b84a;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .rc-when {

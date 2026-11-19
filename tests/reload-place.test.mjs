@@ -11,11 +11,12 @@ const { stoodOf, canvasTop } = await import(new URL('../editor/src/lib/reload-pl
 const DEVICES = ['desktop', 'mobile'];
 
 test('what was kept is read back part by part, and a part that does not hold is dropped', () => {
-  const kept = { page: 'kontakt', device: 'mobile', sectionId: 'sec-1', blockId: 'blk-2', top: { sectionId: 'sec-1', offset: 120.4 } };
-  assert.deepEqual(stoodOf(kept, DEVICES), { page: 'kontakt', device: 'mobile', sectionId: 'sec-1', blockId: 'blk-2', top: { sectionId: 'sec-1', offset: 120 } });
-  assert.deepEqual(stoodOf(null, DEVICES), { page: null, device: null, sectionId: null, blockId: null, top: null }, 'nothing kept');
-  const odd = stoodOf({ page: '../x', device: 'free', sectionId: 7, blockId: 'a b', top: { sectionId: 'sec-1', offset: 'far' } }, DEVICES);
-  assert.deepEqual(odd, { page: null, device: null, sectionId: null, blockId: null, top: null }, 'an unknown device, an id that is no id and an offset that is no number');
+  const kept = { page: 'kontakt', device: 'mobile', width: 790.4, sectionId: 'sec-1', blockId: 'blk-2', top: { sectionId: 'sec-1', offset: 120.4 } };
+  assert.deepEqual(stoodOf(kept, DEVICES), { page: 'kontakt', device: 'mobile', width: 790, sectionId: 'sec-1', blockId: 'blk-2', top: { sectionId: 'sec-1', offset: 120 } });
+  assert.deepEqual(stoodOf(null, DEVICES), { page: null, device: null, width: null, sectionId: null, blockId: null, top: null }, 'nothing kept');
+  const odd = stoodOf({ page: '../x', device: 'free', width: 99999, sectionId: 7, blockId: 'a b', top: { sectionId: 'sec-1', offset: 'far' } }, DEVICES);
+  assert.deepEqual(odd, { page: null, device: null, width: null, sectionId: null, blockId: null, top: null }, 'an unknown device, a width past the drag\'s bounds, an id that is no id and an offset that is no number');
+  assert.equal(stoodOf({ width: 'wide' }, DEVICES).width, null, 'a width that is no number');
   assert.equal(stoodOf({ top: { sectionId: 'sec-1', offset: -40 } }, DEVICES).top.offset, 0, 'never above the section\'s top');
 });
 
