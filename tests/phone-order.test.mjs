@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
-const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup, unpinned, phoneAdded, phoneAfterLine } = await engineImport('phone-moves.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup, unpinned, phoneAdded, phoneAfterLine, phoneGroup, phoneUngroupAll, phoneSideCells, phoneHasMiddle, phoneAlignCells } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -806,4 +806,94 @@ test('phoneAfterLine: after the last unit of the line a block stands on, a stack
   assert.deepEqual(phoneAfterLine(boxes, 'N'), { pos: 'after', of: 'K', at: 160 });
   assert.deepEqual(phoneAfterLine(boxes, 'X'), { pos: 'after', of: 'X', at: 40 });
   assert.equal(phoneAfterLine(boxes, 'Z'), null);
+});
+
+/** A section of blocks under each other, read from the top, with the setup given. */
+const setSection = (blocks, setup = {}) => ({ id: 's', blocks, ...setup });
+/** The tree a phone change leaves a section with. */
+const treeAfter = (section, change) => {
+  const next = phoneChangeApplied(section, change);
+  return shape(phoneTree(next.blocks, phoneSetupOf(next)));
+};
+
+test('phoneGroup: the set\'s blocks become one stack in their reading order, at the first one\'s place', () => {
+  const section = setSection([blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)]);
+  const change = phoneGroup(section.blocks, phoneSetupOf(section), ['d', 'b']);
+  assert.deepEqual(change.stacks, [['b', 'd']]);
+  assert.equal(treeAfter(section, change), 'a stack[b,d] c');
+  // A block placed before another by hand keeps the stack where it stands: d reads first, so the stack does.
+  const placed = setSection([blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0, { phonePlace: { before: 'a' } })]);
+  assert.equal(treeAfter(placed, phoneGroup(placed.blocks, phoneSetupOf(placed), ['b', 'd'])), 'stack[d,b] a c');
+});
+
+test('phoneGroup: the owner\'s stack the set touches joins whole, one level deep; a block of the rule\'s column leaves its column, the others staying', () => {
+  const stacked = setSection([blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)], { phoneStacks: [['a', 'b']] });
+  assert.equal(treeAfter(stacked, phoneGroup(stacked.blocks, phoneSetupOf(stacked), ['b', 'd'])), 'stack[a,b,d] c');
+  const columns = setSection(columned(), { phoneOrder: 'left' });
+  assert.equal(shape(phoneTree(columns.blocks, phoneSetupOf(columns))), 'column[a,b] c');
+  const change = phoneGroup(columns.blocks, phoneSetupOf(columns), ['a', 'c']);
+  assert.deepEqual(change.loose, ['a']);
+  assert.equal(treeAfter(columns, change), 'stack[a,c] b');
+  assert.equal(treeAfter(columns, phoneGroup(columns.blocks, phoneSetupOf(columns), ['a', 'b', 'c'])), 'stack[a,b,c]', 'the whole column selected');
+});
+
+test('phoneGroup: pinned and hidden blocks take no part, and a set of fewer than two blocks or stacks groups nothing', () => {
+  const section = setSection([
+    blk('a', 0, 0),
+    blk('b', 20, 0, { mobile: { row: 3, rows: 4 } }),
+    blk('c', 40, 0, { hideMobile: true }),
+    blk('d', 60, 0),
+  ], { phoneStacks: [['d', 'e']] });
+  assert.equal(phoneGroup(section.blocks, phoneSetupOf(section), ['a', 'b', 'c']), null);
+  assert.equal(phoneGroup(section.blocks, phoneSetupOf(section), ['a']), null);
+  const two = setSection([blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0)], { phoneStacks: [['a', 'b']] });
+  assert.equal(phoneGroup(two.blocks, phoneSetupOf(two), ['a', 'b']), null, 'already one stack');
+});
+
+test('phoneUngroupAll: every group the set touches is taken apart whole; a set in no group changes nothing', () => {
+  const section = setSection([blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0), blk('e', 80, 0)], { phoneStacks: [['a', 'b'], ['c', 'd']] });
+  const change = phoneUngroupAll(section.blocks, phoneSetupOf(section), ['b', 'c']);
+  assert.deepEqual(change, { places: {}, stacks: [] });
+  assert.equal(treeAfter(section, change), 'a b c d e');
+  assert.deepEqual(phoneUngroupAll(section.blocks, phoneSetupOf(section), ['a', 'b']).stacks, [['c', 'd']], 'one stack touched twice');
+  assert.equal(phoneUngroupAll(section.blocks, phoneSetupOf(section), ['e']), null);
+  const columns = setSection(columned(), { phoneOrder: 'left' });
+  assert.deepEqual(phoneUngroupAll(columns.blocks, phoneSetupOf(columns), ['b']), { places: {}, loose: ['a', 'b'] });
+});
+
+test('phoneSideCells: the left edge, the middle and the right edge of the eight columns, an odd width\'s middle a whole column', () => {
+  assert.deepEqual(phoneSideCells(4, 'left'), { col: 1, cols: 4 });
+  assert.deepEqual(phoneSideCells(4, 'middle'), { col: 3, cols: 4 });
+  assert.deepEqual(phoneSideCells(2, 'right'), { col: 7, cols: 2 });
+  assert.deepEqual(phoneSideCells(3, 'middle'), { col: 3, cols: 3 });
+  assert.deepEqual(phoneSideCells(5, 'middle'), { col: 2, cols: 5 });
+  assert.equal(phoneHasMiddle(6), true);
+  assert.equal(phoneHasMiddle(7), false, 'seven columns stand at one edge or the other');
+});
+
+test('phoneAlignCells: each block in cells to one side of its row, keeping its width; a stack moves whole, and a block across the row or pinned stays', () => {
+  const blocks = [
+    blk('a', 0, 0, { mobile: { col: 1, cols: 3 } }),
+    blk('b', 20, 0, { mobile: { col: 5, cols: 4 } }),
+    blk('c', 40, 0),
+    blk('d', 60, 0, { mobile: { row: 30, rows: 4, col: 1, cols: 2 } }),
+  ];
+  assert.deepEqual(phoneAlignCells(blocks, 'top', ['a', 'b', 'c', 'd'], 'middle'), { places: {}, cells: { a: { col: 3, cols: 3 }, b: { col: 3, cols: 4 } } });
+  assert.equal(phoneAlignCells(blocks, 'top', ['a'], 'left'), null, 'already at the left edge');
+  assert.equal(phoneAlignCells(blocks, 'top', ['c', 'd'], 'right'), null);
+  const stacked = [blk('e', 0, 0, { mobile: { col: 5, cols: 4 } }), blk('f', 20, 0)];
+  assert.deepEqual(phoneAlignCells(stacked, { rule: 'top', stacks: [['e', 'f']] }, ['f'], 'left'), { places: {}, cells: { e: { col: 1, cols: 4 }, f: { col: 1, cols: 4 } } });
+  const atLeft = [blk('e', 0, 0, { mobile: { col: 1, cols: 4 } }), blk('f', 20, 0)];
+  assert.equal(phoneAlignCells(atLeft, { rule: 'top', stacks: [['e', 'f']] }, ['f'], 'left'), null, 'a stack drawn at the left edge already, its other block without cells of its own');
+  const wide = [blk('g', 0, 0, { mobile: { col: 2, cols: 7 } })];
+  assert.equal(phoneAlignCells(wide, 'top', ['g'], 'middle'), null, 'seven columns have no middle');
+  assert.deepEqual(phoneAlignCells(wide, 'top', ['g'], 'left'), { places: {}, cells: { g: { col: 1, cols: 7 } } });
+});
+
+test('phoneChangeApplied: a layer is written to a block pinned on the phone only', () => {
+  const section = setSection([blk('a', 0, 0, { mobile: { row: 3, rows: 4 } }), blk('b', 20, 0)]);
+  const next = phoneChangeApplied(section, { layers: { a: 4, b: 2 } });
+  assert.deepEqual(next.blocks[0].frames.mobile, { row: 3, rows: 4, z: 4 });
+  assert.equal(next.blocks[1].frames.mobile, null);
+  assert.equal(section.blocks[0].frames.mobile.z, undefined, 'the section given is left as it is');
 });

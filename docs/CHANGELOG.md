@@ -8,6 +8,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.36.3 - Several blocks selected, grouped, aligned and layered on the phone - 19 November 2026
+
+- The phone view selected one block at a time, and grouping, aligning and the layer order stood on the desktop only (BACKLOG 0.7.36.3). Shift+click and a frame drawn round blocks select several there, and a set bar holds «Group», «Ungroup», left, middle and right of the row, «To the front» and «To the back», on the canvas or beside the phone as «Bars in the phone view» says.
+- «Group» (Ctrl+G) makes the selected flowing blocks one stack in reading order at the first one's place, and «Ungroup» (Ctrl+Shift+G) takes apart the stacks the set stands in (`phoneGroup` and `phoneUngroupAll` in phone-moves.js). A block taken from a column the «Left first» rule reads whole leaves its column, so the stack holds the selected blocks alone (browser finding during the build).
+- In the phone view the element menu's head moved a block in the desktop's layer order, and the right-click menu and the keys did nothing. To the front and back there order the blocks pinned on the phone by their own `frames.mobile.z` (`phoneLayerChanges` in layer-order.js), from the set bar, Ctrl+Shift+↑/↓, the right-click menu and the element menu's head, which greys them for a block that flows.
+- «Alignment» in Placement put an odd-width block in the middle at a half column, which the row grid cannot hold, so it did nothing. The middle leans half a column left (`phoneSideCells`), shared with the set bar.
+- A right-click on a block of a set in the phone view keeps the set, and offers «Group on phones».
+- SCHEMA.md names a pinned block's `z` as its phone layer; the shortcut sheet, the guides, ARCHITECTURE.md and the comparison's multi-select, grouping, alignment and layer rows describe the set; the shells carry the stylesheet's new stamp.
+
+The independent review before the commit found these:
+
+1. The set bar's alignment stood active for a stack already at that side, judged by its other blocks' own cells, and a press made an undo step that moved nothing. It is weighed by the cells the stack is drawn in, its first block's.
+2. A frame drawn round blocks on a touch screen and taken over by a scroll kept its listeners, and could change the selection at the next pointer move, now also in the phone view. It ends on `pointercancel` as on a release.
+3. The message contract in previewBridge.js and preview-edit.js left out the bar message's `set` and its tools' `disabled`. Both name them.
+4. The right-click menu's comment said a set is grouped from either view, where the desktop's menu holds one block. It says the grouping stands greyed there.
+5. This entry said the phone view's layer buttons all wrote the desktop's layer, where only the element menu's head did. The bullet names each.
+6. «Middle» put a block seven columns wide at the left edge, the same as «Left». Seven columns have no middle (`phoneHasMiddle`): Placement offers left and right for them, and the set bar's middle leaves them as they are.
+7. Every scroll with a set selected on the phone weighed all the set bar's buttons again. A scroll only moves the bar.
+
 ### 0.7.36.1 - A live phone beside the desktop canvas, docked or floating, scrolling together with it - 19 November 2026
 
 - Seeing a desktop change on the phone took a switch of the view (BACKLOG 0.7.36.1, E14, C38). «Live phone» in the top bar shows the page as a phone draws it beside the desktop canvas, following every change after a short pause, and a press on a block opens it in the phone view (`shell/LivePhone.svelte`).

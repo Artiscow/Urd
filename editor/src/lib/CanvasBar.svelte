@@ -299,7 +299,7 @@
         onpointerenter={(e) => moreEnter(e, kind, i)} onpointerleave={moreLeave} onclick={() => morePress(kind, i)}>{@html tool.html}</button>
     {:else}
       <button type="button" class="cb-tool" class:on={tool.pressed} class:danger={tool.danger} class:word={!tool.html} title={tool.tip || undefined} aria-label={tool.label}
-        aria-pressed={tool.pressed === null ? undefined : tool.pressed} data-opens-menu={tool.opensMenu ? '' : undefined} data-page-pop={tool.pagePop ? '' : undefined} onclick={() => cb.press(kind, i)}>{#if tool.html}{@html tool.html}{:else}{tool.text}{/if}</button>
+        aria-pressed={tool.pressed === null ? undefined : tool.pressed} disabled={tool.disabled} data-opens-menu={tool.opensMenu ? '' : undefined} data-page-pop={tool.pagePop ? '' : undefined} onclick={() => cb.press(kind, i)}>{#if tool.html}{@html tool.html}{:else}{tool.text}{/if}</button>
     {/if}
   {/each}
 {/snippet}
@@ -335,9 +335,10 @@
 
 {#if blockAt}
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <div class="canvas-bar" class:cb-off={!blockPlace} role="toolbar" tabindex="-1" aria-label={ta('canvas.blockTools')} aria-hidden={blockPlace ? undefined : 'true'} inert={!blockPlace} data-canvas-tool bind:offsetWidth={bw} bind:offsetHeight={bh}
+  <div class="canvas-bar" class:cb-off={!blockPlace} role="toolbar" tabindex="-1" aria-label={ta(cb.block.set ? 'canvas.setTools' : 'canvas.blockTools')} aria-hidden={blockPlace ? undefined : 'true'} inert={!blockPlace} data-canvas-tool bind:offsetWidth={bw} bind:offsetHeight={bh}
     style="left: {blockAt.left}px; top: {blockAt.top}px" onmousedown={keepFocus} transition:menuMotion>
-    {#if blockName}<span class="cb-name" title={blockName}>{blockName}</span>{/if}
+    <!-- A set's bar is named by its count, the first of its tools -->
+    {#if blockName && !cb.block.set}<span class="cb-name" title={blockName}>{blockName}</span>{/if}
     {@render tools('block', cb.block.tools)}
   </div>
 {/if}

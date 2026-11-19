@@ -16211,6 +16211,25 @@ body.urd-marqueeing {
   white-space: nowrap;
 }
 
+/* A button in a set's bar with nothing to act on stands greyed (the phone's set bar, preview-edit.js updatePhoneSetBar). */
+.urd-multi-toolbar button:disabled {
+  opacity: 0.38;
+  cursor: default;
+  background: transparent;
+}
+
+/* The phone view's set bar (0.7.36.3): its count and buttons in a row of their own, which the editor watches for the copy it draws beside the phone. */
+.urd-phone-set-body {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Where Urd settings «Bars in the phone view» puts the bars beside the phone (urd-bars-beside), the editor draws the set's bar there: the page keeps its own unseen, for the editor's presses to press its buttons. */
+body.urd-preview.urd-mobile.urd-bars-beside .urd-multi-toolbar.urd-phone-set {
+  display: none;
+}
+
 .urd-preview .urd-page-guide {
   position: absolute;
   /* Above the block lift (99999), like the smart guides: the lines are drawn over the blocks, so an opaque block (a video, a picture) never hides one */

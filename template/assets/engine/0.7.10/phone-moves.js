@@ -319,6 +319,100 @@ export function phoneUngroup(blocks, rawSetup, blockId, whole) {
 }
 
 /**
+ * A set's blocks made one stack on the phone, as «Group» and Ctrl+G ask in the phone view (0.7.36.3), in the phone's reading order, at the first one's place.
+ * The owner's stacks the set touches join whole, so the stack stays one level deep; a block of a column the rule reads whole is taken out of the column (`loose`), as a drag out of it is, and its column's other blocks stay.
+ * Blocks pinned on the phone or hidden there take no part.
+ * @param {object[]} blocks The section's blocks
+ * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
+ * @param {Iterable<string>} ids The set
+ * @returns {{places: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[]}|null} null where the set touches fewer than two blocks or stacks
+ */
+export function phoneGroup(blocks, rawSetup, ids) {
+  const setup = setupFrom(rawSetup);
+  const wanted = new Set(ids);
+  const columned = phoneTree(blocks, setup).filter((node) => node.kind === 'column').flatMap((node) => node.children.map((c) => c.id)).filter((id) => wanted.has(id));
+  const looser = columned.length ? { ...setup, loose: [...new Set([...setup.loose, ...columned])] } : setup;
+  const tree = phoneTree(blocks, looser);
+  const units = unitsOf(tree);
+  const touched = units.filter((unit) => unit.some((id) => wanted.has(id)));
+  if (touched.length < 2) return null;
+  const merged = touched.flat();
+  const want = units.flatMap((unit) => (unit === touched[0] ? [merged] : touched.includes(unit) ? [] : [unit]));
+  const change = settle(blocks, looser, tree, want, merged.filter((id) => !touched[0].includes(id)));
+  if (!change) return null;
+  return looser === setup ? change : { ...change, loose: looser.loose };
+}
+
+/**
+ * The groups a set's blocks stand in taken apart whole, as «Ungroup» and Ctrl+Shift+G ask in the phone view (phoneUngroup).
+ * @param {object[]} blocks The section's blocks
+ * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
+ * @param {Iterable<string>} ids The set, or the selected block alone
+ * @returns {{places: {}, stacks?: string[][], loose?: string[]}|null} null where none of the blocks stands in a group
+ */
+export function phoneUngroupAll(blocks, rawSetup, ids) {
+  const start = setupFrom(rawSetup);
+  let setup = start;
+  for (const id of ids) {
+    const change = phoneUngroup(blocks, setup, id, true);
+    if (change) setup = { ...setup, ...(change.stacks ? { stacks: change.stacks } : {}), ...(change.loose ? { loose: change.loose } : {}) };
+  }
+  if (setup === start) return null;
+  return { places: {}, ...(setup.stacks !== start.stacks ? { stacks: setup.stacks } : {}), ...(setup.loose !== start.loose ? { loose: setup.loose } : {}) };
+}
+
+/**
+ * The cells that put a block of `cols` of the phone's columns at the row's left edge, in its middle or at its right edge.
+ * The eight columns have no half, so the middle of an odd width leans to the left by half a column.
+ * @param {number} cols
+ * @param {'left'|'middle'|'right'} side
+ * @returns {{col: number, cols: number}}
+ */
+export function phoneSideCells(cols, side) {
+  const col = side === 'right' ? PHONE_COLUMNS + 1 - cols : side === 'middle' ? Math.floor((PHONE_COLUMNS - cols) / 2) + 1 : 1;
+  return { col, cols };
+}
+
+/**
+ * Whether a block of `cols` columns has a middle of the phone's row apart from its two edges: one of seven columns stands only at an edge.
+ * @param {number} cols
+ * @returns {boolean}
+ */
+export function phoneHasMiddle(cols) {
+  return cols <= PHONE_COLUMNS - 2;
+}
+
+/**
+ * A set's blocks in cells moved to one side of the phone's row, each keeping its width, as the phone's set bar aligns them (0.7.36.3).
+ * A block in the owner's stack moves its whole stack, which stands in its first block's cells; a block across the row, pinned or hidden on phones stays as it is, and so does one with no middle in the row (phoneHasMiddle) when the side is the middle.
+ * @param {object[]} blocks The section's blocks
+ * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
+ * @param {Iterable<string>} ids The set
+ * @param {'left'|'middle'|'right'} side
+ * @returns {{places: {}, cells: Record<string, {col: number, cols: number}>}|null} null where nothing moves
+ */
+export function phoneAlignCells(blocks, rawSetup, ids, side) {
+  const parts = phoneParts(blocks, setupFrom(rawSetup));
+  const shown = new Set(parts.order.filter(flowing).map((b) => b.id));
+  const byId = new Map(blocks.map((b) => [b.id, b]));
+  const cells = {};
+  let moves = false;
+  for (const id of ids) {
+    if (!shown.has(id)) continue;
+    // A stack stands in its first block's cells where that one flows (render.js), and its flowing blocks move together.
+    const stack = parts.stacks.find((s) => s.includes(id));
+    const members = stack && shown.has(stack[0]) ? stack.filter((m) => shown.has(m)) : [id];
+    const now = phoneCellsOf(byId.get(members[0]));
+    if (!now || (side === 'middle' && !phoneHasMiddle(now.cols))) continue;
+    const next = phoneSideCells(now.cols, side);
+    // The first block's cells are the ones drawn, so they alone tell whether the set moves.
+    if (next.col !== now.col) moves = true;
+    for (const member of members) cells[member] = next;
+  }
+  return moves ? { places: {}, cells } : null;
+}
+
+/**
  * A block moved one place in the phone's order, as the arrows on its bar and Alt with the arrow keys move it: within its stack where it stands in one of the owner's, else past the next block or stack; the blocks placed against it go with it and are passed over, unless nothing else stands beyond them, and a column of the rule counts its blocks one by one.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
@@ -594,10 +688,10 @@ export function phoneDropChange(blocks, rawSetup, blockId, drop) {
 }
 
 /**
- * A section with a phone change written in, as the editor writes it (changeSectionPhone): the places, the stacks, the custom order, the cells and the heights; the section given is left as it is.
- * The cells take the place of a width and a left edge set by hand, a height is the block's own on the phone (null takes it away), and a block pinned to rows of its own keeps its place.
+ * A section with a phone change written in, as the editor writes it (changeSectionPhone): the places, the stacks, the custom order, the cells, the heights and the pinned blocks' layers; the section given is left as it is.
+ * The cells take the place of a width and a left edge set by hand, a height is the block's own on the phone (null takes it away), and a block pinned to rows of its own keeps its place; a layer is a pinned block's own z on the phone (layer-order.js phoneLayerChanges), and a flowing block takes none.
  * @param {object} section
- * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>}} change
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>, layers?: Record<string, number>}} change
  * @returns {object}
  */
 export function phoneChangeApplied(section, change) {
@@ -630,6 +724,9 @@ export function phoneChangeApplied(section, change) {
       delete place.height;
       if (Number.isFinite(height) && height > 0) place.height = Math.round(height);
       own().frames.mobile = Object.keys(place).length ? place : null;
+    }
+    if (change?.layers && b.id in change.layers && Number.isFinite(b.frames?.mobile?.row) && Number.isInteger(change.layers[b.id]) && change.layers[b.id] >= 1) {
+      own().frames.mobile = { ...next.frames.mobile, z: change.layers[b.id] };
     }
     return next;
   });

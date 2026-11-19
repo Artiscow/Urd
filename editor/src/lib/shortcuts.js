@@ -64,6 +64,10 @@ export const SHORTCUT_GROUPS = [
     { labelKey: 'shortcuts.phoneLand', ways: [['enter']] },
     { labelKey: 'shortcuts.phoneBack', ways: [['esc']] },
     { labelKey: 'shortcuts.phoneNudge', ways: [['arrows']] },
+    { labelKey: 'shortcuts.phoneGroup', ways: [['ctrl', 'G']] },
+    { labelKey: 'shortcuts.phoneUngroup', ways: [['ctrl', 'shift', 'G']] },
+    { labelKey: 'canvas.ctx.toFront', tipKey: 'tip.shortcuts.phoneLayer', ways: [['ctrl', 'shift', 'up']] },
+    { labelKey: 'canvas.ctx.toBack', tipKey: 'tip.shortcuts.phoneLayer', ways: [['ctrl', 'shift', 'down']] },
   ] },
   { id: 'sections', labelKey: 'shortcuts.group.sections', tipKey: 'tip.shortcuts.sections', rows: [
     { labelKey: 'shortcuts.copySection', ways: [['ctrl', 'C']] },

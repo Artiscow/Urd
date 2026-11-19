@@ -19,8 +19,8 @@
  *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
  *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
  *                  { type: 'urd-edit-on-phone', sectionId }  (a section showing its phone layout in the desktop view, its words too narrow at this width: its bar's «Edit on the phone»)
- *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks, the custom order or blocks taken out of the rule's columns; also a block taken out of its group, or the group undone, from the block's menu; coalesce from the keys, a burst one undo step)
- *                  { type: 'urd-phone-layout', sectionId, change, preset?, follow? }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js, `preset` its id, which asks for «Same height» after it; «Same width» there; or «Same height», the heights its lines are measured to, `follow` where they follow a preset as part of its step)
+ *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks, the custom order or blocks taken out of the rule's columns; also a block taken out of its group, or the group undone, from the block's menu, and a set grouped or its groups undone from the phone's set bar, the menu or the keys; coalesce from the keys, a burst one undo step)
+ *                  { type: 'urd-phone-layout', sectionId, change, preset?, follow? }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js, `preset` its id, which asks for «Same height» after it; «Same width» there; or «Same height», the heights its lines are measured to, `follow` where they follow a preset as part of its step; or the phone's set bar's alignment, its cells, and the layer order of the blocks pinned on the phone, its `layers`)
  *                  { type: 'urd-hover-block', blockId }  (the block under the mouse, null for none: its row in the Phone panel's list is lit)
  *                  { type: 'urd-attention-cards', cards: [{ sectionId, rect }] }  (the sections that need a phone review in the phone view, where each stands in the canvas, for the editor to draw their cards beside the phone; sent when they change)
  *                  { type: 'urd-new-fitted', sectionId, blockId, w, h }  (a new block's box fitted to what it draws, the answer to urd-fit-new, once, as the block is shown: the fitted width in percent and height in px, or null for both where it was not fitted, add-fit.js)
@@ -34,7 +34,7 @@
  *                  { type: 'urd-toggle-grid' }  (G on the page: the editor shows or hides the grid)
  *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
- *                  { type: 'urd-block-bar', blockId, rect?, tools? }  (in the phone view, the selected block's box in the canvas and its bar's tools, the tools only when they changed, for the editor to draw the bar beside the phone; blockId null when no block's bar stands, 0.7.3.19.2)
+ *                  { type: 'urd-block-bar', blockId, rect?, tools?, set? }  (in the phone view, the selected block's box in the canvas and its bar's tools, the tools only when they changed, each `disabled` where it greys, for the editor to draw the bar beside the phone; `set` true while they are a set's bar and the box the set's, 0.7.36.3; blockId null when no block's bar stands, 0.7.3.19.2)
  *                  { type: 'urd-section-bar', sectionId, rect?, tools? }  (the same for the section the mouse was last over, or put at work: its bar beside the phone, 0.7.3.23)
  *                  { type: 'urd-nav-bar', on, rect? }  (in the phone view, where the site's menu stands in the canvas while the mouse was last over it or it was last pressed: the editor draws the menu's size bar beside the phone, 0.7.3.25; on false takes it away)
  *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest }  (in the phone view, a menu's rows for the editor to draw: at the point `at`, or under the ⋮ of the editor's bar `editor` names, 'block' or 'section'; `rest` leaves the focus where it is)
@@ -53,7 +53,7 @@ import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './blocks/video.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
-import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneAfterLine, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup } from './phone-moves.js';
+import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneAfterLine, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup, phoneGroup, phoneUngroupAll, phoneAlignCells } from './phone-moves.js';
 import { closeColorPicker } from './color-picker.js';
 import { attachHint } from './hint.js';
 import { closeDropdowns } from './dropdown.js';
@@ -69,7 +69,7 @@ import { styleOf, pasteStyle } from './block-style.js';
 import { BLOCK_DESIGNS } from './block-designs.js';
 import { pluginBlockDesigns } from './plugins.js';
 import { nearestDock } from './sticky-model.js';
-import { layerChanges } from './layer-order.js';
+import { layerChanges, phoneLayerChanges } from './layer-order.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
 import { pathTo, nodeAt } from './caret-path.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
@@ -130,6 +130,30 @@ function bumpBlockZ(host, section, block, el, dir) {
     // groupKey collects the whole reordering into ONE undo step in the editor.
     post({ type: 'urd-move', sectionId: section.id, blockId: other.id, frame, coalesce: true, groupKey: `z-${block.id}` });
   }
+}
+
+/** The layer order on the phone: the pinned blocks among `ids` put in front of the section's other pinned blocks there, or behind them all (layer-order.js phoneLayerChanges), the desktop's order left as it is; one undo step. */
+function bumpPhoneZ(section, ids, dir) {
+  const layers = Object.fromEntries(phoneLayerChanges(section.blocks, ids, dir));
+  if (Object.keys(layers).length) post({ type: 'urd-phone-layout', sectionId: section.id, change: { layers } });
+}
+
+/** The set made one stack on the phone (phone-moves.js phoneGroup), one undo step; the set stays selected. */
+function groupOnPhone(section, ids) {
+  const change = phoneGroup(section.blocks, phoneSetupOf(section), ids);
+  if (change) post({ type: 'urd-phone-order', sectionId: section.id, blockId: ids[0], change });
+}
+
+/** The groups the set, or the selected block, stands in on the phone taken apart whole (phoneUngroupAll), one undo step. */
+function ungroupOnPhone(section, ids) {
+  const change = phoneUngroupAll(section.blocks, phoneSetupOf(section), ids);
+  if (change) post({ type: 'urd-phone-order', sectionId: section.id, blockId: ids[0], change });
+}
+
+/** The set's blocks in cells moved to one side of the phone's row, each keeping its width (phoneAlignCells), one undo step. */
+function alignOnPhone(section, ids, side) {
+  const change = phoneAlignCells(section.blocks, phoneSetupOf(section), ids, side);
+  if (change) post({ type: 'urd-phone-layout', sectionId: section.id, change });
 }
 
 /** Whether a block has designs to choose among: the calendar's, a core block's in the catalogue (block-designs.js), or a plugin block's (the design contract). */
@@ -444,12 +468,13 @@ export function phoneMenuClosed(focus = false) {
   el.focus({ preventScroll: true });
 }
 
-/** The tools of a bar the editor draws in the phone view: a block's every tool but ⠿, whose drag the block's own surface gives there; a section's every button, and its link name. */
+/** The tools of a bar the editor draws in the phone view: a block's every tool but ⠿, whose drag the block's own surface gives there, or with a set the set bar's count and buttons (phoneSetBar); a section's every button, and its link name. */
 const phoneBarTools = (el, kind = 'block') => (kind === 'section'
   ? [...el.querySelectorAll(':scope > .urd-section-toolbar :is(button, .urd-anchor-tag)')]
-  : [...el.querySelectorAll(':scope > .urd-edit-toolbar .urd-bar-body button')].filter((b) => !b.classList.contains('urd-edit-move')));
+  : multiIds.size > 1 && phoneSetBar ? [...phoneSetBar._urd.body.querySelectorAll(':scope > :is(button, .urd-multi-count)')]
+    : [...el.querySelectorAll(':scope > .urd-edit-toolbar .urd-bar-body button')].filter((b) => !b.classList.contains('urd-edit-move')));
 
-/** A tool as the editor draws it: its drawing or its words, its name and tooltip, whether it is pressed (null for a tool with no such state), removes, is the ⋮ or the help chip, whether it opens the editor's menu, which a second press closes, whether it opens a pop-up of the page's own (the block menu, the layout picker, the hidden blocks), which a second press closes too, and whether it is the section's link name, words to read rather than a tool. */
+/** A tool as the editor draws it: its drawing or its words, its name and tooltip, whether it is pressed (null for a tool with no such state), removes, is the ⋮ or the help chip, whether it opens the editor's menu, which a second press closes, whether it opens a pop-up of the page's own (the block menu, the layout picker, the hidden blocks), which a second press closes too, whether it is the section's link name or a set's count, words to read rather than a tool, and whether it is greyed. */
 const toolOf = (btn) => ({
   html: btn.innerHTML.trim().startsWith('<svg') ? btn.innerHTML : '',
   text: btn.innerHTML.trim().startsWith('<svg') ? '' : btn.textContent.trim(),
@@ -461,7 +486,8 @@ const toolOf = (btn) => ({
   help: btn.classList.contains('urd-hint-chip'),
   opensMenu: btn.hasAttribute('data-opens-menu'),
   pagePop: btn.matches('.urd-sec-add-block, .urd-layout-btn, .urd-hidden-chip'),
-  tag: btn.classList.contains('urd-anchor-tag'),
+  tag: btn.classList.contains('urd-anchor-tag') || btn.classList.contains('urd-multi-count'),
+  disabled: Boolean(btn.disabled),
 });
 
 /** Each bar on the page as watched for changes, and how many it has had, so the editor is sent its tools again only when they change. */
@@ -488,18 +514,30 @@ let phoneBarFrame = 0;
 const phoneBarTold = { block: '', section: '' };
 const phoneBarBox = { block: '', section: '' };
 
+/** The box round a set's blocks as they stand in the window. */
+function setBox(els) {
+  const rects = els.map((el) => el.getBoundingClientRect());
+  const left = Math.min(...rects.map((r) => r.left));
+  const top = Math.min(...rects.map((r) => r.top));
+  const right = Math.max(...rects.map((r) => r.right));
+  const bottom = Math.max(...rects.map((r) => r.bottom));
+  return { left, top, right, bottom, width: right - left, height: bottom - top };
+}
+
 /**
  * Tells the editor of one bar where its block or section stands in the canvas and what the bar holds, the tools only when they changed, or that none stands; true while it stands, or is only out of sight for the moment.
+ * A set's bar is told as the block's, its box the set's, and marked as a set's (`set`).
  * @param {'block'|'section'} kind
  * @param {Element|null} el The selected block, or the section
  * @param {Element|null} bar Its bar on the page
  * @param {boolean} held The block is dragged, its bar out of the way
+ * @param {Element[]|null} [set] The set's blocks, where the bar is the set's
  */
-function tellPhoneBar(kind, el, bar, held = false) {
+function tellPhoneBar(kind, el, bar, held = false, set = null) {
   const type = kind === 'section' ? 'urd-section-bar' : 'urd-block-bar';
   const key = kind === 'section' ? 'sectionId' : 'blockId';
   const id = kind === 'section' ? el?.dataset.sectionId : el?.dataset.blockId;
-  const box = el?.getBoundingClientRect();
+  const box = set ? setBox(set) : el?.getBoundingClientRect();
   const seen = box && (box.width || box.height) && box.bottom > 0 && box.top < window.innerHeight;
   if (!el || !bar || !seen || held) {
     if (phoneBarTold[kind]) post({ type, [key]: null });
@@ -511,7 +549,7 @@ function tellPhoneBar(kind, el, bar, held = false) {
   const rect = { left: Math.round(box.left), top: Math.round(box.top), right: Math.round(box.right), bottom: Math.round(box.bottom) };
   const boxText = `${rect.left},${rect.top},${rect.right},${rect.bottom}`;
   if (told !== phoneBarTold[kind] || boxText !== phoneBarBox[kind]) {
-    post({ type, [key]: id, rect, ...(told !== phoneBarTold[kind] ? { tools: phoneBarTools(el, kind).map(toolOf) } : {}) });
+    post({ type, [key]: id, rect, ...(told !== phoneBarTold[kind] ? { tools: phoneBarTools(el, kind).map(toolOf), set: Boolean(set) } : {}) });
     phoneBarTold[kind] = told;
     phoneBarBox[kind] = boxText;
   }
@@ -519,7 +557,7 @@ function tellPhoneBar(kind, el, bar, held = false) {
 }
 
 /**
- * Tells the editor, once a frame in the phone view, of the two bars it draws beside the phone (urd-block-bar, urd-section-bar): the selected block's, gone while the block is dragged, scrolled out of the phone's window or one of a set; and the section's (phoneBarSectionId); both gone in the Clean view.
+ * Tells the editor, once a frame in the phone view, of the two bars it draws beside the phone (urd-block-bar, urd-section-bar): the selected block's, gone while the block is dragged or scrolled out of the phone's window, and the set's bar in its place while a set stands (phoneSetBar); and the section's (phoneBarSectionId); both gone in the Clean view.
  * Run as the selection changes, the mouse goes over a section and a section is drawn; it stops itself when nothing is left to tell.
  */
 export function watchPhoneBar() {
@@ -527,13 +565,16 @@ export function watchPhoneBar() {
   const tick = () => {
     phoneBarFrame = 0;
     const on = phoneBars() && !document.body.classList.contains('urd-chrome-off');
-    const block = on && selectedBlockId && multiIds.size <= 1
+    const set = on && multiIds.size > 1 && phoneSetBar?.classList.contains('visible') ? selectedEls() : [];
+    const block = on && selectedBlockId && (multiIds.size <= 1 || set.length > 1)
       ? document.querySelector(`.urd-block.urd-selected[data-block-id="${CSS.escape(selectedBlockId)}"]`)
       : null;
     const section = on
       ? (phoneBarSectionId ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(phoneBarSectionId)}"]`) : null) ?? document.querySelector('.urd-section-active')
       : null;
-    const blockOn = tellPhoneBar('block', block, block?.querySelector(':scope > .urd-edit-toolbar') ?? null, Boolean(block?.classList.contains('urd-hold-drag')));
+    const blockOn = set.length > 1
+      ? tellPhoneBar('block', block, phoneSetBar._urd.body, false, set)
+      : tellPhoneBar('block', block, block?.querySelector(':scope > .urd-edit-toolbar') ?? null, Boolean(block?.classList.contains('urd-hold-drag')));
     const sectionOn = tellPhoneBar('section', section, section?.querySelector(':scope > .urd-section-toolbar') ?? null);
     if (blockOn || sectionOn) phoneBarFrame = requestAnimationFrame(tick);
   };
@@ -755,14 +796,16 @@ function showContextMenu(el, x, y, label, build, from = null) {
  */
 const keysHere = (key) => (isMobile() ? '' : key);
 
-/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. The phone view has the same menu, its layer order greyed, since that orders the blocks on the desktop alone. A block in a group of the phone's order (phoneTree) is taken out of it, or the group undone, from either view; the two are greyed for a block in no group. A block is pinned on the phone in the phone view, where it stands, and unpinned from either view. */
+/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. The phone view has the same menu, its layer order the phone's own among the blocks pinned there (bumpPhoneZ), greyed where it moves nothing. A block in a group of the phone's order (phoneTree) is taken out of it, and the groups are undone, from either view. A set's blocks are grouped in the phone view, where a set's member keeps the set, which the grouping and the layer order act on; on the desktop the menu holds one block, so the grouping stands greyed there. Each is greyed where it acts on nothing. A block is pinned on the phone in the phone view, where it stands, and unpinned from either view. */
 function openContextMenu(el, x, y, from = null) {
   const ctx = el._urdCtx;
   if (!ctx || document.body.classList.contains('urd-chrome-off')) return;
   const { host, section, block } = ctx;
   const phone = isMobile();
+  const keep = phone && multiIds.size > 1 && multiIds.has(block.id);
+  const set = keep ? [...multiIds] : [block.id];
   // A menu a rest opened leaves the selection as it stands, until a press on the ⋮ keeps it (moreButton).
-  const select = () => selectBlock(el);
+  const select = () => selectBlock(el, { keepMulti: keep });
   if (from?.rest) from.select = select;
   else select();
   showContextMenu(el, x, y, ta('canvas.ctx.label'), (item, sep) => {
@@ -775,19 +818,22 @@ function openContextMenu(el, x, y, from = null) {
     item(ta('canvas.ctx.copyStyle'), keysHere('Ctrl+Alt+C'), () => copyBlockStyle(block));
     item(ta('canvas.ctx.pasteStyle'), keysHere('Ctrl+Alt+V'), () => pasteBlockStyle(section, block), { disabled: !styleClipboard });
     sep();
-    item(ta('canvas.ctx.toFront'), keysHere('Ctrl+Shift+↑'), () => bumpBlockZ(host, section, block, el, 1), { disabled: phone });
-    item(ta('canvas.ctx.toBack'), keysHere('Ctrl+Shift+↓'), () => bumpBlockZ(host, section, block, el, -1), { disabled: phone });
+    item(ta('canvas.ctx.toFront'), 'Ctrl+Shift+↑', () => (phone ? bumpPhoneZ(section, set, 1) : bumpBlockZ(host, section, block, el, 1)), { disabled: phone && !phoneLayerChanges(section.blocks, set, 1).size });
+    item(ta('canvas.ctx.toBack'), 'Ctrl+Shift+↓', () => (phone ? bumpPhoneZ(section, set, -1) : bumpBlockZ(host, section, block, el, -1)), { disabled: phone && !phoneLayerChanges(section.blocks, set, -1).size });
     item(ta(block.hideMobile ? 'canvas.ctx.showMobile' : 'canvas.ctx.hideMobile'), '', () => {
       block.hideMobile = !block.hideMobile;
       post({ type: 'urd-block-flag', sectionId: section.id, blockId: block.id, hideMobile: block.hideMobile });
     });
-    const grouped = phoneTree(section.blocks, phoneSetupOf(section)).some((node) => node.children?.some((c) => c.id === block.id));
-    const ungroup = (whole) => {
-      const change = phoneUngroup(section.blocks, phoneSetupOf(section), block.id, whole);
+    const setup = phoneSetupOf(section);
+    const grouped = phoneTree(section.blocks, setup).some((node) => node.children?.some((c) => c.id === block.id));
+    const takeOut = () => {
+      const change = phoneUngroup(section.blocks, setup, block.id, false);
       if (change) post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change });
     };
-    item(ta('canvas.ctx.takeOutPhone'), '', () => ungroup(false), { disabled: !grouped });
-    item(ta('canvas.ctx.ungroupPhone'), '', () => ungroup(true), { disabled: !grouped });
+    // The keys for grouping are the phone view's (Ctrl+G and Ctrl+Shift+G), so the desktop view's items stand without them.
+    item(ta('canvas.ctx.groupPhone'), phone ? 'Ctrl+G' : '', () => groupOnPhone(section, set), { disabled: !phoneGroup(section.blocks, setup, set) });
+    item(ta('canvas.ctx.takeOutPhone'), '', takeOut, { disabled: !grouped });
+    item(ta('canvas.ctx.ungroupPhone'), phone ? 'Ctrl+Shift+G' : '', () => ungroupOnPhone(section, set), { disabled: !phoneUngroupAll(section.blocks, setup, set) });
     // Pinned on the phone where it stands, which only the phone view measures, or unpinned from either view.
     if (Number.isFinite(block.frames?.mobile?.row)) item(ta('canvas.ctx.unpinPhone'), '', () => post({ type: 'urd-phone-unpin', sectionId: section.id, blockId: block.id }));
     else item(ta('canvas.ctx.pinPhone'), '', () => el._urdPinOnPhone?.(), { disabled: !phone || block.hideMobile || !el._urdPinOnPhone });
@@ -4201,6 +4247,9 @@ const CROSS_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" s
 /** Every deletion on the canvas draws a bin, as the admin's do (the editor's ICONS.bin), never the cross that closes things; the selection's bar draws the same lines at its own size. */
 const BIN_PATHS = '<path d="M3 6h18"/><path d="M8.5 6V3h7v3"/><path d="M5.5 6l1 15h11l1-15"/><path d="M10 10.5v6M14 10.5v6"/>';
 const BIN_SVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${BIN_PATHS}</svg>`;
+/** The layer order's arrows: to the front, to the back. */
+const Z_FRONT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14"/><path d="M12 20V9"/><path d="M7 13l5-5 5 5"/></svg>';
+const Z_BACK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/></svg>';
 const GRIP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
 const ROTATE_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4v6h-6"/><path d="M20.5 13a8.5 8.5 0 1 1-2-5.5L21 10"/></svg>';
 const FIT_HEIGHT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6 10l6 6 6-6"/><path d="M4 21h16"/></svg>';
@@ -4555,7 +4604,8 @@ document.addEventListener('click', (event) => {
 // Shift = 1 px), Delete deletes, Esc deselects, Ctrl+C, Ctrl+X and Ctrl+V
 // copy, cut and paste with the layout preserved (a selected section with no
 // block is copied whole), Ctrl+D duplicates. Never when focus
-// sits in text/fields. In the phone view the arrows go to phoneArrow.
+// sits in text/fields. In the phone view the arrows go to phoneArrow, and
+// Ctrl+G and Ctrl+Shift+G group and ungroup the set on phones.
 // A dialog on the page keeps its own arrows, and the clean view moves nothing.
 window.addEventListener('keydown', (event) => {
   const target = event.target;
@@ -4698,11 +4748,23 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  // z-order from the keyboard: Ctrl+Shift+Up to the front, Ctrl+Shift+Down to the back.
+  // The set, or the selected block alone, that the phone view's grouping and layer order act on.
+  const phoneSet = multiIds.size > 1 ? [...multiIds] : [selectedBlockId];
+
+  // z-order from the keyboard: Ctrl+Shift+Up to the front, Ctrl+Shift+Down to the back; on the phone among the blocks pinned there (bumpPhoneZ).
   if (ctrl && event.shiftKey && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
-    if (isMobile()) return;
     event.preventDefault();
-    bumpBlockZ(ctx.host, ctx.section, ctx.block, el, event.key === 'ArrowUp' ? 1 : -1);
+    if (isMobile()) bumpPhoneZ(ctx.section, phoneSet, event.key === 'ArrowUp' ? 1 : -1);
+    else bumpBlockZ(ctx.host, ctx.section, ctx.block, el, event.key === 'ArrowUp' ? 1 : -1);
+    return;
+  }
+
+  // Grouping on the phone: Ctrl+G makes the set one stack, Ctrl+Shift+G takes apart the groups the set, or the selected block, stands in.
+  if (ctrl && !event.altKey && String(event.key ?? '').toLowerCase() === 'g') {
+    if (!isMobile() || document.body.classList.contains('urd-chrome-off')) return;
+    event.preventDefault();
+    if (event.shiftKey) ungroupOnPhone(ctx.section, phoneSet);
+    else groupOnPhone(ctx.section, phoneSet);
     return;
   }
 
@@ -4890,7 +4952,7 @@ document.addEventListener('pointerdown', (event) => {
   // A press in it keeps the calendar selected.
   if (target?.closest('.urd-cal-dialog')) return;
   const blockEl = target?.closest('.urd-block') ?? null;
-  if (blockEl && event.shiftKey && !isMobile()) {
+  if (blockEl && event.shiftKey) {
     toggleMulti(blockEl);
   } else if (blockEl && multiIds.size > 1 && multiIds.has(blockEl.dataset.blockId)) {
     // Clicking a member keeps the set (group drag), but makes the block
@@ -4914,8 +4976,9 @@ document.addEventListener('pointerdown', (event) => {
 // Marquee: dragging on empty section surface draws a selection frame, and
 // every block it overlaps becomes the set (a click without a drag remains
 // a click; the set is limited to the section the drag started in).
+// In the phone view the blocks stand in the row grid and its cells, so each is measured where it is drawn.
 document.addEventListener('pointerdown', (event) => {
-  if (event.button !== 0 || event.shiftKey || isMobile()) return;
+  if (event.button !== 0 || event.shiftKey) return;
   if (document.body.classList.contains('urd-chrome-off')) return;
   const target = eventTarget(event);
   const host = target?.closest('.urd-section');
@@ -4953,13 +5016,18 @@ document.addEventListener('pointerdown', (event) => {
     rectEl.style.top = `${rect.top}px`;
     rectEl.style.width = `${rect.right - rect.left}px`;
     rectEl.style.height = `${rect.bottom - rect.top}px`;
-    const blocks = [...canvas.querySelectorAll(':scope > .urd-block')].map((el) => ({
-      id: el.dataset.blockId,
-      left: el.offsetLeft,
-      top: el.offsetTop,
-      right: el.offsetLeft + el.offsetWidth,
-      bottom: el.offsetTop + el.offsetHeight,
-    }));
+    const blocks = isMobile()
+      ? [...canvas.querySelectorAll('.urd-block[data-block-id]')].map((el) => {
+        const r = el.getBoundingClientRect();
+        return { id: el.dataset.blockId, left: r.left - hostRect.left, top: r.top - hostRect.top, right: r.right - hostRect.left, bottom: r.bottom - hostRect.top };
+      })
+      : [...canvas.querySelectorAll(':scope > .urd-block')].map((el) => ({
+        id: el.dataset.blockId,
+        left: el.offsetLeft,
+        top: el.offsetTop,
+        right: el.offsetLeft + el.offsetWidth,
+        bottom: el.offsetTop + el.offsetHeight,
+      }));
     multiSectionId = host.dataset.sectionId;
     multiIds = new Set(blocksInRect(rect, blocks));
     applyMultiClasses();
@@ -4967,6 +5035,7 @@ document.addEventListener('pointerdown', (event) => {
   const onUp = () => {
     document.removeEventListener('pointermove', onMove);
     document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
     document.body.classList.remove('urd-marqueeing');
     if (!rectEl) return;
     rectEl.remove();
@@ -4981,6 +5050,8 @@ document.addEventListener('pointerdown', (event) => {
   };
   document.addEventListener('pointermove', onMove);
   document.addEventListener('pointerup', onUp);
+  // A drag the browser takes for a scroll or a pan ends the frame as a release does.
+  document.addEventListener('pointercancel', onUp);
 });
 
 /**
@@ -5157,10 +5228,106 @@ function startSelectionDrag(event) {
   handle.addEventListener('pointercancel', cancel);
 }
 
+/**
+ * The set bar of the phone view (0.7.36.3): the count, «Group» and «Ungroup» on phones, the blocks in cells to the left, the middle or the right of their row, and the pinned blocks' layer order there; a button with nothing to act on is greyed (updatePhoneSetBar).
+ * Its tools stand in a row of their own, which the editor watches when it draws the bar beside the phone (watchPhoneBar), so the bar's place is no change of its tools.
+ */
+let phoneSetBar = null;
+
+/** A row of the phone's cells, dashed, with a block at the left edge, in the middle or at the right edge, for the set bar's alignment. */
+const rowSideSvg = (x) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="1.5" stroke-dasharray="2.5 2.5"/><rect x="${x}" y="9" width="7" height="6" rx="1" fill="currentColor"/></svg>`;
+const GROUP_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="2" stroke-dasharray="3 3"/><rect x="7" y="6.5" width="10" height="4.5" rx="1"/><rect x="7" y="13" width="10" height="4.5" rx="1"/></svg>';
+const UNGROUP_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="10" height="5" rx="1"/><rect x="11" y="15" width="10" height="5" rx="1"/><path d="M17 4h4v4M3 16v4h4"/></svg>';
+
+function buildPhoneSetBar() {
+  phoneSetBar = document.createElement('div');
+  phoneSetBar.className = 'urd-multi-toolbar urd-phone-set';
+  phoneSetBar.setAttribute('role', 'toolbar');
+  phoneSetBar.setAttribute('aria-label', ta('canvas.setTools'));
+  // Presses in the bar must not reach the document's selection listener.
+  phoneSetBar.addEventListener('pointerdown', (event) => event.stopPropagation());
+  const body = document.createElement('div');
+  body.className = 'urd-phone-set-body';
+  phoneSetBar.appendChild(body);
+  const count = document.createElement('span');
+  count.className = 'urd-multi-count';
+  body.appendChild(count);
+  const btn = (html, label, run) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = html;
+    b.title = label;
+    b.setAttribute('aria-label', label);
+    b.addEventListener('click', () => {
+      const section = selectedEls()[0]?._urdCtx?.section;
+      if (section && multiIds.size > 1) run(section, [...multiIds]);
+    });
+    body.appendChild(b);
+    return b;
+  };
+  phoneSetBar._urd = {
+    body,
+    count,
+    group: btn(GROUP_SVG, ta('canvas.phoneSet.group'), groupOnPhone),
+    ungroup: btn(UNGROUP_SVG, ta('canvas.phoneSet.ungroup'), ungroupOnPhone),
+    left: btn(rowSideSvg(4), ta('canvas.phoneSet.left'), (section, ids) => alignOnPhone(section, ids, 'left')),
+    middle: btn(rowSideSvg(8.5), ta('canvas.phoneSet.middle'), (section, ids) => alignOnPhone(section, ids, 'middle')),
+    right: btn(rowSideSvg(13), ta('canvas.phoneSet.right'), (section, ids) => alignOnPhone(section, ids, 'right')),
+    front: btn(Z_FRONT_SVG, ta('canvas.ctx.toFront'), (section, ids) => bumpPhoneZ(section, ids, 1)),
+    back: btn(Z_BACK_SVG, ta('canvas.ctx.toBack'), (section, ids) => bumpPhoneZ(section, ids, -1)),
+  };
+  document.body.appendChild(phoneSetBar);
+}
+
+/** The phone's set bar for the set as it stands: its count, each button greyed where it would act on nothing, and its place above the set. */
+function updatePhoneSetBar() {
+  const els = selectedEls();
+  const section = els[0]?._urdCtx?.section;
+  if (els.length < 2 || !section) {
+    phoneSetBar?.classList.remove('visible');
+    return;
+  }
+  if (!phoneSetBar) buildPhoneSetBar();
+  const bar = phoneSetBar._urd;
+  const ids = [...multiIds];
+  const setup = phoneSetupOf(section);
+  // Only a change is written, so the editor's copy of the bar is sent its tools again only then.
+  const text = ta('canvas.selectedCount', { n: els.length });
+  if (bar.count.textContent !== text) bar.count.textContent = text;
+  const grey = (b, off) => {
+    if (b.disabled !== off) b.disabled = off;
+  };
+  grey(bar.group, !phoneGroup(section.blocks, setup, ids));
+  grey(bar.ungroup, !phoneUngroupAll(section.blocks, setup, ids));
+  for (const side of ['left', 'middle', 'right']) grey(bar[side], !phoneAlignCells(section.blocks, setup, ids, side));
+  grey(bar.front, !phoneLayerChanges(section.blocks, ids, 1).size);
+  grey(bar.back, !phoneLayerChanges(section.blocks, ids, -1).size);
+  if (!phoneSetBar.classList.contains('visible')) phoneSetBar.classList.add('visible');
+  placeAbove(phoneSetBar, els);
+}
+
+/** A set's bar above the set, centred on it and kept inside the window. */
+function placeAbove(bar, els) {
+  const rects = els.map((el) => el.getBoundingClientRect());
+  const left = Math.min(...rects.map((r) => r.left));
+  const right = Math.max(...rects.map((r) => r.right));
+  const top = Math.min(...rects.map((r) => r.top));
+  const x = clamp((left + right) / 2 - bar.offsetWidth / 2, 8, window.innerWidth - bar.offsetWidth - 8);
+  const y = Math.max(8, top - bar.offsetHeight - 10);
+  bar.style.left = `${x}px`;
+  bar.style.top = `${y}px`;
+}
+
+/** The set's bar: the desktop's, or the phone's in the phone view (updatePhoneSetBar), whose copy beside the phone the editor is told of. */
 function updateMultiToolbar() {
-  const active = multiIds.size >= 2 && !isMobile() && !document.body.classList.contains('urd-chrome-off');
-  if (!active) {
-    multiBar?.classList.remove('visible');
+  const on = multiIds.size >= 2 && !document.body.classList.contains('urd-chrome-off');
+  const phone = isMobile();
+  if (!on || phone) multiBar?.classList.remove('visible');
+  if (!on || !phone) phoneSetBar?.classList.remove('visible');
+  if (phone) watchPhoneBar();
+  if (!on) return;
+  if (phone) {
+    updatePhoneSetBar();
     return;
   }
   if (!multiBar) buildMultiBar();
@@ -5173,18 +5340,16 @@ function updateMultiToolbar() {
   // The distribute buttons require at least three blocks (settings only when relevant).
   for (const b of multiBar._urdDist) b.style.display = els.length >= 3 ? '' : 'none';
   multiBar.classList.add('visible');
-  const rects = els.map((el) => el.getBoundingClientRect());
-  const left = Math.min(...rects.map((r) => r.left));
-  const right = Math.max(...rects.map((r) => r.right));
-  const top = Math.min(...rects.map((r) => r.top));
-  const x = clamp((left + right) / 2 - multiBar.offsetWidth / 2, 8, window.innerWidth - multiBar.offsetWidth - 8);
-  const y = Math.max(8, top - multiBar.offsetHeight - 10);
-  multiBar.style.left = `${x}px`;
-  multiBar.style.top = `${y}px`;
+  placeAbove(multiBar, els);
 }
 
 // The toolbar follows the set on scroll/resize (fixed positioning).
-window.addEventListener('scroll', () => { if (multiIds.size > 1) updateMultiToolbar(); }, { passive: true, capture: true });
+// On a scroll the phone's set bar only moves: its buttons are weighed when the set or the page changes (updatePhoneSetBar).
+window.addEventListener('scroll', () => {
+  if (multiIds.size < 2) return;
+  if (isMobile() && phoneSetBar?.classList.contains('visible')) placeAbove(phoneSetBar, selectedEls());
+  else updateMultiToolbar();
+}, { passive: true, capture: true });
 window.addEventListener('resize', () => { if (multiIds.size > 1) updateMultiToolbar(); });
 
 /** The set's frames as plain items for align/distribute. */
@@ -5857,8 +6022,6 @@ function enhanceBlock(el, block, section, grid, host) {
   const bumpZ = (dir) => bumpBlockZ(host, section, block, el, dir);
   // The layer order and the phone button stand on the desktop's full bar; the phone view's bar is layout, its bin and its menus.
   if (!mobile && form === 'full') {
-    const Z_FRONT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14"/><path d="M12 20V9"/><path d="M7 13l5-5 5 5"/></svg>';
-    const Z_BACK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14"/><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/></svg>';
     const frontBtn = document.createElement('button');
     frontBtn.innerHTML = Z_FRONT_SVG;
     frontBtn.title = ta('canvas.zFront');

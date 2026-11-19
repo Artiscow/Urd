@@ -4,8 +4,8 @@
  */
 import { previewState } from './preview.svelte.js';
 
-/** A bar as the preview tells it: its block's or section's id, its box in the canvas's own px, and its tools in the bar's order ({html, text, label, tip, pressed, danger, more, help, opensMenu}). */
-const none = () => ({ id: null, rect: null, tools: [] });
+/** A bar as the preview tells it: its block's or section's id, its box in the canvas's own px, its tools in the bar's order ({html, text, label, tip, pressed, danger, more, help, opensMenu, pagePop, tag, disabled}), and whether it is a set's bar, its box the set's (0.7.36.3). */
+const none = () => ({ id: null, rect: null, tools: [], set: false });
 
 /** The selected block's bar, and the section's. */
 let block = $state(none());
@@ -25,7 +25,8 @@ let navPlaced = $state(null);
 function told(bar, msg, key) {
   const id = typeof msg?.[key] === 'string' ? msg[key] : null;
   if (!id) return none();
-  return { id, rect: msg.rect ?? bar.rect, tools: Array.isArray(msg.tools) ? msg.tools : bar.id === id ? bar.tools : [] };
+  const keeps = bar.id === id;
+  return { id, rect: msg.rect ?? bar.rect, tools: Array.isArray(msg.tools) ? msg.tools : keeps ? bar.tools : [], set: Array.isArray(msg.tools) ? msg.set === true : keeps && bar.set };
 }
 
 function onBlockBar(msg) {

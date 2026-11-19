@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.36.3): several blocks selected, grouped, aligned and layered on the phone
+
+- [ ] In the phone view, Shift+click two or three blocks, and draw a frame round blocks from a section's empty ground: each selects several, and the set bar shows how many
+- [ ] «Group» or Ctrl+G: the selected blocks become one stack in their reading order where the first one stood; one undo puts them back
+- [ ] With «Left first», select a block from a column the rule reads together and one beside it, and press «Group»: the stack holds the selected blocks alone, and the rest of the column stays
+- [ ] «Ungroup» or Ctrl+Shift+G takes apart the stack the set or the selected block stands in; Ctrl+G on one block does nothing
+- [ ] Left, middle and right of the row move each selected block narrower than the phone to that side, keeping its width; «Alignment» in Placement puts a block of an odd width in the middle too, and offers a block seven columns wide (dragged to that width) left and right only
+- [ ] Two pinned blocks over each other on the phone: «To the front», «To the back» and Ctrl+Shift+↑/↓ change which stands on top on the phone, and the desktop's order stays; the buttons are greyed where nothing would change
+- [ ] The element menu's head in the phone view: To the front and back move a pinned block on the phone, and are greyed for a block that flows
+- [ ] Right-click a block of a set in the phone view: the set stays selected, and «Group on phones» groups it
+- [ ] With «Bars in the phone view» set beside the phone, the set bar stands beside the phone and its buttons act on the set; on the canvas it is gone
+- [ ] The shortcut sheet's phone group lists Ctrl+G, Ctrl+Shift+G and Ctrl+Shift+↑/↓
+- [ ] In Firefox: Shift+click, the frame drawn round blocks and «Group» on the phone (checked in Brave only)
+
 ### Test batch (0.7.36.1): the live phone beside the desktop canvas
 
 - [ ] «Live phone» in the top bar (the phone with waves beside Grid and Guides) shows the page as a phone draws it beside the desktop canvas; off, the canvas takes its full width again, and the choice is kept over a reload

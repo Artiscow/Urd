@@ -22,7 +22,7 @@
   import AnchorField from '../lib/AnchorField.svelte';
   import { blockWords } from '$engine/anchor-model.js';
   import { stackOrder, phoneSetupOf } from '$engine/phone-order.js';
-  import { phonePlaceKeeping, hasPhonePlace, phoneStackOf, flowing } from '$engine/phone-moves.js';
+  import { phonePlaceKeeping, hasPhonePlace, phoneStackOf, flowing, phoneSideCells, phoneHasMiddle } from '$engine/phone-moves.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
   const sections = $derived(ed.sections);
@@ -78,13 +78,11 @@
     if (!cells) return '';
     if (cells.col === 1) return 'left';
     if (cells.col + cells.cols - 1 === 8) return 'right';
-    return cells.col === (8 - cells.cols) / 2 + 1 ? 'middle' : '';
+    return cells.col === phoneSideCells(cells.cols, 'middle').col ? 'middle' : '';
   }
-  /** The cells for a width and a side: the full row writes none. */
+  /** The cells for a width and a side (phoneSideCells): the full row writes none. */
   function phoneCellsFor(cols, side) {
-    if (cols >= 8) return null;
-    const col = side === 'right' ? 9 - cols : side === 'middle' ? (8 - cols) / 2 + 1 : 1;
-    return { col, cols };
+    return cols >= 8 ? null : phoneSideCells(cols, side);
   }
 
   /** The "let go" options for sticky: only the sections AFTER the block's
@@ -230,7 +228,7 @@
         onchange={(v) => setBlockPhoneCells(phoneCellsFor(Number(v), phoneSideOf(selectedBlock.phoneCells) || 'left'))} />
       {#if selectedBlock.phoneCells}
         <Choice label={ta('lbl.phoneSide')} title={ta('tip.phoneSide')} value={phoneSideOf(selectedBlock.phoneCells)}
-          options={[['left', ta('opt.phoneSide.left')], ['middle', ta('opt.phoneSide.middle')], ['right', ta('opt.phoneSide.right')]]}
+          options={[['left', ta('opt.phoneSide.left')], ...(phoneHasMiddle(selectedBlock.phoneCells.cols) ? [['middle', ta('opt.phoneSide.middle')]] : []), ['right', ta('opt.phoneSide.right')]]}
           onchange={(v) => setBlockPhoneCells(phoneCellsFor(selectedBlock.phoneCells.cols, v))} />
       {/if}
     </Setting>

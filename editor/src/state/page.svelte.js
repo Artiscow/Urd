@@ -13,7 +13,7 @@ import { placeBesideBlock, clampPlace, givesWay } from '../lib/menu-place.js';
 import { canvasBarState } from './canvas-bar.svelte.js';
 import { ta } from '$engine/i18n.js';
 import { followsContent, FETCHES_CONTENT, blockSize, fitMoves, sizeRange, SIZE, SIZE_TEXT, STRETCHES, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, phoneSized, forcesReadable } from '$engine/push-model.js';
-import { layerChanges } from '$engine/layer-order.js';
+import { layerChanges, phoneLayerChanges } from '$engine/layer-order.js';
 import { wholeStyleHtml } from '$engine/text-whole.js';
 import { phoneOrderOf, phoneSetupOf, stackOrder } from '$engine/phone-order.js';
 import { flowing, phoneStackOf } from '$engine/phone-moves.js';
@@ -531,8 +531,15 @@ function menuPlaceFor(rect, small = false, section = false, { keepForm = false }
   return { left: place.left, top: place.top };
 }
 
-/** The layer order from the element menu: the selected block in front of its section's other blocks or behind them all, as on the canvas (layer-order.js), in one undo step. */
+/** The layer order from the element menu: the selected block in front of its section's other blocks or behind them all, as on the canvas (layer-order.js), in one undo step; in the phone view a block pinned there is ordered among the pinned blocks on the phone alone (phoneLayerChanges), and a flowing block, which overlaps none there, is left as it is. */
 function setBlockLayer(dir) {
+  if (previewState.viewMode === 'mobile') {
+    const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
+    if (!block || !Number.isFinite(block.frames.mobile?.row)) return;
+    const layers = Object.fromEntries(phoneLayerChanges(section.blocks, [block.id], dir));
+    if (Object.keys(layers).length) changeSectionPhone(section.id, { layers }, `layer:${block.id}`);
+    return;
+  }
   mutateBlock(`layer:${selectedBlock?.blockId}`, (block, section) => {
     const changes = layerChanges(section.blocks, block.id, dir);
     for (const other of section.blocks) {
@@ -1325,10 +1332,10 @@ function setSectionPhoneFollows(on) {
 }
 
 /**
- * A change to a section's phone order, cells and heights (phone-moves.js: a move in the Phone panel's list, a drag, the arrows or the handles on the canvas; phone-layouts.js: a preset): the blocks' exceptions, the stacks, the custom order, the cells and the blocks' own heights on the phone, written as one undo step under `key`.
+ * A change to a section's phone order, cells, heights and layers (phone-moves.js: a move in the Phone panel's list, a drag, the arrows, the handles or the set bar on the canvas; phone-layouts.js: a preset; layer-order.js: to the front or back on the phone): the blocks' exceptions, the stacks, the custom order, the cells, the blocks' own heights on the phone and the pinned blocks' own layers there, written as one undo step under `key`.
  * Only ids the section holds are written, and a stack of fewer than two blocks is left out.
  * @param {string} sectionId
- * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>}} change
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>, layers?: Record<string, number>}} change
  * @param {string} [key] The history key: a burst of keys joins under one
  * @returns {boolean} Whether the section took the change
  */
@@ -1376,6 +1383,12 @@ function changeSectionPhone(sectionId, change, key = 'phone-order') {
     delete place.height;
     if (Number.isFinite(height) && height > 0) place.height = Math.round(height);
     block.frames.mobile = Object.keys(place).length ? place : null;
+  }
+  // A pinned block's own layer on the phone (layer-order.js phoneLayerChanges); a flowing block takes none.
+  for (const [id, z] of Object.entries(change.layers ?? {})) {
+    const block = section.blocks.find((b) => b.id === id);
+    if (!block || !Number.isFinite(block.frames.mobile?.row) || !Number.isInteger(z) || z < 1) continue;
+    block.frames.mobile = { ...block.frames.mobile, z };
   }
   if (change.cells || change.heights) shellState.updateAttention();
   store.save();
