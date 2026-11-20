@@ -614,6 +614,18 @@ async function checkAuth() {
   }
 }
 
+/** «Sign out» (TopBar): the server expires the session and revokes its token (api/github/logout.js), and the sign-in status is read again. */
+async function signOut() {
+  try {
+    const res = await fetch('/api/github/logout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    if (!res.ok) throw new Error(String(res.status));
+    await checkAuth();
+    setStatus(ta('status.signedOut'));
+  } catch {
+    setStatus(ta('status.signOutFailed'), 'error');
+  }
+}
+
 /** Guides on/off: a personal workspace preference, remembered in
  *  localStorage (not page data) and re-established in onReady. */
 let guidesOn = $state(localStorage.getItem('urd-guides') === '1');
@@ -1224,6 +1236,7 @@ export const shellState = {
   loadPanelData,
   reducedMotion,
   checkAuth,
+  signOut,
   get guidesOn() { return guidesOn; },
   set guidesOn(v) { guidesOn = v; },
   get livePhoneOn() { return livePhoneOn; },

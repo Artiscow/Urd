@@ -14,7 +14,7 @@ Urd ile kurulmuş bir siteye sahip olan ya da onu düzenleyen senin için. Kod y
 ## Başlarken
 
 1. Sitende `/admin` adresine git (örneğin `siten.pages.dev/admin`).
-2. GitHub hesabınla giriş yap (sağ üstteki **GitHub ile giriş yap** düğmesi). Düzenleyiciyi giriş yapmadan görebilir ve deneyebilirsin, ama yayımlayamazsın.
+2. GitHub hesabınla giriş yap (sağ üstteki **GitHub ile giriş yap** düğmesi). Düzenleyiciyi giriş yapmadan görebilir ve deneyebilirsin, ama yayımlayamazsın. **Oturumu kapat** (adının yanındaki kapı) bu tarayıcıdaki oturumu bitirir ve GitHub'da da geri alır.
 3. Değiştirdiğin her şey hemen tarayıcında **taslak** olarak kaydedilir. **Yayımla** düğmesine basana kadar hiçbir şey ziyaretçilere görünmez.
 
 ## Düzenleyici

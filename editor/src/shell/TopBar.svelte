@@ -356,6 +356,7 @@
       <span class="who" title={ed.auth.allowed ? ta('tip.hasPublishAccess') : ta('tip.noPublishAccess')}>
         {#if !ed.auth.allowed}{@html ICONS.warn}{/if}{ed.auth.login}
       </span>
+      <button type="button" class="ghost topbar-tall sign-out" title={ta('ui.signOut')} aria-label={ta('ui.signOut')} onclick={ed.signOut}>{@html ICONS.signOut}</button>
     {:else if ed.auth}
       <!-- Login keeps its text at all widths: without an icon the button
            would be empty, and it is the entry point to publishing at all. -->

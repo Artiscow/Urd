@@ -239,7 +239,8 @@ test('the routes: the id, token and file shapes', () => {
 const { onRequestGet: listRoute } = await import('../template/functions/api/photos.js');
 const { onRequestGet: byteRoute } = await import('../template/functions/api/photo.js');
 
-const call = (route, url, env = {}, headers = {}) => route({ request: new Request(url, { headers }), env });
+/** A call as the site's own page makes it (Sec-Fetch-Site same-origin), the headers given standing over that. */
+const call = (route, url, env = {}, headers = {}) => route({ request: new Request(url, { headers: { 'sec-fetch-site': 'same-origin', ...headers } }), env });
 
 /** Stands in for the folder host for one call, and records what was asked. */
 async function withUpstream(answer, run) {
@@ -421,7 +422,7 @@ test('the routes: a good answer is kept at the edge, and a kept one is not built
   } };
   try {
     const url = 'https://site.test/api/photo?p=drive&id=AAA111bbb222ccc&w=800';
-    const ctx = () => ({ request: new Request(url), env: {}, waitUntil: (p) => waits.push(p) });
+    const ctx = () => ({ request: new Request(url, { headers: { 'sec-fetch-site': 'same-origin' } }), env: {}, waitUntil: (p) => waits.push(p) });
     const png = () => new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { 'content-type': 'image/png' } });
     const first = await withUpstream(png, () => byteRoute(ctx()));
     await Promise.all(waits);
@@ -432,7 +433,7 @@ test('the routes: a good answer is kept at the edge, and a kept one is not built
     assert.equal(second.result.headers.get('content-type'), 'image/png');
     // A refusal is never kept, and another site is refused before the cache is asked.
     const bad = await withUpstream(() => new Response('<html>', { status: 200, headers: { 'content-type': 'text/html' } }), () =>
-      byteRoute({ request: new Request('https://site.test/api/photo?p=drive&id=BBB111bbb222ccc'), env: {}, waitUntil: (p) => waits.push(p) }));
+      byteRoute({ request: new Request('https://site.test/api/photo?p=drive&id=BBB111bbb222ccc', { headers: { 'sec-fetch-site': 'same-origin' } }), env: {}, waitUntil: (p) => waits.push(p) }));
     await Promise.all(waits);
     assert.equal(bad.result.status, 502);
     assert.equal(store.size, 1);
@@ -450,10 +451,19 @@ test('the routes: another site cannot serve its pictures through this one', asyn
   assert.equal((await cross.json()).code, 'photoCrossSite');
   const list = await call(listRoute, 'https://site.test/api/photos?p=drive&id=AAA111bbb222ccc', {}, { 'sec-fetch-site': 'cross-site' });
   assert.equal((await list.json()).code, 'photoCrossSite');
-  // The site's own pages, and a browser without the header, go through to
-  // the next check (here the missing key).
-  const own = await call(listRoute, 'https://site.test/api/photos?p=drive&id=AAA111bbb222ccc', {}, { 'sec-fetch-site': 'same-origin' });
+  // The site's own pages go through to the next check (here the missing key), and so does an older browser without fetch metadata that names the site in its Referer.
+  const listUrl = 'https://site.test/api/photos?p=drive&id=AAA111bbb222ccc';
+  const own = await call(listRoute, listUrl, {}, { 'sec-fetch-site': 'same-origin' });
   assert.equal((await own.json()).code, 'photoKeyMissing');
+  const older = await listRoute({ request: new Request(listUrl, { headers: { referer: 'https://site.test/kaker/' } }), env: {} });
+  assert.equal((await older.json()).code, 'photoKeyMissing');
+  // A typed address or a link opened from a chat, a client naming no page, another site's Referer, and a picture opened as a page are refused.
+  for (const headers of [{ 'sec-fetch-site': 'none' }, {}, { referer: 'https://elsewhere.test/' }]) {
+    const res = await byteRoute({ request: new Request(url, { headers }), env: {} });
+    assert.equal(res.status, 403, JSON.stringify(headers));
+  }
+  const opened = await byteRoute({ request: new Request(url, { headers: { 'sec-fetch-site': 'same-origin', 'sec-fetch-dest': 'document' } }), env: {} });
+  assert.equal(opened.status, 403, 'a picture route opened as a page');
 });
 
 test('the list route: the album key rides along to Google Photos', async () => {

@@ -70,6 +70,7 @@ function stubNetwork(site, provider) {
 
 const order = (extra = {}) => new Request(`${ORIGIN}/api/pay/x/checkout`, {
   method: 'POST',
+  headers: { 'content-type': 'application/json' },
   body: JSON.stringify({ order: [{ id: 'kake', qty: 2, variant: 'Stor' }], contact: { name: 'Kari', email: 'kari@forening.no' }, returnPath: '/kasse', ...extra }),
 });
 
@@ -106,6 +107,17 @@ test('vipps checkout: a seller in the VAT register sends no receipt; the card me
   assert.equal(body.receipt, undefined);
   assert.deepEqual(body.paymentMethod, { type: 'CARD' });
   assert.equal(body.profile, undefined);
+});
+
+test('checkout: an order sent as a form or as plain text is refused before anything is read or a provider is asked', async () => {
+  const calls = stubNetwork({}, vippsApi);
+  for (const type of ['text/plain;charset=UTF-8', 'application/x-www-form-urlencoded', 'multipart/form-data; boundary=x']) {
+    const request = new Request(`${ORIGIN}/api/pay/x/checkout`, { method: 'POST', headers: { 'content-type': type }, body: JSON.stringify({ order: [{ id: 'kake', qty: 1 }], returnPath: '/kasse' }) });
+    const res = await vipps.checkout.onRequestPost({ request, env: VIPPS_ENV });
+    assert.equal(res.status, 415, type);
+    assert.equal((await res.json()).code, 'orderInvalid');
+  }
+  assert.equal(calls.length, 0);
 });
 
 test('vipps session: a reserved payment is paid with the buyer\'s name; a malformed reference is refused before Vipps is asked', async () => {

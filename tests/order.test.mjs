@@ -118,6 +118,8 @@ test('an order from the draft view returns to the draft view, paid or cancelled'
 test('currencyExponent and the minor unit: two decimals for most currencies, whole units for the zero-decimal ones', () => {
   for (const code of ['NOK', 'DKK', 'EUR', 'SEK', 'GBP', 'USD', 'ISK']) assert.equal(currencyExponent(code), 2, code);
   for (const code of ['JPY', 'KRW', 'jpy']) assert.equal(currencyExponent(code), 0, code);
+  for (const code of ['KWD', 'BHD', 'JOD', 'OMR', 'TND', 'kwd']) assert.equal(currencyExponent(code), 3, code);
+  assert.equal(orderAmountMinor([{ id: 'kake', qty: 2 }], CATALOGS, 'KWD'), 700000, 'thousandths');
   assert.equal(orderAmountMinor([{ id: 'kake', qty: 2 }], CATALOGS, 'JPY'), 700);
   assert.equal(orderAmountMinor([{ id: 'kake', qty: 2 }], CATALOGS, 'EUR'), 70000);
   assert.equal(orderLineItems([{ id: 'boller', qty: 1 }], CATALOGS, 'KRW')[0].unit, 50, 'rounded to the whole unit');

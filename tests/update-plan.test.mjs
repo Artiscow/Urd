@@ -4,8 +4,9 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
-  planUpdate, highestVersionTag, VERSION_TAG_RE, isAtomPath, chunkEntries, blobBatch, BLOB_BATCH, BLOB_ROOM, travelsAsBlob,
+  planUpdate, highestVersionTag, isOlderTag, VERSION_TAG_RE, isAtomPath, chunkEntries, blobBatch, BLOB_BATCH, BLOB_ROOM, travelsAsBlob,
 } from '../template/functions/_lib/update-plan.js';
 import { engineImport } from './_engine.mjs';
 
@@ -37,6 +38,19 @@ test('highestVersionTag: numbers after the third rank after their three and befo
     assert.ok(!VERSION_TAG_RE.test(bad), bad);
   }
   assert.equal(highestVersionTag(['v0.7.7.0', 'v0.7.7']), 'v0.7.7');
+});
+
+test('isOlderTag: an update never goes back to an older version; equal, newer or non-version names are not older', () => {
+  assert.equal(isOlderTag('v0.7.10', 'v0.7.11'), true);
+  assert.equal(isOlderTag('v0.7.11', 'v0.7.11.1'), true);
+  assert.equal(isOlderTag('v0.6.9', 'v0.7.0'), true);
+  assert.equal(isOlderTag('v0.7.11', 'v0.7.11'), false);
+  assert.equal(isOlderTag('v0.7.12', 'v0.7.11'), false);
+  assert.equal(isOlderTag('v0.7.11.1', 'v0.7.11'), false);
+  assert.equal(isOlderTag('main', 'v0.7.11'), false);
+  assert.equal(isOlderTag('v0.7.10', 'nope'), false);
+  const src = readFileSync(new URL('../template/functions/api/github/update.js', import.meta.url), 'utf8');
+  assert.match(src, /if \(isOlderTag\(target, `v\$\{engine\}`\)\)/, 'the update refuses a target older than the installed engine');
 });
 
 test('VERSION_TAG_RE and the engine\'s parseEngineVersion accept the same versions', () => {

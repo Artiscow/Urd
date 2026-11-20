@@ -14,7 +14,7 @@ For you who own or edit a site built with Urd. No code, no git knowledge needed:
 ## Getting started
 
 1. Go to `/admin` on your site (for example `yoursite.pages.dev/admin`).
-2. Log in with your GitHub account (the **Log in with GitHub** button in the top right). You can see and try the editor without logging in, but not publish.
+2. Log in with your GitHub account (the **Log in with GitHub** button in the top right). You can see and try the editor without logging in, but not publish. **Log out** (the door beside your name) ends the session in this browser and revokes it at GitHub.
 3. Everything you change is saved as a **draft** in your browser straight away. Nothing becomes visible to visitors until you press **Publish**.
 
 ## The editor

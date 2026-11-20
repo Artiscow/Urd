@@ -6,6 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { engineImport } from './_engine.mjs';
 
 const { internalPageFor, storePrefetched, readPrefetched, prefetchPage, revalidatePage } = await engineImport('prefetch.js');
@@ -124,4 +125,14 @@ test('revalidateFile: the fresh page comes with its text and ETag, so the next c
   assert.equal(await revalidateFile('content/site.json', null, { fetchFn: unconditional, text: '{"s":1}' }), null, 'identical text without an ETag is current');
   assert.equal(unconditional.calls[0].headers['If-None-Match'], undefined);
   assert.deepEqual(await revalidateFile('content/site.json', null, { fetchFn: unconditional, text: '{"s":0}' }), { page: { s: 1 }, text: '{"s":1}', etag: null });
+});
+
+test('speculation-rules.json: the browser prefetches and prerenders the site\'s pages, never the admin (at /admin or under it), a function or a media file', () => {
+  const rules = JSON.parse(readFileSync(new URL('../template/speculation-rules.json', import.meta.url), 'utf8'));
+  for (const kind of ['prefetch', 'prerender']) {
+    for (const rule of rules[kind]) {
+      const kept = rule.where.and.filter((w) => w.not).map((w) => w.not.href_matches);
+      for (const path of ['/admin', '/admin/*', '/api/*', '/media/*']) assert.ok(kept.includes(path), `${kind} leaves out ${path}`);
+    }
+  }
 });

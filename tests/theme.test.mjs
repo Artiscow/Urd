@@ -129,6 +129,17 @@ test('buildThemeCss: with alt the colors become light-dark(light, dark) in the r
   assert.ok(!/--urd-font-body: light-dark/.test(css));
 });
 
+test('buildThemeCss: a group or token name that could end the rule is left out, and the names beside it are kept', () => {
+  const css = buildThemeCss({ tokens: {
+    color: { accent: '#ff0000', 'x: red; } body { display: none } :root { --y': '#000000' },
+    'color: red; } * { --z': { a: '#111111' },
+  } });
+  assert.match(css, /--urd-color-accent: #ff0000;/);
+  assert.ok(!css.includes('display: none'), css);
+  assert.ok(!css.includes('--z'), css);
+  assert.ok(!css.includes('--y'), css);
+});
+
 test('buildThemeCss: the fallback single values sit in :root BEFORE the @supports block', () => {
   const css = buildThemeCss(THEME);
   const rootAt = css.indexOf(':root {');

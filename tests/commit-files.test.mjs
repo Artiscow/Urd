@@ -59,3 +59,14 @@ test('a move writes the source\'s own blob at the new path and deletes the sourc
   assert.ok(tree.some((e) => e.path === 'content/site.json' && e.sha === 'b1'));
   await assert.rejects(postedTree(['content/site.json'], [{ path: 'media/images/gone.svg', from: 'media/gone.svg' }]), (err) => err.code === 'moveMissing' && err.status === 404);
 });
+
+test('a page copy takes the blob the root index.html holds in the base tree, with no blob posted; a copy of a file that is not there fails', async () => {
+  const tree = await postedTree(
+    ['index.html', 'om-oss/index.html', 'content/site.json'],
+    [{ path: 'om-oss/index.html', copyOf: 'index.html' }, { path: 'nyheter/index.html', copyOf: 'index.html' }, { path: 'content/site.json', content: '{}' }],
+  );
+  assert.ok(tree.some((e) => e.path === 'om-oss/index.html' && e.sha === 'sha-of-index.html'));
+  assert.ok(tree.some((e) => e.path === 'nyheter/index.html' && e.sha === 'sha-of-index.html'));
+  assert.equal(tree.filter((e) => e.sha === 'b1').length, 1, 'only the content is posted as a blob');
+  await assert.rejects(postedTree(['content/site.json'], [{ path: 'om-oss/index.html', copyOf: 'index.html' }]));
+});

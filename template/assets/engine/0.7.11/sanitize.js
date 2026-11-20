@@ -1,5 +1,12 @@
 import { resolveLink } from './nav-model.js';
 
+/** The attributes that hold an address something may run from. */
+const ADDRESS_ATTRIBUTES = new Set(['href', 'xlink:href', 'src', 'action', 'formaction', 'poster', 'background']);
+/** The elements stripped wherever owner or imported text is drawn; an SVG's animation elements are named as SVG writes them, since a selector matches them by their case. */
+const ACTIVE_ELEMENTS = 'script, iframe, frame, frameset, object, embed, applet, portal, form, input, button, select, textarea, meta, base, link, style, animate, set, animateMotion, animateTransform';
+/** A picture inline as data, in a format that runs nothing: kept where a picture is drawn, a video's poster and an SVG's image. */
+const DATA_PICTURE = /^data:image\/(?:png|jpeg|gif|webp|avif)[;,]/i;
+
 /**
  * Shared visitor-side protection for rich text (text blocks and collection entries): pasted or stored HTML can carry event attributes or active elements, and legitimate formatting never needs either.
  * The owner is trusted for MARKUP; executable code is always stripped at render, an address that would run code included.
@@ -10,13 +17,20 @@ import { resolveLink } from './nav-model.js';
 export function stripActiveContent(root, pages = null) {
   for (const el of root.querySelectorAll('*')) {
     for (const attr of [...el.attributes]) {
-      if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
+      const name = attr.name.toLowerCase();
+      if (name.startsWith('on')) {
+        el.removeAttribute(attr.name);
+        continue;
+      }
+      // Every attribute an address can run from, an SVG's xlink:href and a field's formaction among them, read as the URL parser reads it: tabs, newlines and control characters inside the scheme are dropped there, so they are dropped for the check too.
+      if (!ADDRESS_ATTRIBUTES.has(name)) continue;
+      const address = attr.value.replace(/[\u0000-\u0020\u007f]/g, '');
+      const keptData = name === 'src' || ((name === 'poster' || el.tagName.toLowerCase() === 'image') && DATA_PICTURE.test(address));
+      if (/^(?:javascript|vbscript):/i.test(address) || (/^data:/i.test(address) && !keptData)) el.removeAttribute(attr.name);
     }
-    // Read as the URL parser reads it: tabs, newlines and control characters inside the scheme are dropped there, so they are dropped for the check too.
-    const href = (el.getAttribute?.('href') ?? '').replace(/[\u0000-\u0020\u007f]/g, '');
-    if (/^(?:javascript|data|vbscript):/i.test(href)) el.removeAttribute('href');
   }
-  root.querySelectorAll('script, iframe, object, embed').forEach((n) => n.remove());
+  // Elements no text needs that act on their own: a form or its fields post wherever a press reaches, a meta refreshes or redirects the page, a base moves every link, a link or a style pulls in or changes the page's look, and an SVG animation can set a link's address after the check.
+  root.querySelectorAll(ACTIVE_ELEMENTS).forEach((n) => n.remove());
   if (!pages) return;
   for (const a of root.querySelectorAll('a[data-urd-page], a[data-urd-target]')) {
     a.setAttribute('href', resolveLink({ page: a.dataset.urdPage, target: a.dataset.urdTarget }, pages).href);

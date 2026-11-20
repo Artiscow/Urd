@@ -8,23 +8,23 @@
  * the coordinates are stored in the block, so visitors load the map straight
  * from OSM.
  *
- * Requires a signed-in session (like latest.js): without that guard this is an
- * open proxy to Nominatim, and abuse can get the deployment IP banned.
+ * Requires a signed-in publisher from the site's own pages (requirePublisher, as publishing does), since every Urd site shares the User-Agent and abuse through one site can get every site's lookups banned.
  */
-import { readCookie } from '../_lib/cookies.js';
+import { requirePublisher } from '../_lib/auth.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
     headers: {
       'content-type': 'application/json',
-      // Shared cache for an hour: the same address is not looked up again.
-      'cache-control': status === 200 ? 'public, max-age=300, s-maxage=3600' : 'no-store',
+      // Kept by the browser for an hour: the same address is not looked up again.
+      'cache-control': status === 200 ? 'private, max-age=3600' : 'no-store',
     },
   });
 
-export async function onRequestGet({ request }) {
-  if (!readCookie(request, 'urd_gh')) return json({ error: 'Not signed in', code: 'notLoggedIn' }, 401);
+export async function onRequestGet({ request, env }) {
+  const auth = await requirePublisher(request, env);
+  if (auth.response) return auth.response;
   const q = (new URL(request.url).searchParams.get('q') ?? '').trim();
   if (q.length < 3) return json({ error: 'Enter an address or a place', code: 'queryTooShort' }, 400);
 

@@ -75,7 +75,7 @@ function capped(body, max) {
 
 export async function onRequestGet(context) {
   const { request, env } = context;
-  const refused = refuseCrossSite(request);
+  const refused = refuseCrossSite(request, { image: true });
   if (refused) return refused;
   return edgeCached(context, () => picture(new URL(request.url).searchParams, env));
 }

@@ -148,6 +148,17 @@ export function isDeletablePath(path) {
 }
 
 /**
+ * @param {string} path Repo-relative path
+ * @returns {boolean} true for a file inside a plugin's folder, which publishing deletes with the whole folder and the undo of that publish brings back
+ */
+export function isPluginFile(path) {
+  const normalized = normalizePath(path);
+  if (!normalized) return false;
+  const parts = normalized.split('/');
+  return parts.length > 2 && PLUGIN_FOLDER_RE.test(parts.slice(0, 2).join('/'));
+}
+
+/**
  * The ownership map for the updater: mirrors ownedPaths/userPaths in urd.json,
  * because functions cannot read the repo's urd.json at runtime. The contract
  * test in tests/guard.test.mjs requires the lists to be identical to urd.json,

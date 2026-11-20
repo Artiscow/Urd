@@ -10,7 +10,7 @@
  * on in the Stripe dashboard (card, Apple Pay, Google Pay, Klarna, MobilePay
  * and the rest), so the site needs no script, frame or connect-src of its own.
  */
-import { orderLineItems, orderDescription, returnUrl, cancelUrl } from './order.js';
+import { orderLineItems, orderDescription, returnUrl, cancelUrl, THREE_DECIMAL } from './order.js';
 import { sameText } from './net.js';
 
 /** Reads the configuration from env; null when Stripe is not set up. */
@@ -78,11 +78,21 @@ export function sessionForm({ order, catalogs, currency = 'NOK', reference, cont
     fields.push(
       [`line_items[${i}][quantity]`, String(item.qty)],
       [`line_items[${i}][price_data][currency]`, currency.toLowerCase()],
-      [`line_items[${i}][price_data][unit_amount]`, String(item.unit)],
+      [`line_items[${i}][price_data][unit_amount]`, String(stripeAmount(item.unit, currency))],
       [`line_items[${i}][price_data][product_data][name]`, item.name.slice(0, 250)],
     );
   });
   return fields;
+}
+
+/**
+ * An amount in a currency's minor unit as Stripe takes it: in the three-decimal currencies Stripe counts thousandths but takes only whole hundredths, so the last digit is rounded to 0.
+ * @param {number} minor
+ * @param {string} currency
+ * @returns {number}
+ */
+export function stripeAmount(minor, currency) {
+  return THREE_DECIMAL.has(String(currency ?? '').toUpperCase()) ? Math.round(minor / 10) * 10 : minor;
 }
 
 /** The Checkout Session ids Stripe makes (anchored, the CodeQL lesson). */

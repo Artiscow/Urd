@@ -10,7 +10,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import {
-  stripeConfig, stripeLocale, sessionForm, isSessionId, sessionSummary,
+  stripeConfig, stripeLocale, sessionForm, isSessionId, sessionSummary, stripeAmount,
   parseStripeSignature, stripeSignature, verifyStripeWebhook, SIGNATURE_TOLERANCE,
 } from '../template/functions/_lib/stripe.js';
 
@@ -76,6 +76,16 @@ test('sessionForm: capture now takes the money at once; a zero-decimal currency 
   assert.equal(now['line_items[0][price_data][currency]'], 'jpy');
   assert.equal(now.customer_email, undefined);
   assert.equal(sessionForm({ ...base, order: [{ id: 'gratis', qty: 1 }] }), null);
+});
+
+test('stripeAmount: thousandths in the three-decimal currencies, rounded to whole hundredths as Stripe takes them; other currencies unchanged', () => {
+  assert.equal(stripeAmount(10000, 'KWD'), 10000);
+  assert.equal(stripeAmount(5124, 'kwd'), 5120);
+  assert.equal(stripeAmount(5125, 'BHD'), 5130);
+  assert.equal(stripeAmount(4950, 'EUR'), 4950);
+  assert.equal(stripeAmount(350, 'JPY'), 350);
+  const form = Object.fromEntries(sessionForm({ order: [{ id: 'kake', qty: 1 }], catalogs: CATALOGS, reference: 'urd-' + 'c'.repeat(24), origin: 'https://s.no', returnPath: '/', currency: 'KWD' }));
+  assert.equal(form['line_items[0][price_data][unit_amount]'], '350000', '350 dinar in thousandths');
 });
 
 test('isSessionId: the ids Stripe makes, nothing else', () => {

@@ -42,6 +42,15 @@ export function isCrossOrigin({ secFetchSite, origin, url }) {
 }
 
 /**
+ * Whether a request carries JSON (Content-Type application/json): a form cannot send that type, so a call that changes something and demands it cannot be made by a form, not even one on the site's own pages.
+ * @param {Request} request
+ * @returns {boolean}
+ */
+export function isJsonRequest(request) {
+  return /^application\/json\s*(?:;|$)/i.test(request.headers.get('content-type') ?? '');
+}
+
+/**
  * Runs the whole prologue. Returns {config, token, user} on success, or
  * {response}, which the endpoint should return directly on a rejection.
  *
@@ -66,6 +75,10 @@ export async function requirePublisher(request, env) {
   });
   if (crossOrigin) {
     return { response: json({ error: 'The request comes from the wrong site', code: 'wrongOrigin' }, 403) };
+  }
+  // A call that changes something carries JSON: a form, which passes the check above when it stands on the site's own pages, cannot send it.
+  if (request.method !== 'GET' && request.method !== 'HEAD' && !isJsonRequest(request)) {
+    return { response: json({ error: 'The request must be sent as JSON', code: 'notJson' }, 415) };
   }
 
   const token = readCookie(request, 'urd_gh');

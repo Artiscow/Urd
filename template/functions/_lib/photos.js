@@ -3,18 +3,11 @@
  * shapes an id, a host and a share token may take, the host allowlists, and
  * the size caps.
  *
- * OPEN PROXY GUARD, the same rules as the calendar's feed proxy: https only,
- * no sign-in in the address, and a host on the owner's allowlist (the
- * PHOTO_HOSTS environment variable, comma-separated). Google's own hosts are
- * never on a list: the Drive and album routes fetch fixed addresses of their
- * own, so no caller can steer them. Every id is matched with an anchored
- * regex, and hosts are compared exactly against a parsed URL, never with a
- * substring test. On top of that both routes answer only the site's own pages
- * (isCrossOrigin in auth.js), so another site cannot serve its pictures
- * through this one.
+ * OPEN PROXY GUARD, the same rules as the calendar's feed proxy: https only, no sign-in in the address, and a host on the owner's allowlist (the PHOTO_HOSTS environment variable, comma-separated).
+ * Google's own hosts are never on a list: the Drive and album routes fetch fixed addresses of their own, so no caller can steer them.
+ * Every id is matched with an anchored regex, and hosts are compared exactly against a parsed URL, never with a substring test.
+ * On top of that both routes, and the calendar's, answer only the site's own pages (fromOwnPages), so neither another site nor a link shared anywhere can serve pictures through this one.
  */
-
-import { isCrossOrigin } from './auth.js';
 
 /**
  * The most pictures one folder call may answer with: the pool the layers cut
@@ -129,19 +122,34 @@ export function safeTarget(raw, env, only) {
 }
 
 /**
- * The refusal for a call from another site, or null when the call is the
- * site's own. Pictures are embedded, so the check is the Sec-Fetch-Site one
- * the auth prologue uses, never a cookie.
+ * Whether a call comes from the site's own pages, for the anonymous routes that fetch from other sites (pictures, picture lists, calendar feeds): a browser that sends fetch metadata says so (Sec-Fetch-Site same-origin, and for a picture a picture's or a fetch's destination); one that sends none names the site in its Origin or Referer.
+ * A typed address or a link opened from a chat (Sec-Fetch-Site none), another site, and a client that names no page are refused, so the routes serve the site and no one else.
  * @param {Request} request
+ * @param {{image?: boolean}} [options] `image`: the route answers pictures
+ * @returns {boolean}
+ */
+export function fromOwnPages(request, { image = false } = {}) {
+  const site = request.headers.get('sec-fetch-site');
+  if (site) {
+    const dest = request.headers.get('sec-fetch-dest');
+    return site === 'same-origin' && (!image || !dest || dest === 'image' || dest === 'empty');
+  }
+  const from = request.headers.get('origin') ?? request.headers.get('referer');
+  try {
+    return Boolean(from) && new URL(from).origin === new URL(request.url).origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The refusal for a call that does not come from the site's own pages (fromOwnPages), or null.
+ * @param {Request} request
+ * @param {{image?: boolean}} [options]
  * @returns {Response|null}
  */
-export function refuseCrossSite(request) {
-  const cross = isCrossOrigin({
-    secFetchSite: request.headers.get('sec-fetch-site'),
-    origin: request.headers.get('origin'),
-    url: request.url,
-  });
-  return cross ? json({ error: 'The picture routes answer this site only', code: 'photoCrossSite' }, 403) : null;
+export function refuseCrossSite(request, options = {}) {
+  return fromOwnPages(request, options) ? null : json({ error: 'The picture routes answer this site only', code: 'photoCrossSite' }, 403);
 }
 
 /**

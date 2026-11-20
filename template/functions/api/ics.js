@@ -4,19 +4,19 @@
  * connect-src 'self'), so the block fetches everything through this
  * same-origin route.
  *
- * OPEN PROXY GUARD: https only, no sign-in in the URL, and the host must be on
- * the allowlist (calendar.google.com is always included; the owner puts other
- * feed hosts in the ICS_HOSTS environment variable, comma-separated).
- * Redirects are validated against the same list, so an approved host cannot
- * point the proxy onwards.
+ * OPEN PROXY GUARD: https only, no sign-in in the URL, and the host must be on the allowlist (calendar.google.com is always included; the owner puts other feed hosts in the ICS_HOSTS environment variable, comma-separated).
+ * Every redirect hop is checked against the same list before it is fetched (fetchWithTimeout in _lib/photos.js, which also limits the body's time), so an approved host cannot point the proxy onwards.
+ * The route answers the site's own pages only (fromOwnPages).
  */
+import { fetchWithTimeout, RedirectRefused, refuseCrossSite } from '../_lib/photos.js';
 
 const json = (body, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'x-content-type-options': 'nosniff' } });
 
 const MAX_BYTES = 1_500_000;
 
 export async function onRequestGet({ request, env }) {
+  if (refuseCrossSite(request)) return json({ error: 'The calendar route answers this site only', code: 'wrongOrigin' }, 403);
   const raw = new URL(request.url).searchParams.get('url') ?? '';
   let target;
   try {
@@ -35,27 +35,13 @@ export async function onRequestGet({ request, env }) {
     return json({ error: `The calendar host «${target.hostname}» is not allowed. Add it to the ICS_HOSTS environment variable (comma-separated) in the hosting setup.`, code: 'calendarHostNotAllowed', host: target.hostname }, 403);
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
   let upstream;
   try {
-    upstream = await fetch(target, {
-      signal: controller.signal,
-      redirect: 'follow',
-      headers: { accept: 'text/calendar, text/plain;q=0.9' },
-    });
-  } catch {
-    clearTimeout(timer);
+    upstream = await fetchWithTimeout(target, { headers: { accept: 'text/calendar, text/plain;q=0.9' } }, 8000, hostOk);
+  } catch (err) {
+    if (err instanceof RedirectRefused) return json({ error: 'The calendar source redirected to a host that is not allowed', code: 'calendarRedirectBlocked' }, 502);
     return json({ error: 'Could not reach the calendar source', code: 'calendarUnreachable' }, 502);
   }
-  clearTimeout(timer);
-
-  // A redirect may have moved us to another host: validate the end of the chain.
-  try {
-    if (upstream.url && !hostOk(new URL(upstream.url).hostname)) {
-      return json({ error: 'The calendar source redirected to a host that is not allowed', code: 'calendarRedirectBlocked' }, 502);
-    }
-  } catch { /* an unreadable final URL is treated as the original host */ }
 
   if (!upstream.ok) return json({ error: `The calendar source responded ${upstream.status}`, code: 'calendarUpstreamStatus', status: upstream.status }, 502);
 
@@ -92,6 +78,7 @@ export async function onRequestGet({ request, env }) {
     status: 200,
     headers: {
       'content-type': 'text/calendar; charset=utf-8',
+      'x-content-type-options': 'nosniff',
       // Shared cache for 5 minutes: visitors never hammer the feed host.
       'cache-control': 'public, max-age=60, s-maxage=300',
     },

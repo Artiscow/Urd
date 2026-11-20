@@ -10,7 +10,7 @@
  */
 import { commitFiles, triggerDeploy } from '../../_lib/github.js';
 import { requirePublisher } from '../../_lib/auth.js';
-import { isAllowedPath, isAllowedContent, isDeletablePath, isAllowedMove } from '../../_lib/guard.js';
+import { isAllowedPath, isAllowedContent, isDeletablePath, isAllowedMove, isPageIndexCopy } from '../../_lib/guard.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -59,12 +59,16 @@ export async function onRequestPost({ request, env }) {
     }
   }
 
+  // A page's copy of the site's index.html (<slug>/index.html) is written from the index.html the repository holds, never from what is sent: the copy is that file, so a request cannot plant other HTML there.
+  const written = files.map((f) => (f.delete !== true && typeof f.from !== 'string' && isPageIndexCopy(f.path) ? { path: f.path, copyOf: 'index.html' } : f));
+
   // The paths from the editor are relative to the SITE. When the site lives
   // in a subfolder of the repo (GITHUB_ROOT_DIR, e.g. "template"), the paths
   // are prefixed here - AFTER the validation above, which covers site paths.
+  const prefix = (path) => `${config.rootDir}/${path}`;
   const repoFiles = config.rootDir
-    ? files.map((f) => ({ ...f, path: `${config.rootDir}/${f.path}`, ...(typeof f.from === 'string' ? { from: `${config.rootDir}/${f.from}` } : {}) }))
-    : files;
+    ? written.map((f) => ({ ...f, path: prefix(f.path), ...(typeof f.from === 'string' ? { from: prefix(f.from) } : {}), ...(f.copyOf ? { copyOf: prefix(f.copyOf) } : {}) }))
+    : written;
 
   try {
     // expect (optional): the HEAD the editor's conflict check saw. If it has

@@ -22,6 +22,18 @@ export function versionTagParts(name) {
   return typeof name === 'string' && VERSION_TAG_RE.test(name) ? name.slice(1).split('.').map(Number) : null;
 }
 
+/**
+ * Whether version tag `a` is older than version tag `b` (v0.7.10 before v0.7.11, v0.7.11 before v0.7.11.1); false where either is no version tag.
+ * @param {string} a
+ * @param {string} b
+ * @returns {boolean}
+ */
+export function isOlderTag(a, b) {
+  const pa = versionTagParts(a);
+  const pb = versionTagParts(b);
+  return Boolean(pa && pb) && compareParts(pa, pb) < 0;
+}
+
 /** Compares two lists of version numbers number by number, a missing number counting as 0. */
 function compareParts(a, b) {
   for (let i = 0; i < Math.max(a.length, b.length); i++) {

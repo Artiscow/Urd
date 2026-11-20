@@ -164,13 +164,12 @@ export async function commitFiles(token, config, { message, files, expect }) {
   }
   const baseCommit = await gh(token, `/repos/${repo}/git/commits/${baseSha}`);
 
-  // Deletions are validated against the base tree: sha:null for an unknown
-  // path gives 422 from GitHub. (recursive can be truncated in enormous repos;
-  // then the deletion is skipped, which is the harmless direction.) A move
-  // takes its blob's sha from the same tree.
+  // Deletions are validated against the base tree: sha:null for an unknown path gives 422 from GitHub.
+  // (recursive can be truncated in enormous repos; then the deletion is skipped, which is the harmless direction.)
+  // A move, and a copy (copyOf: a page's copy of the site's index.html), take their blob's sha from the same tree.
   let existing = null;
   let blobs = null;
-  if (files.some((f) => f.delete || f.from)) {
+  if (files.some((f) => f.delete || f.from || f.copyOf)) {
     const baseTree = await gh(token, `/repos/${repo}/git/trees/${baseCommit.tree.sha}?recursive=1`);
     const items = baseTree.tree.filter((t) => t.type === 'blob');
     existing = items.map((t) => t.path);
@@ -180,6 +179,12 @@ export async function commitFiles(token, config, { message, files, expect }) {
   const tree = [];
   const gone = new Set();
   for (const file of files) {
+    if (file.copyOf) {
+      const sha = blobs?.get(file.copyOf);
+      if (!sha) throw new Error(`The file '${file.copyOf}' is not in the repository`);
+      tree.push({ path: file.path, mode: '100644', type: 'blob', sha });
+      continue;
+    }
     if (file.from) {
       const sha = blobs?.get(file.from);
       if (!sha) {

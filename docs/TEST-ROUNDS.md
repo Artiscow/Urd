@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.1): the audit's small security fixes
+
+- [ ] On the live site: publish a change, undo it from History, run an update check; each works as before
+- [ ] Publish a change, then update Urd, then «Undo the last publish»: the change is gone and the update's files stay (the engine version in the Updates panel is still the new one)
+- [ ] «Log out» (the door beside your name): the top bar shows «Log in with GitHub» again, and the message says you are logged out; logging in again publishes as before
+- [ ] `python3 dev-server.py`: the site opens at http://localhost:8000 and http://127.0.0.1:8000; http://localhost:8000/.dev.vars gives 404; a phone on the same Wi-Fi reaches the site only with `python3 dev-server.py --lan`
+- [ ] A page with pictures from a photo service and a page with a calendar feed: both show on the published site; a picture's `/api/photo?...` address opened in the address bar is refused
+- [ ] The map block's address lookup finds a place while logged in
+- [ ] A Stripe checkout in test mode: the amount on Stripe's page is the cart's
+- [ ] A text pasted with a form or a link to a stylesheet in it, and a CSV title with a form: drawn without them, the formatting kept
+- [ ] Q1 (from the audit): an old deployment's own address (Cloudflare Pages, Deployments, an older deployment's `*.pages.dev` address): does its checkout still take a payment, at the old prices?
+
 ### Test batch (0.7.0.93): a release's notes as Markdown, and the release named and linked
 
 - [ ] On a site updated past 0.7.11, a later release's notes in the Updates panel («About vX.Y.Z»): headings, bold, lists and the folds drawn as the panel's own folds, no tags or stars standing as text

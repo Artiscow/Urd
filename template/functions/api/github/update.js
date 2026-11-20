@@ -20,7 +20,7 @@
 import { gh, ghGraphql, cleanBase64, commitTree, triggerDeploy } from '../../_lib/github.js';
 import { requirePublisher } from '../../_lib/auth.js';
 import { isPageIndexCopy } from '../../_lib/guard.js';
-import { planUpdate, highestVersionTag, VERSION_TAG_RE, chunkEntries, blobBatch, travelsAsBlob } from '../../_lib/update-plan.js';
+import { planUpdate, highestVersionTag, isOlderTag, VERSION_TAG_RE, chunkEntries, blobBatch, travelsAsBlob } from '../../_lib/update-plan.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -86,6 +86,11 @@ async function loadState(token, config, toParam) {
     }
     if (target === `v${engine}`) {
       return { head, engine, target, userTree, upToDate: true };
+    }
+    // An update only goes forward: a site already ahead of every version the template offers (built ahead of a release) has nothing to update to, and an older version asked for by name is refused.
+    if (isOlderTag(target, `v${engine}`)) {
+      if (!toParam) return { head, engine, target: `v${engine}`, userTree, upToDate: true };
+      throw Object.assign(new Error(`The version ${target} is older than the installed v${engine}`), { code: 'updateOlder', target });
     }
 
     let baselineTree;

@@ -9,6 +9,7 @@
  * The amount is ALWAYS recomputed from the catalogue: the basket lives with
  * the visitor, so anything the client sends may have been tampered with.
  */
+import { isJsonRequest } from './auth.js';
 
 /** Entry ids follow the same regime as the collections (anchored, the CodeQL lesson). */
 const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
@@ -69,12 +70,16 @@ export function productMap(catalogs) {
   return products;
 }
 
-/** The currencies the providers count in whole units (ISO 4217 exponent 0 at Stripe); every other currency has two decimals. */
+/** The currencies the providers count in whole units (ISO 4217 exponent 0 at Stripe). */
 const ZERO_DECIMAL = new Set(['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF']);
 
-/** How many decimals a currency's minor unit has: 0 for the zero-decimal currencies, else 2. */
+/** The currencies Stripe counts in thousandths (ISO 4217 exponent 3); Vipps and PayPal take none of them. */
+export const THREE_DECIMAL = new Set(['BHD', 'JOD', 'KWD', 'OMR', 'TND']);
+
+/** How many decimals a currency's minor unit has: 0 for the zero-decimal currencies, 3 for the three-decimal ones, else 2. */
 export function currencyExponent(code) {
-  return ZERO_DECIMAL.has(String(code ?? '').toUpperCase()) ? 0 : 2;
+  const upper = String(code ?? '').toUpperCase();
+  return ZERO_DECIMAL.has(upper) ? 0 : THREE_DECIMAL.has(upper) ? 3 : 2;
 }
 
 /** A product's price in the currency's minor unit (øre, cents; yen for JPY), or null when it has none. */
@@ -296,6 +301,8 @@ export const json = (body, status = 200) =>
  * @returns {Promise<{clean: object, payload: object, origin: string, site: object|null, catalogs: Array<object>, amountMinor: number, currency: string}|{error: Response}>}
  */
 export async function prepareOrder(request) {
+  // An order is sent as JSON by the checkout block; a form posted from another site cannot send that type, so it creates no payment.
+  if (!isJsonRequest(request)) return { error: json({ error: 'The order must be sent as JSON', code: 'orderInvalid' }, 415) };
   let payload = null;
   try {
     payload = await request.json();

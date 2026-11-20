@@ -12,7 +12,7 @@ For deg som eier eller redigerer en side bygget med Urd. Ingen kode, ingen git-k
 ## Kom i gang
 
 1. Gå til `/admin` på siden din (for eksempel `dinside.pages.dev/admin`).
-2. Logg inn med GitHub-kontoen din (knappen oppe til høyre). Du kan se og prøve editoren uten innlogging, men ikke publisere.
+2. Logg inn med GitHub-kontoen din (knappen oppe til høyre). Du kan se og prøve editoren uten innlogging, men ikke publisere. **Logg ut** (døra ved navnet ditt) avslutter økta i denne nettleseren og trekker den tilbake hos GitHub.
 3. Alt du endrer lagres som **utkast** i nettleseren din med en gang. Ingenting blir synlig for besøkende før du trykker **Publiser**.
 
 ## Editoren

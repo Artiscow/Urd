@@ -4,10 +4,8 @@
  * the current HEAD as its parent - history is never deleted, and the undo
  * can itself be undone.
  *
- * The undo applies to the SITE, not the repo: the new commit takes HEAD's
- * tree, but swaps the site subtree (GITHUB_ROOT_DIR, the whole repo without
- * rootDir) back to how it was BEFORE the publish being undone. In a monorepo
- * no code outside the site is touched.
+ * The undo applies to what that publish changed, nothing else: the new commit takes HEAD's tree and sets back each path the publish changed (_lib/revert-plan.js), so an Urd update, a change by hand or any other commit made since stays as it is.
+ * Only paths publishing may write or delete are touched, inside the site's folder (GITHUB_ROOT_DIR).
  *
  * Body {expect: <sha>}: the publish to undo. It must still be the LAST
  * content commit (same filter as history.js), otherwise 409 - two editors
@@ -18,20 +16,24 @@
  */
 import { gh, triggerDeploy } from '../../_lib/github.js';
 import { requirePublisher } from '../../_lib/auth.js';
+import { revertEntries, treeMap } from '../../_lib/revert-plan.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
-/** The sha of the subtree at a path (e.g. "template") in a given tree. */
-async function subtreeSha(token, repo, treeSha, pathSegments) {
-  let sha = treeSha;
-  for (const segment of pathSegments) {
-    const tree = await gh(token, `/repos/${repo}/git/trees/${sha}`);
-    const entry = tree.tree.find((t) => t.path === segment && t.type === 'tree');
-    if (!entry) return null;
-    sha = entry.sha;
+/** The most pages of a commit's changed files read, a hundred files each. */
+const MAX_FILE_PAGES = 10;
+
+/** The files a commit changed, as GitHub lists them a page at a time; a commit with more than MAX_FILE_PAGES full pages throws, so a publish is never undone in part. */
+async function changedFiles(token, repo, sha) {
+  const files = [];
+  for (let page = 1; page <= MAX_FILE_PAGES; page += 1) {
+    const commit = await gh(token, `/repos/${repo}/commits/${sha}?per_page=100&page=${page}`);
+    const batch = commit.files ?? [];
+    files.push(...batch);
+    if (batch.length < 100) return files;
   }
-  return sha;
+  throw new Error(`the publish changed more than ${MAX_FILE_PAGES * 100} files`);
 }
 
 export async function onRequestPost({ request, env }) {
@@ -69,25 +71,24 @@ export async function onRequestPost({ request, env }) {
 
     const ref = await gh(token, `/repos/${repo}/git/ref/heads/${branch}`);
     const headSha = ref.object.sha;
+    const headCommit = await gh(token, `/repos/${repo}/git/commits/${headSha}`);
 
-    // The tree for the new commit: the site subtree from before the publish,
-    // everything else unchanged from HEAD.
-    let treeSha;
-    if (rootDir) {
-      const before = await subtreeSha(token, repo, targetParent.tree.sha, rootDir.split('/'));
-      const headCommit = await gh(token, `/repos/${repo}/git/commits/${headSha}`);
-      const newTree = await gh(token, `/repos/${repo}/git/trees`, {
-        method: 'POST',
-        body: JSON.stringify({
-          base_tree: headCommit.tree.sha,
-          // sha null deletes the subtree (the site did not exist in the parent).
-          tree: [{ path: rootDir, mode: '040000', type: 'tree', sha: before }],
-        }),
-      });
-      treeSha = newTree.sha;
-    } else {
-      treeSha = targetParent.tree.sha;
+    // The tree for the new commit: HEAD's, with each path the publish changed set back to how the commit before it held it.
+    const files = await changedFiles(token, repo, body.expect);
+    const [beforeTree, nowTree] = await Promise.all([
+      gh(token, `/repos/${repo}/git/trees/${targetParent.tree.sha}?recursive=1`),
+      gh(token, `/repos/${repo}/git/trees/${headCommit.tree.sha}?recursive=1`),
+    ]);
+    if (beforeTree.truncated || nowTree.truncated) {
+      return json({ error: 'The repository tree is too large to undo safely', code: 'revertFailed', detail: 'the git tree is truncated by GitHub' }, 502);
     }
+    const { entries } = revertEntries(files, treeMap(beforeTree.tree), treeMap(nowTree.tree), rootDir);
+    if (!entries.length) return json({ error: 'Nothing to revert: what this publish changed already stands as it was before it', code: 'revertNothingChanged' }, 400);
+    const newTree = await gh(token, `/repos/${repo}/git/trees`, {
+      method: 'POST',
+      body: JSON.stringify({ base_tree: headCommit.tree.sha, tree: entries }),
+    });
+    const treeSha = newTree.sha;
 
     const firstLine = target.message.split('\n')[0];
     const commit = await gh(token, `/repos/${repo}/git/commits`, {

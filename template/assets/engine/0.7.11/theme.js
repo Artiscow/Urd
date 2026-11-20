@@ -86,6 +86,8 @@ function applyTokens(tokens, root) {
    CSS through the theme (buildThemeCss writes raw text, not via
    style.setProperty which rejects silently). */
 const SAFE_CSS_VALUE = /^[a-zA-Z0-9#%.,()'"\s+\-*/]+$/;
+/** A theme group's or token's name as it may stand in a custom property's name. */
+const SAFE_CSS_NAME = /^[a-z0-9-]+$/i;
 export function safeCssValue(value) {
   return typeof value === 'string'
     && SAFE_CSS_VALUE.test(value)
@@ -115,6 +117,8 @@ export function buildThemeCss(theme) {
 
   const groups = new Set([...Object.keys(main), ...Object.keys(light), ...Object.keys(dark)]);
   for (const group of groups) {
+    // A group's and a token's name become part of a property's name in the CSS text, so only letters, digits and dashes pass: anything else could end the rule and write others.
+    if (!SAFE_CSS_NAME.test(group)) continue;
     const isColor = group === 'color';
     const names = new Set([
       ...Object.keys(main[group] || {}),
@@ -122,6 +126,7 @@ export function buildThemeCss(theme) {
       ...Object.keys(dark[group] || {}),
     ]);
     for (const name of names) {
+      if (!SAFE_CSS_NAME.test(name)) continue;
       const mv = main[group]?.[name];
       const lv = light[group]?.[name];
       const dv = dark[group]?.[name];
