@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.93): a release's notes as Markdown, and the release named and linked
+
+- [ ] On a site updated past 0.7.11, a later release's notes in the Updates panel («About vX.Y.Z»): headings, bold, lists and the folds drawn as the panel's own folds, no tags or stars standing as text
+- [ ] A link in the notes opens its page in a new tab
+- [ ] Under «Installed», the release's name with its version, a link to its page on GitHub: with an update waiting, and on the latest version
+- [ ] The next release published on GitHub: the template repo's release takes its name
+
 ### Test batch (0.7.0.88-0.7.9.3p): release 0.7.11
 
 - [ ] A side menu (Nav, «Side left») and a section with a text at about a fifth of the width: narrow the window; the section shows its phone layout once the text would stand under 140 px, not hundreds of px later

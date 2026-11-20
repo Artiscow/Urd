@@ -8,6 +8,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.93 - Bug Fixes: a release's notes in the Updates panel read as Markdown, and the release named and linked to its page on GitHub - 20 November 2026
+
+- The Updates panel showed a release's notes as raw text, their headings, lists and GitHub's folds standing as marks and tags (URGENT). The notes are read as Markdown by `lib/release-notes.js` and drawn by `lib/ReleaseNotes.svelte` with the panel's own elements and the row kit's folds, never as HTML, and a link leads only to an http or https address.
+- The update function cut the notes at 4000 characters, which ends a release summary of this size inside a fold. It keeps 20 000, the length the panel reads, and a fold cut short closes at the end.
+- The panel named no release and gave no way to its page (URGENT). The release on offer, or the one installed where the site is up to date, stands by its name and version as a link to its page on GitHub (`releaseOf` in functions/api/github/update.js, a page on github.com only; `releaseLabel`).
+- The release Action titled the template repo's release «Urd vX.Y.Z». It takes the name of the release it copies, and «Urd vX.Y.Z» only where that has none.
+- ARCHITECTURE.md describes the notes and the link.
+
+The independent review before the commit found these:
+
+1. A `<summary>` left without its closing tag took every line after it, the fold's end and the notes after the fold with it. A summary runs to its closing tag only up to a blank line or the fold's end, and one left open is its first line's words.
+2. Three kinds of notes read in a time that grew with the square of their length: blank lines inside a list item (7.7 s on 20 000 characters), closing marks found and turned down again for every opening one (2 s), and lines holding U+2028 (1 s); the timing test reached none of them. Each line's next filled line is read once, the last search for each mark answers the searches up to what it found, every line break ends a line, and the test holds each such input under 300 ms.
+3. A code span naming a tag (`` `<b>` ``, `` `<code>` ``) came out garbled, since the tags were read as Markdown before the code was found. The tags are read outside code only.
+4. A `</details>` inside a code block in a fold closed the fold. A fold's end is never read inside a code block.
+5. A bare address in a link's words became a link inside the link. The words of a link hold no link of their own.
+6. `*a **b** c*` and `***x***` were read wrong, a fold without a summary had no title, `<details open>` stood closed, comments, quotes and underlined headings stood as raw text, a rule after a list joined the list, a bare address lost its closing bracket, the version 0.7.1 was found inside a name holding 0.7.10, and the release Action's new comment broke its sentences across lines. Each is read and drawn as GitHub has it, a fold without a summary named «Details» and GitHub's alerts named in the admin's language, in nb, en-GB and tr.
+
 ## [0.7.11] - 2026-11-20
 
 ### 0.7.0.88-0.7.9.3p - Release 0.7.11: the phone editor finished, a live phone beside the canvas, the «Back to top» button as an element of the site, and the colour picker's palette and the site's colour sets - 20 November 2026

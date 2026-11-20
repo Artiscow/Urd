@@ -7,6 +7,8 @@
   import SubHeading from '../lib/rows/SubHeading.svelte';
   import EmptyState from '../lib/rows/EmptyState.svelte';
   import ErrorLine from '../lib/rows/ErrorLine.svelte';
+  import ReleaseNotes from '../lib/ReleaseNotes.svelte';
+  import { releaseLabel } from '../lib/release-notes.js';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const auth = $derived(ed.auth);
@@ -141,6 +143,14 @@
         <span class="badge">{updateInfo.target}</span>
       {/if}
     </div>
+    <!-- The release on offer, or the one installed: its name and version, a link to its page on GitHub where the check found one -->
+    {#if updateInfo.release?.url}
+      <a class="update-release" href={updateInfo.release.url} target="_blank" rel="noopener noreferrer" title={ta('update.releaseOnGitHub')}>
+        <span>{releaseLabel(updateInfo.release.name, updateInfo.target)}</span>{@html ICONS.external}
+      </a>
+    {:else if updateInfo.release?.name}
+      <p class="update-release">{releaseLabel(updateInfo.release.name, updateInfo.target)}</p>
+    {/if}
     {#if updateInfo.upToDate}
       <EmptyState text={ta('update.upToDate')} />
     {:else}
@@ -149,8 +159,9 @@
         deletes: updateInfo.changes.filter((c) => c.action === 'delete').length,
       })}</p>
       {#if updateInfo.notes}
+        <!-- The release's notes, written in Markdown on GitHub, drawn with their headings, lists and folds -->
         <Fold id="notes" surface="update" title={ta('update.aboutVersion', { target: updateInfo.target })}>
-          <p class="update-notes">{updateInfo.notes}</p>
+          <ReleaseNotes text={updateInfo.notes} />
         </Fold>
       {/if}
       {#if updateInfo.headers?.upstream}

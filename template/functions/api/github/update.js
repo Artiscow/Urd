@@ -129,6 +129,30 @@ async function loadState(token, config, toParam) {
   }
 }
 
+/**
+ * The template repo's release of a version: its name, its page on GitHub and its notes, which the release Action copies from the monorepo's release (Markdown, kept to the length the Update panel reads, lib/release-notes.js NOTES_MAX).
+ * Null where there is none (404 is normal for older versions) or it cannot be read: an error here must never topple the check.
+ * The page is kept only where it is a page on github.com.
+ * @returns {Promise<{name: string|null, url: string|null, notes: string|null}|null>}
+ */
+async function releaseOf(token, templateRepo, tag) {
+  try {
+    const release = await gh(token, `/repos/${templateRepo}/releases/tags/${tag}`);
+    let url = null;
+    try {
+      const page = new URL(release.html_url);
+      if (page.protocol === 'https:' && page.host === 'github.com') url = page.href;
+    } catch { /* no page to link to */ }
+    return {
+      name: typeof release.name === 'string' && release.name.trim() ? release.name.trim().slice(0, 200) : null,
+      url,
+      notes: typeof release.body === 'string' && release.body.trim() ? release.body.slice(0, 20000) : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function onRequestGet({ request, env }) {
   const auth = await requirePublisher(request, env);
   if (auth.response) return auth.response;
@@ -142,7 +166,9 @@ export async function onRequestGet({ request, env }) {
   try {
     const state = await loadState(token, config, to);
     if (state.upToDate) {
-      return json({ current: state.engine, target: state.target, head: state.head, upToDate: true, changes: [] });
+      // The installed version's release, named and linked in the panel.
+      const installed = await releaseOf(token, config.templateRepo, state.target);
+      return json({ current: state.engine, target: state.target, head: state.head, upToDate: true, changes: [], release: installed && { name: installed.name, url: installed.url } });
     }
     const { changes, upToDate } = planUpdate(state.baselineTree, state.targetTree, state.userTree);
 
@@ -159,16 +185,10 @@ export async function onRequestGet({ request, env }) {
       headers.upstream = decodeBlob(blob.content);
     }
 
-    // The release notes (optional): the release Action publishes the
-    // monorepo release's notes on to the template repo. 404 is normal for
-    // older versions; an error here must never topple the check.
-    let notes = null;
-    try {
-      const release = await gh(token, `/repos/${config.templateRepo}/releases/tags/${state.target}`);
-      notes = typeof release.body === 'string' && release.body.trim() ? release.body.slice(0, 4000) : null;
-    } catch { /* no release with notes: the field stays null */ }
+    // The target's release (optional): its name and page, and its notes.
+    const offered = await releaseOf(token, config.templateRepo, state.target);
 
-    return json({ current: state.engine, target: state.target, head: state.head, upToDate, changes, headers, notes });
+    return json({ current: state.engine, target: state.target, head: state.head, upToDate, changes, headers, notes: offered?.notes ?? null, release: offered && { name: offered.name, url: offered.url } });
   } catch (err) {
     if (err.code) return json({ error: err.message, code: err.code, tag: err.tag, repo: err.repo, target: err.target, detail: err.detail }, 502);
     console.error('Urd update check:', err.message);

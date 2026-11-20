@@ -145,15 +145,16 @@ jobs:
           git push --atomic origin HEAD "refs/tags/$TAG"
 
       - name: Publish the release notes to the template repo
-        # The update panel shows the notes ("About vX.Y.Z"); they exist only
-        # in the monorepo release, so they are copied here. Skipped on dispatch
-        # (no release body) and tolerates the release already existing.
+        # The update panel shows the release's name, links to its page and shows its notes ("About vX.Y.Z"); they exist only in the monorepo release, so its name and notes are copied here ("Urd vX.Y.Z" where it has no name).
+        # Skipped on dispatch (no release body), and tolerates the release already existing.
         if: github.event_name == 'release' && github.event.release.body != ''
         env:
           GH_TOKEN: ${{ secrets.URD_TEMPLATE_PAT }}
           TAG: ${{ steps.meta.outputs.tag }}
+          NAME: ${{ github.event.release.name }}
           BODY: ${{ github.event.release.body }}
           REPO: ${{ env.TEMPLATE_REPO }}
         run: |
-          gh release create "$TAG" --repo "$REPO" --title "Urd $TAG" --notes "$BODY" \
-            || gh release edit "$TAG" --repo "$REPO" --notes "$BODY"
+          TITLE="${NAME:-Urd $TAG}"
+          gh release create "$TAG" --repo "$REPO" --title "$TITLE" --notes "$BODY" \
+            || gh release edit "$TAG" --repo "$REPO" --title "$TITLE" --notes "$BODY"

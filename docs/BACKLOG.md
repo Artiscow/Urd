@@ -672,8 +672,11 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - [ ] Static image as background - while you scroll, the image stays still
 - [ ] Flip/foldable phone view 
 - [ ] Check if deployed site can detect if phone has a holepunch/floating island style camera, and if it can avoid filling that space
+- [ ] Figcraft support (I think they use .figcraft files with support for other imports)
  
 ## URGENT
+- [x] Updates doesn't support markdown - it should, DELIVERED 0.7.0.93 (20 November 2026): a release's notes read as Markdown, headings, lists and GitHub's folds drawn by the panel itself
+- [x] The Updates panel links to the release on GitHub and names it with its version, with an update waiting and on the latest one, DELIVERED 0.7.0.93 (20 November 2026)
 
 ## Known Limitations (documented, no fix planned)
 
