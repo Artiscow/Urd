@@ -64,6 +64,29 @@ test('round trip: a products collection exported and read again is unchanged, in
   }
 });
 
+test('a cell a spreadsheet would run as a formula is written with an apostrophe in front, a plain number is not, and the import takes the apostrophe away', () => {
+  const entries = [
+    { id: 'a', title: '=HYPERLINK("https://evil.example","Klikk")', text: '+1+2', imageAlt: '@SUM(A1)' },
+    { id: 'b', title: '-2', text: '- en liste', imageAlt: '\tfane' },
+  ];
+  const csv = entriesToCsv(entries, [], { kind: 'news' });
+  assert.ok(csv.includes(`"'=HYPERLINK(""https://evil.example"",""Klikk"")"`));
+  assert.ok(csv.includes(",'+1+2,"));
+  assert.ok(csv.includes(",'@SUM(A1),"));
+  assert.ok(csv.includes(",'\tfane,"));
+  assert.ok(csv.includes('b,-2,'), 'a negative number stays a number');
+  assert.ok(csv.includes(",'- en liste,"));
+  const rows = readCsv(csv, 'news').rows;
+  assert.equal(rows[0].set.title, '=HYPERLINK("https://evil.example","Klikk")');
+  assert.equal(rows[0].set.text, '+1+2');
+  assert.equal(rows[0].set.imageAlt, '@SUM(A1)');
+  assert.equal(rows[1].set.title, '-2');
+  assert.equal(rows[1].set.text, '- en liste');
+  const own = [{ id: 'c', title: "'=allerede merket", text: "'-x", imageAlt: "'tis" }];
+  const back = readCsv(entriesToCsv(own, [], { kind: 'news' }), 'news').rows[0].set;
+  assert.deepEqual([back.title, back.text, back.imageAlt], ["'=allerede merket", "'-x", "'tis"], 'an apostrophe of the owner\'s own survives the round trip');
+});
+
 test('round trip: a news collection keeps its dates, its page links with their spots, its new tab, rel words and download', () => {
   const result = plan(NEWS, entriesToCsv(NEWS, PAGES, { kind: 'news', sep: ';' }), 'news', {}, PAGES);
   assert.equal(result.counts.same, 3);

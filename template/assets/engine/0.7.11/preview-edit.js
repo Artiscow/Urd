@@ -71,6 +71,7 @@ import { pluginBlockDesigns } from './plugins.js';
 import { nearestDock } from './sticky-model.js';
 import { layerChanges, phoneLayerChanges } from './layer-order.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
+import { pasteCommand } from './sanitize.js';
 import { pathTo, nodeAt } from './caret-path.js';
 // This module is loaded dynamically by urd.js AFTER the admin dictionary
 // is loaded (initAdminLocale), so ta() is safe even at module level here.
@@ -4361,6 +4362,42 @@ document.addEventListener('input', (event) => {
 document.addEventListener('focusin', (event) => {
   const root = editableRoot(event.target);
   if (root) typedIn.delete(root);
+}, true);
+
+// A paste or a drop into a text goes through the rich-text allowlist (sanitize.js), the same the page draws with: HTML is cleaned before it is inserted, and Ctrl+Shift+V pastes the words alone.
+// The plain paste is known from its keys, held from the key's press to its release.
+let plainPaste = false;
+window.addEventListener('keydown', (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') plainPaste = event.shiftKey;
+}, true);
+window.addEventListener('keyup', () => { plainPaste = false; }, true);
+document.addEventListener('paste', (event) => {
+  const root = editableRoot(event.target);
+  const data = event.clipboardData;
+  const action = root && data ? pasteCommand(root.getAttribute('contenteditable'), plainPaste, data.getData('text/html'), data.getData('text/plain')) : null;
+  plainPaste = false;
+  if (!action) return;
+  event.preventDefault();
+  document.execCommand(action.command, false, action.value);
+}, true);
+// A drop carries its HTML in the input event (Input Events), and lands where the browser was to put it; without it the browser's own drop stands, and the text is cleaned when it is drawn.
+document.addEventListener('beforeinput', (event) => {
+  if (event.inputType !== 'insertFromDrop') return;
+  const root = editableRoot(event.target);
+  const data = event.dataTransfer;
+  const action = root && data ? pasteCommand(root.getAttribute('contenteditable'), false, data.getData('text/html'), data.getData('text/plain')) : null;
+  if (!action) return;
+  event.preventDefault();
+  const at = event.getTargetRanges?.()[0];
+  if (at) {
+    const range = document.createRange();
+    range.setStart(at.startContainer, at.startOffset);
+    range.setEnd(at.endContainer, at.endOffset);
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+  document.execCommand(action.command, false, action.value);
 }, true);
 
 // Ctrl+Z / Ctrl+Shift+Z inside the iframe is forwarded to the editor,

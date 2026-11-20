@@ -257,26 +257,140 @@ function isSvgFile(file) {
 }
 
 /**
- * Validates an SVG and packs it as a base64 data URL. The text is NEVER
- * reinterpreted as markup in the live DOM (no DOMParser/innerHTML) - it
- * only goes into a data URL and renders via <img>/CSS (secure static mode,
- * no scripts). The published /media file can still be opened directly, so
- * an SVG with script vectors is REJECTED (not stripped: rejecting is
- * robust, stripping can be bypassed). Logo SVGs never contain
- * scripts/event handlers, so this does not hit real use.
+ * Why an SVG may not be used, or null where it may: read left to right, each comment, CDATA section, processing instruction, DOCTYPE and tag taken whole where it starts, and each value checked with its references decoded, so neither a prefix (`s:script`), a reference (`&#106;avascript:`), a declaration of its own nor a section hiding a tag's edge can hide a script.
+ * A DOCTYPE may hold an internal subset of entities with plain text only (older Illustrator declares its namespaces so); any other declaration, a stylesheet instruction, a reference to an entity not declared, and script, foreignObject, iframe, embed, object, handler and listener elements under any prefix are refused, as are an `on…` attribute, an animation of a link's address, any value or text naming a script scheme, and a data address in a link that is not a raster picture.
+ * No pattern reads past a `<`, so the time grows with the length of the text alone.
+ * Self-contained, so the publishing guard's copy (functions/_lib/svg-check.js) is held to the same text by a test.
+ * @param {string} text
+ * @returns {null|'notSvg'|'declaration'|'element'|'handler'|'animation'|'scriptAddress'|'dataAddress'}
+ */
+export function svgProblem(text) {
+  const BANNED = ['script', 'foreignobject', 'iframe', 'embed', 'object', 'handler', 'listener'];
+  const LINKS = ['href', 'src', 'from', 'to', 'values', 'by'];
+  const RASTER = /^data:image\/(?:png|jpe?g|gif|webp|avif)[;,]/;
+  const SCRIPT = /(?:javascript|vbscript|livescript):/;
+  const TAG = /<([^\s/<>!?]+)((?:\s(?:[^<>"']|"[^"<]*"|'[^'<]*')*)?)\/?>/y;
+  const ATTR = /([^\s=/"'<>]+)\s*(?:=\s*(?:"([^"<]*)"|'([^'<]*)'|([^\s"'<>]+)))?/g;
+  const ENTITY = /\s*<!ENTITY\s+([A-Za-z_][\w.-]*)\s+(?:"([^"<&%]*)"|'([^'<&%]*)')\s*>/y;
+  const SUBSET_END = /\s*\]\s*>/y;
+  const named = { lt: '<', gt: '>', quot: '"', apos: "'", amp: '&' };
+  let unknown = false;
+  const decode = (value) => value.replace(/&(?:#x([0-9a-f]+);?|#(\d+);?|([A-Za-z_][\w.-]*);)/gi, (m, hex, dec, name) => {
+    if (name) {
+      if (!Object.hasOwn(named, name)) unknown = true;
+      return named[name] ?? '';
+    }
+    return String.fromCodePoint(Math.min(hex ? parseInt(hex, 16) : Number(dec), 0x10ffff));
+  });
+  const plain = (value) => decode(value).replace(/[\u0000-\u0020\u007f]/g, '').toLowerCase();
+  const raw = String(text ?? '');
+  if (!/<svg[\s>]/i.test(raw)) return 'notSvg';
+  const texts = [];
+  let last = 0;
+  let i = 0;
+  while ((i = raw.indexOf('<', i)) !== -1) {
+    const take = (end) => { texts.push(raw.slice(last, i)); last = end; i = end; };
+    if (raw.startsWith('<!--', i)) {
+      const end = raw.indexOf('-->', i + 4);
+      if (end < 0) return 'declaration';
+      take(end + 3);
+      continue;
+    }
+    if (raw.startsWith('<![CDATA[', i)) {
+      const end = raw.indexOf(']]>', i + 9);
+      if (end < 0) return 'declaration';
+      texts.push(raw.slice(i + 9, end));
+      take(end + 3);
+      continue;
+    }
+    if (raw.startsWith('<?', i)) {
+      const end = raw.indexOf('?>', i + 2);
+      if (end < 0 || /^xml-stylesheet\b/i.test(raw.slice(i + 2, end))) return 'declaration';
+      take(end + 2);
+      continue;
+    }
+    if (raw.startsWith('<!', i)) {
+      if (!/^<!DOCTYPE\s/i.test(raw.slice(i, i + 10))) return 'declaration';
+      let j = i + 9;
+      let quote = '';
+      for (; j < raw.length; j += 1) {
+        const c = raw[j];
+        if (quote) { if (c === quote) quote = ''; } else if (c === '"' || c === "'") quote = c;
+        else if (c === '[' || c === '>') break;
+      }
+      if (j >= raw.length) return 'declaration';
+      if (raw[j] === '[') {
+        let at = j + 1;
+        for (;;) {
+          ENTITY.lastIndex = at;
+          const entity = ENTITY.exec(raw);
+          if (!entity) break;
+          const value = entity[2] ?? entity[3];
+          if (SCRIPT.test(plain(value))) return 'scriptAddress';
+          named[entity[1]] = value;
+          at = ENTITY.lastIndex;
+        }
+        SUBSET_END.lastIndex = at;
+        if (!SUBSET_END.exec(raw)) return 'declaration';
+        j = SUBSET_END.lastIndex - 1;
+      }
+      take(j + 1);
+      continue;
+    }
+    if (raw[i + 1] === '/') {
+      const end = raw.indexOf('>', i);
+      take(end < 0 ? raw.length : end + 1);
+      continue;
+    }
+    TAG.lastIndex = i;
+    const tag = TAG.exec(raw);
+    if (!tag) {
+      i += 1;
+      continue;
+    }
+    if (BANNED.includes(tag[1].split(':').pop().toLowerCase())) return 'element';
+    for (const attr of tag[2].matchAll(ATTR)) {
+      const name = attr[1].split(':').pop().toLowerCase();
+      const value = plain(attr[2] ?? attr[3] ?? attr[4] ?? '');
+      if (name.startsWith('on')) return 'handler';
+      if (name === 'attributename' && value.includes('href')) return 'animation';
+      if (SCRIPT.test(value)) return 'scriptAddress';
+      if (LINKS.includes(name) && value.startsWith('data:') && !RASTER.test(value)) return 'dataAddress';
+    }
+    take(TAG.lastIndex);
+  }
+  texts.push(raw.slice(last));
+  if (SCRIPT.test(plain(texts.join(' ')))) return 'scriptAddress';
+  return unknown ? 'declaration' : null;
+}
+
+/**
+ * An SVG's text from a data URL (base64, or percent-encoded), or null where the URL is no SVG or cannot be read.
+ * @param {string} url
+ * @returns {string|null}
+ */
+export function svgDataText(url) {
+  const match = /^data:image\/svg\+xml(;[^,]*)?,(.*)$/s.exec(String(url ?? ''));
+  if (!match) return null;
+  try {
+    if (/;base64/i.test(match[1] ?? '')) return new TextDecoder().decode(Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0)));
+    return decodeURIComponent(match[2]);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Validates an SVG and packs it as a base64 data URL.
+ * The text is never read as markup in the live DOM (no DOMParser or innerHTML): it only goes into a data URL and is drawn by <img> or CSS, where an SVG runs no script.
+ * The published file in media/ can still be opened on its own, so an SVG that holds something that can run is refused (svgProblem, the code `svgUnsafe`), never stripped, since a refusal cannot be passed the way a stripping can.
  * @returns {{dataUrl: string, bytes: number, width: number, height: number}}
  */
 export function svgToDataUrl(text) {
   const raw = String(text ?? '');
-  // Anchored regex barriers (CodeQL recognizes them): it must look like an
-  // SVG, and none of the script vectors may be present.
-  if (!/<svg[\s>]/i.test(raw)) throw new Error('Invalid SVG');
-  if (/<\s*script[\s>]/i.test(raw)
-    || /<\s*foreignObject[\s>]/i.test(raw)
-    || /\son[a-z]+\s*=/i.test(raw)
-    || /javascript:/i.test(raw)) {
-    throw new Error('The SVG contains scripts or event handlers and cannot be used');
-  }
+  const problem = svgProblem(raw);
+  if (problem === 'notSvg') throw new Error('Invalid SVG');
+  if (problem) throw Object.assign(new Error('The SVG contains scripts or event handlers and cannot be used'), { code: 'svgUnsafe', problem });
   const bytes = new Blob([raw]).size;
   // The encodeURIComponent detour lets btoa handle non-ASCII (æøå in title/desc).
   const dataUrl = `data:${SVG_MIME};base64,${btoa(unescape(encodeURIComponent(raw)))}`;

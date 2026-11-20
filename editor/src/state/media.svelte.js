@@ -100,7 +100,7 @@ async function compressOrTrim(file, use = 'image') {
 }
 
 /**
- * What to say when a picture was not taken: a too-large animation names its size and the limit, a picture left out over its budget says so, and anything else is the read error (`fallback`, a key).
+ * What to say when a picture was not taken: a too-large animation names its size and the limit, a picture left out over its budget says so, an SVG holding something that can run says so, and anything else is the read error (`fallback`, a key).
  * @param {unknown} err
  * @param {string} [fallback]
  */
@@ -109,6 +109,7 @@ function imageErrorText(err, fallback = 'status.imageReadError') {
     return ta('status.animatedTooLarge', { mb: (err.bytes / 1_000_000).toFixed(1), max: Math.round(ANIMATED_MAX_BYTES / 1_000_000) });
   }
   if (err?.code === 'pictureLeftOut') return ta('status.pictureLeftOut');
+  if (err?.code === 'svgUnsafe') return ta('status.svgUnsafe');
   return ta(fallback);
 }
 
@@ -138,19 +139,21 @@ function readVideoFile(file, formatKey, done) {
 const newSeed = () => 1 + Math.floor(Math.random() * 1000000);
 
 /**
- * Several pictures in one upload (the galleries): each compressed into the use's budget, one unreadable picture not stopping the rest, and those still over the budget asked about once, together.
+ * Several pictures in one upload (the galleries): each compressed into the use's budget, one unreadable picture not stopping the rest, and those still over the budget asked about once, together; `unsafe` counts the SVGs refused for what they hold.
  * @param {Iterable<File>} fileList
  * @param {keyof typeof PICTURE_BUDGETS} [use]
- * @returns {Promise<{images: {src: string, alt: string, href: null, style: object}[], failed: number}>}
+ * @returns {Promise<{images: {src: string, alt: string, href: null, style: object}[], failed: number, unsafe: number}>}
  */
 async function compressMany(fileList, use = 'gallery') {
   const taken = [];
   let failed = 0;
+  let unsafe = 0;
   for (const file of fileList) {
     try {
       taken.push({ img: await compressOne(file, use), file });
-    } catch {
+    } catch (err) {
       failed += 1;
+      if (err?.code === 'svgUnsafe') unsafe += 1;
     }
   }
   const over = taken.filter(({ img }) => img.bytes > budgetFor(use));
@@ -158,7 +161,7 @@ async function compressMany(fileList, use = 'gallery') {
   const images = taken
     .filter(({ img }) => keep || img.bytes <= budgetFor(use))
     .map(({ img, file }) => ({ src: img.dataUrl, alt: slugify(file.name).replaceAll('-', ' '), href: null, style: {} }));
-  return { images, failed };
+  return { images, failed, unsafe };
 }
 
 /**
@@ -177,9 +180,10 @@ async function imageForBlock(file) {
   }
 }
 
-/** The status line once several pictures are in: the ones that could not be read, nothing added, or clear. */
-function reportUpload(ok, failed) {
-  if (failed) shellState.setStatus(ta('status.imagesReadFailed', { n: failed }), 'error');
+/** The status line once several pictures are in: the SVGs refused for what they hold where all that failed were such, the ones that could not be read, nothing added, or clear. */
+function reportUpload(ok, failed, unsafe = 0) {
+  if (failed && unsafe === failed) shellState.setStatus(ta('status.svgUnsafe'), 'error');
+  else if (failed) shellState.setStatus(ta('status.imagesReadFailed', { n: failed }), 'error');
   else shellState.setStatus(ok ? '' : ta('status.noImagesAdded'));
 }
 

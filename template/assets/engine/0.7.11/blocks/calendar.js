@@ -19,7 +19,7 @@
 import { t, ta, tp, pluralForm, themeString, taApiError, dates, adminLocaleReady } from '../i18n.js';
 import { iconSvg } from '../icons.js';
 import { resolveColor, inkOn } from '../theme.js';
-import { stripActiveContent, safeHtmlFragment, plainLines } from '../sanitize.js';
+import { setRichHtml, safeHtmlFragment, plainLines } from '../sanitize.js';
 import { WIDTH_QUERIES } from '../render.js';
 import { NARROW_PX } from '../push-model.js';
 import { linkAttrs } from '../nav-model.js';
@@ -306,9 +306,8 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
       return;
     }
     if (own) {
-      node.innerHTML = own;
-      // Visitor protection: executable code is always stripped on render, and a link to a page gets the page's address now.
-      stripActiveContent(node, ctx.site?.pages ?? []);
+      // The own words rebuilt from the rich-text allowlist (sanitize.js), a link to a page with the page's address now.
+      setRichHtml(node, own, ctx.site?.pages ?? []);
     } else {
       node.textContent = defaultWords(key, form, plain);
     }

@@ -1666,9 +1666,9 @@ async function addGalleryImages(event) {
   event.target.value = '';
   if (!files.length) return;
   shellState.setStatus(ta('status.compressingImages'));
-  const { images, failed } = await mediaState.compressMany(files, 'gallery');
+  const { images, failed, unsafe } = await mediaState.compressMany(files, 'gallery');
   if (images.length) mutateBlock('gallery-add', (b) => { b.props.images.push(...images); });
-  mediaState.reportUpload(images.length, failed);
+  mediaState.reportUpload(images.length, failed, unsafe);
 }
 
 /** Moves a gallery picture from one place to another, as the list editor's drag and keys do. */

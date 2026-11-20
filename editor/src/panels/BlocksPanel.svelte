@@ -129,15 +129,15 @@
     event.target.value = '';
     if (!files.length) return;
     setStatus(ta('status.compressingImages'));
-    const { images, failed } = await compressMany(files, 'gallery');
+    const { images, failed, unsafe } = await compressMany(files, 'gallery');
     if (!images.length) {
-      reportUpload(0, failed);
+      reportUpload(0, failed, unsafe);
       return;
     }
     const block = buildBlock('gallery');
     block.props.images = images;
     requestPlacement(block);
-    reportUpload(images.length, failed);
+    reportUpload(images.length, failed, unsafe);
   }
 </script>
 

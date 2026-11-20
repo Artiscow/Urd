@@ -296,6 +296,7 @@ export default {
     'api.mediaListFailed': 'Kunne ikkje liste mediefilene',
     'api.fileNotAllowed': 'Fila «{path}» er ikkje ein PDF, eller er større enn 15 MB',
     'api.redirectsNotAllowed': 'Omdirigeringsfila har ei linje som ikkje er ei omdirigering Urd skriv',
+    'api.svgNotAllowed': 'SVG-en «{path}» inneheld eit skript, ei lenkje som køyrer kode eller ein deklarasjon, og kan ikkje publiserast. Byt ut biletet.',
     'api.redirectsReadFailed': 'Kunne ikkje lese omdirigeringsfila',
     'api.publishRace': 'Nokon publiserte akkurat no - prøv å publisere på nytt',
     'api.draftsBadPart': 'Ein del kunne ikkje lagrast som utkast',

@@ -38,7 +38,7 @@ The source marks, the ID scheme and the status words are explained in [README.md
   - clear formatting, and special characters
   - a typography row: font (seven system stacks, code: `fonts.js`), size per selection from 8 to 120 px on a Word-style ladder, line height and letter spacing (code: `text-typo.js`)
 - **Per field:** font and base size in Properties (S, M, L, XL or free px).
-- **Safe output.** Rich text is cleaned at render: event attributes, `javascript:` links and script, iframe, object and embed elements are stripped (code: `sanitize.js`, `stripActiveContent`), and the link field refuses `javascript:`, `data:` and `vbscript:`. Only HTML from a calendar feed is rebuilt from a fixed allowlist, with links limited to `http:`, `https:` and `mailto:` (`safeHtmlFragment`).
+- **Safe output.** Rich text is rebuilt at render from one allowlist of elements, attributes and style properties, parsed in an inert document (code: `sanitize.js`, `RICH_TEXT` and `setRichHtml`), and a paste or a drop into a text goes through the same list (`cleanRichHtml`); the link field refuses `javascript:`, `data:` and `vbscript:`. HTML from a calendar feed goes through a narrower allowlist of its own, with links limited to `http:`, `https:` and `mailto:` (`safeHtmlFragment`).
 - **Content that grows.** A block whose text grows pushes the blocks below it ([ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md)). Below the design width a block wraps, shrinks in proportion, or shrinks and wraps, and «Size» scales a whole block with bounds on its text ([ADR-0025](../adr/0025-the-sizing-model.md)).
 - Dynamic text (CMS merge fields) belongs to the collection views; see [8. CMS, collections and blogs](#8-cms-collections-and-blogs).
 

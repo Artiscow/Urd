@@ -16,7 +16,7 @@
  * render.js), and an unfolded answer grows the display only, the push pass
  * moving the blocks below (ADR-0024, ADR-0025).
  */
-import { stripActiveContent } from '../sanitize.js';
+import { setRichHtml, EDIT_HANDLES } from '../sanitize.js';
 import { boxStyleCss } from '../box-style.js';
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
@@ -118,9 +118,7 @@ export const faqBlock = {
       region.className = 'urd-faq-a';
       const answer = document.createElement('div');
       answer.className = 'urd-text';
-      answer.innerHTML = entry.a ?? '';
-      answer.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button').forEach((n) => n.remove());
-      stripActiveContent(answer, ctx.site?.pages ?? []);
+      setRichHtml(answer, entry.a ?? '', ctx.site?.pages ?? [], { dropClasses: EDIT_HANDLES });
       region.appendChild(answer);
       item.append(head, region);
       host.appendChild(item);

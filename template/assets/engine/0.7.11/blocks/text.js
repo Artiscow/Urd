@@ -4,7 +4,7 @@
  * the same trust model as the owner being able to edit the files in the repo
  * directly.
  */
-import { stripActiveContent } from '../sanitize.js';
+import { setRichHtml, EDIT_HANDLES } from '../sanitize.js';
 import { boxStyleCss } from '../box-style.js';
 
 // The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
@@ -70,14 +70,8 @@ export const textBlock = {
     if (typeof props.letterSpacing === 'number' && props.letterSpacing !== 0) {
       content.style.letterSpacing = `${props.letterSpacing}px`;
     }
-    content.innerHTML = props.html;
-    // Self-healing: content stored by older Urd can contain handle markup,
-    // including orphaned buttons left when browser editing splits the wrapper.
-    // Text content must never contain buttons, so all of them are removed on
-    // render (and stored clean on the next edit).
-    content.querySelectorAll('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button').forEach((n) => n.remove());
-    // Visitor protection (shared with collection entries): executable code is always stripped on render.
-    stripActiveContent(content, ctx.site?.pages ?? []);
+    // The words, rebuilt from the rich-text allowlist (sanitize.js), the same for every block that draws rich text: nothing executable reaches the page, and the editing handles and buttons an older Urd could leave in a text are left out (stored clean on the next edit).
+    setRichHtml(content, props.html, ctx.site?.pages ?? [], { dropClasses: EDIT_HANDLES });
     // A document design (doc-look.js) draws the text in a root of its own, with the contents beside it where the design has them; plain text stands alone as it always has.
     const prefix = `urd-doc-${el.dataset.blockId ?? 'text'}`;
     let doc = null;

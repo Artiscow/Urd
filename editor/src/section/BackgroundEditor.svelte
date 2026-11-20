@@ -366,7 +366,7 @@
     event.target.value = '';
     if (!files.length) return;
     setStatus(ta('status.compressingImages'));
-    const { images, failed } = await compressMany(files, 'background');
+    const { images, failed, unsafe } = await compressMany(files, 'background');
     if (images.length) {
       bg.mutate(bg.keyPrefix, (t) => {
         const props = t.background.layers[i].props;
@@ -374,7 +374,7 @@
         props.images.push(...images.map(({ src }) => ({ src, x: 0.5, y: 0.5 })));
       });
     }
-    reportUpload(images.length, failed);
+    reportUpload(images.length, failed, unsafe);
   }
 
   /** Moves a slide from one place to another, as the list editor's drag and keys do. */

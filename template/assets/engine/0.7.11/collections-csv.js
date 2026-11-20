@@ -13,6 +13,7 @@
  */
 
 import { resolveLink } from './nav-model.js';
+import { svgProblem, svgDataText } from './imageTools.js';
 
 /** The columns of a products collection, in export order. */
 const PRODUCT_COLUMNS = ['id', 'title', 'text', 'image', 'imageAlt', 'imageStyle', 'price', 'memberPrice', 'badge', 'sizes', 'colors', 'colorImages',
@@ -78,8 +79,14 @@ export function detectSeparator(text) {
   return best[1] > 0 ? best[0] : ',';
 }
 
+/** A cell a spreadsheet would read as a formula: one starting with =, +, -, @, a tab or a carriage return, unless it is a plain number; and one starting with the apostrophe that marks such a cell. */
+const FORMULA_START = /^[=+\-@\t\r']/;
+const PLAIN_NUMBER = /^[+-]?\d+(?:[.,]\d+)?$/;
+
 function csvField(value, sep) {
-  const text = String(value ?? '');
+  const raw = String(value ?? '');
+  // An apostrophe in front keeps a spreadsheet from running the cell as a formula, and the import takes one away again (readCsv), so a cell of the owner's own that starts with one keeps it.
+  const text = FORMULA_START.test(raw) && !PLAIN_NUMBER.test(raw) ? `'${raw}` : raw;
   return text.includes(sep) || /["\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
@@ -226,7 +233,17 @@ export function decodeCsv(buffer) {
 }
 
 const splitList = (value) => String(value ?? '').split('|').map((s) => s.trim()).filter(Boolean);
-const isPicture = (value) => value.startsWith('/media/') || value.startsWith('data:image/');
+/**
+ * Why a picture cell cannot be taken, or null where it can: a path in media/, a raster picture in base64, or an SVG in base64 that holds nothing that can run (svgProblem).
+ * @param {string} value
+ * @returns {null|'image'|'svgUnsafe'}
+ */
+function pictureProblem(value) {
+  if (value.startsWith('/media/') || /^data:image\/(?:png|jpeg|gif|webp|avif);base64,/.test(value)) return null;
+  if (!/^data:image\/svg\+xml;base64,/.test(value)) return 'image';
+  const text = svgDataText(value);
+  return text !== null && svgProblem(text) === null ? null : 'svgUnsafe';
+}
 
 /** An image style cell: compact JSON whose fields and values are the ones the image editor sets; null when it is not. */
 function readStyle(raw) {
@@ -290,7 +307,8 @@ function readRow(cells, columns, pages, decimal) {
   }
   if (has('image')) {
     const raw = cell('image');
-    if (raw && !isPicture(raw)) return fail('image', 'image', raw);
+    const problem = raw ? pictureProblem(raw) : null;
+    if (problem) return fail(problem, 'image', problem === 'image' ? raw : undefined);
     set.image = raw || null;
   }
   if (has('imageStyle')) {
@@ -309,7 +327,8 @@ function readRow(cells, columns, pages, decimal) {
   if (has('colors') || has('colorImages')) {
     const images = has('colorImages') ? String(cells.colorImages ?? '').split('|').map((s) => s.trim()) : null;
     for (const image of images ?? []) {
-      if (image && !isPicture(image)) return fail('image', 'colorImages', image);
+      const problem = image ? pictureProblem(image) : null;
+      if (problem) return fail(problem, 'colorImages', problem === 'image' ? image : undefined);
     }
     set.colors = { names: has('colors') ? splitList(cell('colors')) : null, images };
   }
@@ -381,7 +400,8 @@ export function readCsv(text, kind, pages = []) {
   const ignored = header.filter((name) => name && !own.includes(name));
   const rows = table.slice(1).map(({ row, cells }) => {
     const byName = {};
-    header.forEach((name, j) => { if (own.includes(name)) byName[name] = cells[j] ?? ''; });
+    // The apostrophe the export puts before a cell a spreadsheet would run as a formula is taken away, so an export imports as it was.
+    header.forEach((name, j) => { if (own.includes(name)) byName[name] = String(cells[j] ?? '').replace(/^'(?=[=+\-@\t\r'])/, ''); });
     const { set, problem } = readRow(byName, columns, pages, sep === ';' ? ',' : '.');
     return { row, id: String(byName.id ?? '').trim(), cells: byName, set, problem };
   });

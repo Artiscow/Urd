@@ -774,7 +774,7 @@ There has never been a «Safari 19»: Apple went from 18 straight to 26 in Septe
 
 | Feature | Chrome | Firefox | Safari | Baseline | What it replaces or enables in Urd | Source |
 |---|---|---|---|---|---|---|
-| Sanitizer API (`Element.setHTML()`, `new Sanitizer()`) | **146** | **148** | no (bug 303808) | Limited | A native layer under `stripActiveContent` and `safeHtmlFragment`; it cannot replace them while Safari lacks it: T72 | [bcd](https://github.com/mdn/browser-compat-data/blob/main/api/Sanitizer.json), [MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API) (primary) |
+| Sanitizer API (`Element.setHTML()`, `new Sanitizer()`) | **146** | **148** | no (bug 303808) | Limited | A native layer under `setRichHtml` (`RICH_TEXT`) and `safeHtmlFragment`; it cannot replace them while Safari lacks it: T72 | [bcd](https://github.com/mdn/browser-compat-data/blob/main/api/Sanitizer.json), [MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API) (primary) |
 | `setHTMLUnsafe()` / `parseHTMLUnsafe()` | 124 | 128 | 26 | Newly, 15 September 2025 | Declarative Shadow DOM from trusted templates only | [ws](https://webstatus.dev/features/parse-html-unsafe) (primary) |
 | Trusted Types | 83 | 148 | 26 | **Newly, 24 February 2026** | A CSP `require-trusted-types-for` policy around Urd's HTML sinks: T66 | [ws](https://webstatus.dev/features/trusted-types) (primary) |
 | Navigation API (`navigation.navigate`, `intercept`) | 102 | 147 | 26.2 | **Newly, 13 January 2026** | Editor routing and unsaved-change guards without History API hacks: T65 | [ws](https://webstatus.dev/features/navigation) (primary) |
@@ -1103,18 +1103,15 @@ Use explicit anchor names (implicit anchoring from the invoker is Chrome-only pe
 
 ```js
 // Chrome 146 and Firefox 148; Safari keeps the existing path.
-const ALLOW = { elements: ['p','br','strong','b','em','i','u','a','ul','ol','li','blockquote'],
-                attributes: ['href','title','lang','dir'] };
+const ALLOW = { elements: Object.keys(RICH_TEXT.elements),   // the shared schema (sanitize.js)
+                attributes: RICH_TEXT.shared };
 let native = null;
 if (typeof Element.prototype.setHTML === 'function' && typeof Sanitizer === 'function') {
   try { native = new Sanitizer(ALLOW); } catch { native = null; }
 }
 export function renderRichText(el, html) {
   if (native) { el.setHTML(html, { sanitizer: native }); return; }  // XSS-unsafe nodes go even if allowed
-  const t = document.createElement('template');
-  t.innerHTML = html;                 // inert: nothing in a template loads or runs
-  stripActiveContent(t.content);      // the existing path (sanitize.js)
-  el.replaceChildren(t.content);
+  setRichHtml(el, html);              // the existing path: parsed inert, rebuilt from RICH_TEXT
 }
 ```
 Keep Urd's own sanitizer canonical when content is saved, and test both paths against the same allow-list, which T27 makes one shared schema. The browser's default configuration also strips `data-*` attributes and comments (T72).
@@ -1362,7 +1359,7 @@ Every technique and code recommendation, with its T-ID, ordered by area in the o
 | T24 | A seeded fuzz test of the push pass and the desktop-mobile sync, replayable by seed; Playwright drag tests | tldraw ([`syncFuzz.test.ts`](https://github.com/tldraw/tldraw/blob/main/packages/sync-core/src/test/syncFuzz.test.ts), code); Webstudio's Playwright drag tests and geometry snapshots ([`geometry-utils.ts`](https://github.com/webstudio-is/webstudio/blob/main/packages/design-system/src/components/primitives/dnd/geometry-utils.ts), code) | High | Taken: v0.9 testing (fixtures, fuzz) |
 | T25 | «Delete out-of-schema fields» as a repo maintenance script | Storyblok ([`migrations/src`](https://github.com/storyblok/monoblok/tree/main/packages/migrations/src), code) | Low-medium | Watch: stray fields found in the v0.9 dress rehearsal |
 | T26 | One documented token contract (the `theme.json` model): token sets as custom properties, duotone presets alongside | Gutenberg and Twenty Twenty-Five ([theme.json in TT5](https://github.com/WordPress/twentytwentyfive), code); Penpot ([`token.cljc`](https://github.com/penpot/penpot/blob/develop/common/src/app/common/types/token.cljc), code) | High, low-medium effort | Taken: 0.7.9 Design stretch |
-| T27 | One declarative allowed-HTML schema shared by the paste cleaner, the render sanitizer and SCHEMA.md | Gutenberg ([`phrasing-content.ts`](https://github.com/WordPress/gutenberg/blob/trunk/packages/dom/src/phrasing-content.ts), [`clean-node-list.ts`](https://github.com/WordPress/gutenberg/blob/trunk/packages/dom/src/dom/clean-node-list.ts), code) | High | Taken: 0.7.10 (paste) |
+| T27 | One declarative allowed-HTML schema shared by the paste cleaner, the render sanitizer and SCHEMA.md | Gutenberg ([`phrasing-content.ts`](https://github.com/WordPress/gutenberg/blob/trunk/packages/dom/src/phrasing-content.ts), [`clean-node-list.ts`](https://github.com/WordPress/gutenberg/blob/trunk/packages/dom/src/dom/clean-node-list.ts), code) | High | Delivered: 0.7.37.2.1 (`RICH_TEXT` in sanitize.js, for drawing and pasting, listed in SCHEMA.md and held to it by a test) |
 | T28 | A paste filter chain (Word lists, Google Docs ids, Slack paragraphs, non-breaking spaces, empty paragraphs) and pasted markdown turned into formatting | Gutenberg ([`paste-handler.ts`](https://github.com/WordPress/gutenberg/blob/trunk/packages/blocks/src/api/raw-handling/paste-handler.ts), code) | High: Urd has no paste handler today | Taken: 0.7.10 (paste) |
 | T29 | A pasted bare URL becomes a link | Ghost Koenig ([`KoenigBehaviourPlugin.tsx`](https://github.com/TryGhost/Koenig/blob/main/packages/koenig-lexical/src/plugins/KoenigBehaviourPlugin.tsx), code) | High, low effort | Taken: 0.7.10 (paste) |
 | T30 | `contenteditable="plaintext-only"` for single-line fields, only while hovered or focused | Puck ([`InlineTextField`](https://github.com/puckeditor/puck/blob/main/packages/core/components/InlineTextField/index.tsx), code); Baseline March 2025 ([ws](https://webstatus.dev/features/contenteditable-plaintextonly), primary) | High | Taken: 0.7.10 (paste) |
@@ -1418,7 +1415,7 @@ Every technique and code recommendation, with its T-ID, ordered by area in the o
 | T80 | Publishing deletes only files an earlier publish wrote (baked pages, `_redirects`) | Silex ([`publish.rs`](https://github.com/silexlabs/Silex/blob/main/server-rust/src/publish.rs), code) | High once publishing generates files | Taken: v0.8 baking |
 | T114 | A sandboxed frame with a CSP of its own for exported code: `media/embeds/<id>/` shown in `<iframe sandbox="allow-scripts">`, a `_headers` rule after `/*` that detaches the site's policy and sets one with the `sandbox` directive, the block locked until admin has seen the policy live, and click-to-load by default | Wix HTML component ([dev.wix.com](https://dev.wix.com/docs/velo/velo-only-apis/$w/html-component/introduction), primary); Cloudflare's rules engine ([rules-engine.ts](https://github.com/cloudflare/workers-sdk/blob/main/packages/workers-shared/asset-worker/src/utils/rules-engine.ts), code); CSP3 ([w3c.github.io](https://w3c.github.io/webappsec-csp/), primary) | Medium: isolation only, no promise beyond it; Safari 26.5 needs the origin named beside `'self'` | Taken: v0.8 Animation files, the portal |
 | T115 | The pointer's position as custom properties on the section (`--urd-pointer-x`, `--urd-pointer-y`), one `pointermove` listener batched by rAF, frozen under reduced motion, so styles, faces and background layers follow the pointer in CSS | csswg-drafts #6733 ([github.com](https://github.com/w3c/csswg-drafts/issues/6733), primary); pointer-animations ([drafts.csswg.org](https://drafts.csswg.org/pointer-animations/), primary) | High: JS only for what CSS cannot read (ADR-0011) | Taken: v0.8 OL-1 the pointer as custom properties |
-| T116 | An allowlist sanitiser for inline SVG: elements and attributes per element, `href` only to `#id`, `<animate>` never on `href`, no external `url()`, ids and classes prefixed per instance; run at upload and at render, with an attack corpus in the tests | DOMPurify ([src](https://github.com/cure53/DOMPurify/tree/main/src), code); PortSwigger ([svg-animate-xss-vector](https://portswigger.net/research/svg-animate-xss-vector), secondary); the Sanitizer API ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API/Default_sanitizer_configuration), primary) | High for every inline path; the CSP is the backstop | Taken: v0.8 OL-2 the inline SVG sanitiser |
+| T116 | An allowlist sanitiser for inline SVG: elements and attributes per element, `href` only to `#id`, `<animate>` never on `href`, no external `url()`, ids and classes prefixed per instance; run at upload and at render, with an attack corpus in the tests | DOMPurify ([src](https://github.com/cure53/DOMPurify/tree/main/src), code); PortSwigger ([svg-animate-xss-vector](https://portswigger.net/research/svg-animate-xss-vector), secondary); the Sanitizer API ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Sanitizer_API/Default_sanitizer_configuration), primary) | High for every inline path; the CSP is the backstop | Partial: 0.7.37.2.1 the SVG check at upload, from a CSV file and in the publishing guard, with an attack corpus (`svgProblem`); taken: v0.8 OL-2 the inline SVG sanitiser |
 
 ### Closed
 

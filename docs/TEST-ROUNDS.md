@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.2.1): one allowlist for rich text, the SVG check and CSV exports without formulas
+
+- [ ] Texts, FAQ answers, collection and product entries and the calendar's own words on the example site look as before: headings, bold, lists, links, colours, sizes, indents and alignment
+- [ ] Copy a few paragraphs with a heading, a list, a link and some bold from another web page and paste into a text: the formatting stays, nothing else comes with it, and Ctrl+Z takes the paste back
+- [ ] Paste from Word or Google Docs: headings, lists, bold, italic, links and alignment stay, and the words take the site's own font, size and colour; no stray boxes or hidden text
+- [ ] Ctrl+Shift+V into a text pastes the words alone; then a paste from the right-click menu keeps the formatting again
+- [ ] Drag a selected piece of another page into a text: it lands cleaned, as a paste does
+- [ ] In Firefox, centre and right-align paragraphs with the text bar and publish: they stand so on the published page and after a reload of the admin
+- [ ] Paste into an FAQ question, a table cell and a quote: words land as before
+- [ ] Upload a logo SVG from a drawing program (Inkscape, Illustrator, Figma, and an older Illustrator file with a DOCTYPE): it is taken as before; an SVG with a script in it is refused with its own message, also among several pictures dropped on a gallery
+- [ ] Export a collection to CSV and open it in a spreadsheet: a title starting with = shows as text; import the file again and the entries are unchanged
+- [ ] Import a CSV whose picture cell holds a scripted SVG: the row is refused, naming the column
+
 ### Test batch (0.7.37.1): the audit's small security fixes
 
 - [ ] On the live site: publish a change, undo it from History, run an update check; each works as before

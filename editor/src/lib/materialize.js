@@ -3,13 +3,17 @@
  * The same content gives the same path (a hash of the content), so a republish never duplicates a file. Every walker changes the document in place and adds the files to the commit's list.
  * Pure, node-tested (tests/materialize.test.mjs).
  */
-import { slugify, mediaPath } from '$engine/imageTools.js';
+import { slugify, mediaPath, svgProblem, svgDataText } from '$engine/imageTools.js';
 import { publishHeldFiles } from './file-links.js';
 
-/** Turns a data URL in obj[field] into a media file; mutates obj. Pictures, sound and film share the flow. */
+/**
+ * Turns a data URL in obj[field] into a media file; mutates obj. Pictures, sound and film share the flow.
+ * Only base64 data is written as a file. An SVG that holds something that can run (svgProblem) is never written, since a file could be opened on its own; it stays a data address in the page, which draws it as a picture, where nothing in it runs.
+ */
 export function materializeField(obj, field, name, files) {
   const src = obj?.[field];
-  if (!src?.startsWith('data:image/') && !src?.startsWith('data:audio/') && !src?.startsWith('data:video/')) return;
+  if (!/^data:(?:image|audio|video)\/[^;,]+(?:;[^;,]*)*;base64,/.test(src ?? '')) return;
+  if (src.startsWith('data:image/svg+xml') && svgProblem(svgDataText(src) ?? '') !== null) return;
   const base64 = src.split(',', 2)[1];
   const path = mediaPath(slugify(name || 'image'), base64, src);
   files.push({ path, content: base64, encoding: 'base64' });

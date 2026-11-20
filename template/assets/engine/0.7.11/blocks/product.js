@@ -21,7 +21,7 @@
 import { getCollection } from '../collections.js';
 import { applyEntryImageStyle } from './collection.js';
 import { renderCardAnimations } from '../render.js';
-import { stripActiveContent, plainText } from '../sanitize.js';
+import { setRichHtml, plainText } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
 import { readCart, writeCart, cartAdd, itemKey, variantLabel, formatPrice, quantityLimits, limitNote } from '../shop.js';
 // Only called in preview (after the admin dictionary is loaded): never at module level.
@@ -45,8 +45,7 @@ function richNode(tag, className, entry, field, collection, editable) {
   if (!value && !editable) return null;
   const node = el2(tag, className);
   if (value) {
-    node.innerHTML = value;
-    stripActiveContent(node, pagesNow);
+    setRichHtml(node, value, pagesNow);
   } else {
     node.classList.add('urd-collection-placeholder');
     node.dataset.placeholder = ta('canvas.textPlaceholder');

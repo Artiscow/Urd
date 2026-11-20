@@ -401,13 +401,13 @@ async function handleRequestBlock(msg) {
     report = () => shellState.setStatus('');
   } else if (files.length && msg.kind === 'gallery') {
     shellState.setStatus(ta('status.compressingImages'));
-    const { images, failed } = await mediaState.compressMany(files, 'gallery');
+    const { images, failed, unsafe } = await mediaState.compressMany(files, 'gallery');
     if (!images.length) {
-      mediaState.reportUpload(0, failed);
+      mediaState.reportUpload(0, failed, unsafe);
       return;
     }
     block.props = { ...block.props, images };
-    report = () => mediaState.reportUpload(images.length, failed);
+    report = () => mediaState.reportUpload(images.length, failed, unsafe);
   }
   await seedTerms(block);
   if (!stillThere()) {

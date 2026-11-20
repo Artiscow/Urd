@@ -9,7 +9,7 @@
  * state, never a crash.
  */
 import { getCollection, sortEntries, groupByYear, dateBadge } from '../collections.js';
-import { stripActiveContent } from '../sanitize.js';
+import { setRichHtml } from '../sanitize.js';
 import { resolveLink, linkAttrs } from '../nav-model.js';
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
@@ -53,8 +53,7 @@ function textOrPlaceholder(entry) {
   if (!entry.text && !editCtx) return null;
   const node = el2('div', 'urd-text urd-collection-text');
   if (entry.text) {
-    node.innerHTML = entry.text;
-    stripActiveContent(node, pagesNow);
+    setRichHtml(node, entry.text, pagesNow);
   } else {
     node.classList.add('urd-collection-placeholder');
     node.dataset.placeholder = ta('canvas.textPlaceholder');
@@ -89,8 +88,7 @@ function titleNode(entry) {
   const link = entry.page || entry.href || entry.target ? resolveLink(entry, pagesNow) : null;
   const tag = link && !link.missing && !editCtx ? 'a' : 'strong';
   const node = el2(tag, 'urd-collection-title');
-  node.innerHTML = entry.title;
-  stripActiveContent(node, pagesNow);
+  setRichHtml(node, entry.title, pagesNow);
   if (tag === 'a') {
     Object.assign(node, linkAttrs(link));
     return node;

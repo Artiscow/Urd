@@ -247,3 +247,12 @@ test('the address lookup is for a signed-in publisher from the site\'s own pages
   assert.deepEqual(await res.json(), { lat: 59.91, lon: 10.75, label: 'Storgata 1, Oslo' });
   assert.equal(res.headers.get('cache-control'), 'private, max-age=3600', 'never kept by a shared cache');
 });
+
+test('publishing refuses an SVG that holds a script, before GitHub is asked for anything but the publisher', async () => {
+  const seen = github(['index.html']);
+  const evil = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><s:script xmlns:s="http://www.w3.org/2000/svg">alert(1)</s:script></svg>').toString('base64');
+  const res = await commit({ request: request('/api/github/commit', { body: { message: 'Publish', files: [{ path: 'media/images/logo.svg', content: evil, encoding: 'base64' }] } }), env: ENV });
+  assert.equal(res.status, 400);
+  assert.deepEqual(await res.json(), { error: "The SVG 'media/images/logo.svg' holds a script, a link that runs code or a declaration", code: 'svgNotAllowed', path: 'media/images/logo.svg' });
+  assert.deepEqual(seen.calls.map((c) => new URL(c.url).pathname), ['/user']);
+});

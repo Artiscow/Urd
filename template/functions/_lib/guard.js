@@ -1,3 +1,5 @@
+import { svgProblem } from './svg-check.js';
+
 /**
  * Guard for the publishing layer (see ADR-0003).
  *
@@ -73,7 +75,7 @@ export function isAllowedPath(path) {
 }
 
 /**
- * Whether a file's content is what its path says, for the paths whose content is checked: a PDF in media/ is base64 that starts as a PDF and stays within MEDIA_PDF_MAX_BYTES, and `_redirects` holds redirects only (isAllowedRedirects).
+ * Whether a file's content is what its path says, for the paths whose content is checked: a PDF in media/ is base64 that starts as a PDF and stays within MEDIA_PDF_MAX_BYTES, an SVG in media/ holds nothing that can run (svgProblem), and `_redirects` holds redirects only (isAllowedRedirects).
  * Every other path passes here; isAllowedPath decides whether it may be written at all.
  * @param {string} path Repo-relative file path from a commit request
  * @param {unknown} content The file's content as sent
@@ -83,9 +85,23 @@ export function isAllowedPath(path) {
 export function isAllowedContent(path, content, encoding) {
   const normalized = normalizePath(path);
   if (normalized === '_redirects') return encoding !== 'base64' && isAllowedRedirects(content);
+  if (normalized?.startsWith('media/') && normalized.toLowerCase().endsWith('.svg')) {
+    const text = encoding === 'base64' ? base64Text(content) : content;
+    return typeof text === 'string' && svgProblem(text) === null;
+  }
   if (!normalized || !normalized.startsWith('media/') || !normalized.toLowerCase().endsWith('.pdf')) return true;
   if (encoding !== 'base64' || typeof content !== 'string') return false;
   return content.startsWith(PDF_BASE64_HEAD) && Math.floor((content.length * 3) / 4) <= MEDIA_PDF_MAX_BYTES;
+}
+
+/** A base64 file's text as UTF-8, or null where it is not base64. */
+function base64Text(content) {
+  if (typeof content !== 'string') return null;
+  try {
+    return new TextDecoder().decode(Uint8Array.from(atob(content), (c) => c.charCodeAt(0)));
+  } catch {
+    return null;
+  }
 }
 
 /** The largest `_redirects` publishing writes: the host's 2,100 rules, each old address twice, at a generous line length. */

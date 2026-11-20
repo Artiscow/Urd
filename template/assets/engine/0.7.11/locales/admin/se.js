@@ -223,6 +223,7 @@ export default {
     'api.mediaListFailed': 'Ii sáhttán listet mediafiillaid',
     'api.fileNotAllowed': 'Fiila «{path}» ii leat PDF, dahje lea stuorát go 15 MB',
     'api.redirectsNotAllowed': 'Ođđasitstivrenfiillas lea linnjá mii ii leat ođđasitstivren maid Urd čállá',
+    'api.svgNotAllowed': 'SVG «{path}» sisttisdoallá skripta, liŋkka mii vuodjá koda dahje julggaštusa, ja ii sáhte almmuhuvvot. Lonut gova.',
     'api.redirectsReadFailed': 'Ii sáhttán lohkat ođđasitstivrenfiilla',
     'api.publishRace': 'Muhtin almmuhii aiddo dál - geahččal almmuhit ođđasit',
     'api.draftsBadPart': 'Oassi ii sáhttán vurkejuvvot konseaptan',
