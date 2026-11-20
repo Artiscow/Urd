@@ -54,6 +54,7 @@
   /** Whether the size field is being typed in, and the size it showed as it took the focus, kept while it is typed in so the selection's size does not write over it. */
   let sizeFocus = $state(false);
   let sizeHeld = $state('');
+  /** The colour and the highlight last picked here, which the pickers open on where the selection's own are not known. */
   let ownColour = $state('#ffffff');
   let ownHighlight = $state('#ffe066');
   let recent = $state(readRecentGlyphs());
@@ -253,10 +254,10 @@
       <div class="tb-sub tb-colours" transition:rowMotion>
         <button type="button" class="tb-swatch" style="background: {swatch('text')}" title={ta('tt.textColorTheme')} onclick={() => bar.run('colour', 'text', true)}></button>
         <button type="button" class="tb-swatch" style="background: {swatch('accent')}" title={ta('tt.accentColorTheme')} onclick={() => bar.run('colour', 'accent', true)}></button>
-        <ColorPicker value={ownColour} tokens={ed.themeSwatches()} label={ta('tt.customTextColor')} onchange={(v) => { ownColour = v; bar.run('colour', v); }} />
+        <ColorPicker value={sel.colour || ownColour} tokens={ed.themeSwatches()} label={ta('tt.customTextColor')} onchange={(v) => { ownColour = v; bar.run('colour', v); }} />
         <span class="tb-sep" aria-hidden="true"></span>
         <button type="button" title={ta('tt.hlAccent')} onclick={() => bar.run('highlight', 'accent', true)}><span class="tb-hl" style="background: {swatch('accent')}">{@html HL_A}</span></button>
-        <ColorPicker value={ownHighlight} tokens={ed.themeSwatches()} label={ta('tt.hlCustom')} onchange={(v) => { ownHighlight = v; bar.run('highlight', v); }} />
+        <ColorPicker value={sel.highlight || ownHighlight} tokens={ed.themeSwatches()} label={ta('tt.hlCustom')} onchange={(v) => { ownHighlight = v; bar.run('highlight', v); }} />
         <button type="button" title={ta('tt.hlNone')} onclick={() => bar.run('highlight', '', true)}><span class="tb-hl tb-hl-none">{@html HL_A}</span></button>
       </div>
     {:else if sub === 'spacing'}

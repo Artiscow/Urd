@@ -3,6 +3,7 @@
  * The drafts are the editor's own storage (editor/src/lib/draftStore.js): the site under `urd-draft-site`, a page under `urd-draft-<page id>` and a collection under `urd-draft-collection-<id>`.
  * A saved draft looked at in a tab of its own (`?draft=look&look=<id>`) is handed over by the editor under `urd-look-<id>`, which the tab moves into its own session storage at its first load (receiveLook), so a reload draws it again; there it stands over this browser's drafts (overlayDrafts).
  * A browser without drafts reads nothing and shows the published page; nothing leaves the browser.
+ * The editor's preview reads the same drafts for its first paint, before the editor's own messages arrive.
  * Loaded on demand by urd.js, so visitors never fetch it.
  */
 

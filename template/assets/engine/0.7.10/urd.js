@@ -366,7 +366,7 @@ function resolvePage(site, preview = false) {
   return pages.find((p) => p.path === path) ?? site.pages[0];
 }
 
-/** The draft view's drafts (drafts.js, loaded for it alone); with `look`, a saved draft the editor handed this tab (receiveLook) stands over this browser's own; a browser whose storage is closed has none. */
+/** The drafts this browser's editor keeps, for the draft view and the preview's first paint (drafts.js, loaded for those alone); with `look`, a saved draft the editor handed this tab (receiveLook) stands over this browser's own; a browser whose storage is closed has none. */
 async function loadDrafts(look = false, lookId = null) {
   try {
     const { readDrafts, overlayDrafts, receiveLook } = await import('./drafts.js');
@@ -841,14 +841,17 @@ export async function boot(opts) {
   // served text and ETag are kept too: a prerendered or restored page
   // rechecks them against the server (see recheck below).
   const served = { site: null, page: null };
-  const siteRes = await fetch('/content/site.json');
-  const siteText = await siteRes.text();
-  served.site = { text: siteText, etag: siteRes.headers.get('etag') };
   const params = new URLSearchParams(location.search);
   const preview = params.get('preview') === '1';
   // The draft view (?draft=1, drafts.js): the drafts this browser's editor keeps, drawn as a visitor's page; ?draft=look draws a saved draft the Drafts window opened in a tab of its own.
+  // The preview draws the same drafts from its first paint, the ones the editor holds, so a change not yet published shows at once and is never first drawn as published until the editor's own message arrives.
+  // They are read alongside site.json.
   const draftMode = preview ? null : params.get('draft');
-  const drafts = draftMode === '1' || draftMode === 'look' ? await loadDrafts(draftMode === 'look', params.get('look')) : null;
+  const draftsRead = preview || draftMode === '1' || draftMode === 'look' ? loadDrafts(draftMode === 'look', params.get('look')) : null;
+  const siteRes = await fetch('/content/site.json');
+  const siteText = await siteRes.text();
+  served.site = { text: siteText, etag: siteRes.headers.get('etag') };
+  const drafts = draftsRead ? await draftsRead : null;
   const rawSite = drafts?.site ?? JSON.parse(siteText);
   const site = liftSiteFile(rawSite);
   // The engine tolerates a truncated site.json: missing parts get empty defaults instead of a crash (the page never dies from bad data).
@@ -867,7 +870,7 @@ export async function boot(opts) {
   // An empty page register (hand-edited site.json) gives an empty page, not a crash.
   const entry = resolvePage(site, preview) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
   // A page file parked by the previous page's intent prefetch (prefetch.js) is used as it is and revalidated after the first render.
-  // Visitors only: the preview receives its pages via postMessage, and the draft view reads the page's draft.
+  // Visitors only: the preview and the draft view read the page's draft, and the preview then receives its pages via postMessage.
   const draftPage = drafts?.page(entry.id) ?? null;
   const parked = preview || drafts ? null : readPrefetched(entry.file, sessionStore());
   // Otherwise the page file depends only on the register, so its fetch
@@ -961,7 +964,7 @@ export async function boot(opts) {
   initSticky();
   wireJumps();
   if (!preview) arriveAtSpot();
-  if (drafts && (drafts.site || draftPage || Object.keys(drafts.collections).length)) markDraftView();
+  if (!preview && drafts && (drafts.site || draftPage || Object.keys(drafts.collections).length)) markDraftView();
 
   if (!preview) {
     mq.addEventListener('change', (event) => {

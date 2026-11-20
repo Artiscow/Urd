@@ -8,7 +8,7 @@ import { previewState } from './preview.svelte.js';
 let blockId = $state(null);
 /** Its block's box in the canvas's own px, its bar above it included. */
 let rect = $state(null);
-/** What the selection holds: {level, quote, marks, size, font, linkable}. */
+/** What the selection holds: {level, quote, marks, size, font, colour, highlight, linkable}. */
 let selection = $state(null);
 
 /** The preview's word on the text being written: its place and its selection, or none (blockId null). */

@@ -19202,6 +19202,12 @@ body:not(.urd-mobile) .urd-phone-seam,
   outline-offset: -1px;
 }
 
+/* Words selected while they are written: a see-through mark in the admin's accent over the words' own colours, so a colour or a highlight given to them from the text bar shows while they are still selected (the browser's own selection draws them in its colours) */
+body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"])::selection,
+body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"]) ::selection {
+  background-color: color-mix(in srgb, var(--urd-admin-accent, #2ec8b5) 35%, transparent);
+}
+
 /* Decor toggle on the block toolbar */
 .urd-preview .urd-edit-toolbar .urd-edit-decor.on {
   background: #e2b84a;

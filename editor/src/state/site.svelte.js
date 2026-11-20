@@ -29,6 +29,7 @@ import { liftPageFile } from '$engine/migrate.js';
 import { makeId } from '$engine/sections/presets.js';
 import { termsSeed } from '../lib/site-seed.js';
 import { setsOf, setsAfter, siteColours } from '../lib/colour-sets.js';
+import { sitePictures } from '../lib/colour-ways.js';
 import { tick } from 'svelte';
 import { historyState } from './history.svelte.js';
 import { pageState } from './page.svelte.js';
@@ -130,16 +131,19 @@ function setGrid(field, value) {
  * preview. Keys with the edit: prefix are merged in the undo history
  * (bursts of keystrokes/color drags become one undo step).
  */
-/** A change to the site draft as one undo step; `pages` names other pages whose drafts the change writes as well, so the step holds them (history.svelte.js pushHistory). */
-function siteMutate(key, fn, { pages } = {}) {
+/** A change to the site draft as one undo step; `pages` names other pages whose drafts the change writes as well, so the step holds them (history.svelte.js pushHistory); `preview` false leaves the canvas as it stands, for a change that shows nowhere on the pages. */
+function siteMutate(key, fn, { pages, preview = true } = {}) {
   historyState.pushHistory(key, pages ? { pages } : undefined);
   fn();
   siteStore.save();
   historyState.updateDirty();
-  pushSiteToPreview();
+  if (preview) pushSiteToPreview();
 }
 
-/** The site's colour sets (theme.colorSets, lib/colour-sets.js), which every colour picker offers: each change one undo step, a name typed one step for the typing (`edit:`). */
+/**
+ * The site's colour sets (theme.colorSets, lib/colour-sets.js), which every colour picker offers: each change one undo step, a name typed one step for the typing (`edit:`).
+ * The sets show nowhere on the pages, so the canvas is not drawn again for them, and the words being written keep their selection while a set is made or changed.
+ */
 function changeColourSets(key, change) {
   if (!siteDraft?.theme) return false;
   const now = setsOf(siteDraft.theme);
@@ -148,7 +152,7 @@ function changeColourSets(key, change) {
   siteMutate(key, () => {
     if (next.length) siteDraft.theme.colorSets = next;
     else delete siteDraft.theme.colorSets;
-  });
+  }, { preview: false });
   return true;
 }
 const addColourSet = (set) => changeColourSets('theme-colour-set-add', { kind: 'add', set });
@@ -168,8 +172,8 @@ function pageForColours(entry) {
   return pagesRead.get(entry.file);
 }
 
-/** The live set «On this site»: the colours the pages and the site's settings use, the most used first, the theme's own left out (the Theme tab holds them). */
-async function readSiteColours() {
+/** The site's settings, the theme left out, and every page's data, for the live set and the set maker's pictures. */
+async function readSiteDocs() {
   if (!siteDraft) return [];
   const docs = await Promise.all((siteDraft.pages ?? []).map((entry) => {
     if (entry.id !== pageState.pageId) return Promise.resolve(pageForColours(entry)).catch(() => null);
@@ -178,7 +182,17 @@ async function readSiteColours() {
     return $state.snapshot(pageState.store?.data ?? null);
   }));
   const { theme: _theme, ...settings } = $state.snapshot(siteDraft);
-  return siteColours([settings, ...docs.filter(Boolean)]);
+  return [settings, ...docs.filter(Boolean)];
+}
+
+/** The live set «On this site»: the colours the pages and the site's settings use, the most used first, the theme's own left out (the Theme tab holds them). */
+async function readSiteColours() {
+  return siteColours(await readSiteDocs());
+}
+
+/** The pictures the pages and the site's settings use, the most used first, for the set maker's «From the site's pictures». */
+async function readSitePictures() {
+  return sitePictures(await readSiteDocs());
 }
 
 /** Pins a command into the site's shared shortcuts, or takes it out (site.shortcuts, the command palette's first group for everyone who edits the site); a pin the list cannot take (lib/command-palette.js togglePinned) changes nothing. */
@@ -1023,6 +1037,7 @@ export const siteState = {
   removeSetColour,
   deleteColourSet,
   readSiteColours,
+  readSitePictures,
   toggleShortcut,
   setUpdateNotice,
   get newPageTitle() { return newPageTitle; },

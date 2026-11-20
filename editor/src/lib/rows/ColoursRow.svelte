@@ -44,7 +44,7 @@
     max-width: 5.5rem;
   }
 
-  .row-colour-one :global(.cp-swatch) {
+  .row-colour-one :global(.cp-swatch:not(.cp-pop *)) {
     width: 2.6rem;
     height: 1.9rem;
   }

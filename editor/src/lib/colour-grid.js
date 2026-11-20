@@ -112,12 +112,15 @@ export function strengthOf(code, prefer = null) {
 
 /**
  * Where the colour picker opens for a colour: the tab and the palette's strength.
- * A theme colour opens Theme, and so does an empty colour where the picker has the theme's colours; a colour the grid holds opens Palette in the strength that holds it, the one kept asked first; any other opens Custom, the strength left as kept.
- * @param {{value: string, kept: string|null, linked: boolean, themed: boolean}} at The colour, the strength kept, whether the colour is a theme colour, and whether the picker has the theme's colours
+ * The tab last chosen opens where the picker has it (Theme only with the theme's colours).
+ * With none kept, the tab the colour comes from: a theme colour opens Theme, and so does an empty colour where the picker has the theme's colours; a colour the grid holds opens Palette; any other opens Custom.
+ * The strength is the one that holds the colour, the one kept asked first, else the one kept.
+ * @param {{value: string, kept: string|null, linked: boolean, themed: boolean, keptTab?: string|null}} at The colour, the strength kept, whether the colour is a theme colour, whether the picker has the theme's colours, and the tab kept
  * @returns {{tab: 'theme'|'custom'|'palette', strength: string}}
  */
-export function pickerStart({ value, kept, linked, themed }) {
+export function pickerStart({ value, kept, linked, themed, keptTab = null }) {
   const held = linked ? null : strengthOf(value, kept);
-  const tab = linked || (!value && themed) ? 'theme' : held ? 'palette' : 'custom';
+  const usable = keptTab === 'custom' || keptTab === 'palette' || (keptTab === 'theme' && themed);
+  const tab = usable ? keptTab : linked || (!value && themed) ? 'theme' : held ? 'palette' : 'custom';
   return { tab, strength: held ?? (GRID_STRENGTHS.includes(kept) ? kept : GRID_STRENGTHS[0]) };
 }

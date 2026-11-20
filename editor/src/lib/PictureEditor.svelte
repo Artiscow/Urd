@@ -823,19 +823,19 @@
   }
 
   /* Round like the swatches beside it, and ringed as a chosen one is */
-  .pe-own :global(.cp-swatch) {
+  .pe-own :global(.cp-swatch:not(.cp-pop *)) {
     width: 1.9rem;
     height: 1.9rem;
     border-radius: 50%;
   }
 
-  .pe-own.on :global(.cp-swatch) {
+  .pe-own.on :global(.cp-swatch:not(.cp-pop *)) {
     border-color: #fff;
     box-shadow: 0 0 0 2px var(--urd-color-accent, #7c5cff);
   }
 
   /* Until an own colour is chosen the picker shows the colour wheel, not a swatch that is already beside it */
-  .pe-own:not(.on) :global(.cp-swatch) {
+  .pe-own:not(.on) :global(.cp-swatch:not(.cp-pop *)) {
     background: conic-gradient(#f44, #fd3, #4d4, #3dd, #44f, #d4d, #f44) !important;
   }
 

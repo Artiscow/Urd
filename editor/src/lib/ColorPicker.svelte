@@ -2,8 +2,9 @@
   /**
    * The colour picker: three tabs over the saved and recent colours.
    * Theme holds the theme's colours as named tiles; Custom a saturation and brightness field, hue and opacity, with the numbers in the format chosen (Hex, RGB or HSL, kept per browser) and the eyedropper; Palette twelve hues and a grey in eight rows of even lightness, in six strengths (lib/colour-grid.js).
-   * The strength last pressed or picked from is kept per browser, and the picker opens on the tab its colour comes from, a palette colour in the strength that holds it (pickerStart).
+   * The tab last chosen and the strength last pressed or picked from are kept per browser: the picker opens on that tab, on the tab its colour comes from before one is kept, a palette colour in the strength that holds it (pickerStart).
    * Under the palette stand the site's colour sets (theme.colorSets, lib/colour-sets.js), the same in every picker and for everyone who edits the site: «On this site» first, the colours the pages use, gathered at each opening and never changed here; then the site's own sets, each renamed, given the colour in use, a colour taken out, or deleted, each change one undo step.
+   * «+ New set» opens the set maker in the palette's place (lib/ColourSetMaker.svelte), and a set made there opens under the row.
    *
    * The value is EITHER #rrggbb OR a theme color NAME (e.g. 'accent'):
    * picking a theme dot stores the name, so the content is recolored when
@@ -15,8 +16,8 @@
    * over the panel, never out over the preview) with the browser flipping
    * it away from the viewport edge and light dismiss; otherwise position:
    * fixed (the panels clip absolute content), placed by measuring, closing
-   * on a click outside or Escape. Both close on a window blur (a click in
-   * the preview iframe never reaches this document).
+   * on a click outside or Escape. Both close when the focus moves into a
+   * frame (a click in the preview iframe never reaches this document).
    */
   import { getContext, tick } from 'svelte';
   import { lingering, menuMotion, rowMotion } from './motion.svelte.js';
@@ -25,8 +26,10 @@
   import { ICONS } from './icons.js';
   import { colourGrid, GRID_HUES, GRID_STRENGTHS, pickerStart } from './colour-grid.js';
   import { setsOf, newSetId, colourCode, SET_LIMITS } from './colour-sets.js';
+  import ColourSetMaker from './ColourSetMaker.svelte';
 
-  let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false, onremove = undefined } = $props();
+  /** `newSets` false leaves «+ New set» out: a picker inside the set maker picks from the sets but makes none. */
+  let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false, onremove = undefined, newSets = true } = $props();
   const ed = getContext('urd-editor');
 
   /** The site's sets (theme.colorSets), the live set gathered at each opening, the set pressed open under the grid (LIVE for the live set, a key no set's id can be), and whether the open set is being changed. */
@@ -49,18 +52,31 @@
     openSet = showing === id ? null : id;
     changing = false;
   }
-  function startChanging(on) {
-    changing = on;
-    if (on && opened) nameText = opened.name;
+  /** Enter in the name field: the name kept, the field and the bins put away, the focus back on the pencil. */
+  async function nameKey(event) {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    changing = false;
+    await tick();
+    pencil?.focus();
   }
-  /** A new set holding the colour in use, named «Set n», its name field open with the focus in it. */
-  async function newSet() {
+  /** The pencil: the name field and the colours' bins, the focus in the name field. */
+  async function startChanging(on) {
+    changing = on;
+    if (!on || !opened) return;
+    nameText = opened.name;
+    await tick();
+    nameField?.focus();
+  }
+  /** The set maker standing in the palette's place, opened by «+ New set». */
+  let making = $state(false);
+  /** A set made in the maker: added in one undo step, the maker closed and the set open under the row. */
+  function madeSet({ name, colors }) {
     const id = newSetId(sets);
-    if (ed?.addColourSet?.({ id, name: ta('cp.setDefault', { n: sets.length + 1 }), colors: [{ code: currentColor() }] })) {
+    if (ed?.addColourSet?.({ id, name, colors })) {
+      making = false;
       openSet = id;
-      startChanging(true);
-      await tick();
-      nameField?.select();
+      changing = false;
     }
   }
   /** The set deleted, the focus on «On this site», which opens. */
@@ -96,6 +112,16 @@
   /** The tabs, Theme only where the picker has the theme's colours. */
   const tabs = $derived(tokens.length ? ['theme', 'custom', 'palette'] : ['custom', 'palette']);
   let tab = $state('custom');
+  /** The tab chosen, kept in this browser, so every picker opens on it where it has that tab (pickerStart). */
+  const TAB_KEY = 'urd-colour-tab';
+  function setTab(id) {
+    tab = id;
+    try {
+      localStorage.setItem(TAB_KEY, id);
+    } catch {
+      // Without storage the picker opens on the tab its colour comes from.
+    }
+  }
   /** The numbers' format on the Custom tab. */
   const FORMATS = ['hex', 'rgb', 'hsl'];
   const CHANNEL_MAX = { rgb: [255, 255, 255], hsl: [360, 100, 100] };
@@ -119,6 +145,8 @@
   let lastPickedHex = '';
 
   let rootEl = $state(null);
+  /** Whether this picker stands inside another picker's card (the set maker's): its card then stands beside that card, which is named --urd-cp-card for it. */
+  const inCard = $derived(Boolean(rootEl?.parentElement?.closest('.cp-pop')));
   let open = $state(false);
   /** The card stays drawn while the closing pop-up fades out (app.css). */
   const drawn = lingering(() => open);
@@ -200,16 +228,19 @@
     setFromHex(displayHex()) || setFromHex('#000000');
     seedHsl();
     changing = false;
+    making = false;
     ed?.readSiteColours?.().then((list) => { onSite = list; }).catch(() => { onSite = []; });
     openedWith = value;
     lastPickedHex = '';
     let kept = null;
+    let keptTab = null;
     try {
       kept = localStorage.getItem(STRENGTH_KEY);
+      keptTab = localStorage.getItem(TAB_KEY);
     } catch {
-      // Without storage the palette opens on the standard strength.
+      // Without storage the palette opens on the standard strength, on the tab the colour comes from.
     }
-    const start = pickerStart({ value, kept, linked: Boolean(linkedToken()), themed: tokens.length > 0 });
+    const start = pickerStart({ value, kept, linked: Boolean(linkedToken()), themed: tokens.length > 0, keptTab });
     tab = start.tab;
     strength = start.strength;
     aimGrid();
@@ -233,14 +264,19 @@
     }
   }
 
+  /** A click on the card that reaches no control of its own goes no further than the card (the comment on the card's markup says why). */
+  function keepClick(event) {
+    if (!event.target.closest('button, input, textarea, select, a[href]')) event.preventDefault();
+  }
+
   /** The popover's toggle event drives the open state in the anchored branch. */
   function onToggle(e) {
     if (e.newState === 'open') {
       prepare();
-      namePane(rootEl, true);
+      if (!inCard) namePane(rootEl, true);
       open = true;
     } else if (open) {
-      namePane(rootEl, false);
+      if (!inCard) namePane(rootEl, false);
       open = false;
       remember();
     }
@@ -260,8 +296,22 @@
     const left = Math.max(8, Math.min(r.right - W, rightEdge - W - 8));
     // Under the swatch where it fits, else moved up as far as it must to stay in the window.
     const top = Math.max(8, Math.min(r.bottom + 6, window.innerHeight - H - 8));
-    pos = { top, left };
+    // A picker inside another's card stands beside that card, its top at the swatch, so the card it changes stays in view.
+    const card = inCard ? rootEl.parentElement.closest('.cp-pop').getBoundingClientRect() : null;
+    pos = card
+      ? { top: Math.max(8, Math.min(r.top, window.innerHeight - H - 8)), left: card.right + 8 + W <= window.innerWidth - 8 ? card.right + 8 : Math.max(8, card.left - W - 8) }
+      : { top, left };
     open = true;
+  }
+
+  /** The measured card keeps its foot inside the window as it grows (the set maker opening in it), moved up as far as it must. */
+  function keepInWindow(node) {
+    const ro = new ResizeObserver(() => {
+      const room = window.innerHeight - 8 - node.offsetHeight;
+      if (pos.top > room) pos = { ...pos, top: Math.max(8, room) };
+    });
+    ro.observe(node);
+    return () => ro.disconnect();
   }
 
   /** Remembers the color as recently used (detached hex picks only). */
@@ -429,7 +479,7 @@
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
     event.preventDefault();
     const at = tabs.indexOf(tab);
-    tab = tabs[(at + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+    setTab(tabs[(at + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]);
     event.currentTarget.querySelector(`[data-tab="${tab}"]`)?.focus();
   }
 
@@ -460,23 +510,22 @@
     keep(SAVED_KEY, $state.snapshot(saved));
   }
 
-  // Close ONLY on a click outside or Escape (like most menus). Not on scroll:
-  // clicking a field/button inside the floating popover gives it focus, and
-  // the browser then scrolls the panel slightly to reveal the element - that
-  // scroll must not close the picker (it would otherwise close on every click
-  // inside it). A click in the preview iframe never reaches the document's
-  // pointerdown; the focus moving there gives a window blur, which must close
-  // it too.
+  // Close ONLY on a click outside or Escape (like most menus), and not on scroll: a field or button pressed inside the floating card takes the focus, and the browser then scrolls the panel slightly to show it.
+  // A click in the preview iframe never reaches the document's pointerdown, so the focus moving into a frame closes the picker too, read once the window's blur has settled.
+  // A blur that leaves the focus in this document (the file dialog the set maker opens, another window) keeps it open.
   $effect(() => {
     if (!open) return;
-    const onBlur = () => close();
+    const onBlur = () => setTimeout(() => {
+      if (open && document.activeElement instanceof HTMLIFrameElement) close();
+    });
     window.addEventListener('blur', onBlur);
     if (native) return () => window.removeEventListener('blur', onBlur);
     const onDown = (e) => {
       if (rootEl && !rootEl.contains(e.target)) close();
     };
+    // Escape closes a picker open inside this one's card first, as the top layer does in the anchored branch.
     const onKey = (e) => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape' && !rootEl?.querySelector('.cp-pop .cp-pop')) close();
     };
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey, true);
@@ -497,14 +546,12 @@
     <button type="button" class="cp-remove danger" title={ta('cp.clearTitle')}
       aria-label={ta('cp.clear')} onclick={() => remove()}>{@html ICONS.bin}</button>
   {/if}
-  <!-- The picker often sits inside a <label>: without preventDefault the browser
-       forwards clicks on non-interactive surfaces (the color field, empty space)
-       as a click to the label's control = the swatch, which would toggle the
-       picker closed. -->
+  <!-- The picker often sits inside a <label>: the browser forwards a click on a surface that is no control (the colour field, empty space) to the label's control, the swatch, which would close the picker, so such a click is cancelled (keepClick).
+       A click on a control of the card's own is left alone, so a dropdown's button opens its list and a file field its dialog. -->
   {#if native}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="cp-pop cp-anchored" id={popId} popover="auto" bind:this={popEl}
-      style="position-anchor: {anchor}" ontoggle={onToggle} onclick={(e) => e.preventDefault()}>
+    <div class="cp-pop cp-anchored" class:cp-beside={inCard} id={popId} popover="auto" bind:this={popEl}
+      style="position-anchor: {anchor}{inCard ? '' : '; anchor-name: --urd-cp-card'}" ontoggle={onToggle} onclick={keepClick}>
       {#if drawn.shown}
         {@render card()}
       {/if}
@@ -512,7 +559,7 @@
   {:else if open}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="cp-pop" style="top: {pos.top}px; left: {pos.left}px" transition:menuMotion
-      onclick={(e) => e.preventDefault()}>
+      onclick={keepClick} {@attach keepInWindow}>
       {@render card()}
     </div>
   {/if}
@@ -521,7 +568,7 @@
 {#snippet card()}
       <div class="cp-tabs" role="tablist" aria-label={label} tabindex="-1" onkeydown={tabKeys}>
         {#each tabs as id (id)}
-          <button type="button" role="tab" data-tab={id} id="{popId}-tab-{id}" aria-selected={tab === id} aria-controls="{popId}-pane" tabindex={tab === id ? 0 : -1} onclick={() => (tab = id)}>{ta(`cp.tab.${id}`)}</button>
+          <button type="button" role="tab" data-tab={id} id="{popId}-tab-{id}" aria-selected={tab === id} aria-controls="{popId}-pane" tabindex={tab === id ? 0 : -1} onclick={() => setTab(id)}>{ta(`cp.tab.${id}`)}</button>
         {/each}
       </div>
       <div class="cp-pane" id="{popId}-pane" role="tabpanel" aria-labelledby="{popId}-tab-{tab}">
@@ -576,6 +623,9 @@
               <input type="number" min="0" max="100" value={Math.round(a * 100)} aria-label={ta('cp.opacity')} onchange={(e) => onOpacity(e.currentTarget)} /><span aria-hidden="true">%</span></label>
           </span>
         {:else}
+          {#if making}
+            <ColourSetMaker inUse={currentColor()} onmake={madeSet} onclose={() => (making = false)} />
+          {:else}
           <!-- The palette: the strength over the grid, the grey and twelve hues across and light to dark down; a pick stores the colour's code -->
           <div class="cp-strengths" role="group" aria-label={ta('cp.strength')}>
             {#each GRID_STRENGTHS as id (id)}
@@ -602,7 +652,9 @@
               {#each sets as set (set.id)}
                 <button type="button" class="cp-chip" aria-pressed={showing === set.id} onclick={() => toggleSet(set.id)}>{set.name}</button>
               {/each}
-              <button type="button" class="cp-chip cp-chip-add" disabled={sets.length >= SET_LIMITS.sets} onclick={newSet}>{@html ICONS.plus}<span>{ta('cp.newSet')}</span></button>
+              {#if newSets}
+                <button type="button" class="cp-chip cp-chip-add" disabled={sets.length >= SET_LIMITS.sets} onclick={() => (making = true)}>{@html ICONS.plus}<span>{ta('cp.newSet')}</span></button>
+              {/if}
             </div>
             {#if showing === LIVE}
               <div class="cp-set-open" transition:rowMotion>
@@ -622,7 +674,7 @@
                 <div class="cp-set-head">
                   {#if changing}
                     <input class="cp-set-name" bind:this={nameField} value={nameText} aria-label={ta('cp.setName')} maxlength="40"
-                      oninput={(e) => { nameText = e.currentTarget.value; ed.renameColourSet(opened.id, nameText); }}
+                      oninput={(e) => { nameText = e.currentTarget.value; ed.renameColourSet(opened.id, nameText); }} onkeydown={nameKey}
                       onchange={() => { nameText = opened.name; }} />
                   {:else}
                     <span class="cp-set-title">{opened.name}</span>
@@ -646,6 +698,7 @@
                 </div>
               </div>
             {/if}
+          {/if}
           {/if}
         {/if}
       </div>
@@ -775,9 +828,20 @@
       display: none;
     }
 
+    /* A picker inside another's card: beside that card, its top at the swatch, turned to the card's other side where the window ends (--cp-beside-fit, app.css, keeps it inside the window's foot) */
+    .cp-anchored.cp-beside {
+      margin: 0 0 0 8px;
+      top: anchor(top);
+      left: anchor(--urd-cp-card right);
+    }
+
     @supports (position-try-fallbacks: flip-block) {
       .cp-anchored {
         position-try-fallbacks: --cp-fit, flip-block;
+      }
+
+      .cp-anchored.cp-beside {
+        position-try-fallbacks: --cp-beside-fit, flip-inline, --cp-beside-fit flip-inline;
       }
     }
   }

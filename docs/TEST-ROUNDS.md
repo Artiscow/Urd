@@ -2,6 +2,23 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.9.3): the set maker's ten ways, and a colour picker that keeps its tab, the words' selection and their colour
+
+- [ ] The Palette tab's «+ New set»: the maker stands in the tab, ten tiles in two rows with a drawing and a short word each, the way chosen named beside the way back; the pointer over a tile names the way and what it does
+- [ ] Shades (light to dark, lighter, darker, greyer; 5, 7, 9 or 12), Colours that match (the six kinds), Between two colours and Readable on a colour (AA, large text, AAA, each cell an «Aa» on the colour): the preview follows each choice, and «Make the set» makes that set and opens it under the row
+- [ ] The swatch beside a way's code opens a colour picker of its own beside the maker's card, without «+ New set»; a pick from its Theme, Custom or Palette tab sets the colour, and a press elsewhere in the maker closes it alone
+- [ ] From a picture: choose one from the computer through the file dialog; the picker stays open, the main colours come in the preview, and the set takes the picture's name (the browser's network list shows no upload)
+- [ ] From the site's pictures: two sets made from two pictures take each picture's name
+- [ ] From codes or a link: a palette site's link and a text with codes in it keep only the codes; Ready-made: the seven sets, each colour named in its tooltip in nb, en-GB and tr; The site's colours; Shuffle: the locked colours stay at a new shuffle
+- [ ] Select words in a text, make a set and pick a colour from it at once: the words take it, still selected
+- [ ] Rename a set by its pencil and press Enter: the name stays and the field is put away
+- [ ] The colour picker opens on the tab used last, in every picker, also after a reload
+- [ ] Colour some words, reload the admin, select them again: the text bar's swatch and picker stand on their colour, a theme colour on its tile
+- [ ] Colour selected words from the text bar: the colour shows while they are still selected
+- [ ] Reload the admin with a colour not yet published: the canvas shows it at once, never first the published colour; no «draft view» mark in the canvas
+- [ ] The tiles' short words fit in nb and tr
+- [ ] In Firefox: the maker, the place of a way's own picker, and the colour of selected words (checked in Brave only)
+
 ### Test batch (0.7.9.2): the site's colour sets and the colours the pages use
 
 - [ ] The colour picker's Palette tab: under the grid a row of chips, «On this site» first; open it: the colours your pages use, the most used first, a press setting one

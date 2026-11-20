@@ -3230,7 +3230,7 @@ function makeSectionAdder(index, above = null, below = null) {
 
 /**
  * The tools of a text field written in place: the editor draws their bar over the canvas (editor/src/lib/TextToolbar.svelte), beside the phone or above the block, free of the canvas's edges, and the editing stays here, on the text and its selection.
- * While a text field is being written, its block's place and the selection's state (the level, the font, the size, the marks pressed) go to the editor as urd-text-state, and the bar's commands come back as urd-text-cmd (textCommand): each is applied on the selection kept here, through contenteditable (execCommand) or the text's own markup, and the input event it fires saves it in the draft through text.js, as typing does.
+ * While a text field is being written, its block's place and the selection's state (the level, the font, the size, the marks pressed, the colour and the highlight) go to the editor as urd-text-state, and the bar's commands come back as urd-text-cmd (textCommand): each is applied on the selection kept here, through contenteditable (execCommand) or the text's own markup, and the input event it fires saves it in the draft through text.js, as typing does.
  * A command leaves the focus where it is, so a picker in the editor stays open while its colour is tried live; the editor asks for the focus back where the owner goes on typing.
  */
 let textToolbarReady = false;
@@ -3728,7 +3728,55 @@ function initTextToolbar() {
     }
     return '';
   };
-  /** The state the bar shows: the level and the quote where the caret stands, the marks pressed, the size and the font the selection holds, and whether the words can take a link. */
+  /** A computed colour as #rrggbb, or #rrggbbaa with an alpha; null for a see-through one. */
+  const hexOfComputed = (value) => {
+    const m = /^rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})(?:\s*[,/]\s*([\d.]+)(%?))?\s*\)$/.exec(String(value).trim());
+    if (!m) return null;
+    const alpha = m[4] === undefined ? 1 : Number(m[4]) / (m[5] ? 100 : 1);
+    if (!(alpha > 0)) return null;
+    const hex = '#' + [m[1], m[2], m[3]].map((n) => Math.min(255, Number(n)).toString(16).padStart(2, '0')).join('');
+    return alpha >= 0.995 ? hex : hex + Math.round(alpha * 255).toString(16).padStart(2, '0');
+  };
+  /**
+   * The colour and the highlight of the words where the selection starts (the first selected letters, or where the caret stands): a theme colour by its name where the words keep the theme's (themeify), else the colour as a code.
+   * The highlight is the nearest one inside the text, null where the words have none.
+   */
+  const selectionColours = () => {
+    const sel = document.getSelection();
+    if (!sel || !sel.rangeCount) return { colour: null, highlight: null };
+    const range = sel.getRangeAt(0);
+    let el = null;
+    if (range.collapsed) {
+      el = styledAncestor(range.startContainer);
+    } else {
+      const walker = document.createTreeWalker(activeText, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = walker.nextNode())) {
+        const before = n === range.startContainer && range.startOffset >= n.length;
+        const after = n === range.endContainer && range.endOffset === 0;
+        if (n.textContent.trim() && !before && !after && sel.containsNode(n, true)) {
+          el = styledAncestor(n);
+          break;
+        }
+      }
+    }
+    if (!el) return { colour: null, highlight: null };
+    const own = (prop) => {
+      for (let x = el; x && x !== activeText; x = x.parentElement) {
+        const set = (x.style?.[prop] || (prop === 'color' && x.tagName === 'FONT' ? x.getAttribute('color') : '') || '').trim();
+        if (!set) continue;
+        const token = /^var\(--urd-color-([a-z][a-z0-9-]*)\)$/i.exec(set);
+        return token ? { token: token[1] } : { el: x };
+      }
+      return null;
+    };
+    const colourSet = own('color');
+    const colour = colourSet?.token ?? hexOfComputed(getComputedStyle(el).color);
+    const highlightSet = own('backgroundColor');
+    const highlight = highlightSet ? highlightSet.token ?? hexOfComputed(getComputedStyle(highlightSet.el).backgroundColor) : null;
+    return { colour, highlight };
+  };
+  /** The state the bar shows: the level and the quote where the caret stands, the marks pressed, the size, the font and the colours the selection holds, and whether the words can take a link. */
   const textState = () => {
     let level = 'p';
     let quote = false;
@@ -3741,7 +3789,7 @@ function initTextToolbar() {
     for (const cmd of TEXT_MARKS) {
       try { marks[cmd] = document.queryCommandState(cmd); } catch { marks[cmd] = false; }
     }
-    return { level, quote, marks, size: selectionSize(), font: matchFontStack(selectionFamily()) || '', linkable: !activeText.closest('a, button') };
+    return { level, quote, marks, size: selectionSize(), font: matchFontStack(selectionFamily()) || '', ...selectionColours(), linkable: !activeText.closest('a, button') };
   };
 
   /** Whether the editor's bar stands for a text now, so its end is told once. */

@@ -3271,8 +3271,8 @@
     width: 3.6rem;
   }
 
-  /* Compact color buttons in the gradient rows (same height as the row buttons) */
-  .grad-stop .cp-swatch {
+  /* Compact color buttons in the gradient rows (same height as the row buttons); a rule for a panel's own picker stops at a picker's card, so it never reaches the picker inside one (the set maker's) */
+  .grad-stop .cp-swatch:not(.cp-pop *) {
     width: 1.7rem;
     height: 1.7rem;
   }
@@ -4714,8 +4714,8 @@
   .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *))::before{ content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--urd-color-accent); }
   .palcells { display: flex; gap: 6px; }
   .palcells .palcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
-  .palcells .cp { display: block; width: 100%; }
-  .palcells .cp-swatch { width: 100%; height: 32px; }
+  .palcells .cp:not(.cp-pop *) { display: block; width: 100%; }
+  .palcells .cp-swatch:not(.cp-pop *) { width: 100%; height: 32px; }
   .palcells .palcap { text-align: center; font-size: 9px; opacity: 0.6; }
   .palcells .palhex { text-align: center; font: 400 9px ui-monospace, monospace; opacity: 0.7; letter-spacing: -0.02em; }
   .palcells.autopal .palcol { opacity: 0.7; }
@@ -5775,4 +5775,10 @@
     top: auto;
     bottom: 8px;
     margin: 0;
+  }
+
+  /* A picker beside another's card, moved up to the window's foot, its gap to the card kept */
+  @position-try --cp-beside-fit {
+    top: auto;
+    bottom: 8px;
   }

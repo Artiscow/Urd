@@ -89,3 +89,13 @@ test('a saved draft handed over to a tab moves into its own storage once, draft 
   receiveLook('zzz999yyy', kept, full);
   assert.equal(kept.getItem('urd-look-zzz999yyy'), handed);
 });
+
+test('the preview draws this browser\'s drafts from its first paint, read alongside site.json, without the draft view\'s mark', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const urd = readFileSync(new URL('urd.js', ENGINE_DIR), 'utf8');
+  const read = urd.indexOf("const draftsRead = preview || draftMode === '1' || draftMode === 'look' ? loadDrafts(");
+  assert.ok(read > 0, 'the preview reads the drafts too');
+  assert.ok(read < urd.indexOf("const siteRes = await fetch('/content/site.json');"), 'the read starts before site.json is awaited');
+  assert.match(urd, /if \(!preview && drafts && \(drafts\.site \|\| draftPage \|\| Object\.keys\(drafts\.collections\)\.length\)\) markDraftView\(\);/);
+});

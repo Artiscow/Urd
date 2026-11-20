@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { GRID_HUES, GRID_STRENGTHS, colourGrid, strengthOf, pickerStart, oklchToCode, codeToOklch } from '../editor/src/lib/colour-grid.js';
+import { ENGINE_DIR } from './_engine.mjs';
 
 test('each strength is a grid of eight rows of the grey and twelve hues, every colour a code', () => {
   assert.deepEqual(GRID_STRENGTHS, ['vivid', 'soft', 'muted', 'deep', 'pastel', 'neon']);
@@ -90,4 +91,34 @@ test('the picker opens on the tab its colour comes from, and a pick reopens in t
   assert.deepEqual(start(shared.code, null), { tab: 'palette', strength: 'vivid' }, 'with nothing kept, the first that holds it');
   const picker = readFileSync(new URL('../editor/src/lib/ColorPicker.svelte', import.meta.url), 'utf8');
   assert.match(picker, /onclick=\{\(\) => \{ setStrength\(strength\); pick\(cell\.code\); \}\}/, 'a pick keeps the strength it came from');
+});
+
+test('the picker opens on the tab last chosen where it has that tab, the strength still the one that holds the colour', () => {
+  const start = (value, keptTab, { kept = null, linked = false, themed = true } = {}) => pickerStart({ value, kept, linked, themed, keptTab });
+  const code = colourGrid('vivid')[3][5].code;
+  assert.deepEqual(start('#123457', 'palette', { kept: 'muted' }), { tab: 'palette', strength: 'muted' }, 'an own colour opens on the Palette kept');
+  assert.deepEqual(start(code, 'custom'), { tab: 'custom', strength: 'vivid' }, 'a palette colour opens on the Custom kept, its strength found');
+  assert.deepEqual(start('accent', 'palette', { linked: true, kept: 'deep' }), { tab: 'palette', strength: 'deep' }, 'a theme colour opens on the Palette kept');
+  assert.deepEqual(start('#123457', 'theme'), { tab: 'theme', strength: 'vivid' });
+  assert.deepEqual(start('#123457', 'theme', { themed: false }), { tab: 'custom', strength: 'vivid' }, 'Theme kept, where the picker has no theme colours: the tab the colour comes from');
+  assert.deepEqual(start(code, 'nonsense'), { tab: 'palette', strength: 'vivid' }, 'nothing usable kept: the tab the colour comes from');
+  const picker = readFileSync(new URL('../editor/src/lib/ColorPicker.svelte', import.meta.url), 'utf8');
+  assert.match(picker, /onclick=\{\(\) => setTab\(id\)\}/, 'a tab pressed is kept');
+  assert.match(picker, /setTab\(tabs\[\(at \+ \(event\.key === 'ArrowRight' \? 1 : tabs\.length - 1\)\) % tabs\.length\]\);/, 'a tab reached by the arrows is kept');
+  assert.match(picker, /keptTab = localStorage\.getItem\(TAB_KEY\);/);
+});
+
+test('the picker stays open while a file dialog has the window, and closes when the focus goes into a frame', () => {
+  const picker = readFileSync(new URL('../editor/src/lib/ColorPicker.svelte', import.meta.url), 'utf8');
+  assert.match(picker, /const onBlur = \(\) => setTimeout\(\(\) => \{\s*if \(open && document\.activeElement instanceof HTMLIFrameElement\) close\(\);\s*\}\);/);
+  assert.doesNotMatch(picker, /const onBlur = \(\) => close\(\);/, 'a blur alone closes nothing');
+});
+
+test('the text bar\'s pickers open on the colour and the highlight the selected words have, as the preview tells them', () => {
+  const bar = readFileSync(new URL('../editor/src/lib/TextToolbar.svelte', import.meta.url), 'utf8');
+  assert.match(bar, /<ColorPicker value=\{sel\.colour \|\| ownColour\}/);
+  assert.match(bar, /<ColorPicker value=\{sel\.highlight \|\| ownHighlight\}/);
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  assert.match(edit, /font: matchFontStack\(selectionFamily\(\)\) \|\| '', \.\.\.selectionColours\(\),/, 'the text state carries the colours');
+  assert.match(edit, /const token = \/\^var\\\(--urd-color-\(\[a-z\]\[a-z0-9-\]\*\)\\\)\$\/i\.exec\(set\);/, 'a theme colour is told by its name');
 });
