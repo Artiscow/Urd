@@ -64,10 +64,16 @@ export const imageBlock = {
     const frame = document.createElement('span');
     frame.className = 'urd-image-frame';
     const img = document.createElement('img');
-    // Content images are fetched only as they approach the viewport: that spares
-    // images below the fold on heavy pages. loading/decoding are set BEFORE src,
-    // or the browser may already have begun fetching. (Collection/gallery/video do the same.)
-    img.loading = 'lazy';
+    // Content images are fetched only as they approach the viewport: that spares images below the fold on heavy pages.
+    // The first image block a page's first section draws is the first screen's picture, so it is fetched at once and ahead of the rest (`fetchpriority`), never lazily; one picture alone takes the high priority.
+    // loading, decoding and the priority are set before src, or the browser may already have begun fetching.
+    if (ctx?.first && !ctx.preview && !ctx.firstPictureTaken) {
+      ctx.firstPictureTaken = true;
+      img.loading = 'eager';
+      img.setAttribute('fetchpriority', 'high');
+    } else {
+      img.loading = 'lazy';
+    }
     img.decoding = 'async';
     img.src = props.src;
     img.draggable = false;

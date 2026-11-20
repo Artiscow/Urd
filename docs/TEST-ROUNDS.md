@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.2): the push pass in phases, the calendar's early feed, and pictures by their place
+
+- [ ] On the desktop, pages with texts beside pictures and buttons: every block stands where it did, a text that grows pushes the blocks under it, and resizing the window keeps them in place
+- [ ] A text with «Shrink to fit» or «Both» in a narrow window: it shrinks as before
+- [ ] A page with a calendar: the events show sooner than before; the week and month views and the view switcher start the week on the language's first day
+- [ ] A long page with a background picture in a section far down: the picture is there by the time the section is reached, and DevTools' network list shows it fetched only as you scroll toward it
+- [ ] The first section's picture (its first image block, or an image or slideshow background) loads first, with priority High in DevTools' network list; other pictures are not High
+- [ ] Print a long page with background pictures far down (with «Background graphics» on in the print dialog): every section's picture is on paper
+- [ ] Resize the window across the phone width on a page with a background picture far down: the picture stays, with no blank frame
+- [ ] «Back to top» set to show always is there at once; set to show after scrolling, it comes after scrolling
+- [ ] A link to a spot on another page (with `#`) still lands on the spot
+
 ### Test batch (0.7.37.3.1): the boot without waiting, and a footer that stays put
 
 - [ ] On a phone (or a narrow window), open /personvern/ on the published site: the footer is not seen at the top while the page loads, and comes in under the text

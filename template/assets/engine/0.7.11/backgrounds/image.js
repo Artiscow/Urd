@@ -283,6 +283,8 @@ export const imageLayer = {
   version: 3,
   label: 'Image',
   labelKey: 'bgLayer.image',
+  // Its picture can wait until its section comes near (renderBackgroundLayers).
+  pictures: true,
   defaults: () => ({
     src: '', fit: 'plain', x: 0.5, y: 0.5, size: 1, opacity: 1, blur: 0,
     parallax: 0, bleed: 'none', motion: 'none', motionSpeed: BG_MOTION_TIME.dflt,
@@ -302,8 +304,9 @@ export const imageLayer = {
   /**
    * @param {HTMLElement} el
    * @param {{src: string, fit?: 'plain'|'tile'|'cover'|'custom'|'contain'|'repeat', x?: number, y?: number, size?: number, opacity?: number, blur?: number, parallax?: number, bleed?: 'none'|'up'|'down'|'both', motion?: 'none'|'kenburns'|'drift', motionSpeed?: number}} props
+   * @param {{first?: boolean}} [options] `first`: the layer stands in the page's first section (renderBackgroundLayers)
    */
-  render(el, props) {
+  render(el, props, options) {
     // The source goes straight into CSS url(), so it must pass the same guard as
     // the nav background (shared isSafeImage). No picture yet means a drawn
     // example that base.css shows only inside the editor, so the owner can set
@@ -366,7 +369,9 @@ export const imageLayer = {
 
     // Same load guard as the image block: the layer is kept invisible until the image
     // has finished loading, so it never appears in stripes.
+    // In a page's first section the picture is the first screen's, so the probe asks for it ahead of the rest, and the background reuses that request.
     const probe = new Image();
+    if (options?.first) probe.setAttribute('fetchpriority', 'high');
     probe.src = src;
     if (!probe.complete) {
       el.style.visibility = 'hidden';

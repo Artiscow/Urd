@@ -291,6 +291,8 @@ function wireJumps() {
  */
 function arriveAtSpot() {
   const jump = () => {
+    // Without a spot in the address there is nothing to jump to, and the scroll position is not read.
+    if (!location.hash) return;
     const navigationType = performance.getEntriesByType?.('navigation')?.[0]?.type;
     if (!jumpOnArrival({ hash: location.hash, navigationType, scrollY: window.scrollY })) return;
     // A link holds the spot's id: the address shows the spot's name, in the same history entry.
@@ -959,7 +961,7 @@ export async function boot(opts) {
 
   const state = { page, site, engine, viewport };
 
-  renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
+  renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport, arriving: true });
   // A visitor's footer joins once no block on the page is still fetching its content, so the page's own content never pushes it down; the editor's preview shows it at once.
   if (preview) opts.root.insertAdjacentElement('afterend', opts.footer);
   else {

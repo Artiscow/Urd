@@ -23,10 +23,18 @@ export function calClock12(props) {
   return props?.clock === '12';
 }
 
-/** The first day of the week as Date.getDay() counts (0 Sunday, 1 Monday): the block's choice, else the language's, else Monday. */
+const weekStarts = new Map();
+
+/** The first day of the week as Date.getDay() counts (0 Sunday, 1 Monday): the block's choice, else the language's (read once per language, since the locale data costs on its first use), else Monday. */
 export function calWeekStart(props, lang) {
   if (props?.weekStart === 'sun') return 0;
   if (props?.weekStart === 'mon') return 1;
+  if (!weekStarts.has(lang)) weekStarts.set(lang, languageWeekStart(lang));
+  return weekStarts.get(lang);
+}
+
+/** The language's first day of the week, from Intl.Locale's week info, else Monday. */
+function languageWeekStart(lang) {
   try {
     const locale = new Intl.Locale(localeOf(lang));
     const info = typeof locale.getWeekInfo === 'function' ? locale.getWeekInfo() : locale.weekInfo;

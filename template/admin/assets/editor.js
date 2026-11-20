@@ -16586,6 +16586,7 @@ var lte = {
 	version: 3,
 	label: "Image",
 	labelKey: "bgLayer.image",
+	pictures: !0,
 	defaults: () => ({
 		src: "",
 		fit: "plain",
@@ -16610,36 +16611,36 @@ var lte = {
 			...e
 		})
 	},
-	render(e, t) {
-		let n = !Cc(t.src);
-		n && e.classList.add("urd-bg-demo");
-		let r = n ? Yy(0) : t.src;
+	render(e, t, n) {
+		let r = !Cc(t.src);
+		r && e.classList.add("urd-bg-demo");
+		let i = r ? Yy(0) : t.src;
 		e.style.opacity = String(t.opacity ?? 1), e.style.clipPath = $ee(t.bleed), e.style.zIndex = t.bleed === "down" || t.bleed === "both" ? "1" : "";
-		let i = document.createElement("div");
-		i.className = "urd-bg-image", i.style.position = "absolute", i.style.left = "0", i.style.right = "0", i.style.top = "0", i.style.bottom = "0";
-		let a = qb(t.motion), o = a === "none" ? i : document.createElement("div");
-		o !== i && (o.className = `urd-bg-motion urd-bg-motion-${a}`, o.style.position = "absolute", o.style.left = "0", o.style.right = "0", o.style.top = "0", o.style.bottom = "0", o.style.animationDuration = `${Jb(t.motionSpeed)}s`, i.appendChild(o));
-		let s = t.fit === "tile" || t.fit === "repeat";
-		o.style.backgroundImage = `url("${r}")`, o.style.backgroundSize = Xb(t.fit, t.size), o.style.backgroundRepeat = s ? "repeat" : "no-repeat", o.style.backgroundPosition = Yb(t.x, t.y);
-		let c = jb(Ab({
+		let a = document.createElement("div");
+		a.className = "urd-bg-image", a.style.position = "absolute", a.style.left = "0", a.style.right = "0", a.style.top = "0", a.style.bottom = "0";
+		let o = qb(t.motion), s = o === "none" ? a : document.createElement("div");
+		s !== a && (s.className = `urd-bg-motion urd-bg-motion-${o}`, s.style.position = "absolute", s.style.left = "0", s.style.right = "0", s.style.top = "0", s.style.bottom = "0", s.style.animationDuration = `${Jb(t.motionSpeed)}s`, a.appendChild(s));
+		let c = t.fit === "tile" || t.fit === "repeat";
+		s.style.backgroundImage = `url("${i}")`, s.style.backgroundSize = Xb(t.fit, t.size), s.style.backgroundRepeat = c ? "repeat" : "no-repeat", s.style.backgroundPosition = Yb(t.x, t.y);
+		let l = jb(Ab({
 			look: t.look,
 			brightness: t.brightness,
 			contrast: t.contrast,
 			saturate: t.saturate,
 			blur: t.blur
 		}));
-		c && (o.style.filter = c);
-		let l = 0;
-		t.blur > 0 && (l = Math.ceil(t.blur), o.style.left = `-${l}px`, o.style.right = `-${l}px`, o.style.top = `-${l}px`, o.style.bottom = `-${l}px`);
-		let u = new Image();
-		if (u.src = r, !u.complete) {
+		l && (s.style.filter = l);
+		let u = 0;
+		t.blur > 0 && (u = Math.ceil(t.blur), s.style.left = `-${u}px`, s.style.right = `-${u}px`, s.style.top = `-${u}px`, s.style.bottom = `-${u}px`);
+		let d = new Image();
+		if (n?.first && d.setAttribute("fetchpriority", "high"), d.src = i, !d.complete) {
 			e.style.visibility = "hidden";
 			let t = () => {
 				e.style.visibility = "";
 			};
-			u.addEventListener("load", t, { once: !0 }), u.addEventListener("error", t, { once: !0 });
+			d.addEventListener("load", t, { once: !0 }), d.addEventListener("error", t, { once: !0 });
 		}
-		e.appendChild(i), t.parallax > 0 && ax(i, t.parallax, o === i ? l : 0, t.fit ?? "cover");
+		e.appendChild(a), t.parallax > 0 && ax(a, t.parallax, s === a ? u : 0, t.fit ?? "cover");
 	}
 };
 function ax(e, t, n, r) {
@@ -16901,6 +16902,7 @@ var Ox = {
 	version: 2,
 	label: "Image gallery",
 	labelKey: "bgLayer.slideshow",
+	pictures: !0,
 	defaults: () => ({
 		images: [],
 		fit: "cover",
@@ -16916,39 +16918,39 @@ var Ox = {
 		opacity: 1,
 		...e
 	}) },
-	render(e, t) {
-		wte(e, t, Tte);
+	render(e, t, n) {
+		wte(e, t, (e, t) => Tte(e, t, n));
 	}
 }, Ax = (e, t) => {
 	let n = document.createElement(e);
 	return n.className = t, n;
 };
-function Tte(e, t) {
-	let n = $y(t.style), r = Cte(t).filter((e) => Cc(e?.src)), i = sb(t.shape), a = cb(t.look);
-	e.classList.add("urd-bg-slideshow", `urd-gallery-${n}`, `urd-gallery-tone-${lb(t.tone)}`), n !== "fill" && e.classList.add(`urd-gallery-shape-${i}`, `urd-gallery-look-${a}`), e.style.setProperty("--urd-frame-radius", `${hb(t.radius)}px`), r.length || e.classList.add("urd-bg-demo"), e.style.opacity = String(t.opacity ?? .85);
-	let o = ob(a, t.frameColor);
-	o && e.style.setProperty("--urd-frame-color", gc(o));
-	let s = t.underNav === !1 ? ["var(--urd-announce-h, 0px)", "var(--urd-nav-own-h, 0px)"] : t.underAnnounce === !0 ? [] : ["var(--urd-announce-h, 0px)"], c = s.length ? `calc(${s.join(" + ")})` : "", l = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? !1, u = eb(n, t.motion), d = {
+function Tte(e, t, n) {
+	let r = $y(t.style), i = Cte(t).filter((e) => Cc(e?.src)), a = sb(t.shape), o = cb(t.look);
+	e.classList.add("urd-bg-slideshow", `urd-gallery-${r}`, `urd-gallery-tone-${lb(t.tone)}`), r !== "fill" && e.classList.add(`urd-gallery-shape-${a}`, `urd-gallery-look-${o}`), e.style.setProperty("--urd-frame-radius", `${hb(t.radius)}px`), i.length || e.classList.add("urd-bg-demo"), e.style.opacity = String(t.opacity ?? .85);
+	let s = ob(o, t.frameColor);
+	s && e.style.setProperty("--urd-frame-color", gc(s));
+	let c = t.underNav === !1 ? ["var(--urd-announce-h, 0px)", "var(--urd-nav-own-h, 0px)"] : t.underAnnounce === !0 ? [] : ["var(--urd-announce-h, 0px)"], l = c.length ? `calc(${c.join(" + ")})` : "", u = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? !1, d = eb(r, t.motion), f = {
 		el: e,
 		props: t,
-		style: n,
-		images: r,
-		motion: u,
-		shape: i,
-		look: a,
-		aspect: ub(i, a),
+		style: r,
+		images: i,
+		motion: d,
+		shape: a,
+		look: o,
+		aspect: ub(a, o),
 		moves: nb({
-			style: n,
-			motion: u,
-			reducedMotion: l
+			style: r,
+			motion: d,
+			reducedMotion: u
 		}),
-		reduced: l,
+		reduced: u,
 		seed: vb(t.seed, yx()),
 		time: gb(t.motionSpeed),
 		dwell: fb(t.interval),
 		dpr: window.devicePixelRatio || 1
 	};
-	Mte[n](d), c && (e.style.top = n === "fill" && t.blur > 0 ? `calc(${c} - ${t.blur * 2}px)` : c);
+	Mte[r](f), l && (e.style.top = r === "fill" && t.blur > 0 ? `calc(${l} - ${t.blur * 2}px)` : l);
 }
 function jx(e, t, n, r, i) {
 	let a = t[n];
@@ -16965,7 +16967,7 @@ function Ete({ el: e, props: t, images: n, motion: r, reduced: i, dpr: a, dwell:
 	}, p = (e, n) => {
 		e.style.backgroundImage = `url("${s ? n.src : xx(n.src, l)}")`, e.style.backgroundSize = s ? "240px auto" : Xb(t.fit), e.style.backgroundRepeat = s ? "repeat" : "no-repeat", e.style.backgroundPosition = s ? "" : Yb(n.x, n.y);
 	}, m = new Image();
-	if (m.src = s ? c[0].src : xx(c[0].src, l), !m.complete) {
+	if (options?.first && m.setAttribute("fetchpriority", "high"), m.src = s ? c[0].src : xx(c[0].src, l), !m.complete) {
 		e.style.visibility = "hidden";
 		let t = () => {
 			e.style.visibility = "";

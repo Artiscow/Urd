@@ -316,10 +316,15 @@ export function renderToTop(site, host = document.body) {
   listening?.abort();
   listening = new AbortController();
   const shown = () => {
-    const past = set.after === 'always' ? -1 : set.after === 'screen' ? window.innerHeight : 400;
+    if (set.after === 'always') {
+      button?.classList.add('visible');
+      return;
+    }
+    const past = set.after === 'screen' ? window.innerHeight : 400;
     button?.classList.toggle('visible', window.scrollY > past);
   };
   window.addEventListener('scroll', shown, { passive: true, signal: listening.signal });
   window.addEventListener('resize', shown, { passive: true, signal: listening.signal });
-  shown();
+  // The first look waits for the next frame, so the scroll position is read once the page is laid out, not while it is being drawn.
+  requestAnimationFrame(shown);
 }

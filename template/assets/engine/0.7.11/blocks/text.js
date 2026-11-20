@@ -206,27 +206,7 @@ export const textBlock = {
       });
     }
 
-    // A safety net at RENDER, not only while typing (ADR-0018). The stored
-    // height is in pixels while the wrapping depends on the width: if the content
-    // width, the font size or the language changes, a text that fit perfectly
-    // becomes too tall for its own box. The listener above catches that only
-    // while someone is actually typing, so the same measurement is done here,
-    // following the same pattern as the data blocks (quote, stats, faq ...).
-    //
-    // The growth is ONE-WAY: the frame never shrinks by itself, since an empty
-    // or short text keeps the space the owner gave it. The tolerance keeps
-    // rounding from causing endless small adjustments.
-    requestAnimationFrame(() => {
-      if (!el.isConnected || ctx.viewport === 'mobile' || design === 'questions') return;
-      const needed = box.scrollHeight * ((box.currentCSSZoom ?? 1) / (el.currentCSSZoom ?? 1));
-      if (needed <= el.clientHeight + 4) return;
-      const step = ctx.grid?.size ?? 8;
-      const newH = Math.ceil(needed / step) * step;
-      // The display only: the frame keeps the design height, and the push
-      // pass in render.js moves the blocks below by the measured growth
-      // (ADR-0024), in the editor as on the published page.
-      el.style.height = `${newH}px`;
-    });
+    // The height a text needs is measured by the push pass on the desktop (render.js applyPush, which every desktop section has) and by the phone's flow on the phone, so a text whose wrapping changed with the width, the font or the language grows its box there.
   },
 };
 

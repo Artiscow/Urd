@@ -33,25 +33,62 @@ import { textDesign } from './doc-look.js';
  * they never topple the page).
  * @param {HTMLElement} host The element the layers are built into
  * @param {{layers?: Array<{type: string, version?: number, props?: object}>}} [background]
+ * @param {{later?: boolean, first?: boolean}} [options] `later` (a section below the first, on a visitor's page as it arrives): a layer whose definition loads pictures (`pictures: true`) is placed at once and drawn as its section comes within a screen of the viewport, or before the page is printed, so the pictures below the first screen wait for their turn; without an IntersectionObserver it is drawn at once. `first` (the page's first section on a visitor's page): the layer is told so, and fetches its picture ahead of the rest.
  */
-export function renderBackgroundLayers(host, background) {
+export function renderBackgroundLayers(host, background, { later = false, first = false } = {}) {
   const Urd = window.Urd;
   for (const layer of background?.layers ?? []) {
     const el = document.createElement('div');
     el.className = 'urd-bg-layer';
-    const lifted = lift(layer, Urd.backgrounds.get(layer.type));
+    const def = Urd.backgrounds.get(layer.type);
+    const lifted = lift(layer, def);
     if (!lifted.ok) {
       console.warn(`Urd: skipping background layer '${layer.type}' (${lifted.placeholder})`);
       continue;
     }
-    try {
-      Urd.backgrounds.get(layer.type).render(el, lifted.props);
+    const draw = () => {
+      try {
+        def.render(el, lifted.props, { first });
+        return true;
+      } catch (err) {
+        console.warn(`Urd: background layer '${layer.type}' failed to render`, err);
+        return false;
+      }
+    };
+    if (later && def.pictures === true && typeof IntersectionObserver === 'function') {
       host.appendChild(el);
-    } catch (err) {
-      console.warn(`Urd: background layer '${layer.type}' failed to render`, err);
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) drawWaiting(el);
+      }, { rootMargin: '100% 0px' });
+      waitingLayers.set(el, () => {
+        observer.disconnect();
+        if (el.isConnected) draw();
+      });
+      observer.observe(el);
+    } else if (draw()) {
+      host.appendChild(el);
     }
   }
 }
+
+/** The picture layers waiting for their section to come near, each with what draws it. */
+const waitingLayers = new Map();
+
+/** Draws a waiting layer once, and lets go of the layers that have left the page. */
+function drawWaiting(el) {
+  const draw = waitingLayers.get(el);
+  waitingLayers.delete(el);
+  draw?.();
+  for (const [other, drawOther] of waitingLayers) {
+    if (!other.isConnected) {
+      waitingLayers.delete(other);
+      drawOther();
+    }
+  }
+}
+
+// A page printed holds every picture: the layers still waiting are drawn before the print is laid out.
+if (typeof window !== 'undefined') window.addEventListener?.('beforeprint', () => { for (const el of [...waitingLayers.keys()]) drawWaiting(el); });
 
 /**
  * Translates a frame to CSS positioning.
@@ -120,8 +157,7 @@ let pushSuspended = 0;
  * @param {{w: number}} frame The block's desktop frame
  * @returns {number}
  */
-export function drawnWidth(el, canvas, frame) {
-  const across = canvas.clientWidth;
+export function drawnWidth(el, canvas, frame, across = canvas.clientWidth) {
   return across && el.offsetWidth ? Math.max(frame.w, (el.offsetWidth / across) * 100) : frame.w;
 }
 
@@ -147,30 +183,42 @@ function applyPush(host) {
   // last pass put it: the drag draws its block with the block's own shift
   // (pushShiftOf), and the resume pushes again from the new frames.
   if (pushSuspended) return;
-  const items = [];
+  const blocks = [];
   for (const el of canvas.querySelectorAll(':scope > .urd-block')) {
     // A block drawn in its phone design is measured by the design it draws (drawnBlock).
     const stored = section.blocks.find((b) => b.id === el.dataset.blockId);
     const block = el._urdPhone ? drawnBlock(stored, el._urdPhone.narrow) : stored;
     const frame = block?.frames?.desktop;
-    if (!frame) continue;
-    // The box follows its content down to the design height and never
-    // below it: taller content grows it, content that fits again (a wider
-    // window, a text set to shrink) gives the design height back. Measured
-    // with the box at the design height, since the content's min-height
-    // follows the box. A block whose height follows its content (ADR-0025)
-    // is drawn at the content's own height, also below the design height,
-    // while the blocks below keep their places, since the push moves blocks
-    // down only.
+    if (frame) blocks.push({ el, block, frame });
+  }
+  // The pass reads and writes in phases, so the reads of most blocks share one layout rather than one each (a block that follows its content, or holds the editor's own parts, measures with writes of its own): the canvas's width first, before anything is written.
+  const across = canvas.clientWidth;
+  const ratio = canvasRatioAt(canvas, across);
+  // The box follows its content down to the design height and never
+  // below it: taller content grows it, content that fits again (a wider
+  // window, a text set to shrink) gives the design height back. Measured
+  // with the box at the design height, since the content's min-height
+  // follows the box. A block whose height follows its content (ADR-0025)
+  // is drawn at the content's own height, also below the design height,
+  // while the blocks below keep their places, since the push moves blocks
+  // down only.
+  for (const { el, block, frame } of blocks) {
     el.style.height = `${frame.h}px`;
-    fitContent(el, frame.h, block);
+    fitContent(el, frame.h, block, ratio);
+  }
+  for (const it of blocks) {
+    const { el, block, frame } = it;
     // An image block's picture fills its frame and never grows it: a zoomed or turned picture overflows its clipping frame, which is no content to make room for.
     const measure = () => (followsContent(block) ? hugHeight(el) : 0) || (block.type === 'image' ? frame.h : Math.max(frame.h, Math.round(contentHeight(el))));
-    const needed = measure();
+    it.needed = measure();
     // The editor's own parts (the adders, the placeholders of empty fields)
     // are drawn but never push: the growth is the content a visitor sees, so
     // the editor's section heights are the published page's.
-    const seen = el.querySelector(EDITOR_ONLY) ? asVisitor(el, measure) : needed;
+    it.seen = el.querySelector(EDITOR_ONLY) ? asVisitor(el, measure) : it.needed;
+    it.w = drawnWidth(el, canvas, frame, across);
+  }
+  const items = [];
+  for (const { el, frame, needed, seen, w } of blocks) {
     if (needed !== frame.h) el.style.height = `${needed}px`;
     const grow = Math.max(0, seen - frame.h);
     // The drawn box is kept, so a redraw between passes (a drag, the arrow
@@ -178,7 +226,7 @@ function applyPush(host) {
     // is kept the same way, below.
     if (needed !== frame.h) el.dataset.urdDrawn = String(needed);
     else delete el.dataset.urdDrawn;
-    items.push({ id: el.dataset.blockId, x: frame.x, w: drawnWidth(el, canvas, frame), y: frame.y, h: frame.h, grow, el });
+    items.push({ id: el.dataset.blockId, x: frame.x, w, y: frame.y, h: frame.h, grow, el });
   }
   // The growth is kept for the drag's live pass (pushPreview).
   host._urdPushGrow = new Map(items.map((it) => [it.id, it.grow]));
@@ -304,7 +352,7 @@ export function updateFrames(host, frames) {
  * @param {number} designH The frame's design height in px
  * @param {object} block The block data
  */
-function fitContent(el, designH, block) {
+function fitContent(el, designH, block, ratio = canvasRatio(el)) {
   const child = contentChild(el);
   if (!child) return;
   const size = drawnScale(block);
@@ -316,7 +364,7 @@ function fitContent(el, designH, block) {
   }
   const floor = clampFitMin(block.fitMin);
   if (block.fit === 'shrink') {
-    applyZoom(child, Math.max(floor, canvasRatio(el)) * size);
+    applyZoom(child, Math.max(floor, ratio) * size);
     return;
   }
   const minHeight = child.style.minHeight;
@@ -347,9 +395,14 @@ function fitContent(el, designH, block) {
  */
 function canvasRatio(el) {
   const canvas = el.closest('.urd-canvas');
+  return canvas ? canvasRatioAt(canvas, canvas.clientWidth) : 1;
+}
+
+/** canvasRatio for a canvas whose width is already read. */
+function canvasRatioAt(canvas, across) {
   const designW = canvas?._urdDesignW;
   if (!canvas || !(designW > 0)) return 1;
-  return Math.min(1, canvas.clientWidth / designW);
+  return Math.min(1, across / designW);
 }
 
 /** The block's content: its first child that is not editing chrome. */
@@ -1001,11 +1054,15 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
  */
 export function renderPage(page, site, root, opts = {}) {
   root.replaceChildren();
-  for (const section of page.sections) {
+  // The scrollbar's width and the side menu's column are read once, before the sections are added, rather than by each section while the page grows.
+  const gutter = window.innerWidth - document.documentElement.clientWidth;
+  const side = sideColumn();
+  page.sections.forEach((section, i) => {
     const host = document.createElement('section');
     root.appendChild(host);
-    renderSection(section, site, host, opts);
-  }
+    // The first section is the first screen: its pictures load at once and first (`first`).
+    renderSection(section, site, host, { ...opts, first: i === 0, gutter, side });
+  });
   // The "+ New section" bars between sections (preview only).
   if (opts.preview) window.UrdPreviewEdit?.enhancePage(root, page, site);
   // Sticky blocks are remeasured (a re-render may have changed heights/fields).
@@ -1074,15 +1131,15 @@ export function renderSection(section, site, host, opts = {}) {
   const grid = section.grid ?? site.grid;
   const asked = opts.viewport ?? 'desktop';
   // A copy drawn to be measured keeps the view it is asked for.
-  const handoff = asked === 'desktop' && !opts.measure ? phoneHandoff(section, site, measuredText, window.innerWidth - document.documentElement.clientWidth, sideColumn()) : 0;
+  const handoff = asked === 'desktop' && !opts.measure ? phoneHandoff(section, site, measuredText, opts.gutter ?? window.innerWidth - document.documentElement.clientWidth, opts.side ?? sideColumn()) : 0;
   watchHandoff(host, handoff, () => {
     // In the editor the editor sends the section again, since what has been typed since it was drawn lives in its draft.
     if (opts.preview) window.parent?.postMessage({ type: 'urd-redraw-section', sectionId: section.id }, location.origin);
-    else renderSection(section, site, host, opts);
+    else renderSection(section, site, host, { ...opts, gutter: undefined, side: undefined, arriving: false });
   });
   const viewport = handoff && window.matchMedia(`(max-width: ${handoff}px)`).matches ? 'mobile' : asked;
   // `handoff`: a section showing its phone layout on a desktop page keeps the desktop's measure on its texts (blocks/text.js), its row being as wide as the desktop's canvas.
-  const ctx = { site, section, grid, viewport, handoff: viewport !== asked, preview: Boolean(opts.preview || opts.measure), measure: Boolean(opts.measure) };
+  const ctx = { site, section, grid, viewport, handoff: viewport !== asked, preview: Boolean(opts.preview || opts.measure), measure: Boolean(opts.measure), first: Boolean(opts.first) };
 
   host.className = 'urd-section';
   host.dataset.sectionId = section.id;
@@ -1098,7 +1155,8 @@ export function renderSection(section, site, host, opts = {}) {
   applySectionTheme(host, section.theme);
   host.replaceChildren();
 
-  renderBackgroundLayers(host, section.background);
+  // The pictures of a section below the first wait until it comes near, as a visitor's page arrives; a later drawing (a breakpoint, a newer page file) draws them at once.
+  renderBackgroundLayers(host, section.background, { later: Boolean(opts.arriving) && !opts.first && !ctx.preview, first: Boolean(opts.first) && !ctx.preview });
 
   // The shape dividers: over the background, under the content.
   for (const edge of ['top', 'bottom']) {

@@ -68,7 +68,8 @@ test('a block beside the grown one, in another column, keeps its place, and a pu
   // The page's pass reads the width as drawn, which a picture's width floor can make wider than its frame on a narrow canvas.
   const render = readFileSync(new URL('render.js', ENGINE_DIR), 'utf8');
   assert.match(render, /return across && el\.offsetWidth \? Math\.max\(frame\.w, \(el\.offsetWidth \/ across\) \* 100\) : frame\.w;/);
-  assert.equal((render.match(/w: drawnWidth\(el, canvas, frame\)/g) ?? []).length, 2, 'the pass and the drag\'s live pass');
+  assert.match(render, /it\.w = drawnWidth\(el, canvas, frame, across\);/, 'the pass, with the canvas read once');
+  assert.match(render, /w: drawnWidth\(el, canvas, frame\)/, 'the drag\'s live pass');
   // The fit and the typing read the frames' widths the same way.
   const blocks = [{ id: 'cal', frames: { desktop: { x: 50, y: 0, w: 45, h: 300 } } }, { id: 'text', frames: { desktop: { x: 0, y: 200, w: 45, h: 80 } } }];
   assert.equal(fitMoves(blocks, 'cal', 420).size, 0);
@@ -520,7 +521,7 @@ test('phoneHandoff: a side menu\'s column narrows the canvas, so the section tur
   const { readFileSync } = await import('node:fs');
   const { ENGINE_DIR } = await import('./_engine.mjs');
   const render = readFileSync(new URL('render.js', ENGINE_DIR), 'utf8');
-  assert.match(render, /phoneHandoff\(section, site, measuredText, window\.innerWidth - document\.documentElement\.clientWidth, sideColumn\(\)\)/);
+  assert.match(render, /phoneHandoff\(section, site, measuredText, opts\.gutter \?\? window\.innerWidth - document\.documentElement\.clientWidth, opts\.side \?\? sideColumn\(\)\)/);
   // A section that shows its phone layout on the desktop is edited in the phone view: «My templates» and a selection by id pass it by, as placing and pasting do.
   const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
   assert.match(edit, /const host = document\.querySelector\('\.urd-section-active:not\(\.urd-handoff\)'\) \?\? document\.querySelector\('\.urd-section:not\(\.urd-handoff\)'\);/);

@@ -58,7 +58,10 @@ async function fetchSource(url) {
 }
 
 /** All sources (resolved, ics.resolveSources) → sorted occurrences with category and signup link. */
-async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetingHosts, to = undefined) {
+/**
+ * @param {Map<string, Promise<string>>|null} [early] The feeds the calendar asked for with its modules (renderCalendar), by address: each is taken once, so a redraw reads the session's copy
+ */
+async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetingHosts, to = undefined, early = null) {
   const errors = [];
   const events = [];
   let feedZone = null;
@@ -67,7 +70,9 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetin
     if (!url) { errors.push(ta('calendar.unknownSource', { source: entry.url })); return; }
     try {
       // Every event remembers the source it came from (expandEvents keeps it on the occurrence): its name and colours, and from the site's registry its words, page, organizer and whether it stands in the filter.
-      const feed = ics.parseIcs(await fetchSource(url));
+      const asked = early?.get(url);
+      early?.delete(url);
+      const feed = ics.parseIcs(await (asked ?? fetchSource(url)));
       feedZone ??= feed.timezone;
       for (const event of feed.events) events.push({ ...event, source: entry });
     } catch (error) {
@@ -205,7 +210,9 @@ const TEXTS = new WeakMap();
 function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const lang = ctx.site?.site?.lang;
   const clock12 = cf.calClock12(props);
-  const weekStart = cf.calWeekStart(props, lang);
+  // The first day of the week asks the browser's locale data, which costs on its first use, so it is worked out only where a week is drawn.
+  let weekStartDay = null;
+  const weekStart = () => (weekStartDay ??= cf.calWeekStart(props, lang));
   const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
   // The keys of a day grid belong to the visitor: with the editing handles on in the preview they are left alone.
   const keysOn = () => !ctx.preview || document.body.classList.contains('urd-chrome-off');
@@ -667,9 +674,9 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const ui = { el: el2, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, noticeHref: noticeLink?.href ?? '', noticeOn, countdown, image: imageUrl, themedWords, withDesign, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), descriptionIn: cd.calDescription(props), time, timeText, timeString, startClock, metaString, hasTime, excerpt, sources,
     dayMonth, dateLine, weekdayDay, monthYear, monthRange, percent,
     /** The week as the site's language lays it out: the empty cells before the first of a month, the weekday names in order, and the first day of a week. */
-    lead: (first) => cf.leadDays(first, weekStart),
-    dows: () => cf.orderWeekdays(dates().weekdaysShort, weekStart),
-    weekStartOf: (ms) => cf.startOfWeek(ms, weekStart),
+    lead: (first) => cf.leadDays(first, weekStart()),
+    dows: () => cf.orderWeekdays(dates().weekdaysShort, weekStart()),
+    weekStartOf: (ms) => cf.startOfWeek(ms, weekStart()),
     /** Now, on the clock the times are shown in. */
     today: () => new Date(zone ? cf.shiftToZone(Date.now(), zone) : Date.now()),
     /** True when the calendar is narrow (drawCalendar), and a design with seven columns draws its phone layout. */
@@ -1712,17 +1719,26 @@ function renderCalendar(el, props, ctx) {
     host.setAttribute('aria-busy', 'true');
     host.appendChild(loadingNode(el, ctx));
   }
-  // The parser and the design model are loaded together, on the first render, and a design's renderer module with them.
+  // The feeds are asked for as soon as the parser is in, beside the other modules, so the events arrive with the code that draws them; the drawing takes these requests (loadOccurrences), and a copy drawn only to be measured asks for none.
+  const early = new Map();
+  if (host.hasAttribute('aria-busy') && !ctx.measure) {
+    import('../ics.js').then((ics) => {
+      if (!host.isConnected) return;
+      for (const entry of ics.resolveSources(props.sources, ctx.site?.site?.calendars)) {
+        const url = ics.normalizeSourceUrl(entry.url);
+        if (!url || early.has(url)) continue;
+        const asked = fetchSource(url);
+        asked.catch(() => {});
+        early.set(url, asked);
+      }
+    }, () => {});
+  }
+  // The parser and the design model are loaded together, on the first render, and the renderer modules the calendar draws with in one wave after them: the design's own, the week strip for the view switcher, and the phone's and the card's design (calPhoneView, calCardDesign) where they are a module's own.
   calendarParts().then(async ([ics, cd, cf, maps, links]) => {
     const design = cd.calDesign(props.design);
-    const mod = design.module ? await DESIGN_MODULES[design.module]?.() : null;
-    // The view switcher draws the week with the week strip, so its module comes along.
-    const weekMod = cd.calSwitcher(props) ? await DESIGN_MODULES.time() : null;
-    // The phone design the block draws on a phone (calPhoneView) and the card design its card wears (calCardDesign), when they are a module's own.
-    const lent = async (def) => (!def.module ? null : def.module === design.module ? mod : await DESIGN_MODULES[def.module]?.());
-    const phoneMod = await lent(cd.calPhoneDesignDef(cd.calPhoneView(props), props));
-    const cardMod = await lent(cd.calCardDesignDef(cd.calCardDesign(props)));
-    if (host.isConnected) drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx);
+    const wanted = [design.module, cd.calSwitcher(props) ? 'time' : null, cd.calPhoneDesignDef(cd.calPhoneView(props), props).module, cd.calCardDesignDef(cd.calCardDesign(props)).module];
+    const [mod, weekMod, phoneMod, cardMod] = await Promise.all(wanted.map((name) => (name ? DESIGN_MODULES[name]?.() ?? null : null)));
+    if (host.isConnected) drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx, early);
   }).catch((error) => {
     // A module that did not load, or a design that threw: the loading state gives way to the empty state.
     console.warn('Urd: the calendar could not be drawn', error);
@@ -1732,7 +1748,7 @@ function renderCalendar(el, props, ctx) {
   });
 }
 
-function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx) {
+function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx, early = null) {
   // The site's own time zone, when set: every visitor sees the times on that zone's clock.
   const siteZone = ctx.site?.site?.timeZone;
   const zone = cf.zoneValid(siteZone) ? siteZone.trim() : null;
@@ -1971,7 +1987,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
 
   // The switcher needs the week and the month from their start, whichever is the earlier.
   // The week begins on the day the site's language starts it on, which can be the day before Monday.
-  const weekFrom = Math.min(ics.windowStart('week'), ui.weekStartOf(Date.now()));
+  const weekFrom = switcher || view === 'week' ? Math.min(ics.windowStart('week'), ui.weekStartOf(Date.now())) : 0;
   // A year design with another month at the top reads a season: twelve months from that month, through the season's end.
   const season = view === 'year' ? ics.seasonRange(ics.seasonTop(ui.opt.firstMonth, ui.today()), ui.today().getTime()) : null;
   const viewFrom = switcher ? Math.min(weekFrom, ics.windowStart('month')) : view === 'week' ? weekFrom : season ? season.from : ics.windowStart(view);
@@ -1979,7 +1995,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   const pagesBack = ['month', 'week', 'day'].includes(view) || switcher;
   const from = Math.min(pagesBack ? viewFrom - 365 * 24 * 3600 * 1000 : viewFrom, props.showEarlier === true ? Date.now() - EARLIER_DAYS * 24 * 3600 * 1000 : viewFrom);
   const to = season && !switcher ? season.to : pagesBack ? Date.now() + 400 * 24 * 3600 * 1000 : undefined;
-  loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone, ui.meetingHosts, to).then(({ occurrences, errors, feedZone: fz }) => {
+  loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone, ui.meetingHosts, to, early).then(({ occurrences, errors, feedZone: fz }) => {
     if (!host.isConnected) return;
     feedZone = fz;
     if (!occurrences.length && errors.length) {

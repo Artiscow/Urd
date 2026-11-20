@@ -52,6 +52,8 @@ export const slideshowLayer = {
   version: 2,
   label: 'Image gallery',
   labelKey: 'bgLayer.slideshow',
+  // Its pictures can wait until its section comes near (renderBackgroundLayers).
+  pictures: true,
   defaults: () => ({ images: [], fit: 'cover', opacity: 0.85, blur: 0, ...V2_FIELDS }),
   migrations: {
     // 1 -> 2: the styles, the motions and pictures from a shared folder. The
@@ -74,8 +76,13 @@ export const slideshowLayer = {
    *          spread?: number, tilt?: number, radius?: number, rows?: number,
    *          direction?: 'left'|'right', underNav?: boolean, underAnnounce?: boolean, repeat?: boolean, frameColor?: string}} props
    */
-  render(el, props) {
-    drawWithFolder(el, props, draw);
+  /**
+   * @param {HTMLElement} el
+   * @param {object} props
+   * @param {{first?: boolean}} [options] `first`: the layer stands in the page's first section (renderBackgroundLayers), so its first picture is fetched ahead of the rest
+   */
+  render(el, props, options) {
+    drawWithFolder(el, props, (layer, layerProps) => draw(layer, layerProps, options));
   },
 };
 
@@ -86,7 +93,7 @@ const el2 = (tag, className) => {
 };
 
 /** The layer itself, from the pictures that are in hand at this moment. */
-function draw(el, props) {
+function draw(el, props, options) {
   const style = galleryStyle(props.style);
   // The sources go straight into CSS url(), so they pass the same guard as the image layer.
   const images = picturesFor(props).filter((img) => isSafeImage(img?.src));
@@ -181,6 +188,7 @@ function renderFill({ el, props, images, motion, reduced, dpr, dwell }) {
   // Same load guard as the image layer: keep the layer invisible until the first
   // image has finished loading, so it never appears in stripes.
   const probe = new Image();
+  if (options?.first) probe.setAttribute('fetchpriority', 'high');
   probe.src = demo ? list[0].src : photoSrcAt(list[0].src, width);
   if (!probe.complete) {
     el.style.visibility = 'hidden';
