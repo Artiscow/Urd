@@ -667,10 +667,6 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
   Done when: a menu laid out in the editor from its own parts stands anywhere on the page, works by the keyboard and on touch, and survives an Urd update.
 
 ## Bugs, (bad) functions and stuff that needs fixing
- - [x] Colour picker is a bit shabby - needs design reevaluation, DELIVERED 0.7.0.92 (19 November 2026): three tabs, Theme, Custom and Palette, chosen as B on the «Colour Picker» canvas (https://claude.ai/code/artifact/07b90a5b-ae48-45ea-8bb0-934d67f772d1, a private claude.ai artifact); the larger palette and the site's own colour sets continue in 0.7.9.1 to 0.7.9.3
- - [x] "Settings" panel name needs a new name - it has to show that it is settings for the chosen section or element, DELIVERED 0.7.0.92 (19 November 2026): «Selection settings» (nb «Utvalgets innstillinger», tr «Seçim ayarları»), ADR-0016 amended
- - [x] "+ [setting]" inside toolmenu/settings need to be vertical with the option below, DELIVERED 0.7.0.92 (19 November 2026): the extras at an area's foot stand in a column, an extra added opening in its name's place
- - [x] New setting to put another icon/arrow on top of an image background for the Back to top button, DELIVERED 0.7.0.92 (19 November 2026): «Over the picture», the arrow, a drawn icon or a character over a picture that fills the whole button
 
 ## Suggestions, Ideas and Wishes
 - [ ] Static image as background - while you scroll, the image stays still
@@ -678,7 +674,6 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - [ ] Check if deployed site can detect if phone has a holepunch/floating island style camera, and if it can avoid filling that space
  
 ## URGENT
-- [x] Toolmenu hover highlight, DELIVERED 0.7.0.92 (19 November 2026): a tool on the block's bar lit under the pointer and at the keyboard's focus in every look, its drawing in the middle of its button at every size and screen scale
 
 ## Known Limitations (documented, no fix planned)
 

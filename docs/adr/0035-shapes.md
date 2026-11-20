@@ -7,7 +7,7 @@ Status: Accepted. Chosen in the design pass of BACKLOG 0.7.13.14 on 19 November 
 
 The «Back to top» button had three outlines of its own (a circle, a rounded square and a ring) and one slider that turned the edge into waves. More shapes were wanted, and ways to shape the button by hand.
 
-The field offers shapes two ways. A large design system ships 35 fixed shapes for its buttons. CSS has corner shapes of its own (`corner-shape`: squircle, bevel, notch), in one browser engine only on 19 November 2026 ([docs/comparison/CODE.md](../comparison/CODE.md)). Neither lets an owner make a shape, and the second cannot be relied on ([ADR-0011](0011-native-css-first-components.md)).
+The field offers shapes two ways. A large design system ships 35 fixed shapes for its buttons. CSS has corner shapes of its own (`corner-shape`: squircle, bevel, notch), in one browser engine only on 19 November 2026 ([docs/comparison/CODE.md](../comparison/CODE.md)). Neither lets an owner make a shape, and the second cannot be relied on ([ADR-0011](0011-native-css-first.md)).
 
 An outline that Urd draws itself, as one SVG path, is the same in every browser, and anything cut to a shape (a picture filling a button) can take the same path as its mask.
 

@@ -125,13 +125,10 @@ export const textBlock = {
     /** The box the words fill: the document's root where there is one, with the contents row above the text in a narrow block. */
     const box = doc ?? content;
 
-    // Click-and-type: in preview mode (inside the editor's iframe) the text is
-    // directly editable, and every change is posted to the editor, which owns
-    // the draft. The block id sits on the block element (set by render.js).
-    // In the phone view the words written are the phone's own (ADR-0033): the
-    // edit says so, and the desktop frame is left as it is. A block whose words
-    // the phone cannot keep (PHONE_WORDS, the terms of sale among them) is not
-    // written in the phone view.
+    // Click-and-type: in preview mode (inside the editor's iframe) the text is directly editable, and every change is posted to the editor, which owns the draft.
+    // The block id sits on the block element (set by render.js).
+    // In the phone view the words written are the phone's own (ADR-0033): the edit says so, and the desktop frame is left as it is.
+    // A block whose words the phone cannot keep (PHONE_WORDS, the terms of sale among them) is not written in the phone view.
     const phoneView = ctx.viewport === 'mobile';
     const ownType = ctx.section?.blocks.find((b) => b.id === el.dataset.blockId)?.type ?? 'text';
     if (ctx.preview && (!phoneView || PHONE_WORDS[ownType])) {

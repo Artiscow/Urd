@@ -165,6 +165,33 @@
       </label>
     </Setting>
   {/if}
+  {#if wordsAlone}
+    <!-- The words alone answer the mouse and a touch as the menu's links do, and stand over a line of the owner's choosing -->
+    <Setting key="hover">
+      <SelectRow inline label={ta('lbl.toTopHover')} value={set.hover}
+        options={TOTOP_HOVERS.map((id) => [id, ta(`opt.hover.${id}`)])}
+        onchange={(v) => write('hover', v, 'standard')} />
+    </Setting>
+    <!-- A touch on a phone, where phones show the button -->
+    {#if set.phone}
+      <Setting key="press">
+        <SelectRow inline label={ta('lbl.navPress')} title={ta('tip.toTopPress')} value={set.press ?? ''}
+          options={[['', ta('opt.navPress.none')], ...TOTOP_PRESSES.map((id) => [id, ta(`opt.navPress.${id}`)])]}
+          onchange={(v) => write('press', v, '')} />
+      </Setting>
+    {/if}
+    <Setting key="line">
+      <SelectRow inline label={ta('lbl.toTopLine')} value={set.line}
+        options={TOTOP_LINES.map((id) => [id, ta(`opt.toTopLine.${id}`)])}
+        onchange={(v) => write('line', v, 'solid')} />
+    </Setting>
+    {#if set.line !== 'none'}
+      <Setting key="lineWidth">
+        <SliderRow label={ta('lbl.toTopLineWidth')} value={set.lineWidth} min={TOTOP_LINE_WIDTH.min} max={TOTOP_LINE_WIDTH.max} step={TOTOP_LINE_WIDTH.step}
+          shown={`${set.lineWidth} px`} oninput={(v) => write('lineWidth', v, TOTOP_LINE_WIDTH.standard, 'edit:site-totop-line')} />
+      </Setting>
+    {/if}
+  {/if}
   {#if shaped}
     <!-- The shape: its picture and its name, opening the shape window (lib/ShapeWindow.svelte), where a shipped shape is picked, shaped with Custom's sliders or drawn by hand -->
     <Setting key="shape">
@@ -220,33 +247,6 @@
             </span>
           </span>
         </div>
-      </Setting>
-    {/if}
-  {/if}
-  {#if wordsAlone}
-    <!-- The words alone answer the mouse and a touch as the menu's links do, and stand over a line of the owner's choosing -->
-    <Setting key="hover">
-      <SelectRow inline label={ta('lbl.toTopHover')} value={set.hover}
-        options={TOTOP_HOVERS.map((id) => [id, ta(`opt.hover.${id}`)])}
-        onchange={(v) => write('hover', v, 'standard')} />
-    </Setting>
-    <!-- A touch on a phone, where phones show the button -->
-    {#if set.phone}
-      <Setting key="press">
-        <SelectRow inline label={ta('lbl.navPress')} title={ta('tip.toTopPress')} value={set.press ?? ''}
-          options={[['', ta('opt.navPress.none')], ...TOTOP_PRESSES.map((id) => [id, ta(`opt.navPress.${id}`)])]}
-          onchange={(v) => write('press', v, '')} />
-      </Setting>
-    {/if}
-    <Setting key="line">
-      <SelectRow inline label={ta('lbl.toTopLine')} value={set.line}
-        options={TOTOP_LINES.map((id) => [id, ta(`opt.toTopLine.${id}`)])}
-        onchange={(v) => write('line', v, 'solid')} />
-    </Setting>
-    {#if set.line !== 'none'}
-      <Setting key="lineWidth">
-        <SliderRow label={ta('lbl.toTopLineWidth')} value={set.lineWidth} min={TOTOP_LINE_WIDTH.min} max={TOTOP_LINE_WIDTH.max} step={TOTOP_LINE_WIDTH.step}
-          shown={`${set.lineWidth} px`} oninput={(v) => write('lineWidth', v, TOTOP_LINE_WIDTH.standard, 'edit:site-totop-line')} />
       </Setting>
     {/if}
   {/if}

@@ -3865,9 +3865,8 @@ function initTextToolbar() {
       if (!document.hasFocus()) return;
       const el = document.activeElement;
       if (el instanceof HTMLElement && el.closest('.urd-text[contenteditable="true"], .urd-cp')) return;
-      // Was the field SWAPPED OUT by a re-render (typography/panel
-      // change), not abandoned by the user? Then report reconnects
-      // via the block id instead of ending the writing.
+      // Was the field SWAPPED OUT by a re-render (typography/panel change), not abandoned by the user?
+      // Then report reconnects via the block id instead of ending the writing.
       if (activeText && !activeText.isConnected && activeBlockId) {
         report();
         return;
@@ -3877,11 +3876,9 @@ function initTextToolbar() {
       report();
     });
   });
-  // A press anywhere in the canvas outside the field ends the writing. The surface
-  // drag in preview swallows mousedown (preventDefault), so the text field
-  // never loses focus by itself; it is therefore ended explicitly here.
-  // Presses in the color picker, the image editor or another
-  // text field must NOT end it (they handle themselves).
+  // A press anywhere in the canvas outside the field ends the writing.
+  // The surface drag in preview swallows mousedown (preventDefault), so the text field never loses focus by itself; it is therefore ended explicitly here.
+  // Presses in the color picker, the image editor or another text field must NOT end it (they handle themselves).
   document.addEventListener('pointerdown', (event) => {
     if (!activeText) return;
     const target = event.target instanceof Element ? event.target : null;
@@ -4571,12 +4568,8 @@ function selectBlock(el, opts = {}) {
   // The bar shows with the selection, and is kept inside the canvas once it is drawn; in the phone view the editor draws it (watchPhoneBar).
   el?._urdKeepBar?.();
   watchPhoneBar();
-  // The selected block takes the keyboard focus, so the keys on a selected
-  // block (the arrows, Delete, 1, 2 and 3, Shift+F10) work right after the
-  // click: the press that selects prevents its default, which would
-  // otherwise have moved the focus into the frame. Text with the caret
-  // keeps it, and a block picked in the editor's own lists leaves the focus
-  // in the list (opts.keepFocus).
+  // The selected block takes the keyboard focus, so the keys on a selected block (the arrows, Delete, 1, 2 and 3, Shift+F10) work right after the click: the press that selects prevents its default, which would have moved the focus into the frame.
+  // Text with the caret keeps it, and a block picked in the editor's own lists leaves the focus in the list (opts.keepFocus).
   if (el && !opts.keepFocus && !el.contains(document.activeElement)) {
     if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
     el.focus({ preventScroll: true });
@@ -5539,12 +5532,10 @@ function insertBlocksTemplate(tpl, sectionId, anchor, phone = {}) {
   post({ type: 'urd-select-block', sectionId, blockId: selectedBlockId });
 }
 
-/** The Blocks panel's My templates group (urd-insert-template): insert
- *  into the active section (otherwise the first) with stored positions,
- *  clamping only. */
+/** The Blocks panel's My templates group (urd-insert-template): insert into the active section (otherwise the first) with stored positions, clamping only; a section showing its phone layout on the desktop (urd-handoff) is edited in the phone view and takes none, as placeBlock does. */
 export function insertTemplate(id) {
   const tpl = templates.find((m) => m.id === id && m.kind === 'blocks' && Array.isArray(m.blocks));
-  const host = document.querySelector('.urd-section-active') ?? document.querySelector('.urd-section');
+  const host = document.querySelector('.urd-section-active:not(.urd-handoff)') ?? document.querySelector('.urd-section:not(.urd-handoff)');
   if (!tpl || !host) return;
   insertBlocksTemplate(tpl, host.dataset.sectionId, null, phoneAdd(isMobile() ? phoneDropMid(host) : null));
 }
@@ -5562,9 +5553,10 @@ function duplicateSelection(ctx) {
  * the id until the section is re-rendered). Called AFTER the re-render.
  * A block `picked` in the editor's own lists (the Phone panel's order) is
  * brought into view, and the focus stays in the list.
+ * A block in a section showing its phone layout on the desktop (urd-handoff) is not selected there: that section is edited in the phone view.
  */
 export function selectById(blockId, picked = false) {
-  const el = document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"]`);
+  const el = document.querySelector(`.urd-section:not(.urd-handoff) .urd-block[data-block-id="${CSS.escape(blockId)}"]`);
   if (!el) return;
   selectBlock(el, { keepFocus: picked });
   if (picked) el.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });

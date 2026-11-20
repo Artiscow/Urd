@@ -38,3 +38,7 @@ What the field does: the editorial grid keeps text at a readable measure of abou
 - The phone's floor is the same as before where the setting is on; a section that turns it off draws its words as narrow as its cells, for visitors too.
 - The drops of 0.7.3.21 can give words quarters only where the phone's setting is off, and grey the target where it is on.
 - A long word in a narrow box stands whole past it, on published pages as before and now in the editor too, where it used to break without a hyphen; a site or a text that chooses hyphens gets them where the browser has a word list for the page's language, and a break without one elsewhere.
+
+## Addendum (20 November 2026)
+
+A section that shows its phone layout on the desktop (decision 3) is drawn as the phone draws it: its order, cells and stacks, the phone's own words of [ADR-0033](0033-words-of-its-own-on-the-phone.md), the blocks shown on phones only and not those hidden there, and the phone's choice of entrance; only its texts' measure is the desktop's. A phone layout has no place for a block hidden on phones, and its cells are set for the phone's words, so the section is the phone's whole. This names what decision 3's «phone layout» holds and changes no decision. The side column of a side menu narrows the canvas as the side margin does, so it counts in the width where the section turns.

@@ -307,9 +307,12 @@ export function spotLinks(spot, { page = null, pageId = '', path = '/', site = n
   for (const section of page?.sections ?? []) {
     for (const block of section?.blocks ?? []) {
       let found = false;
-      walkRefs(block?.props, (ref) => {
-        if (lands(ref, true)) found = true;
-      });
+      // The phone's own words (phoneProps, ADR-0033) link as the desktop's do.
+      for (const props of [block?.props, block?.phoneProps]) {
+        walkRefs(props, (ref) => {
+          if (lands(ref, true)) found = true;
+        });
+      }
       if (found) uses.push({ area: 'page', sectionId: section.id, blockId: block.id, type: block.type, words: blockWords(block) });
     }
   }

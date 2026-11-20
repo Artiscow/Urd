@@ -175,3 +175,11 @@ test('a shaped design draws the owner\'s shape where there is one, and its own o
   assert.ok(waved.waves > 0 && waved.count === 9 && waved.sharp > 0, 'the waves carried over');
   assert.equal(toTopShapeOf(drop), drop.shape);
 });
+
+test('the settings of «Words only» stand directly under the design\'s words, before the mark and the shape', () => {
+  const panel = readFileSync(new URL('../editor/src/panels/site/SiteToTop.svelte', import.meta.url), 'utf8');
+  const at = (marker) => panel.indexOf(marker);
+  assert.ok(at('{#if worded}') < at('{#if wordsAlone}'));
+  assert.ok(at('{#if wordsAlone}') < at('{#if shaped}'));
+  assert.ok(at('{#if wordsAlone}') < at("<Setting key={sizeShown ? 'iconSize' : null}>"));
+});

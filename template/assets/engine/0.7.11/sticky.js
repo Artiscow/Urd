@@ -151,8 +151,7 @@ function applySticky() {
   const els = document.querySelectorAll('.urd-sticky-able');
   if (!els.length) return;
   const body = document.body;
-  // On the phone, pinning while scrolling is render.js's (stickOnPhone), and
-  // only screen docking is this module's (render.js marks screen mode alone).
+  // On the phone, pinning while scrolling is render.js's (stickOnPhone), and only screen docking is this module's (render.js marks screen mode alone).
   const mobile = body.classList.contains('urd-mobile');
   const scrollY = window.scrollY;
   // A sticky menu sits above the pinned block (the nav has a higher z-index,

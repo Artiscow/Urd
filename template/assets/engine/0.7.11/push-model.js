@@ -175,15 +175,16 @@ const HANDOFF_DESIGN_PX = 1440;
  * The canvas is the window less the side margin on each side, up to its bound (base.css): the section's own px width, else the site's content width, none where either is full width. A text stands at its share of it and so falls under the floor below a window width of its own; the section takes the widest of its texts'.
  * A text already narrower than the floor at the design width, the canvas on a 1440 px screen, is the owner's choice and does not count, nor does one hidden on the desktop.
  * A text that shrinks below the design width instead of wrapping (ADR-0024 decision 6) keeps its lines down to its smallest scale (`fitMin`), so it falls under the floor only where its box is narrower than the floor at that scale; without a design size (a full-width canvas) it wraps as any other.
- * The page's scrollbar, where it takes room (`scrollbar-gutter: stable` in base.css), narrows the canvas by its width while the media query reads the window with it.
+ * The page's scrollbar, where it takes room (`scrollbar-gutter: stable` in base.css), narrows the canvas by its width while the media query reads the window with it, and a side menu's column (`side-left`, `side-right`) by its own, at every window width and at the design width alike.
  * None where the section's desktop «Force readable text» is off, where its own width is in another unit than px (no width to reckon with), or where the width lies at or under the phone breakpoint, where the whole page shows its phone layout already.
  * @param {object} section
  * @param {object} site site.json: `layout.contentWidth`, `layout.gutter` (vw) and `breakpoints.mobile`
  * @param {(block: object) => boolean} hasWords Whether a block's words are measured (render.js: a text block in its plain design)
  * @param {number} [scrollbar] The width the page's scrollbar takes, in px
+ * @param {number} [aside] The width a side menu's column takes beside the page, in px
  * @returns {number} The window width in px at and under which the section shows its phone layout, or 0
  */
-export function phoneHandoff(section, site, hasWords, scrollbar = 0) {
+export function phoneHandoff(section, site, hasWords, scrollbar = 0, aside = 0) {
   if (!forcesReadable(section, 'desktop')) return 0;
   const gutter = Number(site?.layout?.gutter ?? 6);
   const share = 1 - (2 * (Number.isFinite(gutter) ? gutter : 6)) / 100;
@@ -193,7 +194,8 @@ export function phoneHandoff(section, site, hasWords, scrollbar = 0) {
   if (own && own !== 'full' && !ownPx) return 0;
   const siteWidth = site?.layout?.contentWidth ?? HANDOFF_DESIGN_PX;
   const bound = own === 'full' ? 0 : ownPx || (typeof siteWidth === 'number' ? siteWidth : 0);
-  const atDesign = HANDOFF_DESIGN_PX * share;
+  const side = Math.max(0, Number(aside) || 0);
+  const atDesign = HANDOFF_DESIGN_PX * share - side;
   const design = bound ? Math.min(bound, atDesign) : atDesign;
   const bar = Math.max(0, Number(scrollbar) || 0);
   let widest = 0;
@@ -203,7 +205,7 @@ export function phoneHandoff(section, site, hasWords, scrollbar = 0) {
     if ((w / 100) * design < READABLE_PX) continue;
     const floor = bound && (block.fit === 'shrink' || block.fit === 'both') ? READABLE_PX * clampFitMin(block.fitMin) : READABLE_PX;
     // The window at which the canvas leaves the block its floor: under it, the words stand narrower.
-    const edge = (floor / (w / 100) + bar) / share;
+    const edge = (floor / (w / 100) + bar + side) / share;
     widest = Math.max(widest, Math.ceil(edge) - 1);
   }
   const breakpoint = Number(site?.breakpoints?.mobile ?? 640);

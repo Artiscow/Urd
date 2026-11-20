@@ -19,7 +19,7 @@
  * ghost there, or a pull tab (nav.hideMode).
  */
 
-import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, logoParts, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, phoneMenuModel, sheetMotion, announcementModel, launcherModel, launcherVars, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped } from './nav-model.js';
+import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, logoParts, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, phoneMenuModel, sheetMotion, announcementModel, launcherModel, launcherVars, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped, keepsSheet, subsAfterRender } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
@@ -191,8 +191,12 @@ export function renderNav(site, host, pageId) {
   // An open full-screen menu stays open through the render: its dialog and the bar holding it are kept and filled with this render's contents.
   // A dialog that stays open keeps the focus where it is, in the preview in the field the owner is typing in.
   // It is kept while this render also wants the full-screen menu and the phone state holds: the breakpoint, the preview's phone view, or a bar folded to the burger.
-  const keep = Boolean(was?.sheet?.open && was.nav.parentNode === host && mobileMenuMode(site.nav.style) === 'sheet'
-    && (mobileMq.matches || document.body.classList.contains('urd-mobile') || was.folded));
+  const keep = keepsSheet({
+    sheetOpen: Boolean(was?.sheet?.open),
+    sameHost: was?.nav.parentNode === host,
+    mode: mobileMenuMode(site.nav.style),
+    phoneState: mobileMq.matches || document.body.classList.contains('urd-mobile') || Boolean(was?.folded),
+  });
   const keptNav = keep ? was.nav : null;
   const keptSheet = keep ? was.sheet : null;
   // The host is emptied but for a kept bar, which in turn keeps only its open dialog; the bar's own style is written again below.
@@ -934,12 +938,10 @@ export function renderNav(site, host, pageId) {
   if (was?.open && isMobileState()) {
     if (sheet?.kept) sheet.fill();
     setMobileOpen(true);
-    // The submenus that were open open again; where every submenu stood open from the start before the change and still does, one closed by hand stays closed. A fixed one stays open.
-    for (const entry of subs) {
-      if (isFixed(entry)) continue;
-      const wasOpen = was.subs.includes(entry.button.getAttribute('aria-controls'));
-      if (wasOpen || (was.expanded && expandedSubs())) setOpen(entry, wasOpen);
-    }
+    // The submenus that were open open again; where every submenu stood open from the start before the change and still does, one closed by hand stays closed (subsAfterRender). A fixed one stays open.
+    const idOf = (entry) => entry.button.getAttribute('aria-controls');
+    const again = new Map(subsAfterRender(subs.filter((entry) => !isFixed(entry)).map(idOf), was, expandedSubs()));
+    for (const entry of subs) if (again.has(idOf(entry))) setOpen(entry, again.get(idOf(entry)));
     (sheet ? sheet.body : list).scrollTop = was.scroll;
     // Focus that stood in the old contents left with them: the new close button takes it, only while the page has the focus, never from the editor around the preview.
     if (sheet?.kept && was.focusInside && document.hasFocus()) sheet.closeButton.focus();

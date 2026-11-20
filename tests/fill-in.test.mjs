@@ -23,3 +23,8 @@ test('pageFills: every text block and the terms of sale on the page, other block
   assert.deepEqual(pageFills(page), { own: 3, contact: 2 });
   assert.deepEqual(pageFills(null), { own: 0, contact: 0 });
 });
+
+test('pageFills: a text\'s own words on the phone are filled in as its desktop words are', () => {
+  const page = { sections: [{ blocks: [{ type: 'text', props: { html: '<p>Done</p>' }, phoneProps: { html: '<span data-urd-fill="">[short]</span>' } }] }] };
+  assert.deepEqual(pageFills(page), { own: 1, contact: 0 });
+});

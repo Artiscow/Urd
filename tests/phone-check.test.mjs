@@ -103,3 +103,12 @@ test('a change undone is checked again', () => {
   assert.deepEqual(uncheckedSections([section('s1', [text('a', 300), image('b', 100)])], base), ['s1']);
   assert.deepEqual(uncheckedSections(sections, base), []);
 });
+
+test('pinning on the phone is part of the phone\'s layout, so «On phones too» set from the desktop view leaves the section unchecked', () => {
+  const pinned = (sticky) => section('s1', [{ ...text('a'), sticky }]);
+  const desktopOnly = layoutKey(pinned({ offset: 16, until: null }));
+  assert.equal(desktopOnly, layoutKey(section('s1', [text('a')])), 'a pin on the desktop alone keeps the key');
+  const onPhone = layoutKey(pinned({ offset: 16, until: null, phone: true }));
+  assert.notEqual(onPhone, desktopOnly);
+  assert.notEqual(layoutKey(pinned({ offset: 40, until: null, phone: true })), onPhone, 'its distance');
+});

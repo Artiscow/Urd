@@ -230,3 +230,17 @@ test('a copied section\'s custom order, stacks and blocks taken out of the rule\
   assert.equal('phoneStacks' in lone, false);
   assert.deepEqual(original.phoneList, [b, a, 'blk-gone'], 'the original is untouched');
 });
+
+test('a copied section\'s phone words follow its own spots as the desktop words do, and its review flag names the copy\'s block', () => {
+  const frames = { desktop: { x: 0, y: 0, w: 10, h: 10, z: 1, rot: 0 }, mobile: null };
+  const original = { id: 'sec-t', version: 1, responsive: { mobile: { mode: 'auto', attention: { needed: true, reason: 'words-changed', since: '2026-11-20T10:00:00Z', blockId: 'blk-b' } } }, blocks: [
+    { id: 'blk-a', type: 'text', version: 1, props: { html: '<p>Mål</p>' }, frames },
+    { id: 'blk-b', type: 'text', version: 1, props: { html: '<p>Desktop</p>' }, phoneProps: { html: '<p><a href="#blk-a" data-urd-target="blk-a">her</a></p>' }, frames },
+  ] };
+  const out = cloneSectionForInsert(original, makeId);
+  const [a, b] = out.blocks;
+  assert.ok(b.phoneProps.html.includes(`href="#${a.id}" data-urd-target="${a.id}"`), 'the phone link lands on the copy');
+  assert.equal(out.responsive.mobile.attention.blockId, b.id);
+  const lone = cloneSectionForInsert({ ...original, responsive: { mobile: { attention: { needed: true, reason: 'words-changed', blockId: 'blk-gone' } } } }, makeId);
+  assert.equal(lone.responsive.mobile.attention.blockId, undefined, 'a flag naming a block not in the copy names none');
+});

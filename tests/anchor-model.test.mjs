@@ -169,3 +169,10 @@ test('spotLinks: the blocks, menu items and footer links that point at a spot, b
   const frontSite = { footer: { baseline: [{ label: 'Til toppen', href: '/#velkommen' }, { label: 'Annen side', href: '/kaker#velkommen' }] } };
   assert.deepEqual(spotLinks({ id: 'sec-topp1234', name: 'velkommen' }, { page: front, pageId: 'hjem', path: '/', site: frontSite }), [{ area: 'footer', words: 'Til toppen' }], 'the front page\'s address is /');
 });
+
+test('spotLinks: a link to the spot in a block\'s own words on the phone counts as one in its desktop words', () => {
+  const page = { sections: [{ id: 'sec-1', blocks: [
+    { id: 'blk-p', type: 'text', props: { html: '<p>Plain</p>' }, phoneProps: { html: '<p><a href="#priser" data-urd-target="priser">Priser</a></p>' } },
+  ] }] };
+  assert.deepEqual(spotLinks({ id: 'sec-9', name: 'priser' }, { page, pageId: 'kaker', path: '/kaker' }).map((u) => u.blockId), ['blk-p']);
+});

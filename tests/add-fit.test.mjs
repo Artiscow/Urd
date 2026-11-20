@@ -60,3 +60,10 @@ test('the kinds that draw their content later are fitted ones, which say when th
   for (const type of DRAWS_LATE) assert.equal(fitsWhenAdded({ type }), true, type);
   assert.deepEqual([...DRAWS_LATE].sort(), ['calendar', 'privacy']);
 });
+
+test('a new block\'s fit is written only into the step that added it, never into a later block\'s add', async () => {
+  const { readFileSync } = await import('node:fs');
+  const blocks = readFileSync(new URL('../editor/src/state/blocks.svelte.js', import.meta.url), 'utf8');
+  assert.match(blocks, /pendingFits\.set\(block\.id, \{ w: block\.frames\.desktop\.w, h: block\.frames\.desktop\.h, step: historyState\.history\.at\(-1\) \}\);/);
+  assert.match(blocks, /historyState\.history\.at\(-1\) === pending\.step/);
+});

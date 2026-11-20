@@ -8,6 +8,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+## [0.7.11] - 2026-11-20
+
+### 0.7.0.88-0.7.9.3p - Release 0.7.11: the phone editor finished, a live phone beside the canvas, the «Back to top» button as an element of the site, and the colour picker's palette and the site's colour sets - 20 November 2026
+
+- RELEASE: the engine bumped 0.7.10 to 0.7.11 after the ritual (urd.json, the engine folder renamed, the five assets/urd/ shells and their five locale shells, the eight HTML shells with byte-identical slug copies, editor/package.json and its lock, the roadmaps' release range with 0.7.3 among the delivered, a rebuilt bundle); check-release green in full mode.
+- The commits of the span were pushed one by one as they were made, so the preparation covers what was already on the remote.
+
+The independent review of the whole span, read in three slices side by side, found these:
+
+1. Under a side menu a section showed its phone layout on the desktop up to 250 px too late, since the width it turns at left the menu's column out (`phoneHandoff` in push-model.js). The column counts, measured from the page (`sideColumn` in render.js).
+2. A section showing its phone layout on the desktop draws the phone's own words and the blocks shown on phones only, while SCHEMA.md and ARCHITECTURE.md said those are never drawn on the desktop. A phone layout has no place for a block hidden on phones, so the section is drawn as the phone's whole: an addendum to ADR-0034 says so, and SCHEMA.md, ARCHITECTURE.md and the three guides name it.
+3. The canvas's «Hide on phones» on a block shown on phones only left both set, so the block stood nowhere. Hiding on phones lifts the other there too, as the menu's switch does.
+4. The phone's own words were passed by where a copied section's links follow its blocks, where a spot's links are counted before its name may go, and where open fill-ins are counted before publishing. Each reads them beside the desktop's words.
+5. Two blocks placed after one put the second between the first and the block placed after that one. The second goes past the first's own followers.
+6. «On phones too» set on a pinned block in the desktop view left its section checked before publishing. Pinning on the phone is part of the phone check's layout.
+7. The live phone scrolled back to the selected block whenever its look or its scale changed. It scrolls only on a new selection.
+8. A new block's fit that came after another block's add was written into that one's undo step. The fit belongs to the step that added its block.
+9. «My templates» could insert into a section showing its phone layout on the desktop, and a selection by id could land in one. Both pass it by, as placing and pasting do.
+10. A copied section's review flag named the original's block, and a block moved to another section kept a phone place naming the old section's blocks. The flag names the copy's block, and the place is left behind.
+11. The «Words only» settings of «Back to top» stood under the mark and the picture rows, not under the design's words. They stand directly under them.
+12. The kept full-screen phone menu's rules had no test that would fail with them broken. They are the pure `keepsSheet` and `subsAfterRender` (nav-model.js), tested.
+13. SCHEMA.md named the review reason of desktop words changed under the phone's own `block-edited`, ADR-0035 linked ADR-0011 by a wrong file name, the example data lacked a section's own `mobileGap` and `readablePhone`, and eight comments were wrapped mid-sentence. Each is set right.
+14. Left as they are: the review card names the first block that fell behind, as SCHEMA.md documents; the phone words mark stands from the first letter typed even where the words are typed back to the desktop's, until the next drawing; and ADR-0019's amendment of 15 November came in a commit of 17 November, its date kept as written.
+
 ### 0.7.9.3 - The set maker's ten ways to make a colour set, and a colour picker that keeps its tab, the words' selection and their colour - 20 November 2026
 
 - «+ New set» made a set of the colour in use alone (BACKLOG 0.7.9.3). It turns the Palette tab into the set maker (`lib/ColourSetMaker.svelte`), with ten ways worked out by the pure `lib/colour-ways.js`: a colour's shades, the colours that match it, the steps between two colours, colours readable on a colour, the main colours of a picture of one's own (read in the browser, never sent) or of one the pages hold, the codes in a pasted text or palette link, seven ready-made sets with their colours named in nb, en-GB and tr, the colours the pages use, and a shuffle that keeps the colours locked.

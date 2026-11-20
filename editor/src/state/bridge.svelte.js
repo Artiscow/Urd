@@ -290,14 +290,15 @@ function handleBlockFlag(msg) {
   const block = section?.blocks.find((b) => b.id === msg.blockId);
   if (!block) return;
   historyState.pushHistory('block-flag');
+  const phoneOnly = Boolean(block.hideDesktop);
   if (typeof msg.decor === 'boolean') block.decor = msg.decor;
   if (typeof msg.hideMobile === 'boolean') block.hideMobile = msg.hideMobile;
-  if (msg.hideDesktop === false) delete block.hideDesktop;
+  // Hidden on phones and shown on phones only cannot both hold: hiding on phones lifts the other, as the menu's switch does (setBlockHideMobile).
+  if (msg.hideMobile === true || msg.hideDesktop === false) delete block.hideDesktop;
   pageState.store.save();
   historyState.updateDirty();
-  // hideMobile changes the mobile render and hideDesktop the desktop's; in that view the section
-  // must be redrawn for the block to actually appear or disappear.
-  if ((typeof msg.hideMobile === 'boolean' && previewState.viewMode === 'mobile') || (msg.hideDesktop === false && previewState.viewMode === 'desktop')) {
+  // hideMobile changes the mobile render and hideDesktop the desktop's; in that view the section must be redrawn for the block to actually appear or disappear.
+  if ((typeof msg.hideMobile === 'boolean' && previewState.viewMode === 'mobile') || (phoneOnly && !block.hideDesktop && previewState.viewMode === 'desktop')) {
     previewState.bridge?.sendSection(pageState.pageId, section);
   }
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
@@ -426,8 +427,9 @@ function handleMoveBlockSection(msg) {
   historyState.pushHistory(msg.groupKey ? `edit:${msg.groupKey}` : 'move-block');
   from.blocks = from.blocks.filter((b) => b.id !== msg.blockId);
   block.frames.desktop = msg.frame;
-  // The mobile layout is re-derived in the new section.
+  // The mobile layout is re-derived in the new section, and a place in the phone order, which names blocks of the old one, is left behind.
   block.frames.mobile = null;
+  delete block.phonePlace;
   to.blocks.push(block);
   pageState.markPinnedBehind(from);
   pageState.markPinnedBehind(to);

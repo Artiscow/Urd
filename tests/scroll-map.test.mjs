@@ -62,3 +62,10 @@ test('mapScroll: where one page\'s sections are much taller than the other\'s, t
     last = y;
   }
 });
+
+test('the live phone scrolls to a block only when the selection changes, never when its look or scale does', async () => {
+  const { readFileSync } = await import('node:fs');
+  const live = readFileSync(new URL('../editor/src/shell/LivePhone.svelte', import.meta.url), 'utf8');
+  assert.match(live, /const id = selectedId;[\s\S]{0,300}untrack\(\(\) => \{\s*\/\/ While the two scroll together the phone follows the canvas instead\.\s*if \(el && win && !look\.follow\)/);
+});
+

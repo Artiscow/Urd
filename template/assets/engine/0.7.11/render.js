@@ -1053,6 +1053,13 @@ function placeBlockSpots(el, block, names = []) {
   for (const spot of names) placeSpot(el, spot);
 }
 
+/** The width a side menu's column takes beside the page, in px: the body's room for it (base.css `urd-side-left`, `urd-side-right`), as nav.js sets it; 0 without one. */
+function sideColumn() {
+  const body = document.body;
+  if (!body.classList.contains('urd-side-left') && !body.classList.contains('urd-side-right')) return 0;
+  return parseFloat(getComputedStyle(body).getPropertyValue('--urd-nav-side-width')) || 250;
+}
+
 /**
  * Renders (or rerenders) a single section - the basis for incremental preview.
  *
@@ -1067,7 +1074,7 @@ export function renderSection(section, site, host, opts = {}) {
   const grid = section.grid ?? site.grid;
   const asked = opts.viewport ?? 'desktop';
   // A copy drawn to be measured keeps the view it is asked for.
-  const handoff = asked === 'desktop' && !opts.measure ? phoneHandoff(section, site, measuredText, window.innerWidth - document.documentElement.clientWidth) : 0;
+  const handoff = asked === 'desktop' && !opts.measure ? phoneHandoff(section, site, measuredText, window.innerWidth - document.documentElement.clientWidth, sideColumn()) : 0;
   watchHandoff(host, handoff, () => {
     // In the editor the editor sends the section again, since what has been typed since it was drawn lives in its draft.
     if (opts.preview) window.parent?.postMessage({ type: 'urd-redraw-section', sectionId: section.id }, location.origin);
@@ -1213,16 +1220,12 @@ export function renderSection(section, site, host, opts = {}) {
       if (followsWidth(drawn)) el.dataset.urdWidth = 'own';
       const align = heightAlign(drawn);
       if (align !== 'top') el.dataset.urdAlign = align;
-      // A block that fetches its content stands at the height the editor
-      // measured at the phone width while it loads (0.7.21.7, base.css).
-      // The reserve stands inside the content, which the block's drawn
-      // scale zooms, so it is written in the content's own px; a block
-      // that shrinks on the phone writes it again at its zoom (fitOnPhone).
+      // A block that fetches its content stands at the height the editor measured at the phone width while it loads (0.7.21.7, base.css).
+      // The reserve stands inside the content, which the block's drawn scale zooms, so it is written in the content's own px; a block that shrinks on the phone writes it again at its zoom (fitOnPhone).
       const loadingH = mobileLoadingHeight(block);
       if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / drawnScale(phoneSized(block)))}px`);
-      // Screen docking applies on mobile too: sticky.js docks the block
-      // against its own measured size. Pinning while scrolling is the
-      // row grid's own on the phone (stickOnPhone), so it is not marked here.
+      // Screen docking applies on mobile too: sticky.js docks the block against its own measured size.
+      // Pinning while scrolling is the row grid's own on the phone (stickOnPhone), so it is not marked here.
       if (block.sticky && typeof block.sticky.offset === 'number' && block.sticky.mode === 'screen') {
         el.classList.add('urd-sticky-able');
         el.dataset.stickyOffset = String(block.sticky.offset);

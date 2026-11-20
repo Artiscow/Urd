@@ -48,9 +48,12 @@ export function pageFills(page) {
   for (const section of page?.sections ?? []) {
     for (const block of section?.blocks ?? []) {
       if (block?.type !== 'text' && block?.type !== 'terms') continue;
-      const parts = openFills(block.props?.html);
-      open.own += parts.own;
-      open.contact += parts.contact;
+      // A text's own words on the phone (phoneProps, ADR-0033) are filled in as its desktop words are.
+      for (const html of [block.props?.html, block.phoneProps?.html]) {
+        const parts = openFills(html);
+        open.own += parts.own;
+        open.contact += parts.contact;
+      }
     }
   }
   return open;

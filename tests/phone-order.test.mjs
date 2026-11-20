@@ -897,3 +897,16 @@ test('phoneChangeApplied: a layer is written to a block pinned on the phone only
   assert.equal(next.blocks[1].frames.mobile, null);
   assert.equal(section.blocks[0].frames.mobile.z, undefined, 'the section given is left as it is');
 });
+
+test('two blocks placed after one: the second goes after the first and the block placed after that one, which stays directly after it', () => {
+  const at = (id, y, place) => ({ id, type: 'text', frames: { desktop: { x: 0, y, w: 50, h: 5 } }, ...(place ? { phonePlace: place } : {}) });
+  const blocks = [at('A', 0), at('B', 10), at('C', 20, { after: 'A' }), at('X', 30, { after: 'C' }), at('D', 40, { after: 'A' })];
+  assert.deepEqual(stackOrder(blocks, {}).map((b) => b.id), ['A', 'C', 'X', 'D', 'B']);
+});
+
+test('the canvas\'s right-click «Hide on phones» lifts «Only on phones», and a block moved to another section leaves its phone place behind', async () => {
+  const { readFileSync } = await import('node:fs');
+  const bridge = readFileSync(new URL('../editor/src/state/bridge.svelte.js', import.meta.url), 'utf8');
+  assert.match(bridge, /if \(msg\.hideMobile === true \|\| msg\.hideDesktop === false\) delete block\.hideDesktop;/);
+  assert.match(bridge, /block\.frames\.mobile = null;\s*delete block\.phonePlace;\s*to\.blocks\.push\(block\);/);
+});

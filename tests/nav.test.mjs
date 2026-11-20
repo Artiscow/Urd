@@ -1180,3 +1180,28 @@ test('the logo on the phone: its words have a size of their own there, and a log
   assert.equal(logoParts({ type: 'both', mobileParts: 'nonsense' }, { mobile: true }), 'both');
   assert.equal(logoParts(undefined, { mobile: true }), 'both');
 });
+
+test('keepsSheet: an open full-screen menu is kept through a render only while it stays the full-screen menu, in its bar, in the phone state', async () => {
+  const { keepsSheet } = await engineImport('nav-model.js');
+  const kept = { sheetOpen: true, sameHost: true, mode: 'sheet', phoneState: true };
+  assert.equal(keepsSheet(kept), true);
+  assert.equal(keepsSheet({ ...kept, sheetOpen: false }), false, 'a closed menu is drawn anew');
+  assert.equal(keepsSheet({ ...kept, sameHost: false }), false, 'a bar moved to another host');
+  assert.equal(keepsSheet({ ...kept, mode: 'dropdown' }), false, 'the render wants another kind of menu');
+  assert.equal(keepsSheet({ ...kept, phoneState: false }), false, 'the phone state ended: it closes');
+});
+
+test('subsAfterRender: the submenus open before open again, and with every one open from the start, one closed by hand stays closed', async () => {
+  const { subsAfterRender } = await engineImport('nav-model.js');
+  const ids = ['m1', 'm2', 'm3'];
+  assert.deepEqual(subsAfterRender(ids, { subs: ['m2'], expanded: false }, false), [['m2', true]], 'only the open one is set again');
+  assert.deepEqual(subsAfterRender(ids, { subs: ['m1', 'm3'], expanded: true }, true), [['m1', true], ['m2', false], ['m3', true]], 'every one set, m2 kept closed');
+  assert.deepEqual(subsAfterRender(ids, { subs: ['m1'], expanded: true }, false), [['m1', true]], 'no longer open from the start: the rest stand as the render draws them');
+  assert.deepEqual(subsAfterRender(['m1'], { subs: ['gone'], expanded: false }, false), [], 'a submenu this render does not hold is left out');
+  assert.deepEqual(subsAfterRender(ids, null, true), [], 'nothing left by a previous render');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const nav = (await import('node:fs')).readFileSync(new URL('nav.js', ENGINE_DIR), 'utf8');
+  assert.match(nav, /const keep = keepsSheet\(\{/);
+  assert.match(nav, /new Map\(subsAfterRender\(subs\.filter\(\(entry\) => !isFixed\(entry\)\)\.map\(idOf\), was, expandedSubs\(\)\)\)/);
+});
+

@@ -928,6 +928,29 @@ export function navLayerVeil(layers) {
 }
 
 /**
+ * Whether an open full-screen phone menu is kept through a render (renderNav): it was open, its bar still stands in the host, this render wants the full-screen menu too, and the phone state holds (the breakpoint, the preview's phone view, or a bar folded to the burger).
+ * A kept menu is never closed and takes the new render's contents, so the owner setting it in the preview sees it change in place.
+ * @param {{sheetOpen: boolean, sameHost: boolean, mode: string, phoneState: boolean}} at
+ * @returns {boolean}
+ */
+export function keepsSheet({ sheetOpen, sameHost, mode, phoneState }) {
+  return Boolean(sheetOpen && sameHost && mode === 'sheet' && phoneState);
+}
+
+/**
+ * The submenus the phone menu sets again after a render, as `[id, open]`: those open before open again, and where every submenu stood open from the start before the change and still does, one closed by hand stays closed.
+ * A submenu that stands open for good is not among `ids`, nor is one this render does not hold.
+ * @param {string[]} ids The submenus this render holds that open and close
+ * @param {{subs?: string[], expanded?: boolean}|null} was What the previous render left: the submenus open, and whether every one stood open from the start
+ * @param {boolean} expandedNow Whether every submenu stands open from the start in this render
+ * @returns {Array<[string, boolean]>}
+ */
+export function subsAfterRender(ids, was, expandedNow) {
+  const open = new Set(was?.subs ?? []);
+  return ids.filter((id) => open.has(id) || (Boolean(was?.expanded) && expandedNow)).map((id) => [id, open.has(id)]);
+}
+
+/**
  * The side column's width in px (nav.style.width), clamped to sensible
  * bounds; anything invalid yields the default width 250.
  * @param {number|string|undefined} width

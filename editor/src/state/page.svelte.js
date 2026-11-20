@@ -273,10 +273,7 @@ function onSelectBlock(msg) {
     return;
   }
   selectedBlock = { sectionId: msg.sectionId, blockId: msg.blockId };
-  // The block's section becomes the palette target (block gestures do not
-  // post urd-select-section, so Properties is not torn from the block to
-  // the section), and the section's mirrors follow it, as the Phone panel
-  // shows that section's settings.
+  // The block's section becomes the palette target (block gestures do not post urd-select-section, so Properties is not torn from the block to the section), and the section's mirrors follow it, as the Phone panel shows that section's settings.
   if (msg.sectionId && msg.sectionId !== activeSectionId) {
     activeSectionId = msg.sectionId;
     syncSectionMirrors(store?.data.sections.find((s) => s.id === msg.sectionId));

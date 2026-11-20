@@ -150,7 +150,9 @@ function withExceptions(base) {
       if (side === 'before') {
         list.splice(at, 0, block);
       } else {
-        const tail = lastAfter.get(of);
+        // After the block's last follower, and past that one's own followers in turn, so a block placed after a follower stays directly after it.
+        let tail = lastAfter.get(of);
+        while (tail && lastAfter.has(tail.id)) tail = lastAfter.get(tail.id);
         list.splice((tail ? list.indexOf(tail) : at) + 1, 0, block);
         lastAfter.set(of, block);
       }

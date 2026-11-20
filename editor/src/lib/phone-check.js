@@ -6,6 +6,7 @@
  */
 import { followsContent } from '$engine/push-model.js';
 import { stackOrder, phoneSetupOf } from '$engine/phone-order.js';
+import { pinsOnPhone } from '$engine/sticky-model.js';
 
 /** Blocks that grow with their words on the phone, so the desktop's height is not theirs there (autoGrows in render.js). */
 const GROWS = new Set(['text', 'terms']);
@@ -28,7 +29,9 @@ export function layoutKey(section) {
     return [block.id, block.hideMobile ? 1 : 0, block.frames?.mobile ?? null, block.phonePlace ?? null,
       grows ? null : round(frame.w), grows ? null : round(frame.h), frame.rot ?? 0,
       // A size of the phone's own and the bounds that stop it, only where the block has one, so a block without one keeps the key it had.
-      ...(block.phoneSize !== undefined ? [block.phoneSize, block.sizeMin ?? null, block.sizeMax ?? null] : [])];
+      ...(block.phoneSize !== undefined ? [block.phoneSize, block.sizeMin ?? null, block.sizeMax ?? null] : []),
+      // Pinning on the phone («On phones too»), its distance and how long it holds, only where the block pins there, likewise.
+      ...(pinsOnPhone(block.sticky) ? ['pin', block.sticky.offset, block.sticky.until ?? null, block.sticky.group ?? null] : [])];
   }).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
   return JSON.stringify([order, own, setup, section?.size?.mobileGap ?? null, section?.size?.readablePhone ?? null, section?.size?.mobilePadTop ?? null, section?.size?.mobilePadBottom ?? null]);
 }

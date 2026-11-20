@@ -69,7 +69,11 @@ function followCopiedSpots(blocks, ids) {
       else visit(inner);
     }
   };
-  for (const block of blocks) visit(block.props);
+  // The phone's own words (phoneProps, ADR-0033) hold their links as the desktop's do.
+  for (const block of blocks) {
+    visit(block.props);
+    visit(block.phoneProps);
+  }
 }
 
 /**
@@ -123,6 +127,12 @@ export function cloneSectionForInsert(section, makeId) {
   followCopiedSpots(out.blocks ?? [], ids);
   followCopiedPlaces(out.blocks ?? [], ids);
   followCopiedOrder(out, ids);
+  // A phone review flag that names a block (responsive.mobile.attention.blockId) names the copy's.
+  const attention = out.responsive?.mobile?.attention;
+  if (attention?.blockId) {
+    if (ids.has(attention.blockId)) attention.blockId = ids.get(attention.blockId);
+    else delete attention.blockId;
+  }
   // Templates saved before v3 carry the old Norwegian contract tokens (ADR-0021); renamed here since payloads bypass the page lift.
   // A map saved before page v5 carries its height as a setting, lifted into the frame, a calendar saved before page v6 its own size, lifted to the block, a gallery band saved before page v7 its height, lifted into the frame, and a text in a document design saved before page v8 becomes the terms block.
   liftContractTokens(out);

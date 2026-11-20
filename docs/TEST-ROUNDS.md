@@ -2,6 +2,19 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.88-0.7.9.3p): release 0.7.11
+
+- [ ] A side menu (Nav, «Side left») and a section with a text at about a fifth of the width: narrow the window; the section shows its phone layout once the text would stand under 140 px, not hundreds of px later
+- [ ] A section showing its phone layout on the desktop draws the phone's own words and a block shown on phones only, and leaves out a block hidden on phones, as a phone does
+- [ ] In the phone view, right-click a block marked «Only on phones» and choose «Hide on phones»: the block now stands on the desktop and not on phones
+- [ ] A text with its own words on the phone that link to a spot in its section: duplicate the section, and the copy's phone link lands in the copy
+- [ ] Set «On phones too» on a pinned block in the desktop view and publish: the section is listed for a look on the phone
+- [ ] The live phone: scroll it away from the selected block, then turn «Scroll together» off, drag the column's edge or press S, M or L: it stays where you scrolled it
+- [ ] Add a calendar and at once another block; undo the second: the calendar keeps its fitted box
+- [ ] «Back to top» with the «Words only» design: hover, touch and the line stand directly under the words
+- [ ] The full-screen phone menu kept open while it is set: open a submenu, change a setting, and the menu stays open with that submenu open
+- [ ] After the update, a site on 0.7.10 opens and publishes as before, and the Updates panel of a site on 0.7.10 offers 0.7.11
+
 ### Test batch (0.7.9.3): the set maker's ten ways, and a colour picker that keeps its tab, the words' selection and their colour
 
 - [ ] The Palette tab's «+ New set»: the maker stands in the tab, ten tiles in two rows with a drawing and a short word each, the way chosen named beside the way back; the pointer over a tile names the way and what it does

@@ -218,8 +218,8 @@ iconSite.footer = { ...(iconSite.footer ?? { version: 1 }), brand: { ...(iconSit
 // The shop's terms of sale page (site.commerce.termsPage, additive from 0.7.24.2.3), which the template does not ship.
 iconSite.site.commerce = { ...(iconSite.site.commerce ?? {}), termsPage: 'kjopsvilkar' };
 const sharePage = load('template/content/pages/hjem.json');
-// The room above and below a section's blocks on the phone (size.mobilePadTop and mobilePadBottom, additive from 0.7.3.26), which the template's pages do not set.
-sharePage.sections[0].size = { ...(sharePage.sections[0].size ?? {}), mobilePadTop: 0, mobilePadBottom: 96 };
+// The room above and below a section's blocks on the phone (size.mobilePadTop and mobilePadBottom, additive from 0.7.3.26), the section's own space between its blocks there (size.mobileGap, additive from 0.7.3.7) and its «Force readable text» on the phone turned off (size.readablePhone, additive from 0.7.3.20), which the template's pages do not set.
+sharePage.sections[0].size = { ...(sharePage.sections[0].size ?? {}), mobilePadTop: 0, mobilePadBottom: 96, mobileGap: 8, readablePhone: false };
 // A block's own size on the phone (block.phoneSize, additive from 0.7.36.2), which the template's pages do not set, and the section flagged for the review that names it.
 const sizedBlock = sharePage.sections[0].blocks.find((b) => b.type === 'text') ?? sharePage.sections[0].blocks[0];
 sizedBlock.size = 1.4;

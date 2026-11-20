@@ -241,7 +241,7 @@ function addOnPhone(section, blocks, phone) {
   }
 }
 
-/** The new blocks waiting for their box fitted to what they draw (add-fit.js), by id: the frame they were added at. */
+/** The new blocks waiting for their box fitted to what they draw (add-fit.js), by id: the frame they were added at, and the undo step that added them. */
 const pendingFits = new Map();
 
 /**
@@ -272,7 +272,7 @@ function insertBlock(sectionId, block, { fit = false, phone = null } = {}) {
   // A new block's fit is asked for before its section is sent, so the preview draws it hidden and shows it fitted.
   const fits = fit && !phone && fitsWhenAdded(block) && previewState.viewMode === 'desktop' && Boolean(block.frames?.desktop);
   if (fits) {
-    pendingFits.set(block.id, { w: block.frames.desktop.w, h: block.frames.desktop.h });
+    pendingFits.set(block.id, { w: block.frames.desktop.w, h: block.frames.desktop.h, step: historyState.history.at(-1) });
     previewState.bridge?.sendFitNew(section.id, block.id, block.frames.desktop.w);
   }
   previewState.bridge?.sendSection(pageState.pageId, section);
@@ -282,7 +282,7 @@ function insertBlock(sectionId, block, { fit = false, phone = null } = {}) {
 
 /**
  * A new block's box fitted to what it draws, as the preview measured it before showing it (urd-new-fitted): written into its desktop frame, its horizontal centre kept as the preview kept it, as part of the step that added it, so one undo takes both away.
- * Only while that step is the last and the block stands as it was added: a block changed meanwhile keeps what the owner made of it, and the preview is given the draft's frame again. An answer without a size (a block not fitted) only finishes the add.
+ * Only while that step is the last and the block stands as it was added: a block changed meanwhile keeps what the owner made of it, and the preview is given the draft's frame again; a fit that comes after another block's add has made a step of its own is not written into that one. An answer without a size (a block not fitted) only finishes the add.
  */
 function handleNewFitted(msg) {
   const pending = pendingFits.get(msg.blockId);
@@ -292,7 +292,7 @@ function handleNewFitted(msg) {
   pendingFits.delete(msg.blockId);
   if (!block || !frame) return;
   const sized = Number.isFinite(msg.w) && Number.isFinite(msg.h);
-  if (sized && pending && historyState.lastHistoryKey === 'add-block' && frame.w === pending.w && frame.h === pending.h) {
+  if (sized && pending && historyState.lastHistoryKey === 'add-block' && historyState.history.at(-1) === pending.step && frame.w === pending.w && frame.h === pending.h) {
     block.frames.desktop = fittedFrame(frame, msg.w, msg.h);
     pageState.store.save();
     historyState.updateDirty();

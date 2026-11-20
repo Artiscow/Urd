@@ -6,7 +6,7 @@
      It is for looking: a press on a block opens it in the phone view, selected.
      The frame is the real page (`/?preview=1`) in the mobile viewport and Clean view, fed the drafts the canvas is drawn from, as the hidden phone frame of lib/phone-fit.js is; its own listener hears its own frame alone.
      The frame scrolls as a page does. The editor listens in the frame's own document, as it reads the canvas's: a press there acts on nothing on the page and opens the block under it, and the pointer over a block rings it. */
-  import { getContext } from 'svelte';
+  import { getContext, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { PHONE_FILL_WIDTH } from '../lib/preview-width.js';
   import { ICONS } from '../lib/icons.js';
@@ -221,19 +221,22 @@
   }
 
   // A block selected on the canvas is brought into the phone's view, at once and as no scroll of the owner's, and ringed.
+  // Only a new selection (or a new frame) scrolls: the phone's look and scale are read untracked, so a change of them leaves the phone where the owner scrolled it.
   $effect(() => {
     const id = selectedId;
     const win = frame?.contentWindow;
     const el = id ? frame?.contentDocument?.querySelector(`[data-block-id="${CSS.escape(id)}"]`) : null;
-    // While the two scroll together the phone follows the canvas instead.
-    if (el && win && !look.follow) {
-      const b = el.getBoundingClientRect();
-      if (b.top < 0 || b.bottom > win.innerHeight) {
-        phoneQuietUntil = performance.now() + 400;
-        win.scrollBy({ top: b.top - win.innerHeight / 3, behavior: 'instant' });
+    untrack(() => {
+      // While the two scroll together the phone follows the canvas instead.
+      if (el && win && !look.follow) {
+        const b = el.getBoundingClientRect();
+        if (b.top < 0 || b.bottom > win.innerHeight) {
+          phoneQuietUntil = performance.now() + 400;
+          win.scrollBy({ top: b.top - win.innerHeight / 3, behavior: 'instant' });
+        }
       }
-    }
-    placePicked();
+      placePicked();
+    });
   });
 
   // The rings follow a new scale.

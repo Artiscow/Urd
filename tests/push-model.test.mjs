@@ -509,3 +509,20 @@ test('phoneHandoff: a section shows its phone layout under the window width wher
   // A section width in another unit than px has no width to reckon with.
   assert.equal(phoneHandoff({ size: { maxWidth: '60rem' }, blocks: [text(21)] }, site, words), 0);
 });
+
+test('phoneHandoff: a side menu\'s column narrows the canvas, so the section turns at a wider window', async () => {
+  const words = (block) => block.type === 'text';
+  const text = (w) => ({ id: `t${w}`, type: 'text', frames: { desktop: { x: 0, y: 0, w, h: 40 } } });
+  const site = { layout: { contentWidth: 1440, gutter: 6 }, breakpoints: { mobile: 640 } };
+  assert.equal(phoneHandoff({ blocks: [text(21)] }, site, words), 757);
+  // 140 px at 21 % is a canvas of 666.7 px, and with the column of 250 px a window of (666.7 + 250) / 0.88.
+  assert.equal(phoneHandoff({ blocks: [text(21)] }, site, words, 0, 250), 1041);
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const render = readFileSync(new URL('render.js', ENGINE_DIR), 'utf8');
+  assert.match(render, /phoneHandoff\(section, site, measuredText, window\.innerWidth - document\.documentElement\.clientWidth, sideColumn\(\)\)/);
+  // A section that shows its phone layout on the desktop is edited in the phone view: «My templates» and a selection by id pass it by, as placing and pasting do.
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  assert.match(edit, /const host = document\.querySelector\('\.urd-section-active:not\(\.urd-handoff\)'\) \?\? document\.querySelector\('\.urd-section:not\(\.urd-handoff\)'\);/);
+  assert.match(edit, /document\.querySelector\(`\.urd-section:not\(\.urd-handoff\) \.urd-block\[data-block-id=/);
+});
