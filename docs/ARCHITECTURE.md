@@ -37,7 +37,7 @@ Hand-written, readable, dependency-free ES module JavaScript - never compiled ([
 
 Core parts:
 
-- **`urd.js`** - entry point. Creates `window.Urd` with the registries, loads site + page, runs migration and render.
+- **`urd.js`** - entry point. Creates `window.Urd` with the registries, loads site + page, runs migration and render. The shell asks for `site.json` at once (`<link rel="preload" as="fetch" crossorigin>`, the same request the boot's fetch makes) and runs `theme-init.js` before its stylesheets, which a classic script after them would wait for. The engine's version is the name of the folder `urd.js` is served from (ADR-0013), so the boot reads no `urd.json`. A visitor's plugins load beside the page: the nav, the page and the footer wait for them only where they use a block, background or animation type the engine has not registered (`pageTypes` and `needsPlugins` in plugins.js), and a language pack's languages are registered for the editor alone, so a site in one of the engine's own languages never loads the pack module; a site in a pack's language reads its words through `initSiteLocale`. A visitor's footer joins the document once no block on the page is busy fetching its content (`aria-busy`, set by the collection, product, calendar and privacy blocks), within three seconds, so late content never pushes it down; the preview shows it at once.
 - **`registry.js`** - shared registry factory. All extensible types use the same pattern:
   ```js
   Urd.blocks.define('text', { version, label, defaults, migrations, render, mount? });

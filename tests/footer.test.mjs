@@ -209,3 +209,35 @@ test('sitePageLink: a page by its id, nothing for no id, a page that is gone or 
   assert.equal(sitePageLink({ pages }, 'borte'), null);
   assert.equal(sitePageLink({ pages }, 'skjult'), null);
 });
+
+test('whenSettled: at once with nothing busy, as the last busy mark goes, and at the ceiling', async () => {
+  const { whenSettled } = await engineImport('footer-model.js');
+  const realObserver = globalThis.MutationObserver;
+  const observers = [];
+  globalThis.MutationObserver = class { constructor(cb) { this.cb = cb; this.on = false; observers.push(this); } observe() { this.on = true; } disconnect() { this.on = false; } };
+  const root = (busy) => ({ busy, querySelector: (sel) => (sel === '[aria-busy="true"]' && root.current.busy ? {} : null) });
+  try {
+    root.current = root(false);
+    let done = false;
+    whenSettled(root.current, 5000).then(() => { done = true; });
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(done, true, 'nothing busy: at once');
+    root.current = root(true);
+    done = false;
+    whenSettled(root.current, 5000).then(() => { done = true; });
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(done, false, 'waits while a block is busy');
+    root.current.busy = false;
+    observers.at(-1).cb();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(done, true, 'goes as the last busy mark goes');
+    assert.equal(observers.at(-1).on, false, 'and lets go of the page');
+    root.current = root(true);
+    done = false;
+    whenSettled(root.current, 30).then(() => { done = true; });
+    await new Promise((r) => setTimeout(r, 60));
+    assert.equal(done, true, 'a block that stays busy holds the footer no longer than the ceiling');
+  } finally {
+    globalThis.MutationObserver = realObserver;
+  }
+});

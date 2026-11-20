@@ -508,7 +508,10 @@ export const privacyBlock = {
     el.appendChild(host);
     // The facts need the pages: drawn once they are read, and with the site alone where none can be.
     // The counting of visits is told where the site switches it on, and where Cloudflare has put its beacon on the page itself.
+    // Busy while the pages are read, as a collection is: the block holds its reserved height, the editor's fit waits for it, and a visitor's footer joins once it is drawn (urd.js boot).
+    host.setAttribute('aria-busy', 'true');
     loadPages(ctx.site).then((pages) => {
+      host.removeAttribute('aria-busy');
       if (!host.isConnected) return;
       const model = privacyModel(ctx.site, pages);
       if (!model.analytics && cloudflareBeacon([...document.scripts].map((s) => s.src))) model.analytics = true;

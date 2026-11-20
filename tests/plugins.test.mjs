@@ -7,7 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
-const { parseSemver, parseEngineVersion, satisfiesEngine, validateManifest, createStagedUrd, checkProvides } = await engineImport('plugins.js');
+const { parseSemver, parseEngineVersion, satisfiesEngine, validateManifest, createStagedUrd, checkProvides, pageTypes, needsPlugins, engineVersionOf } = await engineImport('plugins.js');
 const { createRegistry } = await engineImport('registry.js');
 
 test('parseSemver: valid and invalid forms', () => {
@@ -281,4 +281,61 @@ test('pluginBlockDesigns: a plugin block\'s designs with their words resolved, i
   assert.equal(pluginBlockDesigns({ designs: { prop: 'x y', items: [{ id: 'a' }, { id: 'b' }] } }, translate), null, 'a prop must be a plain name');
   assert.equal(pluginBlockDesigns({}, translate), null);
   assert.equal(pluginBlockDesigns(undefined, translate), null);
+});
+
+test('pageTypes: the block, background and animation types a page and its nav and footer use, from wherever they stand', () => {
+  const page = { sections: [
+    { background: { layers: [{ type: 'color' }, { type: 'aurora' }] }, animation: { type: 'fade' }, hover: { type: 'lift' }, blocks: [
+      { type: 'text', animation: { type: 'slide' } },
+      { type: 'stjernekart', hover: { type: '' } },
+    ] },
+    { blocks: [{ type: 'image' }], mobile: { blocks: [{ type: 'countdown' }] } },
+  ] };
+  const nav = { style: { background: { layers: [{ type: 'gradient' }] } } };
+  const types = pageTypes(page, nav, null);
+  assert.deepEqual([...types.blocks].sort(), ['countdown', 'image', 'stjernekart', 'text']);
+  assert.deepEqual([...types.backgrounds].sort(), ['aurora', 'color', 'gradient']);
+  assert.deepEqual([...types.animations].sort(), ['fade', 'lift', 'slide']);
+  const loop = { blocks: [{ type: 'text' }] };
+  loop.self = loop;
+  assert.deepEqual([...pageTypes(loop).blocks], ['text'], 'a loop is read once');
+});
+
+test('needsPlugins: a page waits for the plugins only when it uses a type the engine has not registered', () => {
+  const Urd = { blocks: createRegistry('blocks'), backgrounds: createRegistry('backgrounds'), animations: createRegistry('animations') };
+  Urd.blocks.define('text', { render() {} });
+  Urd.backgrounds.define('color', { render() {} });
+  Urd.animations.define('fade', { apply() {} });
+  const types = (blocks, backgrounds = [], animations = []) => ({ blocks: new Set(blocks), backgrounds: new Set(backgrounds), animations: new Set(animations) });
+  assert.equal(needsPlugins(types(['text'], ['color'], ['fade']), Urd), false);
+  assert.equal(needsPlugins(types(['text', 'stjernekart']), Urd), true);
+  assert.equal(needsPlugins(types([], ['aurora']), Urd), true);
+  assert.equal(needsPlugins(types([], [], ['sparkle']), Urd), true);
+  Urd.blocks.alias('kalender', 'text');
+  assert.equal(needsPlugins(types(['kalender']), Urd), true, 'an old id the engine knows by an alias alone waits, since a plugin defining it wins');
+});
+
+test('pageTypes reads a section\'s blocksHover', () => {
+  assert.deepEqual([...pageTypes({ sections: [{ blocksHover: { type: 'wiggle' }, blocks: [] }] }).animations], ['wiggle']);
+});
+
+test('engineVersionOf: the version a module\'s folder names, checked as the engine checks versions; null elsewhere', () => {
+  assert.equal(engineVersionOf('https://s.no/assets/engine/0.7.11/urd.js'), '0.7.11');
+  assert.equal(engineVersionOf('https://s.no/assets/engine/0.7.11.2/urd.js'), '0.7.11.2');
+  assert.equal(engineVersionOf('https://s.no/assets/engine/latest/urd.js'), null);
+  assert.equal(engineVersionOf('https://s.no/assets/urd/i18n.js'), null);
+  assert.equal(engineVersionOf('file:///x/editor/src/urd.js'), null);
+  assert.equal(engineVersionOf('not a url'), null);
+});
+
+test('loader: a visitor\'s page (loadPlugins) never loads the language-pack module, which the editor\'s list loads', async () => {
+  const { loadPlugins } = await engineImport('plugins.js');
+  const pack = { id: 'lang-xx', name: 'xx', version: '1.0.0', requiresEngine: '>=0.6.0 <1.0.0', languages: [{ code: 'xx', name: 'X', site: true, admin: true }] };
+  let log = fakeNetwork({ '/plugins/plugins.json': { version: 1, enabled: ['lang-xx'] }, '/plugins/lang-xx/plugin.json': pack, '/assets/urd/language-packs.js': { registerPackLanguages() {} } });
+  await loadPlugins(freshUrd(), '0.7.11');
+  assert.ok(log.includes('/plugins/lang-xx/plugin.json'));
+  assert.ok(!log.includes('/assets/urd/language-packs.js'), 'the visitor\'s page');
+  log = fakeNetwork({ '/plugins/lang-yy/plugin.json': { ...pack, id: 'lang-yy' }, '/assets/urd/language-packs.js': { registerPackLanguages() {} } });
+  await loadPluginList(freshUrd(), '0.7.11', ['lang-yy']);
+  assert.ok(log.includes('/assets/urd/language-packs.js'), 'the editor\'s preview registers the pack\'s languages');
 });

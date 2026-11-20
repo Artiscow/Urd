@@ -222,3 +222,27 @@ test('the closure walker excludes commented and dynamic imports', () => {
   `;
   assert.deepEqual(staticSpecs(src), ['./a.js']);
 });
+
+test('the shell runs theme-init.js before the stylesheets and preloads site.json as the boot fetches it', () => {
+  const html = readFileSync(INDEX, 'utf8');
+  const themeInit = html.indexOf(`<script src="/assets/engine/${ENGINE_VERSION}/theme-init.js"></script>`);
+  const firstStylesheet = html.indexOf('<link rel="stylesheet"');
+  assert.ok(themeInit > 0 && themeInit < firstStylesheet, 'a classic script after a stylesheet waits for it');
+  const preload = html.indexOf('<link rel="preload" href="/content/site.json" as="fetch" crossorigin>');
+  assert.ok(preload > 0 && preload < html.indexOf('<link rel="modulepreload"'), 'site.json is asked for before the engine\'s modules');
+  const urd = readFileSync(new URL('urd.js', ENGINE_DIR), 'utf8');
+  assert.match(urd, /const siteRes = await fetch\('\/content\/site\.json'\);/, 'the boot\'s fetch is the one the preload answers: same address, same mode');
+});
+
+test('the boot reads the engine version from its own folder, and draws a page without waiting for plugins it does not use', () => {
+  const urd = readFileSync(new URL('urd.js', ENGINE_DIR), 'utf8');
+  assert.match(urd, /engineVersionOf\(import\.meta\.url\)/);
+  assert.doesNotMatch(urd, /await loadPlugins\(/, 'the plugins are never awaited whole');
+  const navWait = urd.indexOf('needsPlugins(pageTypes(site.nav), Urd)');
+  assert.ok(navWait > 0 && navWait < urd.indexOf('renderNav(site, opts.nav'), 'the nav waits for a plugin type before it is drawn');
+  assert.match(urd, /needsPlugins\(pageTypes\(page, site\.footer\), Urd\)\) await pluginsLoaded;/);
+  assert.match(urd, /needsPlugins\(pageTypes\(state\.page, site\.footer\), Urd\)\) await pluginsLoaded;/, 'a newer page file waits as the first drawing does');
+  assert.match(urd, /whenSettled\(opts\.root, FOOTER_WAIT_MS\)\.then\(\(\) => \{\s+opts\.root\.insertAdjacentElement\('afterend', opts\.footer\);\s+drawFooter\(\);/, 'a visitor\'s footer is drawn as it joins the page');
+  const privacy = readFileSync(new URL('blocks/privacy.js', ENGINE_DIR), 'utf8');
+  assert.match(privacy, /host\.setAttribute\('aria-busy', 'true'\);[\s\S]{0,80}host\.removeAttribute\('aria-busy'\);/);
+});

@@ -16,6 +16,7 @@ import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrame
 import { renderNav, refreshNavScroll, clearAnnounceDismissal, holdNavForJump } from './nav.js';
 import { isSafeImage, hashTarget, samePageHash, jumpOnArrival } from './nav-model.js';
 import { renderFooter } from './footer.js';
+import { whenSettled, FOOTER_WAIT_MS } from './footer-model.js';
 import { renderToTop } from './totop.js';
 import { textBlock, termsBlock } from './blocks/text.js';
 import { imageBlock } from './blocks/image.js';
@@ -53,7 +54,7 @@ import { slideshowLayer } from './backgrounds/slideshow.js';
 import { videoLayer } from './backgrounds/video.js';
 import { coreAnimations } from './animations/core.js';
 import { registerSectionPresets } from './sections/presets.js';
-import { loadPlugins, loadPluginList, applyPluginSiteLocales, pluginBlockDesigns } from './plugins.js';
+import { loadPlugins, loadPluginList, applyPluginSiteLocales, pluginBlockDesigns, pageTypes, needsPlugins, engineVersionOf } from './plugins.js';
 import { setCollectionsDraft, draftHasKind } from './collections.js';
 import { initSticky, refreshSticky } from './sticky.js';
 import { applyHeadMeta, mountAnalytics, pageTitle } from './seo.js';
@@ -147,10 +148,12 @@ function registerCore() {
 }
 
 /**
- * The engine version from urd.json: the basis for the plugins' requiresEngine check.
+ * The engine version, the basis for the plugins' requiresEngine check: the name of the folder this module is served from, which is always urd.json's `engine` (ADR-0013), so it costs no request; urd.json is read only where the module stands elsewhere.
  * An unreachable manifest yields '0.0.0', which rejects the version requirements instead of loading blindly.
  */
 async function engineVersion() {
+  const folder = engineVersionOf(import.meta.url);
+  if (folder) return folder;
   try {
     return (await (await fetch('/urd.json')).json()).engine ?? '0.0.0';
   } catch {
@@ -830,10 +833,7 @@ export async function boot(opts) {
   // happen via postMessage, never navigation).
   wireArrivalHold();
 
-  // Start the engine version fetch (urd.json) alongside site.json: they are
-  // independent, so they should not sit in a serial queue. Only site.json
-  // blocks the page lookup; the engine version is awaited first right
-  // before plugin loading.
+  // The engine version, read from this module's own folder (engineVersion), is awaited right before the plugins load; site.json goes first.
   const enginePromise = engineVersion();
 
   // The raw file is kept as migration context: the v1 page lift needs the
@@ -891,7 +891,8 @@ export async function boot(opts) {
   const engine = await enginePromise;
   // In preview the EDITOR owns the plugin list (the draft in plugins.json): boot loads nothing,
   // and the urd-plugins message loads the draft's active plugins so they work before publishing.
-  if (!preview) await loadPlugins(Urd, engine);
+  // For a visitor the plugins load beside the page, and the page waits for them only when it uses a type no core module defines (pageTypes below).
+  const pluginsLoaded = preview ? Promise.resolve() : loadPlugins(Urd, engine).catch(() => {});
 
   // Responsive: the viewport follows the screen width (also in the
   // editor's preview, where the iframe is narrowed to mobile width). When
@@ -906,13 +907,12 @@ export async function boot(opts) {
   if (preview) document.body.classList.add('urd-preview');
 
   // The page id is known from the register, so a page the menu stays off (nav.hideOn) starts without it.
+  if (!preview && needsPlugins(pageTypes(site.nav), Urd)) await pluginsLoaded;
   if (opts.nav) renderNav(site, opts.nav, entry.id);
-  // Shared footer: its own element right after the main content (index.html
-  // is Urd-owned and cannot be changed by publishing, so the element is
-  // created here).
+  // The shared footer: its own element right after the main content, created here since index.html is Urd-owned and cannot be changed by publishing.
+  // It joins the document once the page is drawn (below), so it is never shown at the top while the page loads and then pushed down.
   opts.footer = document.createElement('footer');
   opts.footer.id = 'urd-footer';
-  opts.root.insertAdjacentElement('afterend', opts.footer);
   // The site's «Back to top» button, as site.layout.toTop sets it (totop.js).
   renderToTop(site);
 
@@ -931,6 +931,7 @@ export async function boot(opts) {
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   if (!Array.isArray(page.sections)) page.sections = [];
+  if (!preview && needsPlugins(pageTypes(page, site.footer), Urd)) await pluginsLoaded;
   if (drafts) setCollectionsDraft(drafts.collections);
   document.title = pageTitle(site, page, entry);
   // SEO metadata (description, canonical, og: fields, JSON-LD) is set only
@@ -940,8 +941,9 @@ export async function boot(opts) {
     applyHeadMeta(site, page, location.origin, location.pathname, entry);
     if (!drafts) mountAnalytics(site);
   }
-  // The footer is rendered now that the page id is known (per-page hideOn visibility).
-  renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
+  // The footer is rendered now that the page id is known (per-page hideOn visibility): in the preview at once, and for a visitor as it joins the document, so its background layers start in the page.
+  const drawFooter = () => renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
+  if (preview) drawFooter();
 
   if (preview) {
     // The canvas chrome follows the ADMIN language (two registers,
@@ -958,6 +960,14 @@ export async function boot(opts) {
   const state = { page, site, engine, viewport };
 
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
+  // A visitor's footer joins once no block on the page is still fetching its content, so the page's own content never pushes it down; the editor's preview shows it at once.
+  if (preview) opts.root.insertAdjacentElement('afterend', opts.footer);
+  else {
+    whenSettled(opts.root, FOOTER_WAIT_MS).then(() => {
+      opts.root.insertAdjacentElement('afterend', opts.footer);
+      drawFooter();
+    });
+  }
   // The page stands: a held page transition ends here as a cut.
   endArrivalHold();
   // Sticky blocks ("pin on scroll"): one scroll listener for the whole page.
@@ -979,10 +989,12 @@ export async function boot(opts) {
     // A newer page file rerenders in place. The scroll position survives
     // the rerender (the document collapses transiently while the data
     // blocks measure), and the sticky blocks are re-pinned right away.
-    const applyFreshPage = (fresh) => {
+    const applyFreshPage = async (fresh) => {
       served.page = { text: fresh.text, etag: fresh.etag };
       state.page = liftPageFile(fresh.page, rawSite);
       if (!Array.isArray(state.page.sections)) state.page.sections = [];
+      // A page published since with a plugin's type waits for the plugins, as the first drawing does.
+      if (needsPlugins(pageTypes(state.page, site.footer), Urd)) await pluginsLoaded;
       document.title = pageTitle(site, state.page, entry);
       applyHeadMeta(site, state.page, location.origin, location.pathname, entry);
       const y = window.scrollY;
@@ -1010,7 +1022,7 @@ export async function boot(opts) {
           if (freshSite) { location.reload(); return; }
         }
         const fresh = await revalidateFile(entry.file, served.page?.etag ?? null, { text: served.page?.text ?? null });
-        if (fresh) applyFreshPage(fresh);
+        if (fresh) await applyFreshPage(fresh);
       })().catch(() => {}).finally(() => {
         checking = null;
         if (queuedSite) { queuedSite = false; recheck({ site: true }); }

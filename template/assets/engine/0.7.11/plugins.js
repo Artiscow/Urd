@@ -292,9 +292,10 @@ export async function applyPluginSiteLocales() {
  * registered here, so any number of plugins can be prepared concurrently.
  * A failure at any step yields null with a clear log line; the site always
  * lives on.
+ * A language pack's languages are registered for the editor and its preview alone (`packs`): a visitor's page reads its site language's words through initSiteLocale, so a site in one of the engine's own languages never loads the pack module.
  * @returns {Promise<{manifest: object, mod: object|null, locales: object|null}|null>}
  */
-async function preparePlugin(engineVersion, id) {
+async function preparePlugin(engineVersion, id, packs = true) {
   try {
     const manifest = await io.fetchJson(`/plugins/${id}/plugin.json`);
     const errors = validateManifest(manifest);
@@ -318,7 +319,7 @@ async function preparePlugin(engineVersion, id) {
       // renders, so the preview knows a draft-enabled pack language without
       // re-reading the manifests. The pack module is fetched only here,
       // never for a plugin without languages.
-      manifest.languages?.length
+      packs && manifest.languages?.length
         ? io.importModule('/assets/urd/language-packs.js').then(({ registerPackLanguages }) => registerPackLanguages(id, manifest.languages))
         : null,
       // Pure language pack: no entry, nothing to run.
@@ -381,13 +382,14 @@ let listQueue = Promise.resolve();
  * draft in the preview): every plugin is fetched in parallel, then
  * registered one by one in list order. An id already loaded, or in flight
  * from an earlier call, is never fetched again.
+ * @param {{packs?: boolean}} [options] `packs: false` on a visitor's page (preparePlugin)
  */
-export function loadPluginList(Urd, engineVersion, ids) {
+export function loadPluginList(Urd, engineVersion, ids, { packs = true } = {}) {
   const run = listQueue.then(async () => {
     const wanted = [...new Set(ids ?? [])].filter((id) => !loadedPlugins.has(id));
     const prepared = await Promise.all(wanted.map((id) => {
       if (!inFlight.has(id)) {
-        inFlight.set(id, preparePlugin(engineVersion, id).finally(() => inFlight.delete(id)));
+        inFlight.set(id, preparePlugin(engineVersion, id, packs).finally(() => inFlight.delete(id)));
       }
       return inFlight.get(id);
     }));
@@ -400,9 +402,58 @@ export function loadPluginList(Urd, engineVersion, ids) {
 }
 
 /**
- * Loads the enabled plugins from plugins/plugins.json against a given engine version.
+ * The block, background and animation types a page and the site's nav and footer use, read from anywhere they stand: a `blocks` list's types, a `layers` list's types, and the type of an `animation`, a `hover` and a section's `blocksHover`.
+ * The boot draws a page at once when every one of them is the engine's own, and waits for the plugins only when one is not.
+ * @param {...unknown} parts The page, the site's nav, its footer
+ * @returns {{blocks: Set<string>, backgrounds: Set<string>, animations: Set<string>}}
+ */
+export function pageTypes(...parts) {
+  const types = { blocks: new Set(), backgrounds: new Set(), animations: new Set() };
+  const seen = new Set();
+  const walk = (value, depth) => {
+    if (!value || typeof value !== 'object' || depth > 40 || seen.has(value)) return;
+    seen.add(value);
+    if (Array.isArray(value)) { for (const item of value) walk(item, depth + 1); return; }
+    for (const [key, child] of Object.entries(value)) {
+      if (key === 'blocks' && Array.isArray(child)) for (const b of child) if (typeof b?.type === 'string') types.blocks.add(b.type);
+      if (key === 'layers' && Array.isArray(child)) for (const l of child) if (typeof l?.type === 'string') types.backgrounds.add(l.type);
+      if ((key === 'animation' || key === 'hover' || key === 'blocksHover') && typeof child?.type === 'string' && child.type) types.animations.add(child.type);
+      walk(child, depth + 1);
+    }
+  };
+  for (const part of parts) walk(part, 0);
+  return types;
+}
+
+/**
+ * Whether a page needs a plugin to be drawn: a type it uses that the engine has not defined itself.
+ * A type the engine knows only by an alias counts as not defined, since a plugin that still defines that old id wins for its own data (ADR-0021).
+ * @param {{blocks: Set<string>, backgrounds: Set<string>, animations: Set<string>}} types pageTypes
  * @param {typeof window.Urd} Urd
- * @param {string} engineVersion The engine version (from urd.json)
+ */
+export function needsPlugins(types, Urd) {
+  return ['blocks', 'backgrounds', 'animations'].some((kind) => {
+    const own = new Set(Urd[kind].ids());
+    return [...types[kind]].some((type) => !own.has(type));
+  });
+}
+
+/**
+ * The engine version a module's address names, from the folder it is served from (`/assets/engine/<version>/`, which ADR-0013 holds equal to urd.json's `engine`), or null where the address names none.
+ * @param {string} url A module's import.meta.url
+ * @returns {string|null}
+ */
+export function engineVersionOf(url) {
+  let path = '';
+  try { path = new URL(url).pathname; } catch { return null; }
+  const folder = /\/assets\/engine\/([^/]+)\/[^/]+\.js$/.exec(path)?.[1] ?? '';
+  return folder && parseEngineVersion(folder) ? folder : null;
+}
+
+/**
+ * Loads the enabled plugins from plugins/plugins.json against a given engine version, on a visitor's page.
+ * @param {typeof window.Urd} Urd
+ * @param {string} engineVersion The engine version (urd.js engineVersion)
  */
 export async function loadPlugins(Urd, engineVersion) {
   let index;
@@ -411,5 +462,5 @@ export async function loadPlugins(Urd, engineVersion) {
   } catch {
     return; // no plugin index is perfectly fine
   }
-  await loadPluginList(Urd, engineVersion, index.enabled);
+  await loadPluginList(Urd, engineVersion, index.enabled, { packs: false });
 }

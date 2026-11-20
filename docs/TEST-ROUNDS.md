@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.1): the boot without waiting, and a footer that stays put
+
+- [ ] On a phone (or a narrow window), open /personvern/ on the published site: the footer is not seen at the top while the page loads, and comes in under the text
+- [ ] The front page, /shop/ and /kontakt/ on a phone: nothing jumps while the page loads; the light or dark mode chosen in the menu is there from the first paint, with no flash
+- [ ] A site in Swedish (the language pack): the visitor's page is in Swedish from the first paint
+- [ ] A page with a block from a plugin (if a plugin with blocks is installed): the block is drawn
+- [ ] The editor's preview: the footer stands under the page at once, and selecting it works as before
+- [ ] A footer with a video or slideshow background: on the published page it plays once you scroll to it, also on a page with a collection or the privacy page
+- [ ] DevTools' network list on the published front page: no `urd.json`, `plugins/lang-sv/plugin.json` after the page is drawn, and `site.json` asked for right after the HTML
+
 ### Test batch (0.7.37.2.2): the payment rules and feeds that can run nothing
 
 - [ ] A checkout page offering Vipps, a card and PayPal on test keys: each button takes a test payment as before, and the receipt names the buyer with the total charged

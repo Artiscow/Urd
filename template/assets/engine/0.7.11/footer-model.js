@@ -222,3 +222,31 @@ export function hasRichFooter(site) {
     str(site.footer?.copyright).trim()
   );
 }
+
+/** The longest a visitor's footer waits for the page's blocks to fetch their content. */
+export const FOOTER_WAIT_MS = 3000;
+
+/**
+ * Resolves once no element under `root` is busy fetching its content (`aria-busy="true"`, which the collection, product, calendar and privacy blocks set while they load), or after `ms`.
+ * @param {Element} root
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
+export function whenSettled(root, ms) {
+  return new Promise((resolve) => {
+    const busy = () => root.querySelector('[aria-busy="true"]');
+    if (!busy()) {
+      resolve();
+      return;
+    }
+    let timer = 0;
+    const observer = new MutationObserver(() => { if (!busy()) done(); });
+    function done() {
+      observer.disconnect();
+      clearTimeout(timer);
+      resolve();
+    }
+    timer = setTimeout(done, ms);
+    observer.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-busy'] });
+  });
+}
