@@ -96,6 +96,29 @@ export function cartRelimit(items, lines) {
 }
 
 /**
+ * The basket without the lines the checkout answered with (`orderChoice`): a line whose size or colour no longer fits its product goes, so the buyer adds it again with a choice.
+ * @param {Array} items
+ * @param {Array<{id: string, variant?: string}>} lines
+ */
+export function cartDrop(items, lines) {
+  const told = Array.isArray(lines) ? lines : [];
+  return items.filter((item) => !told.some((l) => l && l.id === item.id && (l.variant ?? '') === (item.variant ?? '')));
+}
+
+/**
+ * The basket with the prices the checkout answered with (`orderPrices`): each line the answer names takes the catalogue's price now, so the total the buyer sees is the one that will be charged.
+ * @param {Array} items
+ * @param {Array<{id: string, variant?: string, price: number}>} lines
+ */
+export function cartReprice(items, lines) {
+  const told = Array.isArray(lines) ? lines : [];
+  return items.map((item) => {
+    const line = told.find((l) => l && l.id === item.id && (l.variant ?? '') === (item.variant ?? ''));
+    return line ? cleanItem({ ...item, price: line.price }) ?? item : item;
+  });
+}
+
+/**
  * Adds a line to the basket: if the key is already there the quantity is
  * raised, otherwise the line is appended. Always returns a new list.
  * @param {Array} items
@@ -197,7 +220,7 @@ export const ORDER_KEY = 'urd-last-order';
  * when. Every field is plain data, so the record can be kept and read back.
  * @param {Array} items The basket lines (readCart)
  * @param {{name?: string, email?: string, phone?: string, comment?: string}} contact
- * @param {{currency?: string, payment?: string, provider?: string, reference?: string, at?: string}} [extra] payment is the instruction's text, provider the layer's provider that took the money
+ * @param {{currency?: string, payment?: string, provider?: string, reference?: string, at?: string, total?: number}} [extra] payment is the instruction's text, provider the layer's provider that took the money, and total the amount the provider confirms, which stands in place of the basket's sum
  */
 export function orderRecord(items, contact, extra = {}) {
   const field = (value) => String(value ?? '').trim().slice(0, 200);
@@ -210,7 +233,7 @@ export function orderRecord(items, contact, extra = {}) {
       qty: clampQty(line.qty),
       price: Number(line.price) || 0,
     })),
-    total: cartTotal(items),
+    total: Number.isFinite(extra.total) && extra.total >= 0 ? extra.total : cartTotal(items),
     contact: { name: field(contact?.name), email: field(contact?.email), phone: field(contact?.phone) },
     payment: field(extra.payment),
     provider: PAY_PROVIDERS.includes(extra.provider) ? extra.provider : '',

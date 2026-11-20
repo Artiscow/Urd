@@ -9,17 +9,18 @@
  * 503, and the checkout block shows a calm unavailable message (the form
  * checkout works unchanged).
  */
-import { prepareOrder, makeReference, vatRegistered, json } from '../../../_lib/order.js';
-import { vippsConfig, receiptLines, buildPayment, VIPPS_METHODS } from '../../../_lib/vipps.js';
+import { prepareOrder, makeReference, vatRegistered, buyerKey, json } from '../../../_lib/order.js';
+import { vippsConfig, receiptLines, buildPayment } from '../../../_lib/vipps.js';
 import { callVipps } from '../../../_lib/vipps-api.js';
 
 export async function onRequestPost({ request, env }) {
   const config = vippsConfig(env);
   if (!config) return json({ error: 'Payment is not configured', code: 'vippsNotConfigured' }, 503);
-  const prepared = await prepareOrder(request);
+  const prepared = await prepareOrder(request, 'vipps');
   if (prepared.error) return prepared.error;
-  const { clean, payload, origin, site, catalogs, amountMinor, currency } = prepared;
-  const method = VIPPS_METHODS.includes(payload.method) ? payload.method : 'wallet';
+  const { clean, origin, site, catalogs, amountMinor, currency } = prepared;
+  // The way to pay is one the page's checkout block offers (prepareOrder).
+  const method = clean.method;
   // The receipt in the buyer's app carries the lines without tax, so only a seller outside the VAT register sends one (the VAT lines come with the shop of v1.1, ADR-0027).
   const receipt = vatRegistered(site) ? null : receiptLines(clean.order, catalogs);
 
@@ -42,8 +43,8 @@ export async function onRequestPost({ request, env }) {
   if (typeof answer.data?.redirectUrl !== 'string' || !/^https:\/\//.test(answer.data.redirectUrl)) {
     return json({ error: 'Unexpected response from Vipps', code: 'vippsUnexpected' }, 502);
   }
-  // The reference goes to the client too, which keeps it for the return (blocks/checkout.js).
-  return json({ url: answer.data.redirectUrl, reference });
+  // The reference and the buyer key go to the client too, which keeps them for the return (blocks/checkout.js).
+  return json({ url: answer.data.redirectUrl, reference, key: await buyerKey(config.clientSecret, reference) });
 }
 
 /** Whether the provider is set up, and on its test keys: the editor's checkout block asks on a click, and the published checkout shows a line while test keys are in use. No secret leaves; the answer is never cached. */

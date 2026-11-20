@@ -17,8 +17,8 @@ const ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 /**
  * Validates and cleans the order payload from the client. Only the shape is
  * accepted: order lines with a known id form and clamped quantities, contact
- * fields as short strings. Prices from the client are deliberately ignored.
- * @returns {{order: Array<{id: string, qty: number, variant?: string}>, returnPath: string, draft: boolean, contact: {name: string, email: string, phone: string, comment: string}}|null}
+ * fields as short strings. A line's price is the one the basket shows, kept to be compared with the catalogue's (priceChanges); the charge is never computed from it.
+ * @returns {{order: Array<{id: string, qty: number, variant?: string, price?: number}>, returnPath: string, draft: boolean, method: 'wallet'|'card', contact: {name: string, email: string, phone: string, comment: string}}|null}
  */
 export function validOrderPayload(payload) {
   if (!payload || typeof payload !== 'object') return null;
@@ -38,6 +38,11 @@ export function validOrderPayload(payload) {
       if (variant.length > 200) return null;
       if (variant) clean.variant = variant;
     }
+    if (line.price != null) {
+      const price = Number(line.price);
+      if (!Number.isFinite(price) || price < 0 || price > 1e9) return null;
+      clean.price = price;
+    }
     order.push(clean);
   }
   const field = (value) => String(value ?? '').slice(0, 200).trim();
@@ -49,6 +54,8 @@ export function validOrderPayload(payload) {
     returnPath,
     // An order from the draft view (?draft=1) returns to it, so the return is read with the settings the payment started from.
     draft: payload.draft === true,
+    // Vipps takes a payment in the app (wallet) or on its card page (card); the other providers have one way.
+    method: payload.method === 'card' ? 'card' : 'wallet',
     contact: {
       name: field(payload.contact?.name),
       email: field(payload.contact?.email),
@@ -110,25 +117,70 @@ export function orderAmountMinor(order, catalogs, currency = 'NOK') {
 }
 
 /**
- * Whether every order line's variant text is a label the basket makes for the product («M · Red», a size or a colour alone, as blocks/product.js joins them), compared whole, so a name that holds the separator itself still fits.
- * A line without a variant is fine; a product without sizes or colours takes no variant.
+ * Whether every order line's variant text is a label the basket makes for the product («M · Red», a size or a colour alone, as blocks/product.js joins them), compared whole, so a name that holds the separator itself still fits, and whether it names the size and the colour the product asks for (`requireSize`, `requireColor`, where it has sizes or colours), as the product block asks before the line is put in the basket.
+ * A product without sizes or colours takes no variant.
  * @param {Array<{id: string, qty: number, variant?: string}>} order Cleaned order (validOrderPayload)
  * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
  * @returns {boolean}
  */
 export function validVariants(order, catalogs) {
+  return variantProblems(order, catalogs).length === 0;
+}
+
+/**
+ * The order lines whose variant does not fit their product now (validVariants), each by its product and variant, so the basket can take them out and the buyer choose again.
+ * @param {Array<{id: string, qty: number, variant?: string}>} order Cleaned order (validOrderPayload)
+ * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
+ * @returns {Array<{id: string, variant?: string}>}
+ */
+export function variantProblems(order, catalogs) {
   const products = productMap(catalogs);
+  const problems = [];
+  const refuse = (line) => problems.push({ id: line.id, ...(line.variant ? { variant: line.variant } : {}) });
   for (const line of order) {
-    if (!line.variant) continue;
     const entry = products.get(line.id);
-    if (!entry) return false;
-    const sizes = (Array.isArray(entry.sizes) ? entry.sizes : []).map(String);
+    if (!entry) {
+      refuse(line);
+      continue;
+    }
+    const sizes = (Array.isArray(entry.sizes) ? entry.sizes : []).filter(Boolean).map(String);
     const colors = (Array.isArray(entry.colors) ? entry.colors : []).map((c) => String(c?.name ?? '')).filter(Boolean);
-    const labels = new Set([...sizes, ...colors]);
-    for (const size of sizes) for (const color of colors) labels.add(`${size} · ${color}`);
-    if (!labels.has(line.variant)) return false;
+    let size = false;
+    let color = false;
+    if (line.variant) {
+      if (sizes.some((s) => colors.some((c) => `${s} · ${c}` === line.variant))) size = color = true;
+      else if (sizes.includes(line.variant)) size = true;
+      else if (colors.includes(line.variant)) color = true;
+      else {
+        refuse(line);
+        continue;
+      }
+    }
+    if ((entry.requireSize === true && sizes.length && !size) || (entry.requireColor === true && colors.length && !color)) refuse(line);
   }
-  return true;
+  return problems;
+}
+
+/**
+ * The lines whose price in the basket is not the catalogue's now, each with the price that holds (as the catalogue writes it), so the basket can take it before the buyer pays; empty when every line agrees or carries no price.
+ * Compared in the currency's minor unit.
+ * @param {Array<{id: string, variant?: string, price?: number}>} order Cleaned order (validOrderPayload)
+ * @param {Array<{kind?: string, entries?: Array}>} catalogs The collection files
+ * @param {string} [currency]
+ * @returns {Array<{id: string, variant?: string, price: number}>}
+ */
+export function priceChanges(order, catalogs, currency = 'NOK') {
+  const products = productMap(catalogs);
+  const factor = 10 ** currencyExponent(currency);
+  const changed = [];
+  for (const line of order) {
+    if (line.price == null) continue;
+    const entry = products.get(line.id);
+    const now = priceMinor(entry, currency);
+    if (now == null || now === Math.round(line.price * factor)) continue;
+    changed.push({ id: line.id, ...(line.variant ? { variant: line.variant } : {}), price: Number(entry.price) });
+  }
+  return changed;
 }
 
 /** A product's quantity limits where the buyer types the quantity, as the basket reads them (shop.js quantityLimits): each from 1 to 99, the most never under the least; null without them. */
@@ -250,42 +302,105 @@ export async function ownJson(origin, path) {
 }
 
 /**
- * Reads the site file and the product catalogues from our own deploy (same
- * origin): git is the source of truth for prices.
- * @returns {Promise<{site: object|null, catalogs: Array<object>}|null>} null when the catalogue index cannot be read
+ * Reads the site file and the product catalogues from our own deploy (same origin): git is the source of truth for prices.
+ * The site file holds the site's settings under `site` and the page register beside them, under `pages`.
+ * @returns {Promise<{site: object|null, pages: Array<{id: string, path: string}>, catalogs: Array<object>}|null>} null when the catalogue index cannot be read
  */
 export async function readShop(origin) {
   const index = await ownJson(origin, '/content/samlinger.json');
   if (!index) return null;
-  const [site, ...catalogs] = await Promise.all([
+  const [file, ...catalogs] = await Promise.all([
     ownJson(origin, '/content/site.json'),
     ...(index.samlinger ?? []).slice(0, 50).map((id) => ownJson(origin, `/content/samlinger/${encodeURIComponent(id)}.json`)),
   ]);
-  return { site: site?.site ?? null, catalogs: catalogs.filter(Boolean) };
+  return { site: file?.site ?? null, pages: Array.isArray(file?.pages) ? file.pages : [], catalogs: catalogs.filter(Boolean) };
 }
 
 /**
- * The payment settings of the checkout block the buyer orders from, read from
- * the site's own page file: the page whose registered path is the return
- * path, and on it the first checkout block that offers the provider, else
- * the first checkout block. Null when the page or the block cannot be found,
- * so a caller falls back to the safe setting. The client's words never
- * decide a setting the block owns (ADR-0028 decision 1).
+ * Whether a checkout block's payments offer a provider in a way: Vipps in the app (`vipps`) or on its card page (`card: 'vipps'`), Stripe for cards, PayPal by its own button.
+ * @param {object} pays The block's `payments`
+ * @param {'vipps'|'stripe'|'paypal'} provider
+ * @param {'wallet'|'card'} [method] Vipps's way
+ */
+export function offersPayment(pays, provider, method = 'wallet') {
+  if (provider === 'stripe') return pays?.card === 'stripe';
+  if (provider === 'paypal') return pays?.paypal === true;
+  if (provider === 'vipps') return method === 'card' ? pays?.card === 'vipps' : pays?.vipps === true;
+  return false;
+}
+
+/**
+ * The payment settings of the checkout block the buyer orders from, read from the site's own page file as published: the page whose registered path is the return path, and on it the first checkout block that offers the provider in the way asked (offersPayment).
+ * Null when the page or such a block cannot be found, and the order is then refused: the client's words never decide a setting the block owns (ADR-0028 decision 1), nor a way to pay the page does not offer.
  * @param {string} origin
- * @param {object|null} site The site file's `site`
+ * @param {Array<{id: string, path: string}>} pages The page register (the site file's `pages`)
  * @param {string} returnPath The validated return path
- * @param {'vipps'|'stripe'|'paypal'} [provider]
+ * @param {'vipps'|'stripe'|'paypal'} provider
+ * @param {'wallet'|'card'} [method]
  * @returns {Promise<object|null>} The block's `payments`, as stored
  */
-export async function pageCheckout(origin, site, returnPath, provider) {
+export async function pageCheckout(origin, pages, returnPath, provider, method = 'wallet') {
   const wanted = returnPath.length > 1 ? returnPath.replace(/\/+$/, '') : '/';
-  const page = (site?.pages ?? []).find((p) => typeof p?.path === 'string' && (p.path.length > 1 ? p.path.replace(/\/+$/, '') : '/') === wanted);
+  const page = (Array.isArray(pages) ? pages : []).find((p) => typeof p?.path === 'string' && (p.path.length > 1 ? p.path.replace(/\/+$/, '') : '/') === wanted);
   if (!page?.id || !/^[a-z0-9][a-z0-9-]*$/.test(page.id)) return null;
   const file = await ownJson(origin, `/content/pages/${page.id}.json`);
   const blocks = [];
   for (const section of file?.sections ?? []) for (const block of section?.blocks ?? []) if (block?.type === 'checkout' && block.props?.payments && typeof block.props.payments === 'object') blocks.push(block.props.payments);
-  const offers = (pays) => (provider === 'stripe' ? pays.card === 'stripe' : provider === 'vipps' ? pays.vipps === true || pays.card === 'vipps' : provider === 'paypal' ? pays.paypal === true : true);
-  return blocks.find(offers) ?? blocks[0] ?? null;
+  return blocks.find((pays) => offersPayment(pays, provider, method)) ?? null;
+}
+
+const encoder = new TextEncoder();
+
+/**
+ * The key that lets the page that started a payment read the buyer's details on its return: an HMAC of the reference with the provider's own secret, so it is made again from the reference alone and never stored.
+ * The checkout gives it to the page, which keeps it in sessionStorage and never in an address; a return address shared or copied carries the reference without it.
+ * @param {string} secret The provider's secret key
+ * @param {string} reference
+ * @returns {Promise<string>} 32 hex characters
+ */
+export async function buyerKey(secret, reference) {
+  const key = await crypto.subtle.importKey('raw', encoder.encode(String(secret)), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(`urd-buyer:${reference}`)));
+  return [...mac.slice(0, 16)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Whether a session ask carries the buyer key of its reference (the `x-urd-key` header), compared in constant time.
+ * @param {Request} request
+ * @param {string} secret
+ * @param {string} reference
+ */
+export async function hasBuyerKey(request, secret, reference) {
+  const given = String(request.headers.get('x-urd-key') ?? '');
+  const want = await buyerKey(secret, reference);
+  if (given.length !== want.length) return false;
+  let diff = 0;
+  for (let i = 0; i < want.length; i += 1) diff |= given.charCodeAt(i) ^ want.charCodeAt(i);
+  return diff === 0;
+}
+
+/**
+ * An amount in the currency's minor unit as the currency writes it (350 øre as 3.5), or null where it is not a number.
+ * @param {unknown} minor
+ * @param {string} currency
+ */
+export function majorAmount(minor, currency) {
+  const n = Number(minor);
+  return minor != null && Number.isFinite(n) ? n / 10 ** currencyExponent(currency) : null;
+}
+
+/**
+ * A session endpoint's answer: whether the payment is paid or open and its state for anyone who asks with the reference, and the buyer's details and the amount the provider confirms only for the page that started it (hasBuyerKey).
+ * @param {{paid: boolean, open: boolean, state: string, buyer?: object, amount?: number|null}} summary
+ * @param {boolean} keyed
+ */
+export function sessionAnswer(summary, keyed) {
+  return {
+    paid: summary.paid,
+    open: summary.open,
+    state: summary.state,
+    ...(keyed ? { buyer: summary.buyer ?? {}, ...(Number.isFinite(summary.amount) ? { amount: summary.amount } : {}) } : {}),
+  };
 }
 
 /** The JSON answer the endpoints give, never cached. */
@@ -297,10 +412,12 @@ export const json = (body, status = 200) =>
 
 /**
  * The checks every checkout endpoint runs before it talks to a provider:
- * the payload, the shop files, the total and the variants.
- * @returns {Promise<{clean: object, payload: object, origin: string, site: object|null, catalogs: Array<object>, amountMinor: number, currency: string}|{error: Response}>}
+ * the payload, the shop files, the total, the variants and the choices they need, the prices the basket shows, and the page's checkout block offering this way to pay (`settings`, its payments).
+ * @param {Request} request
+ * @param {'vipps'|'stripe'|'paypal'} provider
+ * @returns {Promise<{clean: object, payload: object, origin: string, site: object|null, catalogs: Array<object>, amountMinor: number, currency: string, settings: object}|{error: Response}>}
  */
-export async function prepareOrder(request) {
+export async function prepareOrder(request, provider) {
   // An order is sent as JSON by the checkout block; a form posted from another site cannot send that type, so it creates no payment.
   if (!isJsonRequest(request)) return { error: json({ error: 'The order must be sent as JSON', code: 'orderInvalid' }, 415) };
   let payload = null;
@@ -319,14 +436,25 @@ export async function prepareOrder(request) {
   if (amountMinor == null || amountMinor <= 0) {
     return { error: json({ error: 'Unknown product in the order', code: 'orderInvalid' }, 400) };
   }
-  // The variant text goes on the receipt, so it must be a choice the product has.
-  if (!validVariants(clean.order, shop.catalogs)) {
-    return { error: json({ error: 'Unknown variant in the order', code: 'orderInvalid' }, 400) };
+  // The variant text goes on the receipt, so it must be a choice the product has now, and name the size and colour the product asks for; the lines that do not go back, so the basket can take them out and the buyer choose again.
+  const choices = variantProblems(clean.order, shop.catalogs);
+  if (choices.length) {
+    return { error: json({ error: 'A product in the order needs its size or colour chosen again', code: 'orderChoice', lines: choices }, 400) };
   }
   // A quantity outside the product's least or most: limits changed since the line was added, or a basket changed by hand. The lines go back with the limits that hold, so the basket can take them.
   const problems = quantityProblems(clean.order, shop.catalogs);
   if (problems.length) {
     return { error: json({ error: 'A quantity outside the product\'s limits', code: 'orderQuantity', lines: problems }, 400) };
   }
-  return { clean, payload, origin, site: shop.site, catalogs: shop.catalogs, amountMinor, currency };
+  // A price changed since the line went into the basket: the lines go back with the prices that hold, so the buyer sees the total that will be charged before paying.
+  const changed = priceChanges(clean.order, shop.catalogs, currency);
+  if (changed.length) {
+    return { error: json({ error: 'A price changed since the basket was filled', code: 'orderPrices', lines: changed }, 409) };
+  }
+  // The way to pay must be one the page's own checkout block offers, as published.
+  const settings = await pageCheckout(origin, shop.pages, clean.returnPath, provider, clean.method);
+  if (!settings) {
+    return { error: json({ error: 'The published checkout page does not offer this way to pay', code: 'payNotOffered' }, 400) };
+  }
+  return { clean, payload, origin, site: shop.site, catalogs: shop.catalogs, amountMinor, currency, settings };
 }

@@ -13,7 +13,7 @@ import {
   readCart, writeCart, cartTotal, formatPrice, orderLines, orderSummary,
   buildOrderBody, buildOrderMailto, buildOrderPayload, isEmail, onCartChange,
   paymentsOf, anyProvider, currencyWord, PAY_PROVIDERS, methodText, shownMethods,
-  orderRecord, saveOrder, readOrder, cartRelimit,
+  orderRecord, saveOrder, readOrder, cartRelimit, cartReprice, cartDrop,
 } from '../shop.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t, siteLang } from '../i18n.js';
@@ -376,7 +376,8 @@ export const checkoutBlock = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              order: items.map(({ id, qty, variant }) => ({ id, qty, ...(variant ? { variant } : {}) })),
+              // Each line's price as the basket shows it, which the checkout compares with the catalogue's before the payment is made.
+              order: items.map(({ id, qty, variant, price }) => ({ id, qty, price, ...(variant ? { variant } : {}) })),
               contact: {
                 name: nameInput.value.trim(),
                 email: emailInput.value.trim(),
@@ -391,8 +392,8 @@ export const checkoutBlock = {
           });
           const data = await res.json().catch(() => null);
           if (res.ok && data?.url) {
-            // The provider, the payment's reference and the provider's own id are kept for the return, which asks whether this payment went through; the id never comes from the address, so a shared link confirms nothing.
-            try { sessionStorage.setItem('urd-pay-reference', [provider, String(data.reference ?? ''), String(data.pid ?? '')].join(':')); } catch { /* no storage: the basket then stays after the payment */ }
+            // The provider, the payment's reference, the provider's own id and the buyer key are kept for the return, which asks whether this payment went through; neither the id nor the key comes from the address, so a shared link confirms nothing and names no buyer.
+            try { sessionStorage.setItem('urd-pay-reference', [provider, String(data.reference ?? ''), String(data.pid ?? ''), /^[0-9a-f]{32}$/.test(data.key ?? '') ? data.key : ''].join(':')); } catch { /* no storage: the basket then stays after the payment */ }
             location.href = data.url;
             return;
           }
@@ -400,6 +401,26 @@ export const checkoutBlock = {
           if (res.status === 400 && data?.code === 'orderQuantity') {
             writeCart(cartRelimit(readCart(), data.lines));
             setStatus(t('shop.qtyChanged'), true);
+            pay.disabled = false;
+            return;
+          }
+          // A price changed since the line went into the basket: the basket takes the price that holds, so the total shown is the one charged, and the buyer pays again.
+          if (res.status === 409 && data?.code === 'orderPrices') {
+            writeCart(cartReprice(readCart(), data.lines));
+            setStatus(t('shop.pricesChanged'), true);
+            pay.disabled = false;
+            return;
+          }
+          // A line whose size or colour no longer fits its product: it leaves the basket, and the buyer adds it again with a choice.
+          if (res.status === 400 && data?.code === 'orderChoice') {
+            writeCart(cartDrop(readCart(), data.lines));
+            setStatus(t('shop.choiceNeeded'), true);
+            pay.disabled = false;
+            return;
+          }
+          // The published page offers no such way to pay: the page as shown is not yet the published one, which the draft view tells the owner testing it.
+          if (res.status === 400 && data?.code === 'payNotOffered') {
+            setStatus(t(new URLSearchParams(location.search).get('draft') === '1' ? 'shop.payNotOfferedDraft' : 'shop.payNotOffered'), true);
             pay.disabled = false;
             return;
           }
@@ -446,16 +467,17 @@ export const checkoutBlock = {
       };
       let started = '';
       try { started = sessionStorage.getItem('urd-pay-reference') ?? ''; } catch { /* no storage */ }
-      const [startedVia = '', startedRef = '', pid = ''] = started.split(':');
+      const [startedVia = '', startedRef = '', pid = '', key = ''] = started.split(':');
       if (PAY_PROVIDERS.includes(via) && startedVia === via && startedRef === ordered && /^urd-[0-9a-f]{24}$/.test(ordered)) {
         // The provider may send the buyer back before the payment is settled, and the site's function may not answer at the first try, so the page asks a few times while the answer is open.
         const ask = async (left) => {
           const query = `reference=${encodeURIComponent(ordered)}${pid ? `&pid=${encodeURIComponent(pid)}` : ''}`;
           // A POST, since PayPal's endpoint captures the approved order on this ask.
-          const data = await fetch(`/api/pay/${via}/session?${query}`, { method: 'POST' }).then((res) => (res.ok ? res.json() : null)).catch(() => null);
+          // The buyer key, kept from the start of the payment, lets this page alone read the buyer's details and the amount confirmed.
+          const data = await fetch(`/api/pay/${via}/session?${query}`, { method: 'POST', headers: key ? { 'x-urd-key': key } : {} }).then((res) => (res.ok ? res.json() : null)).catch(() => null);
           if (data?.paid) {
-            // The confirmation is drawn from the basket before it empties, with the buyer the provider named.
-            showConfirmation(orderRecord(readCart(), data.buyer ?? {}, { currency, provider: via, reference: ordered }));
+            // The confirmation is drawn from the basket before it empties, with the buyer the provider named and the amount it confirms.
+            showConfirmation(orderRecord(readCart(), data.buyer ?? {}, { currency, provider: via, reference: ordered, total: data.amount }));
             writeCart([]);
             // The buyer the provider named is thanked by name; the receipt with the order lines sits with the provider.
             const name = String(data.buyer?.name ?? '').trim();

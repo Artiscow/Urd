@@ -52,10 +52,11 @@ export async function onRequestPost({ request, env }) {
     if (!(file.delete === true ? isDeletablePath(file.path) : isAllowedPath(file.path))) {
       return json({ error: `The path '${file.path}' cannot be published from here`, code: 'pathNotAllowed', path: file.path }, 400);
     }
-    // A file whose content is checked (a PDF or an SVG in media/, `_redirects`) must be what its name says, and within its size.
+    // A file whose content is checked (a PDF or an SVG in media/, a feed in content/, the sitemap, `_redirects`) must be what its name says, and within its size.
     if (file.delete !== true && !isAllowedContent(file.path, file.content, file.encoding)) {
       if (file.path === '_redirects') return json({ error: 'The redirect file holds a line that is not a redirect Urd writes', code: 'redirectsNotAllowed', path: file.path }, 400);
       if (/\.svg$/i.test(file.path)) return json({ error: `The SVG '${file.path}' holds a script, a link that runs code or a declaration`, code: 'svgNotAllowed', path: file.path }, 400);
+      if (/\.xml$/i.test(file.path)) return json({ error: `The file '${file.path}' holds a script, a stylesheet instruction or a declaration, or is not a feed or a sitemap`, code: 'xmlNotAllowed', path: file.path }, 400);
       return json({ error: `The file '${file.path}' is not a PDF, or is too large`, code: 'fileNotAllowed', path: file.path }, 400);
     }
   }

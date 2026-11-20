@@ -8,8 +8,9 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import {
   isAllowedPath, isAllowedContent, MEDIA_PDF_MAX_BYTES, isDeletablePath, isAllowedMove, isAllowedLogin,
-  OWNED_PATTERNS, USER_PATTERNS, matchesPattern, isOwnedPath, isUserPath, isPageIndexCopy,
+  OWNED_PATTERNS, USER_PATTERNS, matchesPattern, isOwnedPath, isUserPath, isPageIndexCopy, isAllowedXml,
 } from '../template/functions/_lib/guard.js';
+import { engineImport } from './_engine.mjs';
 
 // Norwegian path segments below (maler, samlinger, om-oss, ...) are
 // deliberate: user-repo paths are user data and keep their names (ADR-0021).
@@ -313,4 +314,40 @@ test('the editor refuses the same folder names for a page as the guard', async (
   const { readFileSync } = await import('node:fs');
   const list = (file) => readFileSync(new URL(file, import.meta.url), 'utf8').match(/const RESERVED_SLUGS = (\[[^\]]*\])/)[1];
   assert.equal(list('../editor/src/state/site.svelte.js'), list('../template/functions/_lib/guard.js'));
+});
+
+test('isAllowedXml: the feed and the sitemap the engine writes pass; XML that could run a script, draw a page or declare entities is refused, in content/ and as sitemap.xml', async () => {
+  const { buildRssXml, buildSitemapXml } = await engineImport('feeds.js');
+  const rss = buildRssXml({ title: 'Nyheter & <stuff>', origin: 'https://s.no', path: '/nyheter', items: [{ id: 'a', title: '<script>alert(1)</script>', text: 'Tekst med http://www.w3.org/1999/xhtml i seg', date: '2026-11-20', href: '/nyheter' }] });
+  const sitemap = buildSitemapXml([{ id: 'hjem', path: '/' }, { id: 'om', path: '/om' }], 'https://s.no');
+  assert.equal(isAllowedContent('content/samlinger/nyheter.xml', rss, 'utf-8'), true);
+  assert.equal(isAllowedContent('sitemap.xml', sitemap, 'utf-8'), true);
+  assert.equal(isAllowedXml('<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><title>x</title></feed>'), true, 'an Atom feed');
+  const hostile = [
+    '<?xml version="1.0"?><rss xmlns:h="http://www.w3.org/1999/xhtml"><h:script>alert(1)</h:script></rss>',
+    '<rss><channel xmlns="http://www.w3.org/1999/xhtml"><script>alert(1)</script></channel></rss>',
+    '<rss><x xmlns="http&#58;//www.w3.org/1999/xhtml"><script>alert(1)</script></x></rss>',
+    '<rss><x xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></x></rss>',
+    '<rss><x xmlns:m="http://www.w3.org/1998/Math/MathML"/></rss>',
+    '<?xml-stylesheet type="text/xsl" href="data:text/xsl,x"?><rss/>',
+    '<!DOCTYPE rss [<!ENTITY x "y">]><rss>&x;</rss>',
+    '<html xmlns="http://www.w3.org/1999/xhtml"><script>alert(1)</script></html>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+    '<!-- a comment first --><rss/>',
+    `<rss><channel><title>xmlns:q='</title><h:x xmlns:h="http://www.w3.org/1999/xhtml"><h:script>alert(1)</h:script></h:x><title>'</title></channel></rss>`,
+    `<rss><channel a="xmlns:q='" xmlns:h="http://www.w3.org/1999/xhtml" b="'"><h:script>alert(1)</h:script></channel></rss>`,
+    `<rss><channel><![CDATA[xmlns:q=']]><h:x xmlns:h="http://www.w3.org/1999/xhtml"/><![CDATA[']]></channel></rss>`,
+    '<rss xmlns:é="http://www.w3.org/1999/xhtml"><é:script>alert(1)</é:script></rss>',
+    '<rss xmlns:a·b="http://www.w3.org/1999/xhtml"><a·b:script>alert(1)</a·b:script></rss>',
+    'not xml at all',
+  ];
+  for (const xml of hostile) {
+    assert.equal(isAllowedXml(xml), false, xml);
+    assert.equal(isAllowedContent('content/samlinger/x.xml', xml, 'utf-8'), false, xml);
+    assert.equal(isAllowedContent('sitemap.xml', xml, 'utf-8'), false, xml);
+  }
+  assert.equal(isAllowedContent('content/samlinger/x.xml', Buffer.from(rss).toString('base64'), 'base64'), false, 'a feed is sent as text');
+  const start = performance.now();
+  isAllowedXml(`<rss>${"xmlns='".repeat(200000)}</rss>`);
+  assert.ok(performance.now() - start < 2000, 'declarations never closed are read in a time that grows with the length alone');
 });

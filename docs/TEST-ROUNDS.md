@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.2.2): the payment rules and feeds that can run nothing
+
+- [ ] A checkout page offering Vipps, a card and PayPal on test keys: each button takes a test payment as before, and the receipt names the buyer with the total charged
+- [ ] Change a product's price and publish, while a basket from before holds it: «Pay» says a price changed, the basket and the total show the new price, and the next «Pay» goes through
+- [ ] A product in the basket, then «Require a size» switched on for it and published: «Pay» takes the line out of the basket and asks to add it again with a size
+- [ ] A Stripe checkout block set to take the payment «At the order»: the test payment is taken at once in the Stripe dashboard, not held
+- [ ] Add a pay button in the editor without publishing and use «Test the payment»: the draft view says to publish the checkout page first; after publishing, the test goes through
+- [ ] After a paid Vipps test, open `/api/pay/vipps/session?reference=<the reference from the return address>` in the address bar: it says paid and its state, with no name, email or phone
+- [ ] Publish a collection with an RSS feed: `/content/samlinger/<id>.xml` and `/sitemap.xml` are written as before
+
 ### Test batch (0.7.37.2.1): one allowlist for rich text, the SVG check and CSV exports without formulas
 
 - [ ] Texts, FAQ answers, collection and product entries and the calendar's own words on the example site look as before: headings, bold, lists, links, colours, sizes, indents and alignment

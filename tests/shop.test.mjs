@@ -8,7 +8,7 @@ import { engineImport } from './_engine.mjs';
 
 const {
   cartAdd, cartSetQty, cartRemove, cartCount, cartTotal, itemKey, variantLabel, formatPrice,
-  quantityLimits, lineLimits, limitNote, cartRelimit,
+  quantityLimits, lineLimits, limitNote, cartRelimit, cartReprice, cartDrop,
   isEmail, orderLines, orderSummary, buildOrderBody, buildOrderMailto, buildOrderPayload,
   methodText, shownMethods, paymentsOf, orderRecord, saveOrder, readOrder, ORDER_KEY,
 } = await engineImport('shop.js');
@@ -216,4 +216,37 @@ test('cartRelimit: the lines the checkout names take the limits that hold, and t
   assert.equal(out[1].qty, 8, 'another variant is another line');
   assert.equal(out[2], items[2]);
   assert.deepEqual(cartRelimit(items, null), items);
+});
+
+test('cartReprice: the lines the checkout names take the price that holds, by product and variant, and the others stay', () => {
+  const items = [
+    { key: 'kake|Stor', id: 'kake', title: 'Kake', price: 300, qty: 2, variant: 'Stor' },
+    { key: 'kake|Liten', id: 'kake', title: 'Kake', price: 150, qty: 1, variant: 'Liten' },
+    { key: 'bolle', id: 'bolle', title: 'Bolle', price: 10, qty: 3 },
+  ];
+  const next = cartReprice(items, [{ id: 'kake', variant: 'Stor', price: 350 }, { id: 'bolle', price: 12 }, { id: 'ukjent', price: 1 }]);
+  assert.deepEqual(next.map((i) => i.price), [350, 150, 12]);
+  assert.deepEqual(next.map((i) => i.qty), [2, 1, 3]);
+  assert.equal(items[0].price, 300, 'a new list');
+  assert.deepEqual(cartReprice(items, null), items);
+  const limited = cartReprice([{ key: 'te', id: 'te', title: 'Te', price: 5, qty: 4, min: 2, max: 6 }], [{ id: 'te', price: 6 }])[0];
+  assert.deepEqual([limited.price, limited.min, limited.max, limited.qty], [6, 2, 6, 4], 'a line\'s limits stay');
+});
+
+test('cartDrop: the lines the checkout names go, by product and variant, and the others stay', () => {
+  const items = [
+    { key: 'skjorte', id: 'skjorte', title: 'Skjorte', price: 200, qty: 1 },
+    { key: 'kake|Liten', id: 'kake', title: 'Kake', price: 150, qty: 1, variant: 'Liten' },
+    { key: 'kake|Stor', id: 'kake', title: 'Kake', price: 350, qty: 1, variant: 'Stor' },
+  ];
+  assert.deepEqual(cartDrop(items, [{ id: 'skjorte' }, { id: 'kake', variant: 'Liten' }]).map((i) => i.key), ['kake|Stor']);
+  assert.deepEqual(cartDrop(items, null), items);
+});
+
+test('orderRecord: the total is the amount the provider confirms where it is given, else the basket\'s sum', () => {
+  const items = [{ key: 'kake', id: 'kake', title: 'Kake', price: 300, qty: 2 }];
+  assert.equal(orderRecord(items, {}, { total: 700 }).total, 700);
+  assert.equal(orderRecord(items, {}).total, 600);
+  assert.equal(orderRecord(items, {}, { total: 'x' }).total, 600);
+  assert.equal(orderRecord(items, {}, { total: -1 }).total, 600);
 });

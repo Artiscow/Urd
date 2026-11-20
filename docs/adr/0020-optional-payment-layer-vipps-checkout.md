@@ -36,3 +36,7 @@ The payment layer is built on **the Vipps MobilePay ePayment API via a dedicated
 - The seller captures by hand in the Vipps portal until the shop of v1.1 captures from the site at shipping; a reservation not captured within the window is released by Vipps.
 - A test payment (the Done-when criterion) requires the site owner's test sales unit, the test app and a test user on a deployed site, with the API base pointed at the test environment; locally the button degrades gracefully. The setup guide walks through it.
 - If the provider is switched later, the surface is small: one block prop, three functions, one network helper and one pure module.
+
+## Addendum, 20 November 2026: the cart lines carry the price the basket shows
+
+The decisions stand as they are. The cart lines the button posts carry, beside the id, the quantity and the variant, the price the basket shows; the function compares it with the catalogue's and answers with the price that holds where they differ, so the buyer sees the total before paying, and never charges from it ([ADR-0028](0028-payment-providers-in-the-optional-layer.md), its addendum of the same date).

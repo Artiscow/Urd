@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 import { createHmac, createHash } from 'node:crypto';
 
 const FN = new URL('../template/functions/api/pay/', import.meta.url);
+const { buyerKey } = await import('../template/functions/_lib/order.js');
 const vipps = {
   checkout: await import(new URL('vipps/checkout.js', FN).href),
   session: await import(new URL('vipps/session.js', FN).href),
@@ -37,12 +38,13 @@ const REF_RE = /^urd-[0-9a-f]{24}$/;
 // Deliberate Norwegian fixture ids and names: this is user catalog data.
 const SHOP = {
   '/content/samlinger.json': { samlinger: ['produkter'] },
-  '/content/samlinger/produkter.json': { kind: 'products', entries: [{ id: 'kake', title: 'Kake', price: 350, sizes: ['Stor'] }] },
+  '/content/samlinger/produkter.json': { kind: 'products', entries: [{ id: 'kake', title: 'Kake', price: 350, sizes: ['Stor'] }, { id: 'skjorte', title: 'Skjorte', price: 200, sizes: ['S', 'M'], requireSize: true }] },
 };
-/** The checkout block on the page the orders return to; the tests set its capture mode. */
+/** The checkout block on the page the orders return to; the tests set its capture mode, and what it offers beside every provider. */
 let PAGE_CAPTURE = 'ship';
-const PAGES = [{ id: 'kasse', path: '/kasse' }];
-const pageFile = () => ({ sections: [{ blocks: [{ type: 'checkout', props: { payments: { vipps: true, card: 'stripe', paypal: false, capture: PAGE_CAPTURE, manual: [] } } }] }] });
+let PAGE_PAYS = {};
+const PAGES = [{ id: 'kasse', path: '/kasse' }, { id: 'hjem', path: '/' }];
+const pageFile = () => ({ sections: [{ blocks: [{ type: 'checkout', props: { payments: { vipps: true, card: 'stripe', paypal: true, capture: PAGE_CAPTURE, manual: [], ...PAGE_PAYS } } }] }] });
 
 const realFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = realFetch; });
@@ -59,7 +61,8 @@ function stubNetwork(site, provider) {
     const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
     if (hostOf(call.url) === hostOf(ORIGIN)) {
       const path = new URL(call.url).pathname;
-      if (path === '/content/site.json') return json({ site: { pages: PAGES, ...site } });
+      // The site file as it stands: the settings under `site`, the page register beside them.
+      if (path === '/content/site.json') { const { pages = PAGES, ...settings } = site; return json({ site: settings, pages }); }
       if (path === '/content/pages/kasse.json') return json(pageFile());
       return SHOP[path] ? json(SHOP[path]) : new Response('not found', { status: 404 });
     }
@@ -79,7 +82,7 @@ const VIPPS_ENV = { VIPPS_CLIENT_ID: 'id', VIPPS_CLIENT_SECRET: 'sec', VIPPS_SUB
 function vippsApi(call, json) {
   if (call.url.endsWith('/accesstoken/get')) return json({ token_type: 'Bearer', expires_in: '3599', access_token: 'TOK' });
   if (call.url.endsWith('/epayment/v1/payments') && call.method === 'POST') return json({ reference: JSON.parse(call.body).reference, redirectUrl: 'https://landing.vipps.no?token=abc' }, 201);
-  if (/\/epayment\/v1\/payments\/urd-/.test(call.url)) return json({ state: 'AUTHORIZED', userDetails: { firstName: 'Kari', lastName: 'Nordmann', email: 'k@n.no', mobileNumber: '4712345678' } });
+  if (/\/epayment\/v1\/payments\/urd-/.test(call.url)) return json({ state: 'AUTHORIZED', amount: { currency: 'NOK', value: 70000 }, userDetails: { firstName: 'Kari', lastName: 'Nordmann', email: 'k@n.no', mobileNumber: '4712345678' } });
   return new Response('nope', { status: 404 });
 }
 
@@ -102,7 +105,9 @@ test('vipps checkout: the payment in the site currency with the profile, the rec
 
 test('vipps checkout: a seller in the VAT register sends no receipt; the card method sends CARD', async () => {
   const calls = stubNetwork({ contact: { vat: { registered: true } } }, vippsApi);
+  PAGE_PAYS = { card: 'vipps' };
   await vipps.checkout.onRequestPost({ request: order({ method: 'card' }), env: VIPPS_ENV });
+  PAGE_PAYS = {};
   const body = JSON.parse(calls.find((c) => c.url.endsWith('/epayment/v1/payments')).body);
   assert.equal(body.receipt, undefined);
   assert.deepEqual(body.paymentMethod, { type: 'CARD' });
@@ -123,8 +128,13 @@ test('checkout: an order sent as a form or as plain text is refused before anyth
 test('vipps session: a reserved payment is paid with the buyer\'s name; a malformed reference is refused before Vipps is asked', async () => {
   const calls = stubNetwork({}, vippsApi);
   const ref = 'urd-' + 'a'.repeat(24);
-  const res = await vipps.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/vipps/session?reference=${ref}`), env: VIPPS_ENV });
-  assert.deepEqual(await res.json(), { paid: true, open: false, state: 'AUTHORIZED', buyer: { name: 'Kari Nordmann', email: 'k@n.no', phone: '4712345678' } });
+  const key = await buyerKey(VIPPS_ENV.VIPPS_CLIENT_SECRET, ref);
+  const res = await vipps.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/vipps/session?reference=${ref}`, { headers: { 'x-urd-key': key } }), env: VIPPS_ENV });
+  assert.deepEqual(await res.json(), { paid: true, open: false, state: 'AUTHORIZED', buyer: { name: 'Kari Nordmann', email: 'k@n.no', phone: '4712345678' }, amount: 700 });
+  const shared = await vipps.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/vipps/session?reference=${ref}`), env: VIPPS_ENV });
+  assert.deepEqual(await shared.json(), { paid: true, open: false, state: 'AUTHORIZED' }, 'a return address alone names no buyer');
+  const wrong = await vipps.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/vipps/session?reference=${ref}`, { headers: { 'x-urd-key': await buyerKey(VIPPS_ENV.VIPPS_CLIENT_SECRET, 'urd-' + 'b'.repeat(24)) } }), env: VIPPS_ENV });
+  assert.equal((await wrong.json()).buyer, undefined, 'another payment\'s key names no buyer');
   const before = calls.length;
   const bad = await vipps.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/vipps/session?reference=../x`), env: VIPPS_ENV });
   assert.equal(bad.status, 400);
@@ -154,7 +164,7 @@ function stripeApi(sessions) {
       return json({ id: SESSION_ID, url: `https://checkout.stripe.com/c/pay/${SESSION_ID}` });
     }
     const m = /\/v1\/checkout\/sessions\/(cs_[A-Za-z0-9_]+)\?expand\[\]=payment_intent$/.exec(call.url);
-    if (m) return json({ id: m[1], status: 'complete', payment_status: 'unpaid', client_reference_id: sessions.get(m[1]) ?? 'urd-other', payment_intent: { status: 'requires_capture' }, customer_details: { name: 'Kari Nordmann', email: 'k@n.no', phone: null } });
+    if (m) return json({ id: m[1], status: 'complete', payment_status: 'unpaid', client_reference_id: sessions.get(m[1]) ?? 'urd-other', amount_total: 35000, currency: 'eur', payment_intent: { status: 'requires_capture' }, customer_details: { name: 'Kari Nordmann', email: 'k@n.no', phone: null } });
     return new Response('nope', { status: 404 });
   };
 }
@@ -193,8 +203,10 @@ test('stripe checkout: the capture mode is the block\'s on the page, never the c
   await stripe.checkout.onRequestPost({ request: order({ capture: 'now' }), env: STRIPE_ENV });
   assert.equal(captureSent(calls), 'manual', 'the block says ship: held whatever the client posts');
   calls = stubNetwork({ pages: [] }, stripeApi(sessions));
-  await stripe.checkout.onRequestPost({ request: order({ capture: 'now' }), env: STRIPE_ENV });
-  assert.equal(captureSent(calls), 'manual', 'no page found: held, the safe side');
+  const unread = await stripe.checkout.onRequestPost({ request: order({ capture: 'now' }), env: STRIPE_ENV });
+  assert.equal(unread.status, 400, 'no page found: no payment at all');
+  assert.equal((await unread.json()).code, 'payNotOffered');
+  assert.ok(!calls.some((c) => c.url.includes('/v1/checkout/sessions')));
   calls = stubNetwork({}, stripeApi(sessions));
   const res = await stripe.checkout.onRequestPost({ request: order(), env: {} });
   assert.equal(res.status, 503);
@@ -207,8 +219,10 @@ test('stripe session: a held payment for this reference is paid with the name St
   stubNetwork({}, stripeApi(sessions));
   const ref = 'urd-' + 'c'.repeat(24);
   sessions.set(SESSION_ID, ref);
-  const ask = (reference, pid) => stripe.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/stripe/session?reference=${reference}&pid=${pid}`), env: STRIPE_ENV });
-  assert.deepEqual(await (await ask(ref, SESSION_ID)).json(), { paid: true, open: false, state: 'complete:requires_capture', buyer: { name: 'Kari Nordmann', email: 'k@n.no', phone: '' } });
+  const key = await buyerKey(STRIPE_ENV.STRIPE_SECRET_KEY, ref);
+  const ask = (reference, pid, headers = { 'x-urd-key': key }) => stripe.session.onRequestGet({ request: new Request(`${ORIGIN}/api/pay/stripe/session?reference=${reference}&pid=${pid}`, { headers }), env: STRIPE_ENV });
+  assert.deepEqual(await (await ask(ref, SESSION_ID)).json(), { paid: true, open: false, state: 'complete:requires_capture', buyer: { name: 'Kari Nordmann', email: 'k@n.no', phone: '' }, amount: 350 });
+  assert.deepEqual(await (await ask(ref, SESSION_ID, {})).json(), { paid: true, open: false, state: 'complete:requires_capture' }, 'without the key, no buyer');
   assert.equal((await ask('urd-' + 'd'.repeat(24), SESSION_ID)).status, 400, 'the session belongs to another reference');
   assert.equal((await ask(ref, 'pi_123')).status, 400, 'not a session id');
 });
@@ -237,7 +251,7 @@ function paypalApi(state) {
       state.created = JSON.parse(call.body);
       return json({ id: ORDER_ID, status: 'PAYER_ACTION_REQUIRED', links: [{ rel: 'payer-action', href: `https://www.sandbox.paypal.com/checkoutnow?token=${ORDER_ID}` }] }, 200);
     }
-    const unit = { reference_id: state.reference ?? state.created?.purchase_units[0].reference_id };
+    const unit = { reference_id: state.reference ?? state.created?.purchase_units[0].reference_id, amount: { currency_code: 'EUR', value: '700.00' } };
     if (path === `/v2/checkout/orders/${ORDER_ID}` && call.method === 'GET') return json({ id: ORDER_ID, status: state.status, purchase_units: [unit] });
     if (path === `/v2/checkout/orders/${ORDER_ID}/capture` && call.method === 'POST') {
       state.captures = (state.captures ?? 0) + 1;
@@ -287,8 +301,9 @@ test('paypal session: an approved order for this reference is captured once, wit
   const ref = 'urd-' + 'e'.repeat(24);
   const state = { status: 'APPROVED', reference: ref };
   stubNetwork({}, paypalApi(state));
-  const ask = (reference, pid) => paypal.session.onRequestPost({ request: new Request(`${ORIGIN}/api/pay/paypal/session?reference=${reference}&pid=${pid}`, { method: 'POST' }), env: PAYPAL_ENV });
-  assert.deepEqual(await (await ask(ref, ORDER_ID)).json(), { paid: true, open: false, state: 'COMPLETED:COMPLETED', buyer: { name: 'Kari Nordmann', email: 'k@n.no', phone: '' } });
+  const key = await buyerKey(PAYPAL_ENV.PAYPAL_CLIENT_SECRET, ref);
+  const ask = (reference, pid, headers = { 'x-urd-key': key }) => paypal.session.onRequestPost({ request: new Request(`${ORIGIN}/api/pay/paypal/session?reference=${reference}&pid=${pid}`, { method: 'POST', headers }), env: PAYPAL_ENV });
+  assert.deepEqual(await (await ask(ref, ORDER_ID)).json(), { paid: true, open: false, state: 'COMPLETED:COMPLETED', buyer: { name: 'Kari Nordmann', email: 'k@n.no', phone: '' }, amount: 700 });
   assert.equal(state.captures, 1);
   assert.equal(state.captureRequestId, `${ref}-capture`);
   assert.equal((await ask('urd-' + 'f'.repeat(24), ORDER_ID)).status, 400, 'the order belongs to another reference');
@@ -299,6 +314,7 @@ test('paypal session: an approved order for this reference is captured once, wit
   assert.equal(open.open, true);
   assert.equal(open.paid, false);
   assert.equal(state.captures, 1, 'an order not yet approved is not captured');
+  assert.equal((await (await ask(ref, ORDER_ID, {})).json()).buyer, undefined, 'without the key, no buyer');
 });
 
 test('paypal webhook: PayPal\'s check decides, with the event sent back as it came; a missing header 401 before PayPal is asked; no webhook id 503', async () => {
@@ -323,6 +339,78 @@ test('paypal webhook: PayPal\'s check decides, with the event sent back as it ca
   assert.equal((await deliver(unsigned)).status, 401);
   assert.equal(calls.length, before);
   assert.equal((await deliver(headers, { ...PAYPAL_ENV, PAYPAL_WEBHOOK_ID: '' })).status, 503);
+});
+
+test('checkout: a payment goes through against the template\'s own site file and checkout page, as a deployed site holds them', async () => {
+  const { readFileSync } = await import('node:fs');
+  const read = (path) => JSON.parse(readFileSync(new URL(`../template${path}`, import.meta.url), 'utf8'));
+  const siteFile = read('/content/site.json');
+  const checkoutPage = read('/content/pages/checkout.json');
+  for (const section of checkoutPage.sections) for (const block of section.blocks ?? []) if (block.type === 'checkout') block.props.payments = { ...block.props.payments, vipps: true };
+  const path = siteFile.pages.find((p) => p.id === 'checkout').path;
+  const calls = [];
+  globalThis.fetch = async (url, init = {}) => {
+    calls.push(String(url));
+    const at = new URL(String(url));
+    const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+    if (at.host === hostOf(ORIGIN)) {
+      if (at.pathname === '/content/site.json') return json(siteFile);
+      if (at.pathname === '/content/pages/checkout.json') return json(checkoutPage);
+      return SHOP[at.pathname] ? json(SHOP[at.pathname]) : new Response('not found', { status: 404 });
+    }
+    return vippsApi({ url: String(url), method: init.method ?? 'GET', body: init.body }, json);
+  };
+  const res = await vipps.checkout.onRequestPost({ request: order({ returnPath: `${path}/` }), env: VIPPS_ENV });
+  assert.equal(res.status, 200, 'the page register beside the settings finds the checkout page');
+  assert.ok(calls.some((c) => c.endsWith('/epayment/v1/payments')));
+});
+
+test('checkout: the way to pay must be one the published checkout page offers; a return address of another page, or a provider the block does not offer, makes no payment', async () => {
+  for (const [provider, env, pays] of [[vipps, VIPPS_ENV, { vipps: false }], [stripe, STRIPE_ENV, { card: 'none' }], [paypal, PAYPAL_ENV, { paypal: false }]]) {
+    let calls = stubNetwork({}, () => new Response('nope', { status: 500 }));
+    let res = await provider.checkout.onRequestPost({ request: order({ returnPath: '/' }), env });
+    assert.equal(res.status, 400, 'the front page has no checkout block');
+    assert.equal((await res.json()).code, 'payNotOffered');
+    PAGE_PAYS = pays;
+    calls = stubNetwork({}, () => new Response('nope', { status: 500 }));
+    res = await provider.checkout.onRequestPost({ request: order(), env });
+    PAGE_PAYS = {};
+    assert.equal(res.status, 400, JSON.stringify(pays));
+    assert.equal((await res.json()).code, 'payNotOffered');
+    assert.ok(calls.every((c) => hostOf(c.url) === hostOf(ORIGIN)), 'no provider is asked');
+  }
+  PAGE_PAYS = { vipps: true, card: 'stripe' };
+  const calls = stubNetwork({}, vippsApi);
+  const card = await vipps.checkout.onRequestPost({ request: order({ method: 'card' }), env: VIPPS_ENV });
+  PAGE_PAYS = {};
+  assert.equal((await card.json()).code, 'payNotOffered', 'Vipps\'s card page is a way of its own');
+  assert.ok(!calls.some((c) => c.url.includes('/epayment/')));
+});
+
+test('checkout: a price changed since the basket was filled answers 409 with the price that holds, and a product without the size it asks for is refused, before a provider is asked', async () => {
+  let calls = stubNetwork({}, vippsApi);
+  let res = await vipps.checkout.onRequestPost({ request: order({ order: [{ id: 'kake', qty: 1, variant: 'Stor', price: 300 }] }), env: VIPPS_ENV });
+  assert.equal(res.status, 409);
+  assert.deepEqual(await res.json(), { error: 'A price changed since the basket was filled', code: 'orderPrices', lines: [{ id: 'kake', variant: 'Stor', price: 350 }] });
+  assert.ok(!calls.some((c) => c.url.includes('/epayment/')));
+  calls = stubNetwork({}, vippsApi);
+  res = await vipps.checkout.onRequestPost({ request: order({ order: [{ id: 'kake', qty: 1, variant: 'Stor', price: 350 }] }), env: VIPPS_ENV });
+  assert.equal(res.status, 200, 'the price as the catalogue has it passes');
+  calls = stubNetwork({}, vippsApi);
+  res = await vipps.checkout.onRequestPost({ request: order({ order: [{ id: 'skjorte', qty: 1 }, { id: 'kake', qty: 1, variant: 'Liten' }] }), env: VIPPS_ENV });
+  assert.equal(res.status, 400);
+  assert.deepEqual(await res.json(), { error: 'A product in the order needs its size or colour chosen again', code: 'orderChoice', lines: [{ id: 'skjorte' }, { id: 'kake', variant: 'Liten' }] }, 'a size now asked for, and a size the product no longer has');
+  assert.ok(!calls.some((c) => c.url.includes('/epayment/')));
+});
+
+test('checkout: each provider hands the page the buyer key of its reference', async () => {
+  const sessions = new Map();
+  for (const [provider, env, api, secret] of [[vipps, VIPPS_ENV, vippsApi, VIPPS_ENV.VIPPS_CLIENT_SECRET], [stripe, STRIPE_ENV, stripeApi(sessions), STRIPE_ENV.STRIPE_SECRET_KEY], [paypal, PAYPAL_ENV, paypalApi({}), PAYPAL_ENV.PAYPAL_CLIENT_SECRET]]) {
+    stubNetwork({ commerce: { currency: 'EUR' } }, api);
+    const data = await (await provider.checkout.onRequestPost({ request: order(), env })).json();
+    assert.match(data.key, /^[0-9a-f]{32}$/);
+    assert.equal(data.key, await buyerKey(secret, data.reference));
+  }
 });
 
 test('every session endpoint answers the POST the checkout page sends', () => {

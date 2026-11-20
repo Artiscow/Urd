@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import {
   validOrderPayload, orderAmountMinor, validVariants, validQuantities, quantityProblems, quantityLimits, orderLineItems, orderDescription, currencyExponent,
   makeReference, isReference, orderCurrency, vatRegistered, returnUrl, cancelUrl, PROVIDERS, pageCheckout,
+  priceChanges, buyerKey, hasBuyerKey, sessionAnswer, majorAmount, variantProblems,
 } from '../template/functions/_lib/order.js';
 
 // Deliberate Norwegian fixture ids and names: this is user catalog data.
@@ -24,7 +25,11 @@ test('validOrderPayload: cleans lines and contact, clamps quantity, rejects nons
     contact: { name: ' Kari ', email: 'kari@forening.no' },
     returnPath: '/kasse',
   });
-  assert.deepEqual(clean.order, [{ id: 'kake', qty: 2, variant: 'Stor' }]);
+  assert.deepEqual(clean.order, [{ id: 'kake', qty: 2, variant: 'Stor', price: 1 }], 'the basket\'s price is kept to be compared, never charged');
+  assert.equal(clean.method, 'wallet');
+  assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }], method: 'card' }).method, 'card');
+  assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1 }], method: 'cash' }).method, 'wallet');
+  for (const price of [-1, 'x', 2e9, Infinity]) assert.equal(validOrderPayload({ order: [{ id: 'kake', qty: 1, price }] }), null, String(price));
   assert.equal(clean.contact.name, 'Kari');
   assert.equal(clean.returnPath, '/kasse');
   assert.equal(clean.draft, false);
@@ -125,21 +130,69 @@ test('currencyExponent and the minor unit: two decimals for most currencies, who
   assert.equal(orderLineItems([{ id: 'boller', qty: 1 }], CATALOGS, 'KRW')[0].unit, 50, 'rounded to the whole unit');
 });
 
-test('pageCheckout: the checkout block on the page the return path names, the one offering the provider first; nothing for an unknown page, an odd id or a block without payments', async () => {
+test('validVariants: a product that asks for a size or a colour takes no line without it, in either order of the basket\'s label', () => {
+  const catalogs = [{ kind: 'products', entries: [
+    { id: 'skjorte', price: 1, sizes: ['S', 'M'], colors: [{ name: 'Rød' }, { name: 'Blå' }], requireSize: true, requireColor: true },
+    { id: 'lue', price: 1, sizes: ['S'], requireSize: true, colors: [{ name: 'Grå' }] },
+    { id: 'kopp', price: 1, sizes: [], requireSize: true },
+  ] }];
+  const ok = (line) => validVariants([{ qty: 1, ...line }], catalogs);
+  assert.equal(ok({ id: 'skjorte', variant: 'M · Blå' }), true);
+  assert.equal(ok({ id: 'skjorte', variant: 'M' }), false, 'the colour is asked for');
+  assert.equal(ok({ id: 'skjorte', variant: 'Blå' }), false, 'the size is asked for');
+  assert.equal(ok({ id: 'skjorte' }), false, 'a line without a variant');
+  assert.equal(ok({ id: 'lue', variant: 'S' }), true, 'the colour is not asked for');
+  assert.equal(ok({ id: 'lue', variant: 'Grå' }), false);
+  assert.equal(ok({ id: 'kopp' }), true, 'a product without sizes asks for none');
+  assert.deepEqual(variantProblems([{ id: 'skjorte', qty: 1, variant: 'M' }, { id: 'lue', qty: 1, variant: 'S' }, { id: 'lue', qty: 1, variant: 'XL' }], catalogs), [{ id: 'skjorte', variant: 'M' }, { id: 'lue', variant: 'XL' }]);
+});
+
+test('priceChanges: the lines whose basket price is not the catalogue\'s now, compared in the minor unit, with the price that holds', () => {
+  const catalogs = [{ kind: 'products', entries: [{ id: 'kake', price: 49.5 }, { id: 'bolle', price: 10 }] }];
+  assert.deepEqual(priceChanges([{ id: 'kake', qty: 1, price: 49.5 }, { id: 'bolle', qty: 2 }], catalogs), [], 'a line without a price is not compared');
+  assert.deepEqual(priceChanges([{ id: 'kake', qty: 1, price: 0.1 + 49.4 }], catalogs), [], 'floating point noise is no change');
+  assert.deepEqual(priceChanges([{ id: 'kake', qty: 1, variant: 'Stor', price: 45 }, { id: 'bolle', qty: 1, price: 12 }], catalogs), [{ id: 'kake', variant: 'Stor', price: 49.5 }, { id: 'bolle', price: 10 }]);
+});
+
+test('buyerKey, hasBuyerKey and sessionAnswer: the key is made again from the reference and the secret, and the buyer and the amount go to the page that holds it alone', async () => {
+  const ref = 'urd-' + 'a'.repeat(24);
+  const key = await buyerKey('secret', ref);
+  assert.match(key, /^[0-9a-f]{32}$/);
+  assert.equal(await buyerKey('secret', ref), key, 'the same every time');
+  assert.notEqual(await buyerKey('other', ref), key);
+  assert.notEqual(await buyerKey('secret', 'urd-' + 'b'.repeat(24)), key);
+  const ask = (headers) => new Request('https://s.no/api/pay/vipps/session', { headers });
+  assert.equal(await hasBuyerKey(ask({ 'x-urd-key': key }), 'secret', ref), true);
+  assert.equal(await hasBuyerKey(ask({ 'x-urd-key': key.slice(0, 31) }), 'secret', ref), false);
+  assert.equal(await hasBuyerKey(ask({}), 'secret', ref), false);
+  const summary = { paid: true, open: false, state: 'AUTHORIZED', buyer: { name: 'Kari' }, amount: 700 };
+  assert.deepEqual(sessionAnswer(summary, true), summary);
+  assert.deepEqual(sessionAnswer(summary, false), { paid: true, open: false, state: 'AUTHORIZED' });
+  assert.deepEqual(sessionAnswer({ ...summary, amount: null }, true), { paid: true, open: false, state: 'AUTHORIZED', buyer: { name: 'Kari' } });
+  assert.equal(majorAmount(70000, 'NOK'), 700);
+  assert.equal(majorAmount(350, 'JPY'), 350);
+  assert.equal(majorAmount(5125, 'KWD'), 5.125);
+  assert.equal(majorAmount(undefined, 'NOK'), null);
+});
+
+test('pageCheckout: the checkout block on the page the return path names that offers the provider in the way asked; nothing for a page or block that offers none, an unknown page, an odd id or a block without payments', async () => {
   const realFetch = globalThis.fetch;
-  const site = { pages: [{ id: 'hjem', path: '/' }, { id: 'kasse', path: '/kasse' }, { id: 'rar', path: '/rar' }] };
-  const pages = {
+  const pages = [{ id: 'hjem', path: '/' }, { id: 'kasse', path: '/kasse' }, { id: 'rar', path: '/rar' }];
+  const files = {
     '/content/pages/kasse.json': { sections: [{ blocks: [{ type: 'checkout', props: { payments: { card: 'none', paypal: true, capture: 'now' } } }, { type: 'checkout', props: { payments: { card: 'stripe', capture: 'ship' } } }] }] },
+    '/content/pages/rar.json': { sections: [{ blocks: [{ type: 'checkout', props: { payments: { vipps: true, card: 'vipps', capture: 'ship' } } }] }] },
     '/content/pages/hjem.json': { sections: [{ blocks: [{ type: 'checkout', props: { recipient: 'a@b.no' } }] }] },
   };
-  globalThis.fetch = async (url) => { const path = new URL(url).pathname; return pages[path] ? new Response(JSON.stringify(pages[path])) : new Response('no', { status: 404 }); };
+  globalThis.fetch = async (url) => { const path = new URL(url).pathname; return files[path] ? new Response(JSON.stringify(files[path])) : new Response('no', { status: 404 }); };
   try {
-    assert.equal((await pageCheckout('https://s.no', site, '/kasse', 'stripe')).capture, 'ship', 'the block that offers Stripe');
-    assert.equal((await pageCheckout('https://s.no', site, '/kasse/', 'paypal')).capture, 'now', 'a trailing slash is the same page');
-    assert.equal((await pageCheckout('https://s.no', site, '/kasse', 'vipps')).capture, 'now', 'no block offers Vipps: the first');
-    assert.equal(await pageCheckout('https://s.no', site, '/', 'stripe'), null, 'a block still at version 1 has no payments');
-    assert.equal(await pageCheckout('https://s.no', site, '/ukjent', 'stripe'), null);
-    assert.equal(await pageCheckout('https://s.no', { pages: [{ id: '../x', path: '/x' }] }, '/x', 'stripe'), null, 'an id outside the pattern is never fetched');
+    assert.equal((await pageCheckout('https://s.no', pages, '/kasse', 'stripe')).capture, 'ship', 'the block that offers Stripe');
+    assert.equal((await pageCheckout('https://s.no', pages, '/kasse/', 'paypal')).capture, 'now', 'a trailing slash is the same page');
+    assert.equal(await pageCheckout('https://s.no', pages, '/kasse', 'vipps'), null, 'no block offers Vipps: no rules to borrow');
+    assert.equal((await pageCheckout('https://s.no', pages, '/rar', 'vipps', 'card')).card, 'vipps', 'Vipps\'s card page');
+    assert.equal(await pageCheckout('https://s.no', pages, '/rar', 'paypal'), null);
+    assert.equal(await pageCheckout('https://s.no', pages, '/', 'stripe'), null, 'a block still at version 1 has no payments');
+    assert.equal(await pageCheckout('https://s.no', pages, '/ukjent', 'stripe'), null);
+    assert.equal(await pageCheckout('https://s.no', [{ id: '../x', path: '/x' }], '/x', 'stripe'), null, 'an id outside the pattern is never fetched');
   } finally {
     globalThis.fetch = realFetch;
   }

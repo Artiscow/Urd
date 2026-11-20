@@ -256,3 +256,13 @@ test('publishing refuses an SVG that holds a script, before GitHub is asked for 
   assert.deepEqual(await res.json(), { error: "The SVG 'media/images/logo.svg' holds a script, a link that runs code or a declaration", code: 'svgNotAllowed', path: 'media/images/logo.svg' });
   assert.deepEqual(seen.calls.map((c) => new URL(c.url).pathname), ['/user']);
 });
+
+test('publishing refuses a feed that declares the XHTML namespace, and a sitemap that is no sitemap', async () => {
+  for (const [path, content] of [['content/samlinger/nyheter.xml', '<rss xmlns:h="http://www.w3.org/1999/xhtml"><h:script>alert(1)</h:script></rss>'], ['sitemap.xml', '<html><body>x</body></html>']]) {
+    const seen = github(['index.html']);
+    const res = await commit({ request: request('/api/github/commit', { body: { message: 'Publish', files: [{ path, content }] } }), env: ENV });
+    assert.equal(res.status, 400, path);
+    assert.equal((await res.json()).code, 'xmlNotAllowed');
+    assert.deepEqual(seen.calls.map((c) => new URL(c.url).pathname), ['/user']);
+  }
+});

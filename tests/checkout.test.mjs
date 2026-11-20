@@ -351,3 +351,14 @@ test('a pay button in the draft view tells the function so, and the published pa
   assert.equal((await sent('?draft=1')).draft, true);
   assert.equal((await sent('')).draft, undefined);
 });
+
+test('the checkout block sends each line\'s price, keeps the buyer key with the reference, sends it on the return, takes new prices on a 409, and draws the confirmed total', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const src = readFileSync(new URL('blocks/checkout.js', ENGINE_DIR), 'utf8');
+  assert.match(src, /order: items\.map\(\(\{ id, qty, variant, price \}\) => \(\{ id, qty, price,/);
+  assert.match(src, /\[provider, String\(data\.reference \?\? ''\), String\(data\.pid \?\? ''\), \/\^\[0-9a-f\]\{32\}\$\/\.test\(data\.key \?\? ''\) \? data\.key : ''\]\.join\(':'\)/);
+  assert.match(src, /headers: key \? \{ 'x-urd-key': key \} : \{\}/);
+  assert.match(src, /res\.status === 409 && data\?\.code === 'orderPrices'[\s\S]{0,80}cartReprice\(readCart\(\), data\.lines\)/);
+  assert.match(src, /total: data\.amount/);
+});

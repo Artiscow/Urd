@@ -75,7 +75,7 @@ export function isAllowedPath(path) {
 }
 
 /**
- * Whether a file's content is what its path says, for the paths whose content is checked: a PDF in media/ is base64 that starts as a PDF and stays within MEDIA_PDF_MAX_BYTES, an SVG in media/ holds nothing that can run (svgProblem), and `_redirects` holds redirects only (isAllowedRedirects).
+ * Whether a file's content is what its path says, for the paths whose content is checked: a PDF in media/ is base64 that starts as a PDF and stays within MEDIA_PDF_MAX_BYTES, an SVG in media/ holds nothing that can run (svgProblem), an XML file in content/ and `sitemap.xml` are a feed or a sitemap that can run nothing (isAllowedXml), and `_redirects` holds redirects only (isAllowedRedirects).
  * Every other path passes here; isAllowedPath decides whether it may be written at all.
  * @param {string} path Repo-relative file path from a commit request
  * @param {unknown} content The file's content as sent
@@ -85,6 +85,9 @@ export function isAllowedPath(path) {
 export function isAllowedContent(path, content, encoding) {
   const normalized = normalizePath(path);
   if (normalized === '_redirects') return encoding !== 'base64' && isAllowedRedirects(content);
+  if (normalized === 'sitemap.xml' || (normalized?.startsWith('content/') && normalized.toLowerCase().endsWith('.xml'))) {
+    return encoding !== 'base64' && isAllowedXml(content);
+  }
   if (normalized?.startsWith('media/') && normalized.toLowerCase().endsWith('.svg')) {
     const text = encoding === 'base64' ? base64Text(content) : content;
     return typeof text === 'string' && svgProblem(text) === null;
@@ -92,6 +95,33 @@ export function isAllowedContent(path, content, encoding) {
   if (!normalized || !normalized.startsWith('media/') || !normalized.toLowerCase().endsWith('.pdf')) return true;
   if (encoding !== 'base64' || typeof content !== 'string') return false;
   return content.startsWith(PDF_BASE64_HEAD) && Math.floor((content.length * 3) / 4) <= MEDIA_PDF_MAX_BYTES;
+}
+
+/** The namespaces whose elements a browser runs or draws as a page: XHTML, SVG and MathML. */
+const ACTIVE_NAMESPACES = ['http://www.w3.org/1999/xhtml', 'http://www.w3.org/2000/svg', 'http://www.w3.org/1998/Math/MathML'];
+
+/**
+ * Whether an XML file publishing writes is a feed or a sitemap that can run nothing: its root an RSS `rss`, an Atom `feed` or a sitemap's `urlset`, with no DOCTYPE or entity of its own, no stylesheet instruction, and no namespace declared whose elements a browser would run (ACTIVE_NAMESPACES, its value read with references decoded).
+ * Opened on its own, an XML file without those is drawn as a tree of text, whatever its elements are named.
+ * @param {unknown} content
+ * @returns {boolean}
+ */
+export function isAllowedXml(content) {
+  if (typeof content !== 'string' || content.length > 20_000_000) return false;
+  if (/<!DOCTYPE|<!ENTITY|<\?xml-stylesheet/i.test(content)) return false;
+  if (!/^\uFEFF?\s*(?:<\?xml\b[^?>]*\?>\s*)?<(?:rss|feed|urlset)[\s>]/.test(content)) return false;
+  // Each declaration is found where it starts and its value read from there, so a declaration's look-alike in a text or a value never hides the one after it; any prefix counts, and a value is read within 2048 characters.
+  for (const match of content.matchAll(/\bxmlns(?::[^\s=>]*)?\s*=\s*(["'])/g)) {
+    const start = match.index + match[0].length;
+    const window = content.slice(start, start + 2048);
+    const end = window.indexOf(match[1]);
+    const value = (end < 0 ? window : window.slice(0, end)).replace(/&#x([0-9a-f]+);?/gi, (m, hex) => String.fromCodePoint(Math.min(parseInt(hex, 16), 0x10ffff)))
+      .replace(/&#(\d+);?/g, (m, dec) => String.fromCodePoint(Math.min(Number(dec), 0x10ffff)))
+      .replace(/&(lt|gt|quot|apos|amp);/g, (m, name) => ({ lt: '<', gt: '>', quot: '"', apos: "'", amp: '&' })[name])
+      .replace(/[\u0000-\u0020\u007f]/g, '');
+    if (ACTIVE_NAMESPACES.some((ns) => value.toLowerCase() === ns.toLowerCase())) return false;
+  }
+  return true;
 }
 
 /** A base64 file's text as UTF-8, or null where it is not base64. */
