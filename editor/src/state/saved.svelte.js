@@ -1,12 +1,12 @@
 /**
  * The saved drafts (ADR-0032): the work kept on the drafts branch through /api/github/drafts, for another device, without touching the live site.
  * Nothing saved comes into this browser by itself: every saved draft stands in the Drafts window's Saved tab (state/drafts.svelte.js), and is opened here by choice as one undo step (openSaved); a saved draft this browser has not seen is told by a dot on the Drafts tab and a line in the status bar, as the admin loads and as its tab comes back into view.
- * As the editor loads, a part this browser holds exactly as it saw it saved, whose saved copy has left the branch (published or discarded elsewhere), leaves this browser too, before the stores are built (meetOnLoad, lib/saved-model.js meet).
+ * As the editor loads, a part this browser holds exactly as it saw it saved, whose saved copy has left the branch (published or discarded elsewhere), leaves this browser too, before the stores are built; where no part is held so, the stores are built without waiting for the index (meetOnLoad, lib/saved-model.js meet).
  * Each part this browser holds stands in this browser alone, saved, or live; a save writes the ticked parts that stand in this browser alone, with the owner's note and this browser's name, and asks before it writes over a part saved on another device since this browser last saw it.
  * What this browser last saw of each saved part is kept in `urd-saved-seen`, and what the Saved tab last showed in `urd-saved-noticed`, both admin keys.
  */
 import { ta, taApiError, adminLang } from '$engine/i18n.js';
-import { flushDrafts } from '../lib/draftStore.js';
+import { flushDrafts, dropDraft } from '../lib/draftStore.js';
 import { contentHash } from '$engine/imageTools.js';
 import { keysByPart, partCanon, partOfName, meet, standing, counts, savedList, overwrites, publishedSaves } from '../lib/saved-model.js';
 import { timeAgo } from '../lib/time-ago.js';
@@ -159,11 +159,25 @@ const list = $derived.by(() => {
 });
 const fresh = $derived(list.filter((r) => r.fresh).length);
 
+/** The meeting as the editor loaded, which the first notice of new saves waits for. */
+let loadMeeting = Promise.resolve();
+
 /**
- * Meets the saved drafts as the editor loads, before the stores are built, within LOAD_WAIT: nothing comes in by itself, and a part this browser holds exactly as it saw it saved, whose saved copy has left the branch, leaves this browser too.
+ * Meets the saved drafts as the editor loads, within LOAD_WAIT: nothing comes in by itself, and a part this browser holds exactly as it saw it saved, whose saved copy has left the branch, leaves this browser too.
+ * Only a part held exactly as this browser saw it saved can leave, which is known before the index is read: where there is one, the meeting is returned for the stores to wait for, and where there is none, it goes on beside the load, lets go of nothing, and null is returned.
  * An answer that saving cannot be done here leaves it off; a slow or failed read goes on without the saved drafts, and the next Save reads them again. Nothing here stops the editor from loading.
+ * @returns {Promise<void>|null}
  */
-async function meetOnLoad() {
+function meetOnLoad() {
+  const byPart = keysByPart(storedKeys());
+  const mayLeave = Object.keys(seen).some((name) => hashOf(name, byPart) === seen[name]);
+  const meeting = meetSaved(mayLeave);
+  loadMeeting = meeting;
+  return mayLeave ? meeting : null;
+}
+
+/** Reads the saved drafts' index and meets the drafts here with it; `mayLeave`: whether a part held here as it was saved leaves where its saved copy has. */
+async function meetSaved(mayLeave) {
   try {
     const read = await call(ENDPOINT, {}, LOAD_WAIT);
     if (!read.ok || !indexOf(read.body)) {
@@ -180,8 +194,10 @@ async function meetOnLoad() {
     const names = new Set([...Object.keys(index.parts), ...Object.keys(seen)]);
     const local = Object.fromEntries([...names].map((name) => [name, hashOf(name, byPart)]));
     const met = meet({ local, saved: index.parts, seen });
-    for (const name of met.dropLocal) {
-      for (const key of byPart.get(name) ?? []) localStorage.removeItem(key);
+    if (mayLeave) {
+      for (const name of met.dropLocal) {
+        for (const key of byPart.get(name) ?? []) dropDraft(key);
+      }
     }
     keepSeen(met.seen);
     keepNoticed(Object.fromEntries(Object.entries(noticed).filter(([name]) => index.parts[name])));
@@ -200,7 +216,7 @@ function noticeNew() {
 
 /** As the tab comes back into view, the index is read again, at most once a minute, and anything new is told. */
 function watchSaves() {
-  noticeNew();
+  loadMeeting.then(noticeNew);
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState !== 'visible' || !available || busy || Date.now() - lastRead < REREAD_EVERY) return;
     lastRead = Date.now();
@@ -625,6 +641,7 @@ async function afterPublish(names, again = true) {
 
 /** After Discard drafts, or a revert of the last publish: every saved part goes too. */
 async function discardSaved() {
+  await loadMeeting;
   if (!available || (head === null && !Object.keys(index.parts).length)) return;
   for (let attempt = 0; attempt < 2; attempt++) {
     const res = await post({ expect: head, all: true });
@@ -645,6 +662,8 @@ async function discardSaved() {
 
 export const savedState = {
   get savedAvailable() { return available; },
+  /** The meeting as the editor loaded, settled once the index it read is known (or could not be read). */
+  get loadMeeting() { return loadMeeting; },
   get savedBusy() { return busy; },
   /** A save just done, for the Drafts tab's mark. */
   get savedJust() { return justSaved; },

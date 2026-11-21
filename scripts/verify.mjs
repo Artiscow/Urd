@@ -183,7 +183,7 @@ if (plan.validate) results.push(['validate', step('schema validation', 'npm', ['
 console.log('');
 for (const [label, ok] of results) console.log(`${ok ? 'OK  ' : 'FAIL'}  ${label}`);
 if (plan.build && existsSync(new URL('template/admin/assets/editor.js', ROOT))) {
-  const touched = git(['diff', '--name-only', '--', 'template/admin/assets']);
+  const touched = [...git(['diff', '--name-only', '--', 'template/admin/assets']), ...git(['ls-files', '--others', '--exclude-standard', '--', 'template/admin/assets'])];
   if (touched.length) console.log(`note  the bundle changed (${touched.join(', ')}): commit it with the source`);
 }
 process.exit(results.every(([, ok]) => ok) ? 0 : 1);

@@ -1509,8 +1509,9 @@ function blankPage(entry) {
 }
 
 async function selectPage(id, { keepHistory = false } = {}) {
-  // The page left is written before another is read.
+  // The page left is written before another is read, and its message goes with it; a message raised while the page loads, or by the loaders beside it as the editor opens, stays.
   flushDrafts();
+  shellState.status = '';
   pageId = id;
   // The page stands in the address, so a reload of the tab opens it again.
   try {
@@ -1569,7 +1570,6 @@ async function selectPage(id, { keepHistory = false } = {}) {
     sectionGrid = null;
     historyState.updateDirty();
     shellState.updateAttention();
-    shellState.status = '';
   })();
   await pageLoading;
   // The iframe switches src via pageId; the draft is pushed when the

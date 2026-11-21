@@ -12,8 +12,8 @@
  * hidden in Clean view (chrome-off) and never exist for visitors.
  */
 
-// The module is loaded dynamically in preview only, after the admin dictionary
-// is loaded (the call sites await adminLocaleReady), so ta() is safe here.
+// The module is loaded in preview only, by the editing layer beside the admin dictionary and by the blocks as they attach their chips:
+// ta() is called as a chip is attached, once its call site has awaited adminLocaleReady, never at module level (ADR-0012).
 import { ta } from './i18n.js';
 
 let openCard = null;

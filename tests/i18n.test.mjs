@@ -11,6 +11,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, existsSync, readFileSync } from 'node:fs';
+import { register } from 'node:module';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
 const {
   t, tp, pluralForm, themeString, matchLang, requestedLang, initSiteLocale, dates,
@@ -28,6 +31,132 @@ const CORE_LANGS = ['nb', 'en-GB', 'tr'];
 
 const PLUGINS = new URL('plugins/', ROOT);
 const pluginDirs = () => readdirSync(PLUGINS, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+
+/**
+ * The lines of a module where ta() is called as the module loads: outside every function, method, class body and Svelte $derived.
+ * Walks the text by its brackets, skipping comments, strings, the words of template literals (their ${} read as code) and regular expressions; a function's parameters count as the function's.
+ */
+function loadTimeCalls(source) {
+  const found = [];
+  const stack = [];
+  const arrows = [];
+  let i = 0;
+  let prev = '';
+  let word = '';
+  let pendingArrow = false;
+  const KEYWORD_PARENS = new Set(['if', 'for', 'while', 'switch', 'catch', 'with']);
+  const inFunction = () => arrows.length > 0 || stack.some((c) => c.fn);
+  const open = (ch, fn) => stack.push({ ch, fn, word, depth: stack.length });
+  const skipTo = (end) => { const at = source.indexOf(end, i); i = at < 0 ? source.length : at + end.length; };
+  const significant = (ch) => { prev = ch; if (!/[\w$]/.test(ch)) word = ''; };
+  const template = () => {
+    while (i < source.length) {
+      const ch = source[i];
+      if (ch === '\\') { i += 2; continue; }
+      if (ch === '`') { i++; return; }
+      if (ch === '$' && source[i + 1] === '{') { i += 2; open('${', false); return 'code'; }
+      i++;
+    }
+  };
+  while (i < source.length) {
+    const ch = source[i];
+    if (/\s/.test(ch)) { i++; continue; }
+    if (source.startsWith('//', i)) { skipTo('\n'); continue; }
+    if (source.startsWith('/*', i)) { skipTo('*/'); continue; }
+    if (ch === '"' || ch === "'") {
+      i++;
+      while (i < source.length && source[i] !== ch) i += source[i] === '\\' ? 2 : 1;
+      i++;
+      significant('"');
+      continue;
+    }
+    if (ch === '`') { i++; template(); significant('"'); continue; }
+    if (ch === '/' && (prev === '' || '(,=:[!&|?{};+-*%<>~^'.includes(prev) || /^(return|typeof|case|in|of)$/.test(word))) {
+      i++;
+      let inClass = false;
+      while (i < source.length && (source[i] !== '/' || inClass)) {
+        if (source[i] === '\\') i++;
+        else if (source[i] === '[') inClass = true;
+        else if (source[i] === ']') inClass = false;
+        i++;
+      }
+      i++;
+      while (/[a-z]/.test(source[i] ?? '')) i++;
+      significant('"');
+      continue;
+    }
+    if (/[\w$]/.test(ch)) {
+      let j = i;
+      while (j < source.length && /[\w$]/.test(source[j])) j++;
+      const name = source.slice(i, j);
+      if (pendingArrow) { pendingArrow = false; arrows.push(stack.length); }
+      const called = /^\s*\(/.test(source.slice(j, j + 20));
+      if (name === 'ta' && prev !== '.' && word !== 'function' && called && !inFunction()) found.push(source.slice(0, i).split('\n').length);
+      i = j;
+      prev = 'w';
+      word = name;
+      continue;
+    }
+    if (source.startsWith('=>', i)) { i += 2; pendingArrow = true; prev = '>'; word = ''; continue; }
+    if (pendingArrow && ch !== '{') { pendingArrow = false; arrows.push(stack.length); }
+    if (ch === '{') {
+      const afterParen = prev === ')' && !KEYWORD_PARENS.has(stack.closedWord);
+      const classBody = /\bclass\b[^;{}]*$/.test(source.slice(Math.max(0, i - 200), i));
+      open('{', pendingArrow || afterParen || classBody);
+      pendingArrow = false;
+    } else if (ch === '(') {
+      // A function's parameters are read as it is called, and a $derived as it is read.
+      open('(', /\$derived(\.by)?\s*$|\bfunction\b\s*\*?\s*[\w$]*\s*$/.test(source.slice(Math.max(0, i - 60), i)));
+    } else if (ch === '[') {
+      open('[', false);
+    } else if (ch === ')' || ch === ']' || ch === '}') {
+      const closed = stack.pop();
+      while (arrows.length && arrows.at(-1) > stack.length) arrows.pop();
+      stack.closedWord = closed?.word;
+      if (ch === '}' && closed?.ch === '${') { i++; template(); significant('"'); continue; }
+    } else if ((ch === ',' || ch === ';') && arrows.length && arrows.at(-1) === stack.length) {
+      arrows.pop();
+    }
+    i++;
+    significant(ch);
+  }
+  return found;
+}
+
+test('the walk finds a ta() called as a module loads, and passes one inside a function', () => {
+  assert.deepEqual(loadTimeCalls("const T = [['text', ta('lbl.textColor')], ['bg', ta('lbl.background')]];"), [1, 1]);
+  assert.deepEqual(loadTimeCalls("const X = [['a', ta('k')], ['b', (v) => v]];"), [1], 'an arrow beside it does not hide it');
+  assert.deepEqual(loadTimeCalls('const CSS = `\n.a { color: red; }\n.b { top: 0; }\n${ta(\'k\')}\n`;'), [4], 'in a template literal\'s ${}');
+  assert.deepEqual(loadTimeCalls("if (ready) { ta('k'); }"), [1]);
+  assert.deepEqual(loadTimeCalls([
+    "const f = () => ta('k'), g = 1;",
+    "const h = (x) => { return ta(x); };",
+    "function i() { return ta('k'); }",
+    "const o = { m() { return ta('k'); }, n: (x) => ta(x), p: [1, 2] };",
+    "const L = $derived({ a: ta('k') });",
+    "const M = $derived.by(() => [ta('k')]);",
+    "class C { label() { return ta('k'); } }",
+    "const re = /[(]/g; const q = () => ta('k');",
+    "const s = 'ta(\\'k\\')'; // ta('k')",
+    "/* ta('k') */ const r = obj.ta('k');",
+    "function ask({ ok = ta('k') } = {}) { return ok; }",
+  ].join('\n')), [], 'inside a function, a method, an arrow, $derived or a class, or not a call of ta()');
+});
+
+test('no module of the engine, the editor or a plugin calls ta() as it loads: the admin dictionary may not be read yet (ADR-0012)', () => {
+  const repo = fileURLToPath(new URL('..', import.meta.url));
+  const files = [];
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) { if (e.name !== 'locales' && e.name !== 'node_modules') walk(p); } else if (p.endsWith('.js')) files.push(p);
+    }
+  };
+  for (const root of [ENGINE_DIR, new URL('../editor/src/', import.meta.url), PLUGINS]) walk(fileURLToPath(root));
+  assert.ok(files.length > 100, 'the modules are found');
+  const found = files.flatMap((file) => loadTimeCalls(readFileSync(file, 'utf8')).map((line) => `${path.relative(repo, file)}:${line}`));
+  assert.deepEqual(found, [], 'ta() called as the module loads');
+});
 
 /** All locale directories with FULL parity: the engine's site/admin + each
  *  plugin's own strings. The language packs' locales/site|admin/ do not
@@ -247,6 +376,37 @@ test('loadPackStrings: built-in languages and unknown codes give null (never a c
   // Registered pack without site coverage: the registry says no without loading anything.
   registerPackLanguages('test-pakke', [{ code: 'qa-test', name: 'Testspråk', admin: true }]);
   assert.equal(await loadPackStrings('qa-test', 'site'), null);
+});
+
+test('the admin dictionary: the bokmål base under the language\'s own words, read together; a language pack over the base; bokmål where there is neither', async () => {
+  register('./_site-paths.mjs', import.meta.url);
+  registerPackLanguages('lang-sv', [{ code: 'sv', name: 'Svenska', admin: true }]);
+  const words = async (url) => (await import(url.href)).default.strings;
+  const nb = await words(new URL('locales/admin/nb.js', ENGINE_DIR));
+  const sv = await words(new URL('plugins/lang-sv/locales/admin/sv.js', ROOT));
+  // Each language in a fresh copy of the module, with a dictionary of its own.
+  const open = async (lang) => {
+    const i18n = await import(new URL(`i18n.js?admin=${lang}`, ENGINE_DIR).href);
+    return { lang: await i18n.initAdminLocale(lang), ta: i18n.ta };
+  };
+  const key = 'lbl.textColor';
+  for (const lang of ['en-GB', 'tr', 'nn']) {
+    const own = await words(new URL(`locales/admin/${lang}.js`, ENGINE_DIR));
+    const got = await open(lang);
+    assert.equal(got.lang, lang);
+    assert.equal(got.ta(key), own[key]);
+    assert.deepEqual(Object.keys(nb).filter((k) => got.ta(k) === k), [], `${lang}: every key has words, the base's where the language has none`);
+  }
+  const bokmal = await open('nb');
+  assert.equal(bokmal.ta(key), nb[key]);
+  const pack = await open('sv');
+  assert.equal(pack.lang, 'sv');
+  assert.equal(pack.ta(key), sv[key]);
+  const gap = Object.keys(nb).find((k) => !(k in sv));
+  if (gap) assert.equal(pack.ta(gap), nb[gap], 'a word the pack lacks is the base\'s');
+  const none = await open('de');
+  assert.equal(none.lang, 'nb', 'no dictionary and no pack: bokmål');
+  assert.equal(none.ta(key), nb[key]);
 });
 
 test('tp: plural categories via Intl.PluralRules (nb one/other)', async () => {

@@ -286,25 +286,23 @@ export const adminLocaleReady = new Promise((resolve) => { adminLocaleReadyResol
 
 /**
  * Loads the admin dictionary: the nb base at the bottom, the chosen
- * language on top. Runtime import from an absolute path, so the same code
- * works in the admin bundle AND in the preview iframe, and the dictionaries
- * are never bundled. A language that is not built in is fetched from a
- * language pack; if none exists, the bokmål base stays. If loading fails
- * entirely (vite dev without the template server) the keys are shown.
+ * language on top, the two read together. Runtime import from an absolute
+ * path, so the same code works in the admin bundle AND in the preview
+ * iframe, and the dictionaries are never bundled. A language that is not
+ * built in is fetched from a language pack; if none exists, the bokmål base
+ * stays. If loading fails entirely (vite dev without the template server)
+ * the keys are shown.
  */
 export async function initAdminLocale(lang = detectAdminLang()) {
-  const load = async (code) => (await import(/* @vite-ignore */ `/assets/urd/locales/admin/${code}.js`)).default.strings;
+  const load = (code) => import(/* @vite-ignore */ `/assets/urd/locales/admin/${code}.js`).then((m) => m.default.strings, () => null);
   admin.lang = requestedLang(lang);
   const builtin = isBuiltinLang(admin.lang);
-  try {
-    Object.assign(admin.dict, await load('nb'));
-    if (builtin && admin.lang !== 'nb') Object.assign(admin.dict, await load(admin.lang));
-  } catch { /* without a dictionary the keys are shown; the app must never die from this */ }
-  if (!builtin) {
-    const strings = await loadPack(admin.lang, 'admin');
-    if (strings) Object.assign(admin.dict, strings);
-    else admin.lang = 'nb';
-  }
+  const ownWords = !builtin ? loadPack(admin.lang, 'admin') : admin.lang !== 'nb' ? load(admin.lang) : null;
+  const [base, own] = await Promise.all([load('nb'), ownWords]);
+  // Without a dictionary the keys are shown; the app must never die from this.
+  if (base) Object.assign(admin.dict, base);
+  if (own) Object.assign(admin.dict, own);
+  else if (!builtin) admin.lang = 'nb';
   adminLocaleReadyResolve(admin.lang);
   return admin.lang;
 }

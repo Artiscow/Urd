@@ -790,6 +790,13 @@ export async function boot(opts) {
   const served = { site: null, page: null };
   const params = new URLSearchParams(location.search);
   const preview = params.get('preview') === '1';
+  // The canvas chrome follows the ADMIN language (two registers, ADR-0012), with the same detection as the editor's main.js (shared localStorage, same origin).
+  // The editing layer is loaded dynamically ONLY in preview - visitors never fetch this code - and must be in place before the first render.
+  // The preview's own rules (preview.css) come with it, so the editing chrome is never drawn without them.
+  // All three are asked for as the boot starts, beside the site and the page, since none reads them and the editing layer calls no ta() as it loads.
+  const editing = preview ? Promise.all([import('./preview-edit.js'), loadStylesheet(new URL('./preview.css', import.meta.url).href), initAdminLocale()]) : null;
+  // The rejection is consumed here; the failure is handled where the promise is awaited.
+  editing?.catch(() => {});
   // The draft view (?draft=1, drafts.js): the drafts this browser's editor keeps, drawn as a visitor's page; ?draft=look draws a saved draft the Drafts window opened in a tab of its own.
   // The preview draws the same drafts from its first paint, the ones the editor holds, so a change not yet published shows at once and is never first drawn as published until the editor's own message arrives.
   // They are read alongside site.json.
@@ -903,15 +910,7 @@ export async function boot(opts) {
   if (preview) drawFooter();
 
   if (preview) {
-    // The canvas chrome follows the ADMIN language (two registers,
-    // ADR-0012): the dictionary is loaded BEFORE the editing layer, with
-    // the same detection as the editor's main.js (shared localStorage,
-    // same origin).
-    await initAdminLocale();
-    // The editing layer is loaded dynamically ONLY in preview - visitors
-    // never fetch this code. Must be in place before the first render.
-    // The preview's own rules (preview.css) come with it, so the editing chrome is never drawn without them.
-    [window.UrdPreviewEdit] = await Promise.all([import('./preview-edit.js'), loadStylesheet(new URL('./preview.css', import.meta.url).href)]);
+    [window.UrdPreviewEdit] = await editing;
     refreshShopGate(site);
   }
 

@@ -102,11 +102,10 @@ async function initCollections() {
   // The earlier drafts are dropped only once the merge is persisted.
   if (collectionsIndexStore.saveNow()) for (const key of earlier.keys) localStorage.removeItem(key);
   collectionIds = [...collectionsIndexStore.data.samlinger];
-  for (const id of collectionIds) {
-    let published = null;
-    try {
-      published = await (await fetch(`/content/samlinger/${id}.json`)).json();
-    } catch { /* new, unpublished collection */ }
+  // The collections' files are read together; a new, unpublished collection has none.
+  const files = await Promise.all(collectionIds.map((id) => fetch(`/content/samlinger/${id}.json`).then((res) => res.json()).catch(() => null)));
+  for (const [i, id] of collectionIds.entries()) {
+    const published = files[i];
     // An unpublished collection has the baseline "does not exist"
     // (null), never a synthetic published state: otherwise the draft can
     // equal the false baseline, hasDraft() turn false, and the index be

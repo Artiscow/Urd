@@ -252,7 +252,9 @@ function onKeydown(e) {
 }
 
 async function init() {
-  // The saved drafts are met before any store is built, so a part saved on another device is read where a reload reads drafts (ADR-0032).
+  // The sign-in is asked for at once, beside the rest of the load.
+  const signedIn = checkAuth();
+  // The saved drafts are met before any store is built where the meeting may let a part here go (ADR-0032); where it cannot, it goes on beside the load (meetOnLoad).
   // The site is set together with its draft once both are read, so nothing drawn meanwhile finds a site without one.
   const meeting = savedState.meetOnLoad();
   const siteFile = fetch('/content/site.json').then((res) => res.json());
@@ -275,14 +277,17 @@ async function init() {
   siteState.grid = { snap: true, ...siteState.siteDraft.grid };
   // The page the address names (selectPage writes it there, so a reload opens it again), or the first page where it names none of the site's.
   const named = new URLSearchParams(location.search).get('page');
-  await pageState.selectPage(siteState.siteDraft.pages.some((p) => p.id === named) ? named : siteState.siteDraft.pages[0].id);
-  await pluginsState.initPlugins();
-  await collectionsState.initCollections();
-  await templatesState.initTemplates();
-  await redirectsState.initRedirects();
+  // The page, the plugins, the collections, the templates and the redirects are read together: none reads another's store.
+  await Promise.all([
+    pageState.selectPage(siteState.siteDraft.pages.some((p) => p.id === named) ? named : siteState.siteDraft.pages[0].id),
+    pluginsState.initPlugins(),
+    collectionsState.initCollections(),
+    templatesState.initTemplates(),
+    redirectsState.initRedirects(),
+  ]);
   // The steps kept from the last session in this browser, taken up when the drafts are the ones they were kept with.
   await historyState.loadKept();
-  await checkAuth();
+  await signedIn;
   // The publish baseline requires login: signed out, the call would just
   // produce 401 noise in the console. After login (OAuth redirect) the
   // page reloads, so the baseline is fetched here then.

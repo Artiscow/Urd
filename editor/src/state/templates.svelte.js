@@ -31,11 +31,10 @@ async function initTemplates() {
   } catch { /* no index is perfectly fine */ }
   templatesIndexStore = createDraftStore('urd-draft-templates', () => index, shellState.draftSaveError, 'urd-draft-maler');
   templateIds = [...(templatesIndexStore.data.maler ?? [])];
-  for (const id of templateIds) {
-    let published = null;
-    try {
-      published = await (await fetch(`/content/maler/${id}.json`)).json();
-    } catch { /* new, unpublished template */ }
+  // The templates' files are read together; a new, unpublished template has none.
+  const files = await Promise.all(templateIds.map((id) => fetch(`/content/maler/${id}.json`).then((res) => res.json()).catch(() => null)));
+  for (const [i, id] of templateIds.entries()) {
+    const published = files[i];
     publishedTemplates[id] = published;
     templateStores[id] = createDraftStore(`urd-draft-template-${id}`, () => published, shellState.draftSaveError, `urd-draft-mal-${id}`);
     // Drafts from a newer editor are discarded (same guard as page/site).

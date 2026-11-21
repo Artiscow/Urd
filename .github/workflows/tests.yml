@@ -42,4 +42,12 @@ jobs:
         # The bundle in template/admin/assets is a build artefact that is
         # committed: if it differs from what the source actually produces, it
         # was either left unrebuilt or tampered with. Both must stop CI.
-        run: git diff --exit-code -- template/admin/assets
+        # A file the build writes that was never committed stops it too.
+        run: |
+          git diff --exit-code -- template/admin/assets
+          uncommitted="$(git ls-files --others --exclude-standard -- template/admin/assets)"
+          if [ -n "$uncommitted" ]; then
+            echo "Built but never committed:"
+            echo "$uncommitted"
+            exit 1
+          fi

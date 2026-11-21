@@ -22,6 +22,8 @@ export default defineConfig({
   build: {
     outDir: '../template/admin/assets',
     emptyOutDir: true,
+    // The bundle is minified in full, whitespace included, which a library build leaves out by default: the editor is loaded by the browser as it is, never by another bundler, and its readable source is this folder (ADR-0002).
+    rolldownOptions: { output: { minify: true } },
     lib: {
       entry: 'src/main.js',
       formats: ['es'],

@@ -235,6 +235,8 @@ let previewMode = $state('light');
 
 function onIframeLoad() {
   bridge?.destroy();
+  // A canvas that never reports ready (a page that fails to boot) lets go of what waits for it all the same, a while after its frame has loaded.
+  if (!canvasOpened) setTimeout(() => { canvasOpened = true; }, CANVAS_WAIT);
   // A click in the preview (block, text field, canvas) closes the block
   // menu and the top bar's tool menu. The iframe is same-origin, so we
   // listen directly. A press on a bar button that opens the menu (the gear,
@@ -342,6 +344,10 @@ function onIframeLoad() {
 
 /** The fragment of a link in the preview that named a spot on another page, jumped to once that page has loaded (onReady). */
 let pendingAnchor = '';
+/** Whether the canvas has answered its first handshake: what the admin reads for itself alone (the Legal panel's other pages) waits for it, so the canvas's own files are fetched first. */
+let canvasOpened = $state(false);
+/** How long after its frame has loaded a canvas that has not reported ready is waited for. */
+const CANVAS_WAIT = 5000;
 
 /** A section of another page to scroll to once that page has loaded (onReady): the phone check's «Look on the phone». */
 let pendingSection = '';
@@ -352,7 +358,16 @@ function scrollOnReady(sectionId) {
 }
 
 /** The engine in the iframe is listening now: send the draft and the current editor state. */
+/** The canvas's ready handshake answered: whatever happens in the answer, what waits for the canvas to open (canvasOpened) is let go. */
 async function onReady() {
+  try {
+    await answerReady();
+  } finally {
+    canvasOpened = true;
+  }
+}
+
+async function answerReady() {
   // A canvas drawn anew holds no text being written and no bar or menu of its own, and reports its review cards again.
   textBarState.reset();
   canvasBarState.reset();
@@ -623,6 +638,7 @@ export const previewState = {
   get iframeEl() { return iframeEl; },
   set iframeEl(v) { iframeEl = v; },
   get chromeVisible() { return chromeVisible; },
+  get canvasOpened() { return canvasOpened; },
   /** The saved draft looked at in the canvas, or null. */
   get looking() { return look; },
   /** Counts the looks started and ended. */

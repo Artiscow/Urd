@@ -10,9 +10,8 @@
  * onpick(color) is called live on every pick; color is #rrggbb, or #rrggbbaa
  * when transparency is selected.
  */
-// Loaded only through the preview layer (statically from preview-edit.js),
-// always after the admin dictionary is loaded: ta() is safe even at module
-// level here.
+// Loaded only through the preview layer (statically from preview-edit.js), beside the admin dictionary:
+// ta() is called as the picker opens, never at module level (ADR-0012).
 import { ta } from './i18n.js';
 import { nativeAnchoring, anchorName } from './anchored.js';
 
@@ -21,7 +20,8 @@ let teardown = null;
 
 const RECENT_KEY = 'urd-recent-colors';
 const SAVED_KEY = 'urd-saved-colors';
-const THEME_TOKENS = [['text', ta('lbl.textColor')], ['accent', ta('setup.accentPick')], ['bg', ta('lbl.background')], ['surface', ta('color.surface')]];
+/** The theme's colours and their names, the names read as the picker opens (ADR-0012: never at module level). */
+const THEME_TOKENS = [['text', 'lbl.textColor'], ['accent', 'setup.accentPick'], ['bg', 'lbl.background'], ['surface', 'color.surface']];
 /** The close button carries a drawn cross, never a character. */
 const CROSS_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 /** The bin every deletion draws, as the block's bar draws it (BIN_SVG in preview-edit.js). */
@@ -246,7 +246,8 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   const tokens = el2('div', 'urd-cp-tokens');
   const probe = el2('span');
   document.body.appendChild(probe);
-  for (const [token, name] of THEME_TOKENS) {
+  for (const [token, key] of THEME_TOKENS) {
+    const name = ta(key);
     probe.style.color = `var(--urd-color-${token})`;
     const color = getComputedStyle(probe).color;
     const hex = computedHex(color) ?? color;

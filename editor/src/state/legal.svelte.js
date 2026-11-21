@@ -9,6 +9,7 @@ import { siteState } from './site.svelte.js';
 import { pageState } from './page.svelte.js';
 import { historyState } from './history.svelte.js';
 import { blocksState } from './blocks.svelte.js';
+import { previewState } from './preview.svelte.js';
 
 /** The other pages' files by id, read as the pages come and go and as another page is opened. */
 let otherPages = $state({});
@@ -58,15 +59,15 @@ function readBeacon() {
 }
 
 function effects() {
-  // The beacon is read once the editor has the site.
+  // The beacon and the other pages are read once the canvas has opened, so the open page's files are fetched before them.
   $effect(() => {
-    if (siteState.siteDraft) readBeacon();
+    if (siteState.siteDraft && previewState.canvasOpened) readBeacon();
   });
 
   // The other pages are read again as pages come and go, as another page is opened (the page left behind is one of them now), and as the drafts are published or discarded.
   $effect(() => {
     const draft = siteState.siteDraft;
-    if (!draft) return;
+    if (!draft || !previewState.canvasOpened) return;
     const here = pageState.pageId;
     void historyState.dirty;
     const entries = (draft.pages ?? []).filter((p) => p.id !== here).map((p) => ({ id: p.id, title: p.title, path: p.path, file: p.file }));

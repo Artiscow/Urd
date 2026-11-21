@@ -170,16 +170,27 @@ async function tidyMedia({ withChanges = false } = {}) {
   }
 }
 
+/** Whether the question of «Discard drafts» is on its way. */
+let discardAsked = false;
+
 /**
  * «Discard drafts» as the Publish menu, the History panel and the undo list's foot offer it: the question first, since it takes every unpublished change at once, then the discard, and a message whose action brings the drafts back while the discard is still the last step.
  * @returns {Promise<boolean>} whether the drafts were discarded
  */
 async function askDiscard() {
-  // A look at a saved draft ends before the drafts can be discarded.
-  if (previewState.looking) return false;
-  const saved = savedState.savedCount;
-  const lines = [ta('confirm.discardDraftsLine'), ...(saved ? [ta(saved === 1 ? 'confirm.discardSavedLine.one' : 'confirm.discardSavedLine', { n: saved })] : [])];
-  const ok = await shellState.askConfirm({ title: ta('confirm.discardDrafts'), lines, okLabel: ta('ui.discard'), danger: true });
+  // A look at a saved draft ends before the drafts can be discarded, and a second press while the question is on its way does nothing.
+  if (previewState.looking || discardAsked) return false;
+  discardAsked = true;
+  let ok = false;
+  try {
+    // The question names the saved drafts that go too, as the meeting at load found them.
+    await savedState.loadMeeting;
+    const saved = savedState.savedCount;
+    const lines = [ta('confirm.discardDraftsLine'), ...(saved ? [ta(saved === 1 ? 'confirm.discardSavedLine.one' : 'confirm.discardSavedLine', { n: saved })] : [])];
+    ok = await shellState.askConfirm({ title: ta('confirm.discardDrafts'), lines, okLabel: ta('ui.discard'), danger: true });
+  } finally {
+    discardAsked = false;
+  }
   if (!ok || !discardDrafts()) return false;
   // The saved drafts go with this browser's (ADR-0032), and what was kept for later with them; an undo brings back this browser's drafts alone.
   void savedState.discardSaved();
@@ -299,11 +310,28 @@ function publishTicked() {
   if (pick.going.size) return publish({ parts: pick.going });
 }
 
+/** Whether a publish is on its way, from the press until its commit lands: a second press meanwhile does nothing. */
+let publishing = false;
+
 /**
  * Publishes the parts waiting, every one of them or those named in `parts` (lib/publish-pick.js pickParts, with their ties): the files of the parts that go, the site settings with a page not live yet that stays behind marked hidden, the collections' list without a new collection that stays behind; the parts left behind keep their drafts, and those that stand in this browser alone are saved to the drafts branch.
+ * One publish at a time.
  * @param {{parts?: Set<string>|null}} [opts]
  */
-async function publish({ parts = null } = {}) {
+async function publish(opts) {
+  if (publishing) return;
+  publishing = true;
+  try {
+    return await publishOnce(opts);
+  } finally {
+    publishing = false;
+  }
+}
+
+async function publishOnce({ parts = null } = {}) {
+  // The saved drafts' index as the editor loaded is read first, so the saved copies this publish makes stale are found; the status line says the publish has begun meanwhile.
+  shellState.setStatus(ta('status.publishing'));
+  await savedState.loadMeeting;
   // What goes out is read from the stored drafts.
   flushDrafts();
   if (updaterState.revertedSinceLoad) {
@@ -318,7 +346,6 @@ async function publish({ parts = null } = {}) {
     shellState.setStatus(ta('update.publishBlocked'), 'error');
     return;
   }
-  shellState.setStatus(ta('status.publishing'));
   // What goes: a part named, or every part; the pages and collections not live yet that stay behind, and the parts that wait still.
   const want = (name) => !parts || parts.has(name);
   const left = parts ? keptNotLive(parts, notLiveNow()) : { pages: [], collections: [] };

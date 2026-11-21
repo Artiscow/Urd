@@ -73,8 +73,8 @@ import { layerChanges, phoneLayerChanges } from './layer-order.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
 import { pasteCommand } from './sanitize.js';
 import { pathTo, nodeAt } from './caret-path.js';
-// This module is loaded dynamically by urd.js AFTER the admin dictionary
-// is loaded (initAdminLocale), so ta() is safe even at module level here.
+// This module is loaded dynamically by urd.js beside the admin dictionary (initAdminLocale), and is in place before the first render:
+// ta() is called as the editing chrome is drawn, never at module level (ADR-0012).
 import { ta, adminLang } from './i18n.js';
 import { barTools, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, BAR_ICONS } from './bar-tools.js';
 import { textDesign } from './doc-look.js';

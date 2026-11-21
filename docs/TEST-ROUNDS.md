@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.4.3): the editor's opening
+
+- [ ] Open the editor on the deployed site: the canvas with its editing bars comes sooner than before, and the top bar, the panels and the canvas's bars speak the admin language chosen in the Urd settings (try English, Norsk bokmål and Türkçe)
+- [ ] Choose Svenska (the Swedish language pack) as the admin language: the admin and the canvas show its words
+- [ ] Save a draft to the drafts branch, publish that part from another browser, then open the editor here: the part saved is gone from this browser too
+- [ ] Save a draft in another browser, then open the editor here: the status line tells of the new saved draft
+- [ ] Publish, and Discard drafts, right after the editor opens: the saved copies on the drafts branch go with them as before
+- [ ] Press Publish twice quickly: one publish goes, and the status line says it has begun at the first press
+- [ ] The Legal panel's dot and its notes stand as before a moment after the editor opens (a map or a video on another page than the one open)
+- [ ] The colour picker on the canvas (a text's colour): the theme colours' names under the pointer are words, not keys
+- [ ] Open the Collections panel and «My templates» right after the editor opens: every collection and template is there
+
 ### Test batch (0.7.37.4.2): copies, the theme's colours and the editor's opening
 
 - [ ] Open the editor on a page with a background picture, with and without unpublished changes: the background shows once, with no flicker
