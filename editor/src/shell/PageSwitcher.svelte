@@ -23,11 +23,8 @@
     if (!words) return pages;
     return pages.filter((p) => (p.title ?? '').toLowerCase().includes(words) || (p.path ?? '').toLowerCase().includes(words));
   });
-  /** The pages with unpublished changes, read again after every change. */
-  const drafted = $derived.by(() => {
-    void ed.edits;
-    return new Set(pages.filter((p) => localStorage.getItem(`urd-draft-${p.id}`) !== null).map((p) => p.id));
-  });
+  /** The pages with unpublished changes, as the list of what waits to be published has them (the open page's change still waiting to be written included). */
+  const drafted = $derived(new Set(ed.unpublished.filter((part) => part.kind === 'page').map((part) => part.id)));
 
   /** The menu opened with its search empty and the open page marked; a press puts the focus in the search, a mouse's rest leaves it where it is, so what is being edited keeps it. */
   async function openMenu(focus) {

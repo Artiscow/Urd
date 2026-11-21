@@ -7,7 +7,7 @@ import { liftPageFile } from '$engine/migrate.js';
 import { buildThemeCss } from '$engine/theme.js';
 import { resolveLink } from '$engine/nav-model.js';
 import { FEED_KINDS, buildRssXml, buildSitemapXml, buildRobotsTxt } from '$engine/feeds.js';
-import { createDraftStore } from '../lib/draftStore.js';
+import { createDraftStore, dropDraft, flushDrafts } from '../lib/draftStore.js';
 import { materializeField, materializeImages, materializeSiteImages, materializeEntryImages, materializeBackground, materializeSection, materializeBlockImages } from '../lib/materialize.js';
 import { tidyMedia as planTidy, rootMediaFiles, tidyRoom } from '../lib/media-tidy.js';
 import {
@@ -207,6 +207,7 @@ function discardDrafts() {
 }
 
 function discard() {
+  flushDrafts();
   // The other pages' drafts go too, so the step holds them, and an undo of the discard writes them back; a page waiting for its deploy goes back to its draft as it went, which stays the source until the deploy serves it.
   const pending = (id) => pageState.pendingPublished.has(id);
   const others = siteState.siteDraft.pages
@@ -252,8 +253,8 @@ function discard() {
     // draft; published ones return to the published state.
     for (const id of Object.keys(templatesState.templateStores)) {
       if (templatesState.templateIds.includes(id)) templatesState.templateStores[id].reset();
-      else { localStorage.removeItem(`urd-draft-template-${id}`);
-      localStorage.removeItem(`urd-draft-mal-${id}`); delete templatesState.templateStores[id]; }
+      else { dropDraft(`urd-draft-template-${id}`);
+      dropDraft(`urd-draft-mal-${id}`); delete templatesState.templateStores[id]; }
     }
     templatesState.pushTemplatesToPreview();
   }
@@ -303,6 +304,8 @@ function publishTicked() {
  * @param {{parts?: Set<string>|null}} [opts]
  */
 async function publish({ parts = null } = {}) {
+  // What goes out is read from the stored drafts.
+  flushDrafts();
   if (updaterState.revertedSinceLoad) {
     shellState.setStatus(ta('status.revertReloadBeforePublish'), 'error');
     return;
@@ -662,6 +665,8 @@ async function publish({ parts = null } = {}) {
   } catch { /* network errors are handled below */ }
 
   if (res?.ok) {
+    // A change made while the commit was on its way is written before the drafts that went are let go, so no store left waiting writes over them later.
+    flushDrafts();
     // New HEAD = our commit: the conflict baseline moves forward.
     const { sha } = await res.json().catch(() => ({}));
     if (sha) updaterState.baseSha = sha;

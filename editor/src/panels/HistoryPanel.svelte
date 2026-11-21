@@ -3,6 +3,7 @@
   import { getContext } from 'svelte';
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
+  import { cancelWaitingDrafts } from '../lib/draftStore.js';
   import EmptyState from '../lib/rows/EmptyState.svelte';
   import ErrorLine from '../lib/rows/ErrorLine.svelte';
   import Fold from '../lib/rows/Fold.svelte';
@@ -101,6 +102,7 @@
         // The drafts describe the state from BEFORE the revert; the server
         // is the source of truth now. The saved drafts go with them (ADR-0032).
         await ed.discardSaved();
+        cancelWaitingDrafts();
         for (const key of Object.keys(localStorage).filter((k) => k.startsWith('urd-draft-'))) {
           localStorage.removeItem(key);
         }

@@ -2,7 +2,7 @@
  * The owner's templates in content/maler/: their draft stores and the saving and deleting.
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
-import { createDraftStore } from '../lib/draftStore.js';
+import { createDraftStore, dropDraft } from '../lib/draftStore.js';
 import { TEMPLATE_SCHEMA_VERSION, TEMPLATE_KINDS, templateId } from '$engine/templates-model.js';
 import { ta } from '$engine/i18n.js';
 import { historyState } from './history.svelte.js';
@@ -99,8 +99,8 @@ async function handleDeleteTemplate(msg) {
   if (!ok) return;
   historyState.pushHistory('templates');
   if (siteState.newPageTemplate === msg.id) siteState.newPageTemplate = null;
-  localStorage.removeItem(`urd-draft-template-${msg.id}`);
-  localStorage.removeItem(`urd-draft-mal-${msg.id}`);
+  dropDraft(`urd-draft-template-${msg.id}`);
+  dropDraft(`urd-draft-mal-${msg.id}`);
   delete templateStores[msg.id];
   templatesIndexStore.data.maler = templateIds.filter((x) => x !== msg.id);
   templatesIndexStore.save();

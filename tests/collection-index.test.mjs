@@ -151,7 +151,7 @@ test('a collection only the legacy index lists, removed before the first publish
     const baseline = indexBaseline(index, legacy);
     const store = createDraftStore(INDEX_DRAFT_KEY, () => baseline);
     store.data.samlinger = openingIds({ published: index.samlinger, legacy, draft: store.hasDraft() ? store.data.samlinger : null });
-    store.save();
+    store.saveNow();
     return store;
   };
   let store = open();

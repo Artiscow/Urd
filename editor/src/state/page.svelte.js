@@ -25,7 +25,7 @@ import { makeId } from '$engine/sections/presets.js';
 import { anchorError, takenAnchors } from '$engine/anchor-model.js';
 import { setLinkOn } from '../lib/link-edit.js';
 import { readCart, writeCart, cartAdd, itemKey } from '$engine/shop.js';
-import { createDraftStore } from '../lib/draftStore.js';
+import { createDraftStore, flushDrafts } from '../lib/draftStore.js';
 import { layoutKey, layoutKeys, uncheckedSections, seeSections } from '../lib/phone-check.js';
 import { createHeld } from '../lib/held-publish.js';
 import { collectionsState } from './collections.svelte.js';
@@ -1508,6 +1508,8 @@ function blankPage(entry) {
 }
 
 async function selectPage(id, { keepHistory = false } = {}) {
+  // The page left is written before another is read.
+  flushDrafts();
   pageId = id;
   // The page stands in the address, so a reload of the tab opens it again.
   try {
@@ -1551,7 +1553,8 @@ async function selectPage(id, { keepHistory = false } = {}) {
       store.replace(structuredClone(published));
     }
     store.replace(liftPageFile(store.data, siteState.siteStore.data));
-    store.save();
+    // Written at once, so the stored draft says whether the page as lifted differs from the published one.
+    store.saveNow();
     // The phone check's baseline, where this browser has none for the page or holds no change of it: the page as published (lib/phone-check.js).
     if (!phoneBases()[id] || !store.hasDraft()) phoneChecked(id, published.sections);
     storePage = id;
@@ -1596,6 +1599,8 @@ async function readPageDraft(entry) {
 function testPayment() {
   const entry = pageEntry();
   if (!entry) return;
+  // The tab reads the stored drafts.
+  flushDrafts();
   let filled = false;
   if (!readCart().length) {
     const published = collectionsState.publishedCollections;

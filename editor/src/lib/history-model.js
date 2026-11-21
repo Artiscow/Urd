@@ -102,9 +102,10 @@ export const stepPage = (step) => step.pageId ?? step.view?.pageId ?? null;
  * @param {Array<{snap: string, view: object, pages?: string[], key: string, at: number, typed?: boolean, pageId?: string}>} steps The steps in the order the walk passes them, the nearest first
  * @param {{state: string, view: object}} start The state and the view the walk starts from
  * @param {(id: string) => any} readDraft A page's draft as stored now
+ * @param {(value: any) => string} [stringify] How a state is written as text: the history's, which keeps its pictures as tokens (lib/history-media.js)
  * @returns {{passed: Array<object>, state: string, view: object}} passed: the entries for the other stack, in the order they go onto it
  */
-export function walkSteps(steps, start, readDraft) {
+export function walkSteps(steps, start, readDraft, stringify = JSON.stringify) {
   const drafts = {};
   const draftOf = (id) => (id in drafts ? drafts[id] : readDraft(id));
   // A state holding these pages' drafts as the walk stands, in the shape a snapshot of them has.
@@ -112,7 +113,7 @@ export function walkSteps(steps, start, readDraft) {
     const state = JSON.parse(snap);
     delete state.others;
     if (pages?.length) state.others = Object.fromEntries(pages.map((id) => [id, draftOf(id)]));
-    return JSON.stringify(state);
+    return stringify(state);
   };
   let { state, view } = start;
   const passed = [];

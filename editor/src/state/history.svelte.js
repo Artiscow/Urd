@@ -3,9 +3,10 @@
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { untrack } from 'svelte';
-import { createDraftStore } from '../lib/draftStore.js';
+import { createDraftStore, dropDraft, flushDrafts, onDraftsWritten } from '../lib/draftStore.js';
 import { joinsLast, emptyTail, walkSteps, stepTyped, stepPage, keptHolds, HISTORY_LIMIT, ownStepKey } from '../lib/history-model.js';
 import { readKept, writeKept } from '../lib/history-store.js';
+import { createMediaTable } from '../lib/history-media.js';
 import { indexPending } from '../lib/collection-index.js';
 import { unpublishedParts } from '../lib/unpublished.js';
 import { outSite } from '../lib/publish-pick.js';
@@ -23,6 +24,8 @@ import { templatesState } from './templates.svelte.js';
 import { redirectsState } from './redirects.svelte.js';
 
 let dirty = $state(false);
+// The marks of what waits to be published follow the drafts as they are written (lib/draftStore.js).
+onDraftsWritten(() => updateDirty());
 /** What waits to be published, one part per thing a publish would write (lib/unpublished.js); the dirty flag is whether it holds any. */
 let unpublished = $state.raw([]);
 /** When the last publish of everything from this browser was made, kept over a reload, so a part's row shows only the steps since. */
@@ -128,6 +131,15 @@ const history = [];
 
 const redoStack = [];
 
+/** The pictures and films the steps hold, each kept once: a step's state holds a token in an unpublished picture's place (lib/history-media.js). */
+const media = createMediaTable();
+
+/** Gives a step the id it is kept under (lib/history-store.js). */
+function withId(step) {
+  step.id ??= `${(step.made ?? Date.now()).toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return step;
+}
+
 let lastHistoryKey = null;
 
 /** While a change runs as a step of its own (asOwnStep), and the number that sets it apart (ownStepKey). */
@@ -195,17 +207,34 @@ const MARK_KEY = 'urd-history-mark';
 /** Writes the steps for the next session in this browser (lib/history-store.js), and the mark of the state they lead to. */
 function keep() {
   keepTimer = 0;
-  writeKept({ history, redoStack });
+  flushDrafts();
+  writeKept({ history, redoStack }, media);
+  // The pictures no step holds any longer are let go; the redo steps a step set aside hold theirs, since they come back when that step changed nothing.
+  media.keepOnly(new Set([...history, ...redoStack, ...(redoAside ?? [])].flatMap((step) => media.tokensIn(step.snap))));
   writeMark();
 }
 
-/** The state the steps lead to, hashed (lib/history-model.js keptHolds): the steps it was taken with, the open page apart from the rest, and that page's stored draft. */
-function writeMark() {
+/** A page's stored draft, hashed with its pictures as tokens (an empty text where it has none), as the next session hashes it (loadKept). */
+function storedDraftHash(pageId) {
+  const text = localStorage.getItem(`urd-draft-${pageId}`);
+  try {
+    return contentHash(text ? media.stringify(JSON.parse(text)) : '');
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * The state the steps lead to, hashed (lib/history-model.js keptHolds): the steps it was taken with, and the open page apart from the rest, with their pictures as tokens, and that page's stored draft.
+ * After a step the drafts have just been written, so the stored draft is taken as the page held, or none; as the page goes (`exact`) the stored text itself is read, which can differ where a page was changed without a write.
+ */
+function writeMark(exact = false) {
   const { pageId, page, ...rest } = stateObject();
+  const pageHash = contentHash(media.stringify(page));
   const mark = {
     steps: history.length, top: history.at(-1)?.made ?? 0, redo: redoStack.length, redoTop: redoStack.at(-1)?.made ?? 0,
-    pageId, page: contentHash(JSON.stringify(page)), rest: contentHash(JSON.stringify(rest)),
-    draft: contentHash(localStorage.getItem(`urd-draft-${pageId}`) ?? ''),
+    pageId, page: pageHash, rest: contentHash(media.stringify(rest)),
+    draft: exact ? storedDraftHash(pageId) : pageState.store?.hasDraft() ? pageHash : contentHash(''),
   };
   try {
     localStorage.setItem(MARK_KEY, JSON.stringify(mark));
@@ -215,7 +244,8 @@ function writeMark() {
 /** The page goes or is hidden (a reload, a closed tab, another app): the mark follows the drafts as they stand, the typing that joined a step included. */
 function keepOnLeave(event) {
   if (event.type === 'visibilitychange' && document.visibilityState !== 'hidden') return;
-  writeMark();
+  flushDrafts();
+  writeMark(true);
 }
 
 /**
@@ -223,18 +253,18 @@ function keepOnLeave(event) {
  */
 async function loadKept() {
   try {
-    const kept = await readKept();
+    const kept = await readKept(media);
     if (!kept || !Array.isArray(kept.history) || !Array.isArray(kept.redoStack)) return;
     let mark = null;
     try { mark = JSON.parse(localStorage.getItem(MARK_KEY) ?? 'null'); } catch { /* a broken mark holds nothing */ }
     const { pageId, page, ...rest } = stateObject();
     const now = {
-      pageId, page: contentHash(JSON.stringify(page)), rest: contentHash(JSON.stringify(rest)),
-      draftOf: (id) => contentHash(localStorage.getItem(`urd-draft-${id}`) ?? ''),
+      pageId, page: contentHash(media.stringify(page)), rest: contentHash(media.stringify(rest)),
+      draftOf: storedDraftHash,
     };
     if (!keptHolds(mark, kept, now)) return;
-    history.splice(0, history.length, ...kept.history.slice(-HISTORY_LIMIT));
-    redoStack.splice(0, redoStack.length, ...kept.redoStack);
+    history.splice(0, history.length, ...kept.history.slice(-HISTORY_LIMIT).map(withId));
+    redoStack.splice(0, redoStack.length, ...kept.redoStack.map(withId));
     stepsTick += 1;
   } finally {
     keptTaken = true;
@@ -271,7 +301,7 @@ function restoreView(view) {
  * @param {string[]} [pageIds] Pages beside the open one whose drafts the state holds (a change made to a page that is not open)
  */
 function snapshot(pageIds = []) {
-  return JSON.stringify({
+  return media.stringify({
     ...stateObject(),
     ...(pageIds?.length ? { others: Object.fromEntries(pageIds.map((id) => [id, readDraft(id)])) } : {}),
   });
@@ -349,7 +379,7 @@ function pushHistory(key, { caret = null, pages = [] } = {}) {
     redoStack.splice(0, redoStack.length, ...redoAside);
   }
   const view = currentView(caret);
-  history.push({ snap, view, pages, key, at: now, made: now, typed: !!view.caret, pageId: view.pageId });
+  history.push(withId({ snap, view, pages, key, at: now, made: now, typed: !!view.caret, pageId: view.pageId }));
   if (history.length > HISTORY_LIMIT) history.shift();
   redoAside = redoStack.splice(0);
   lastHistoryKey = key;
@@ -358,7 +388,7 @@ function pushHistory(key, { caret = null, pages = [] } = {}) {
 }
 
 function restore(snap) {
-  const { pageId: snapPageId, page, site: siteSnap, collectionsIndex, collections, templatesIndex, templates, plugins, redirects, others } = JSON.parse(snap);
+  const { pageId: snapPageId, page, site: siteSnap, collectionsIndex, collections, templatesIndex, templates, plugins, redirects, others } = media.parse(snap);
   restores += 1;
   // Pages beside the open one the step wrote: their drafts as they were, written back without leaving the page.
   for (const [id, doc] of Object.entries(others ?? {})) {
@@ -407,17 +437,17 @@ function restore(snap) {
  *  Missing stores are recreated against the published baseline; stores outside the snapshot are removed. */
 function restoreCollections(indexSnap, collectionsSnap) {
   if (!collectionsState.collectionsIndexStore || !indexSnap) return;
-  const current = JSON.stringify({
+  const current = media.stringify({
     index: collectionsState.collectionsIndexStore.data,
     collections: Object.fromEntries(Object.entries(collectionsState.collectionStores).map(([id, st]) => [id, st.data])),
   });
-  if (current === JSON.stringify({ index: indexSnap, collections: collectionsSnap })) return;
+  if (current === media.stringify({ index: indexSnap, collections: collectionsSnap })) return;
   collectionsState.collectionsIndexStore.replace(indexSnap);
   collectionsState.collectionsIndexStore.save();
   for (const id of Object.keys(collectionsState.collectionStores)) {
     if (!(id in collectionsSnap)) {
-      localStorage.removeItem(`urd-draft-collection-${id}`);
-      localStorage.removeItem(`urd-draft-samling-${id}`);
+      dropDraft(`urd-draft-collection-${id}`);
+      dropDraft(`urd-draft-samling-${id}`);
       delete collectionsState.collectionStores[id];
     }
   }
@@ -441,17 +471,17 @@ function restoreCollections(indexSnap, collectionsSnap) {
  *  Mirrors restoreCollections, with a "does not exist" baseline for never-published templates. */
 function restoreTemplates(indexSnap, templatesSnap) {
   if (!templatesState.templatesIndexStore || !indexSnap) return;
-  const current = JSON.stringify({
+  const current = media.stringify({
     index: templatesState.templatesIndexStore.data,
     templates: Object.fromEntries(Object.entries(templatesState.templateStores).map(([id, st]) => [id, st.data])),
   });
-  if (current === JSON.stringify({ index: indexSnap, templates: templatesSnap })) return;
+  if (current === media.stringify({ index: indexSnap, templates: templatesSnap })) return;
   templatesState.templatesIndexStore.replace(indexSnap);
   templatesState.templatesIndexStore.save();
   for (const id of Object.keys(templatesState.templateStores)) {
     if (!(id in templatesSnap)) {
-      localStorage.removeItem(`urd-draft-template-${id}`);
-      localStorage.removeItem(`urd-draft-mal-${id}`);
+      dropDraft(`urd-draft-template-${id}`);
+      dropDraft(`urd-draft-mal-${id}`);
       delete templatesState.templateStores[id];
     }
   }
@@ -471,7 +501,7 @@ function restoreTemplates(indexSnap, templatesSnap) {
  *  Diff-guarded: only a real plugin change should cost a preview reboot. */
 function restorePlugins(pluginsSnap) {
   if (!pluginsState.pluginsStore || !pluginsSnap) return;
-  if (JSON.stringify(pluginsState.pluginsStore.data) === JSON.stringify(pluginsSnap)) return;
+  if (media.stringify(pluginsState.pluginsStore.data) === media.stringify(pluginsSnap)) return;
   pluginsState.pluginsStore.replace(pluginsSnap);
   pluginsState.pluginsStore.save();
   pluginsState.syncPluginsView();
@@ -482,6 +512,8 @@ function restorePlugins(pluginsSnap) {
  * Goes back one step that changed something: steps at the end that hold the state as it is now changed nothing and are passed (lib/history-model.js emptyTail), with the redo a last empty step set aside given back.
  */
 function undo() {
+  // The stored drafts of the pages a step names are read and written: a change waiting to be written goes first.
+  flushDrafts();
   // The state now, once for the steps that hold the open page alone and once per step that holds other pages too.
   let plain = null;
   const nowFor = (pages) => (pages?.length ? snapshot(pages) : (plain ??= snapshot()));
@@ -497,7 +529,7 @@ function undo() {
   }
   pageState.dropFits();
   const step = history.pop();
-  redoStack.push({ snap: nowFor(step.pages), view: currentView(), pages: step.pages, key: step.key, at: step.at, made: step.made, typed: stepTyped(step), pageId: stepPage(step) });
+  redoStack.push(withId({ snap: nowFor(step.pages), view: currentView(), pages: step.pages, key: step.key, at: step.at, made: step.made, typed: stepTyped(step), pageId: stepPage(step) }));
   restore(step.snap);
   restoreView(step.view);
   lastHistoryKey = null;
@@ -507,10 +539,11 @@ function undo() {
 
 function redo() {
   if (!redoStack.length) return;
+  flushDrafts();
   redoAside = null;
   pageState.dropFits();
   const step = redoStack.pop();
-  history.push({ snap: snapshot(step.pages), view: currentView(), pages: step.pages, key: step.key, at: step.at, made: step.made, typed: stepTyped(step), pageId: stepPage(step) });
+  history.push(withId({ snap: snapshot(step.pages), view: currentView(), pages: step.pages, key: step.key, at: step.at, made: step.made, typed: stepTyped(step), pageId: stepPage(step) }));
   restore(step.snap);
   restoreView(step.view);
   lastHistoryKey = null;
@@ -525,6 +558,7 @@ function redo() {
  * @param {number} count How many steps to go
  */
 function goSteps(way, count) {
+  flushDrafts();
   const from = way === 'back' ? history : redoStack;
   const to = way === 'back' ? redoStack : history;
   const n = Math.min(Math.max(0, count), from.length);
@@ -533,8 +567,8 @@ function goSteps(way, count) {
   redoAside = null;
   const steps = [];
   for (let i = 0; i < n; i += 1) steps.push(from.pop());
-  const walk = walkSteps(steps, { state: snapshot(), view: currentView() }, readDraft);
-  to.push(...walk.passed);
+  const walk = walkSteps(steps, { state: snapshot(), view: currentView() }, readDraft, media.stringify);
+  to.push(...walk.passed.map(withId));
   restore(walk.state);
   restoreView(walk.view);
   lastHistoryKey = null;

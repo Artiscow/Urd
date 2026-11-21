@@ -2,7 +2,7 @@
  * The collections: their draft stores, the view the preview and the panels read, and the mutators.
  * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
-import { createDraftStore } from '../lib/draftStore.js';
+import { createDraftStore, dropDraft } from '../lib/draftStore.js';
 import { INDEX_DRAFT_KEY, readIndexes, indexBaseline, earlierDrafts, openingIds } from '../lib/collection-index.js';
 import { slugify } from '$engine/imageTools.js';
 import { ta, adminLang } from '$engine/i18n.js';
@@ -99,7 +99,7 @@ async function initCollections() {
     earlier: earlier.ids,
   });
   // The earlier drafts are dropped only once the merge is persisted.
-  if (collectionsIndexStore.save()) for (const key of earlier.keys) localStorage.removeItem(key);
+  if (collectionsIndexStore.saveNow()) for (const key of earlier.keys) localStorage.removeItem(key);
   collectionIds = [...collectionsIndexStore.data.samlinger];
   for (const id of collectionIds) {
     let published = null;
@@ -353,8 +353,8 @@ function createCatalogForBlock() {
 function removeCollection(id) {
   if (csvImport?.id === id) csvImport = null;
   historyState.pushHistory('collections');
-  localStorage.removeItem(`urd-draft-collection-${id}`);
-      localStorage.removeItem(`urd-draft-samling-${id}`);
+  dropDraft(`urd-draft-collection-${id}`);
+  dropDraft(`urd-draft-samling-${id}`);
   delete collectionStores[id];
   collectionsIndexStore.data.samlinger = collectionIds.filter((x) => x !== id);
   collectionsIndexStore.save();

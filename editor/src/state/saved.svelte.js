@@ -6,6 +6,7 @@
  * What this browser last saw of each saved part is kept in `urd-saved-seen`, and what the Saved tab last showed in `urd-saved-noticed`, both admin keys.
  */
 import { ta, taApiError, adminLang } from '$engine/i18n.js';
+import { flushDrafts } from '../lib/draftStore.js';
 import { contentHash } from '$engine/imageTools.js';
 import { keysByPart, partCanon, partOfName, meet, standing, counts, savedList, overwrites, publishedSaves } from '../lib/saved-model.js';
 import { timeAgo } from '../lib/time-ago.js';
@@ -173,6 +174,8 @@ async function meetOnLoad() {
     head = read.body.head ?? null;
     index = indexOf(read.body);
     lastRead = Date.now();
+    // The drafts are met as they stand, a change waiting to be written written first.
+    flushDrafts();
     const byPart = keysByPart(storedKeys());
     const names = new Set([...Object.keys(index.parts), ...Object.keys(seen)]);
     const local = Object.fromEntries([...names].map((name) => [name, hashOf(name, byPart)]));
@@ -248,6 +251,7 @@ async function save({ names = null, note = '', device = '', quiet = false, auto 
       if (!(await readAgain())) return false;
       // The head the index was read at, posted as it is even where the index is read again meanwhile.
       const expect = head;
+      flushDrafts();
       const byPart = keysByPart(storedKeys());
       const now = standing({ parts: historyState.unpublished, localHash: (name) => hashOf(name, byPart), saved: index.parts, seen });
       const asked = now.filter((r) => r.band === 'browser' && (!names || names.includes(r.part)));
@@ -549,6 +553,8 @@ function openInTab(name) {
 }
 
 async function handOver(name, tab) {
+  // The tab lays the saved version over this browser's drafts, which it reads as stored.
+  flushDrafts();
   const of = partOfName(name);
   const read = await readParts(of.kind === 'page' && !siteState.siteDraft?.pages.some((p) => p.id === of.id) && index.parts.site ? [name, 'site'] : [name]);
   if (!read.ok || !read.keys[name]) {

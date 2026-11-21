@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.4.1): the undo history and the drafts' writes
+
+- [ ] A page with two or three new pictures not yet published: typing in a text feels as quick as on a page without them, and the text is all there after a reload made right after typing
+- [ ] Undo and redo across several kinds of changes (a text, a picture, a section's colour, a collection entry): each comes back as it was, the pictures included
+- [ ] Make a few changes, reload the editor: the undo button still undoes them one by one
+- [ ] Delete a collection or a template, reload: it stays deleted; undo the deletion before reloading: it comes back
+- [ ] Switch pages right after a change, and back: the change is there
+- [ ] Publish right after a change: the change is published
+- [ ] The page switcher's dot marks a page with a change as soon as it is made, and leaves it once the change is undone
+- [ ] History panel: a revert of the site leaves no draft behind after its reload
+
 ### Test batch (0.7.0.94): the event card and the year wheel
 
 - [ ] A page with a calendar, scrolled down to it: open an event; the page stays where it is, and the card stands over the calendar with nothing shaded
