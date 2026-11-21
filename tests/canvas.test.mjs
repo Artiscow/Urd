@@ -15,12 +15,11 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { engineImport } from './_engine.mjs';
+import { engineImport, readStyles } from './_engine.mjs';
 
 const { applySiteLayout } = await engineImport('render.js');
 
-const CSS = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf-8');
+const CSS = readStyles();
 
 /** Properties that create a containing block for position: fixed. */
 const FORBIDDEN = [

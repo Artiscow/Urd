@@ -1,5 +1,5 @@
 /**
- * The calendar block's month, week, day and year designs (milestone 0.7.19): eight looks that each show a span of time rather than a count of events, every one a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in base.css under its own class names.
+ * The calendar block's month, week, day and year designs (milestone 0.7.19): eight looks that each show a span of time rather than a count of events, every one a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in calendar.css under its own class names.
  * The data is `ui.all`, the whole filtered window the block loaded for the view (ics.js windowStart), so a design can move through its weeks or months on its own.
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */

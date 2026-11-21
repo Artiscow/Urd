@@ -1,5 +1,5 @@
 /**
- * The calendar block's retro designs (milestone 0.7.19.23): looks from a past of paper, boards and screens, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules and colour set in base.css under its own class names.
+ * The calendar block's retro designs (milestone 0.7.19.23): looks from a past of paper, boards and screens, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules and colour set in calendar.css under its own class names.
  * A design's theme words are drawn through ui.tx like any text: the block swaps in the design's own words where it has them (calThemeTexts in calendar-designs.js), and a design that rewrites calendar data asks ui.rewrite first.
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
@@ -434,7 +434,7 @@ function rcExcerpt(occ, ui) {
   return text;
 }
 
-/** The receipt's rows: per event the date, the title and the time in the columns the rows share with the dot leader between them (base.css), the place and status under them, and the first event's excerpt under that. */
+/** The receipt's rows: per event the date, the title and the time in the columns the rows share with the dot leader between them (calendar.css), the place and status under them, and the first event's excerpt under that. */
 function rcRows(occs, ui) {
   const rows = ui.el('div', 'urd-cal-rc-rows');
   occs.forEach((occ, i) => {
@@ -653,7 +653,7 @@ const DECO_FAN = Array.from({ length: 11 }, (_, i) => {
 
 /** The card's parts, each a decorator the block runs on the event's card after it is built (ui.dressCard), in the common words. */
 export const cards = {
-  /** R4 Cinema marquee's own card: a cinema ticket, the date, title and facts on its face and the stub down its right side with the day standing; the bulbs over it and the tear line under it are base.css's. */
+  /** R4 Cinema marquee's own card: a cinema ticket, the date, title and facts on its face and the stub down its right side with the day standing; the bulbs over it and the tear line under it are calendar.css's. */
   marquee(dialog, occ, ui) {
     const d = dayOf(occ);
     const ticket = ui.el('div', 'urd-cal-mq-cardticket');
@@ -668,7 +668,7 @@ export const cards = {
     ticket.append(face, stub);
   },
   /**
-   * R5 Receipt's own card: the receipt's number over the title (the event's place in the calendar's list, the theme word cardNo), the facts as dot-leader lines with the date first and the category last, named as the receipt's columns, and the thanks at its foot; the torn edge and the capitals are base.css's, the capitals of the calendar's data only with rewriting.
+   * R5 Receipt's own card: the receipt's number over the title (the event's place in the calendar's list, the theme word cardNo), the facts as dot-leader lines with the date first and the category last, named as the receipt's columns, and the thanks at its foot; the torn edge and the capitals are calendar.css's, the capitals of the calendar's data only with rewriting.
    */
   receipt(dialog, occ, ui) {
     if (!ui.rewrite) dialog.classList.add('urd-cal-rc-own');
@@ -712,7 +712,7 @@ export const cards = {
     }
     dialog.insertBefore(band, dialog.querySelector('.urd-cal-dialog-date'));
   },
-  /** R7 Art deco's own card: a fan piece in each corner of the gold double frame, a fan of thin rays over the date, and a rule with a diamond under the title; the frame is base.css's. */
+  /** R7 Art deco's own card: a fan piece in each corner of the gold double frame, a fan of thin rays over the date, and a rule with a diamond under the title; the frame is calendar.css's. */
   deco(dialog, occ, ui) {
     dialog.append(...['tl', 'tr', 'bl', 'br'].map((corner) => decoSvg(`urd-cal-deco-corner urd-cal-deco-corner-${corner}`, '0 0 38 38', DECO_CORNER)));
     dialog.querySelector('.urd-cal-dialog-date')?.before(decoSvg('urd-cal-deco-cardfan', '0 0 120 34', DECO_FAN));

@@ -71,6 +71,28 @@ export function renderBackgroundLayers(host, background, { later = false, first 
   }
 }
 
+/** The stylesheets added on demand, by address. */
+const sheets = new Map();
+
+/**
+ * Adds a stylesheet to the document once, for the code that needs it alone (the preview's rules, a calendar's): resolves when it has loaded or failed, so the caller draws with it in place.
+ * @param {string} href
+ * @returns {Promise<void>}
+ */
+export function loadStylesheet(href) {
+  if (!sheets.has(href)) {
+    sheets.set(href, new Promise((resolve) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.addEventListener('load', () => resolve(), { once: true });
+      link.addEventListener('error', () => resolve(), { once: true });
+      document.head.appendChild(link);
+    }));
+  }
+  return sheets.get(href);
+}
+
 /** The picture layers waiting for their section to come near, each with what draws it. */
 const waitingLayers = new Map();
 

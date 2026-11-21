@@ -6,9 +6,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { ENGINE_DIR } from './_engine.mjs';
+import { ENGINE_DIR, readStyles } from './_engine.mjs';
 
-const BASE = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+const BASE = readStyles();
 const CHROME = /urd-multi-toolbar|urd-multi-count|urd-multi-drag|\.urd-cp\b|urd-cp-|urd-dd-|urd-hidden-list|urd-hidden-chip|\.urd-ctx/;
 /** The parts that draw colour or danger themselves: the spectrum's handles and cursor, a deletion's red and an armed item. */
 const KEEPS = /urd-cp-(?:hue|alpha|cursor|del)\b|urd-multi-delete|urd-ctx-(?:danger|armed)\b/;

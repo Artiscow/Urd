@@ -15,7 +15,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { engineImport } from './_engine.mjs';
+import { engineImport, readStyles } from './_engine.mjs';
 
 const ROOT = new URL('../editor/src/', import.meta.url).pathname;
 const { parse } = await import(new URL('../editor/node_modules/svelte/src/compiler/index.js', import.meta.url).href);
@@ -194,7 +194,7 @@ test('every deletion draws a bin on the dark red, in the admin and on the canvas
   assert.match(edit, /del\.className = 'urd-template-delete';\s*del\.innerHTML = BIN_SVG;/, 'a section template');
   assert.match(edit, /if \(opts\.danger\) b\.insertAdjacentHTML\('beforeend', BIN_SVG\);/, 'the right-click menu\'s deletions');
   assert.match(readFileSync(new URL(`../template/assets/engine/${ENGINE}/color-picker.js`, import.meta.url), 'utf8'), /del\.innerHTML = BIN_SVG;/, 'a saved colour on the canvas');
-  const base = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const base = readStyles();
   assert.match(base, /\.urd-preview \.urd-ctx-danger \{\s*color: #ffd4d4;\s*background: #5e1c22;/);
   // The phone view's bar and menus the editor draws for the canvas (CanvasBar.svelte): the block's bin and a menu's removal on the same dark red, the menu's drawing the bin.
   const canvasBar = readFileSync(new URL('../editor/src/lib/CanvasBar.svelte', import.meta.url), 'utf8');

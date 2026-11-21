@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.3): the stylesheet in three
+
+- [ ] Every page of the published site looks as before, on the desktop and on a phone, in light and dark mode
+- [ ] A page with a calendar: the calendar's loading bars show, then the calendar in its design; its event card, the week and month views and the view switcher look as before
+- [ ] A page without a calendar: DevTools' network list shows no `calendar.css`, and no `preview.css`
+- [ ] The editor: the section and block bars, the menus, the right-click menu, the grid, the guides, the handles and the phone view look as before
+- [ ] The editor: a cards collection's entry without a picture shows «Add images» as the picture's full slot at the card's top, and a list collection's as a thumbnail
+- [ ] Print a page with a calendar: the events print as a plain list
+
 ### Test batch (0.7.37.3.2): the push pass in phases, the calendar's early feed, and pictures by their place
 
 - [ ] On the desktop, pages with texts beside pictures and buttons: every block stands where it did, a text that grows pushes the blocks under it, and resizing the window keeps them in place

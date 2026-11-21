@@ -7,11 +7,10 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { engineImport } from './_engine.mjs';
+import { engineImport, readStyles } from './_engine.mjs';
 
 const { FOLLOWS_WIDTH, followsWidth } = await engineImport('push-model.js');
-const CSS = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '');
+const CSS = readStyles().replace(/\/\*[\s\S]*?\*\//g, '');
 
 /** The top-level rules of a style sheet as [prelude, body] pairs, bodies unparsed. */
 function rules(css) {

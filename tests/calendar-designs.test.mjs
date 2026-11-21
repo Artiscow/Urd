@@ -6,7 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { engineImport, ENGINE_DIR } from './_engine.mjs';
+import { engineImport, ENGINE_DIR, readStyles } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
@@ -379,10 +379,10 @@ test('every theme word names a text the design draws, and the three core site di
   }
 });
 
-test('every design belongs to a colour set, and base.css defines every set', () => {
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+test('every design belongs to a colour set, and calendar.css defines every set', () => {
+  const css = readStyles();
   for (const design of CAL_DESIGNS) assert.ok(CAL_SETS.includes(design.set), `${design.id} has a set`);
-  for (const set of CAL_SETS) assert.ok(set === 'theme' || css.includes(`.urd-cal-set-${set} {`), `base.css defines the set ${set}`);
+  for (const set of CAL_SETS) assert.ok(set === 'theme' || css.includes(`.urd-cal-set-${set} {`), `calendar.css defines the set ${set}`);
   // The card is drawn from the set variables alone: nothing measured at run time reaches it.
   assert.ok(!css.includes('--urd-cal-dlg-'), 'the card reads no measured variable');
   const block = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
@@ -554,11 +554,11 @@ test('the card designs: the neutral card first, one card per colour set its desi
   }
 });
 
-test('every design with a card of its own has the card\'s rules in base.css, and its module\'s decorator where it has one', async () => {
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+test('every design with a card of its own has the card\'s rules in calendar.css, and its module\'s decorator where it has one', async () => {
+  const css = readStyles();
   const own = CAL_DESIGNS.filter((d) => d.ownCard);
   assert.ok(own.length >= 10);
-  for (const design of own) assert.ok(css.includes(`.urd-cal-dlg-${design.id}`), `${design.id}: .urd-cal-dlg-${design.id} in base.css`);
+  for (const design of own) assert.ok(css.includes(`.urd-cal-dlg-${design.id}`), `${design.id}: .urd-cal-dlg-${design.id} in calendar.css`);
   for (const design of own) {
     const mod = await engineImport(`blocks/calendar-${design.module}.js`);
     if (mod.cards?.[design.id]) assert.equal(typeof mod.cards[design.id], 'function');
@@ -651,7 +651,7 @@ test('a calendar in the editor shows the example events by its bar\'s choice for
   assert.doesNotMatch(src, /urd-cal-note/, 'no note stands under a calendar');
   const bar = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
   assert.equal([...bar.matchAll(/if \(block\.type === 'calendar'\) (?:barBody\.appendChild|place)\(exampleButton\(\)/g)].length, 3, 'the button stands on the phone view\'s bar, the full bar and the shorter bars');
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   assert.doesNotMatch(css, /urd-cal-note/);
   assert.match(css, /\.urd-edit-examples\[aria-pressed="true"\] \{/, 'the button is drawn pressed while the examples show');
 });

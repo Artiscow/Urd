@@ -1,8 +1,7 @@
 // The one drawing every picture shares (picture.js): its settings read within their bounds, the filter, the turn, and the looks held equal to the slideshow's tones.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { engineImport } from './_engine.mjs';
+import { engineImport, readStyles } from './_engine.mjs';
 
 const { pictureStyle, pictureFilter, pictureTurn, straightenScale, LOOK_FILTERS, PICTURE_LOOKS, parseColor, duotoneTables } = await engineImport('picture.js');
 const { COVER_DIM } = await engineImport('embed-cover.js');
@@ -60,7 +59,7 @@ test('pictureTurn: none for a picture that is not turned; quarter turns lie acro
 
 test('the looks are the slideshow layer\'s tones, with the same filters base.css gives them', () => {
   assert.deepEqual(Object.keys(LOOK_FILTERS).sort(), [...PICTURE_LOOKS].sort());
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   for (const look of PICTURE_LOOKS) {
     if (look === 'natural') continue;
     const rule = new RegExp(`\\.urd-gallery-tone-${look} \\.urd-gallery-face, \\.urd-gallery-tone-${look} \\.urd-bg-slide \\{ filter: ([^;]+);`).exec(css);
@@ -90,7 +89,7 @@ test('the duotone as a gradient map: any pair of colours, the lighter one in the
 });
 
 test('the picture layers place a frame only where it has no place of its own, so the embed cover\'s frame stays laid over its box', () => {
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   assert.match(css, /:where\(\.urd-pic-turned, \.urd-pic-look-vintage, \.urd-pic-overlaid\) \{[^}]*position: relative;/);
   assert.match(css, /\.urd-cover-frame \{\s*position: absolute;\s*inset: 0;/);
   // No rule outside :where gives a frame with these classes a position of its own.

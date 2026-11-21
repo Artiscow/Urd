@@ -4,7 +4,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { engineImport } from './_engine.mjs';
+import { engineImport, readStyles } from './_engine.mjs';
 const { frameToCss, mobilePlacementToCss, phoneCells, phoneHeight, phoneCellCss, PHONE_COLUMNS, autoGrows, anchorTargets, EDITOR_ONLY } = await engineImport('render.js');
 const { galleryBlock } = await engineImport('blocks/gallery.js');
 const { MOBILE_ROW, MOBILE_GAP } = await engineImport('migrate.js');
@@ -156,11 +156,10 @@ test('mobilePlacementToCss: a block pinned in cells is a grid item of its own on
   assert.deepEqual(mobilePlacementToCss({ col: 1, cols: 8 }, desktop, {}), mobilePlacementToCss(null, desktop, {}), 'the full row is no cells');
 });
 
-test('the editor-only parts the push and the fit leave out are the ones base.css hides under .urd-fit-measure', async () => {
-  const { readFileSync } = await import('node:fs');
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf-8');
+test('the editor-only parts the push and the fit leave out are the ones preview.css hides under .urd-fit-measure', async () => {
+  const css = readStyles();
   const rule = css.match(/((?:\.urd-preview \.urd-fit-measure [^,{]+,\s*)*\.urd-preview \.urd-fit-measure [^,{]+)\{/);
-  assert.ok(rule, 'the .urd-fit-measure rule is in base.css');
+  assert.ok(rule, 'the .urd-fit-measure rule is in preview.css');
   const hidden = rule[1].split(',').map((sel) => sel.trim().replace('.urd-preview .urd-fit-measure ', '')).sort();
   const listed = EDITOR_ONLY.split(',').map((sel) => sel.trim()).sort();
   assert.deepEqual(hidden, listed);

@@ -210,13 +210,13 @@ const barForm = () => barChoice(BAR_CHOICES.form);
 const barGear = () => barChoice(BAR_CHOICES.gear) === 'on';
 /** Whether the phone button (shown or hidden on phones) stands on a bar that leaves it to the right-click menu (Urd settings «Phone button on the bar», shown by default). */
 const barPhone = () => barChoice(BAR_CHOICES.phone) === 'on';
-/** How large the bar is drawn (Urd settings «Toolbar size»): its class, which base.css sizes the bar by. */
+/** How large the bar is drawn (Urd settings «Toolbar size»): its class, which preview.css sizes the bar by. */
 const barSize = () => barChoice(BAR_CHOICES.size);
 /** Whether the phone view's bars and their menus are drawn by the editor beside the phone (Urd settings «Bars in the phone view»: beside the phone, or both, where the page keeps its own bars as well), or stand on the page alone as on the desktop, as they do by default. */
 const phoneBars = () => isMobile() && barChoice(BAR_CHOICES.place) !== 'canvas';
 
 /**
- * The bar's look (Urd settings «Toolbar look», kept in the shared localStorage and read at every draw): the class `urd-bar-<look>` on the toolbar, which base.css draws.
+ * The bar's look (Urd settings «Toolbar look», kept in the shared localStorage and read at every draw): the class `urd-bar-<look>` on the toolbar, which preview.css draws.
  * The area looks set the tools apart by Content, Style and Placement, so they hold only for the bar of tools; another form takes the plain look in their place.
  */
 function barLook(form = barForm()) {
@@ -405,7 +405,7 @@ function closeContextMenu(returnFocus = true) {
 
 /*
  * The phone view's bar and menus, drawn by the editor over the stage beside the phone (0.7.3.19.2, editor/src/lib/CanvasBar.svelte), free of the page's edges and clear of the page.
- * The page keeps the selected block's bar, unseen (base.css), and tells the editor once a frame where the block stands and what its tools show (urd-block-bar); a press there presses the tool here (pressPhoneBar), so every tool acts as on the page.
+ * The page keeps the selected block's bar, unseen (preview.css), and tells the editor once a frame where the block stands and what its tools show (urd-block-bar); a press there presses the tool here (pressPhoneBar), so every tool acts as on the page.
  * A menu, the right-click one or a ⋮'s, is handed to the editor as its rows (urd-ctx-menu), and a row chosen there runs here (runPhoneMenu).
  */
 
@@ -682,7 +682,7 @@ function showContextMenu(el, x, y, label, build, from = null) {
     b.className = `urd-ctx-item${opts.danger ? ' urd-ctx-danger' : ''}`;
     b.setAttribute('role', 'menuitem');
     b.tabIndex = -1;
-    // A deletion draws the bin before its words, on the dark red every deletion stands on (base.css).
+    // A deletion draws the bin before its words, on the dark red every deletion stands on (preview.css).
     if (opts.danger) b.insertAdjacentHTML('beforeend', BIN_SVG);
     const span = document.createElement('span');
     span.textContent = text;
@@ -1442,7 +1442,7 @@ function toggleLayoutPicker(host, cardsFor, titleKey = 'canvas.layoutTitle') {
     picker.className = 'urd-layout-strip';
     picker.append(...cards);
   }
-  // The section toolbar's own height, which the picker's offsets clear at any scale (base.css).
+  // The section toolbar's own height, which the picker's offsets clear at any scale (preview.css).
   const toolbar = host.querySelector(':scope > .urd-section-toolbar');
   if (toolbar?.offsetHeight) picker.style.setProperty('--urd-picker-clear', `${toolbar.offsetHeight}px`);
   // Before the canvas, so it sticks from the section's top: in the phone view the canvas stands in the flow, and the picker lies over it rather than pushing it down.
@@ -1464,7 +1464,7 @@ document.addEventListener('pointermove', (event) => {
 /**
  * The block raised under the pointer is the smallest one there, not the topmost, so a small block lying over a larger one can be reached.
  * A block whose own bar or handles stand topmost under the pointer stays raised: its bar stands outside its box, over the block above or below it, and stays reachable there.
- * The class stands where :hover would in base.css; a block that is not under the pointer loses it, and the Clean view raises nothing.
+ * The class stands where :hover would in preview.css; a block that is not under the pointer loses it, and the Clean view raises nothing.
  */
 let raisedEl = null;
 let raiseFrame = 0;
@@ -1689,7 +1689,7 @@ export function closeMenus() {
  */
 export function enhanceSection(host, section, grid) {
   host._urdGrid = grid;
-  // Where the phone view's bars stand, read at every drawing as the bar's other choices are: base.css leaves the page's own bars unseen while the editor draws them beside the phone.
+  // Where the phone view's bars stand, read at every drawing as the bar's other choices are: preview.css leaves the page's own bars unseen while the editor draws them beside the phone.
   // With the bars in both places the page keeps its own in sight.
   document.body.classList.toggle('urd-bars-beside', barChoice(BAR_CHOICES.place) === 'beside');
   // The section's data on its element, for the right-click menu on its surface.
@@ -2972,7 +2972,7 @@ function makeSectionAdder(index, above = null, below = null) {
     const groupLabel = (name, labelKey) => (labelKey ? ta(labelKey) : (name || ta('canvas.groupOther')));
 
     // The category colors: each group gets a fixed color step derived from
-    // the admin accent in base.css (--urd-category-1..5, cyclic with more
+    // the admin accent in preview.css (--urd-category-1..5, cyclic with more
     // groups); My templates always has step 5. The color is set as
     // --urd-category-color on cards, headings and category buttons.
     const TEMPLATE_CAT = 5;
@@ -4416,7 +4416,7 @@ window.addEventListener('keydown', (event) => {
 });
 
 // Selection: clicking a block gives it lasting focus (the handles stay
-// visible, see base.css). Clicking outside all blocks deselects. The
+// visible, see preview.css). Clicking outside all blocks deselects. The
 // selection survives re-renders via the id.
 let selectedBlockId = null;
 
@@ -5839,7 +5839,7 @@ function duplicateBlock(section, block) {
 
 /**
  * Visible grid overlay in the section while dragging/resizing, so the snapping has something visible to snap against.
- * The lines, the dots or the columns are drawn with CSS gradients at the exact cell size (base.css, by `look`), the cells counted out from the content's middle.
+ * The lines, the dots or the columns are drawn with CSS gradients at the exact cell size (preview.css, by `look`), the cells counted out from the content's middle.
  * @param {HTMLElement} host
  * @param {{size: number}} grid
  * @param {'lines'|'dots'|'columns'} look
@@ -5902,7 +5902,7 @@ function enhanceBlock(el, block, section, grid, host) {
   el._urdKeepBar = () => requestAnimationFrame(keepToolbarIn);
   // On a rotated block the toolbar is anchored at the block's bounding box
   // on the screen (toolbarAnchor), clear of the content, and turns itself
-  // upright there; unrotated, base.css places it at the block's own edge.
+  // upright there; unrotated, preview.css places it at the block's own edge.
   const placeToolbar = (under = toolbar.classList.contains('urd-toolbar-under')) => {
     const rot = Number.parseFloat(el.style.getPropertyValue('--urd-block-rot')) || 0;
     // A shift kept from an upright bar is never carried onto a turned one; an upright bar is kept inside the canvas anew once drawn.

@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { engineImport } from './_engine.mjs';
+import { engineImport, readStyles } from './_engine.mjs';
 const { buttonBlock } = await engineImport('blocks/button.js');
 
 /** An element stub with the style and class list the colours write. */
@@ -49,7 +49,7 @@ test('a button with none of the colours is drawn by its design alone', () => {
 });
 
 test('each design falls back to its own colour from the theme, and an own fill under the pointer replaces the lightening', () => {
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   assert.match(css, /\.urd-button-primary \{\s*background: var\(--urd-btn-bg, var\(--urd-color-accent\)\);[\s\S]*?color: var\(--urd-btn-text, var\(--urd-color-accent-text, var\(--urd-color-bg\)\)\);\s*\}/, 'no border on a filled button of its own');
   assert.match(css, /\.urd-button-primary\.urd-button-own-border \{\s*border: 1px solid var\(--urd-btn-border\);/);
   assert.match(css, /\.urd-button-secondary \{\s*background: var\(--urd-btn-bg, transparent\);\s*border: 1px solid var\(--urd-btn-border, var\(--urd-color-accent\)\);\s*color: var\(--urd-btn-text, var\(--urd-color-accent\)\);/);

@@ -12,7 +12,7 @@
 import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme } from './theme.js';
-import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrames } from './render.js';
+import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrames, loadStylesheet } from './render.js';
 import { renderNav, refreshNavScroll, clearAnnounceDismissal, holdNavForJump } from './nav.js';
 import { isSafeImage, hashTarget, samePageHash, jumpOnArrival } from './nav-model.js';
 import { renderFooter } from './footer.js';
@@ -955,7 +955,8 @@ export async function boot(opts) {
     await initAdminLocale();
     // The editing layer is loaded dynamically ONLY in preview - visitors
     // never fetch this code. Must be in place before the first render.
-    window.UrdPreviewEdit = await import('./preview-edit.js');
+    // The preview's own rules (preview.css) come with it, so the editing chrome is never drawn without them.
+    [window.UrdPreviewEdit] = await Promise.all([import('./preview-edit.js'), loadStylesheet(new URL('./preview.css', import.meta.url).href)]);
     refreshShopGate(site);
   }
 

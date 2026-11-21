@@ -5,6 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { readStyles } from './_engine.mjs';
 
 const ENGINE = JSON.parse(readFileSync(new URL('../template/urd.json', import.meta.url), 'utf8')).engine;
 const edit = readFileSync(new URL(`../template/assets/engine/${ENGINE}/preview-edit.js`, import.meta.url), 'utf8');
@@ -39,7 +40,7 @@ test('in the Clean view, which shows the page as visitors see it, every link in 
   assert.match(click, /if \(url\.origin === location\.origin && !\/\\\.\[a-z0-9\]\{2,5\}\$\/i\.test\(url\.pathname\)\) \{\s*post\(\{ type: 'urd-navigate'/, 'a file of the site opens in a tab, a page through the editor');
   assert.match(edit, /handle\.addEventListener\('pointerdown', \(event\) => \{\s*if \(opts\.surface\) \{\s*\/\/[^\n]*\n\s*if \(document\.body\.classList\.contains\('urd-chrome-off'\)\) return;/, 'no press in the Clean view selects or drags a block, so the link keeps its click');
   // The pointer says the link is followed, over the block's move cursor and an editable text's caret.
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   assert.match(css, /\.urd-preview\.urd-chrome-off \.urd-editable a\[href\],\s*\.urd-preview\.urd-chrome-off \.urd-editable a\[href\] \* \{\s*cursor: pointer;/);
 });
 

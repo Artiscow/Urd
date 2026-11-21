@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { engineImport, ENGINE_DIR } from './_engine.mjs';
+import { engineImport, ENGINE_DIR, readStyles } from './_engine.mjs';
 
 const { toTopOf, toTopShape, toTopClip, toTopFillsWhole, toTopOutline, toTopShapeOf, TOTOP_FILLS, TOTOP_ICON_SIZE, TOTOP_DESIGNS, TOTOP_SHAPED, TOTOP_WORDED, TOTOP_SIZES, TOTOP_COUNT, TOTOP_COLOURS, TOTOP_HOVERS, TOTOP_PRESSES, TOTOP_LINES } = await engineImport('totop.js');
 
@@ -107,7 +107,7 @@ test('the arrow\'s or the own mark\'s size is a percent of its size in the desig
   assert.equal(size(10), 50);
   assert.equal(size(900), 200);
   for (const none of [undefined, null, '', 'big']) assert.equal(size(none), 100, `${none} reads as the standard`);
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   assert.match(css, /\.urd-totop-mark \{[^}]*font-size: calc\(1em \* var\(--urd-totop-mark-scale, 1\)\);/, 'the arrow, a character and a picture all follow the scale');
   assert.match(css, /\.urd-totop-glyph \{[^}]*font-size: calc\(1\.1em \* var\(--urd-totop-mark-scale, 1\)\);/, 'a character, whose own size stands on the mark itself');
 });
@@ -130,7 +130,7 @@ test('on a shaped design the mark is cut to the button\'s outline, and a picture
   // The ring's whole picture covers its line: it is cut to the whole box, as the circle is.
   assert.ok(decodeURIComponent(toTopClip(set({ design: 'ring', image: PIC, fill: 'whole' }))).includes(`d="${toTopShape('circle', 0, 10)}"`));
   assert.ok(decodeURIComponent(toTopClip(set({ design: 'ring' }))).includes(`d="${toTopShape('ring', 0, 10)}"`));
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   assert.match(css, /\.urd-totop-ring \.urd-totop-label \{[^}]*mask-image: var\(--urd-totop-clip, none\);\s*mask-size: 84% 84%;/, 'inside the edge, the outline drawn a little smaller');
   assert.match(css, /\.urd-totop-whole \.urd-totop-label \{\s*mask-size: 100% 100%;/);
   assert.match(css, /\.urd-totop-whole \.urd-totop-shape \{\s*display: none;/, 'a whole picture is the button, no background seen at its edge');

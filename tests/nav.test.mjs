@@ -5,7 +5,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { engineImport } from './_engine.mjs';
+import { engineImport, readStyles } from './_engine.mjs';
 const { resolveLink, linkAttrs, LINK_RELS, resolveItem, navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, hashTarget, samePageHash, jumpOnArrival, isAnchorName, navSizeVars, NAV_SIZE_BOUNDS, subOpenMode, mobileMenuMode, mobileSubMode, sideSubMode, phoneMenuModel, MOBILE_ALIGNS, effectiveNav, TOOLS_ALIGNS, sheetMotion, SHEET_MOTIONS, announcementModel, launcherModel, launcherVars, LAUNCHER_SIZES, LAUNCHER_BOUNDS, LAUNCHER_VIEWS, clampLauncherMax, toolOrder, TOOL_IDS, isSafeImage, burgerModel, BURGER_ICONS, navHidden, announcementHidden, subGrouped, hideMode, HIDE_MODES, tabModel, logoParts, NAV_PRESSES, NAV_PHONE_LOGOS } = await engineImport('nav-model.js');
 
 // Deliberately Norwegian page titles and slugs: user data stays Norwegian (ADR-0021).
@@ -726,8 +726,7 @@ test('subOpenMode: hover by default, stay keeps hover opening only, click disabl
 });
 
 test('base.css: the underline hover is revealed with clip-path, and the clear surface hides the surface until scrolled', async () => {
-  const { readFile } = await import('node:fs/promises');
-  const css = await readFile(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   const underline = css.slice(css.indexOf('.urd-nav-hover-underline .urd-nav-list a::after'), css.indexOf('.urd-nav-hover-pill'));
   assert.match(underline, /clip-path: inset\(0 100% 0 0\)/);
   assert.match(underline, /clip-path: inset\(0\)/);
@@ -1142,7 +1141,7 @@ test('the logo can be taken out of the bar, and the bar keeps its other parts in
   const nav = readFileSync(new URL(`../template/assets/engine/${ENGINE}/nav.js`, import.meta.url), 'utf8');
   assert.match(nav, /const showLogo = logoDef\.show !== false;\s*if \(showLogo\) nav\.insertBefore\(logo, keptSheet\);\s*nav\.classList\.toggle\('urd-nav-no-logo', !showLogo\);/);
   assert.match(nav, /logo: showLogo && site\.nav\.style\?\.sheetLogo === true \? logo : null/, 'nor does the sheet take it in');
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   assert.match(css, /body\.urd-mobile \.urd-nav-no-logo:not\(\.urd-nav-tools-start\) \.urd-nav-tools,\s*\.urd-nav-mobile\.urd-nav-no-logo:not\(\.urd-nav-tools-start\) \.urd-nav-tools \{\s*margin-left: auto;/, 'the burger keeps its edge on the phone');
   // The panel's switch leaves the default out of the file, and the fold holds the switch alone while it is off.
   const panel = readFileSync(new URL('../editor/src/panels/nav/NavLogo.svelte', import.meta.url), 'utf8');
@@ -1151,7 +1150,6 @@ test('the logo can be taken out of the bar, and the bar keeps its other parts in
 });
 
 test('the phone\'s own menu: the logo\'s place in the bar and a link\'s answer to a touch are classes at the mobile breakpoint only', async () => {
-  const { readFileSync } = await import('node:fs');
   const site = { nav: { logo: { type: 'text', value: 'Urd' }, style: { mobile: { logo: 'center', press: 'tint' } } } };
   assert.ok(!/urd-nav-logo-|urd-nav-press-/.test(navClasses(site)), 'the desktop draws neither');
   const phone = navClasses(site, { mobile: true });
@@ -1163,7 +1161,7 @@ test('the phone\'s own menu: the logo\'s place in the bar and a link\'s answer t
   for (const press of NAV_PRESSES) assert.ok(navClasses({ nav: { style: { mobile: { press } } } }, { mobile: true }).includes(`urd-nav-press-${press}`));
   assert.deepEqual(NAV_PHONE_LOGOS, ['center', 'hidden']);
   // The stylesheet has a rule for every class the model can give.
-  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const css = readStyles();
   for (const name of ['urd-nav-logo-center', 'urd-nav-logo-off', ...NAV_PRESSES.map((press) => `urd-nav-press-${press}`)]) assert.ok(css.includes(`.${name} `), name);
 });
 

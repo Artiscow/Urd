@@ -20,7 +20,7 @@ import { t, ta, tp, pluralForm, themeString, taApiError, dates, adminLocaleReady
 import { iconSvg } from '../icons.js';
 import { resolveColor, inkOn } from '../theme.js';
 import { setRichHtml, safeHtmlFragment, plainLines } from '../sanitize.js';
-import { WIDTH_QUERIES } from '../render.js';
+import { WIDTH_QUERIES, loadStylesheet } from '../render.js';
 import { NARROW_PX } from '../push-model.js';
 import { linkAttrs } from '../nav-model.js';
 import { CALENDAR_FEED_MINUTES } from '../privacy-model.js';
@@ -773,7 +773,7 @@ function descriptionNode(description, ui) {
 }
 
 /**
- * The card wears the card design the block names (calCardDress, written on the block as `data-card-set`, `data-card-classes` and `data-card-colours`): the set it is drawn in, the card classes (`urd-cal-dlg-<design>`, where a design overrides its set's variables for the card, and a lent card design's own), and the owner's colour slots copied from the block when the card is the calendar's own design's or the neutral one, so base.css draws it in the right colours although it lies in the page.
+ * The card wears the card design the block names (calCardDress, written on the block as `data-card-set`, `data-card-classes` and `data-card-colours`): the set it is drawn in, the card classes (`urd-cal-dlg-<design>`, where a design overrides its set's variables for the card, and a lent card design's own), and the owner's colour slots copied from the block when the card is the calendar's own design's or the neutral one, so calendar.css draws it in the right colours although it lies in the page.
  */
 function dressDialog(dialog, from) {
   const host = from?.closest?.('.urd-cal');
@@ -1564,7 +1564,7 @@ const SPAN_VIEWS = ['month', 'week', 'day', 'year'];
 /** How far back «Earlier» reaches. */
 const EARLIER_DAYS = 90;
 
-/** The events as a plain list, drawn for the printed page only (base.css shows it in print and hides the design). */
+/** The events as a plain list, drawn for the printed page only (calendar.css shows it in print and hides the design). */
 function printList(occs, ui) {
   const list = el2('ul', 'urd-cal-print');
   for (const occ of occs.slice(0, PRINT_MAX)) {
@@ -1684,8 +1684,8 @@ function keepDesignVariants(cd) {
 /** The renderer module of each design family, loaded when a calendar draws one (literal paths, so the modules stay out of the visitor closure and the preload list). */
 const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };
 
-/** The parser, the design model, the formats and the links every calendar draws with, loaded together on the first render. */
-const calendarParts = () => Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js')]);
+/** The parser, the design model, the formats and the links every calendar draws with, and the calendar's own rules (calendar.css), loaded together on the first render. */
+const calendarParts = () => Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js'), loadStylesheet(new URL('./calendar.css', import.meta.url).href)]);
 
 /**
  * Loads what a calendar draws with ahead of the first one, every design's renderer among it, so a calendar added in the editor draws at once; a part that cannot be loaded now is loaded when a calendar draws.

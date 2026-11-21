@@ -8,6 +8,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.37.3.3 - The stylesheet in three: the visitor's base, the preview's own rules and the calendar's - 21 November 2026
+
+- Every page loaded all of base.css, 565 KB, of which the rules that need the preview were 16 % and the calendar's 39 % (audit V1). The rules that need the preview's body class stand in the engine's `preview.css`, loaded by the boot in the preview with the editing layer (`loadStylesheet` in render.js); base.css falls to 248 KB, 57 KB compressed from 111.
+- The calendar's rules stand in `blocks/calendar.css`, loaded by the calendar with its modules; its loading state stays in base.css, since it shows first.
+- Every element's computed style on the template's eight pages, at 1440 and 390 px, as a visitor and in the preview, is the one it had.
+- `tests/stylesheets.test.mjs` keeps each rule in its sheet, and keeps a preview rule from outranking a base rule by its later place alone.
+- The tests that look a rule up read the three sheets (`readStyles` in tests/_engine.mjs).
+- base.css's stamp is written anew in every HTML shell.
+- AGENTS.md, ARCHITECTURE.md, the development guide in both languages and the engine's comments name the sheet each rule stands in.
+- Measured in headless Brave on a phone slowed four times, a page without a calendar paints about 0.1 s sooner (/om-oss/ 1833 to 1729 ms, /shop/ 1806 to 1693 ms).
+
+The independent review before the commit found these:
+
+1. In the editor a cards collection's «Add images» button stood short with round corners, since its general rule now loaded after the card's rule in base.css, which it used to lose to. The card's and the row's rules stand after it in preview.css, and the new order guard in the test would catch such a pair.
+2. The test's «class no visitor module writes» never applied, since a template string building `--urd-…` custom properties counted every class as a visitor's; the split had in fact moved the rules that need `.urd-preview`, and 44 rules only the editor draws (about 6 KB) stay in base.css. The test, ARCHITECTURE.md, the development guide and the sheet's header say what the split does.
+3. A preview rule placed in calendar.css by mistake would have passed the test, comments in the calendar's modules and the editing layer still named base.css for rules that moved, three comments told where a sheet came from rather than what it holds, two CHANGELOG bullets held several changes, and five tests kept an import they no longer used. Each is set right.
+
 ### 0.7.37.3.2 - A push pass that reads and writes in phases, a calendar that asks for its feed with its code, and the first section's picture first - 20 November 2026
 
 - The push pass wrote, measured and wrote again block by block, so the page was laid out once per block (audit V4). It reads the canvas's width, writes every box, measures every block and writes again.
