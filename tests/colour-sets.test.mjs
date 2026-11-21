@@ -87,7 +87,7 @@ test('the sets live in the site\'s theme, each change one undo step, and the liv
   const site = readFileSync(new URL('../editor/src/state/site.svelte.js', import.meta.url), 'utf8');
   assert.match(site, /if \(next\.length\) siteDraft\.theme\.colorSets = next;\s*else delete siteDraft\.theme\.colorSets;/);
   assert.match(site, /else delete siteDraft\.theme\.colorSets;\s*\}, \{ preview: false \}\);/, 'a set change leaves the canvas as it stands, so the words being written keep their selection');
-  assert.match(site, /if \(preview\) pushSiteToPreview\(\);/);
+  assert.match(site, /if \(preview\) pushSiteToPreview\(\{ soon: true \}\);/);
   assert.match(site, /const renameColourSet = \(id, name\) => changeColourSets\(`edit:theme-colour-set-name:\$\{id\}`/, 'a name typed is one step for the typing, the theme\'s');
   assert.match(site, /pagesRead\.delete\(entry\.file\);\s*return \$state\.snapshot\(pageState\.store\?\.data \?\? null\);/, 'the open page\'s file read anew once it is left');
   assert.match(site, /const \{ theme: _theme, \.\.\.settings \} = \$state\.snapshot\(siteDraft\);\s*return \[settings, \.\.\.docs\.filter\(Boolean\)\];/);

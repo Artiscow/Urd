@@ -79,13 +79,27 @@ function linkSiteDraft() {
   siteStore.replace(siteDraft);
 }
 
+/** The send a panel's change waits for (siteMutate), so a drag sends the site once a frame however often the pointer moves. */
+let siteFrame = 0;
+
 /**
  * The site draft for the preview. ALWAYS through this: siteDraft is a
  * Svelte proxy, and postMessage (structured clone) throws DataCloneError
  * on proxies - $state.snapshot yields a plain object.
+ * It is sent at once, or with `soon` in the next frame, together with every other change made before it; `startup` marks the send made as the preview reports ready.
+ * @param {{soon?: boolean, startup?: boolean}} [options]
  */
-function pushSiteToPreview() {
-  previewState.bridge?.sendSite($state.snapshot(siteDraft));
+function pushSiteToPreview({ soon = false, startup = false } = {}) {
+  if (soon) {
+    siteFrame ||= requestAnimationFrame(() => {
+      siteFrame = 0;
+      previewState.bridge?.sendSite($state.snapshot(siteDraft));
+    });
+    return;
+  }
+  if (siteFrame) cancelAnimationFrame(siteFrame);
+  siteFrame = 0;
+  previewState.bridge?.sendSite($state.snapshot(siteDraft), { startup });
 }
 
 /* The slideshow layer: the image list is edited like the other
@@ -137,7 +151,7 @@ function siteMutate(key, fn, { pages, preview = true } = {}) {
   fn();
   siteStore.save();
   historyState.updateDirty();
-  if (preview) pushSiteToPreview();
+  if (preview) pushSiteToPreview({ soon: true });
 }
 
 /**

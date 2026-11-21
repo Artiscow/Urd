@@ -230,7 +230,7 @@ export function duotoneAt(style, near) {
   return dark && light ? duotoneFilterUrl(dark, light, near.ownerDocument) : '';
 }
 
-/** The frames drawn with a duotone, drawn again when the page's colours change (the light or dark mode), so a site colour follows. */
+/** The frames drawn with a duotone, drawn again when the page's colours change (the light or dark mode, or the theme's colours themselves), so a site colour follows. */
 const duotoneFrames = new Set();
 let watchingColours = false;
 
@@ -243,7 +243,11 @@ function watchColours() {
       else frame._urdPicRedraw?.();
     }
   };
-  new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-urd-theme', 'style', 'class'] });
+  const observer = new MutationObserver(redraw);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-urd-theme', 'style', 'class'] });
+  // Where the browser has light-dark(), the theme's colours are the text of their own stylesheet (theme.js applyTheme), which a colour changed in the editor rewrites.
+  const theme = document.getElementById('urd-theme');
+  if (theme) observer.observe(theme, { childList: true, characterData: true, subtree: true });
   window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', redraw);
 }
 

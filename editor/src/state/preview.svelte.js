@@ -363,7 +363,8 @@ async function onReady() {
   // loads plugins from the DRAFT, and the viewport follows the editor's
   // choice (not the iframe width).
   bridge?.sendPlugins($state.snapshot(pluginsState.pluginsView)?.enabled ?? []);
-  bridge?.sendViewport(viewMode);
+  // The view, the site and the page sent here are marked as the handshake's: the preview drew the same drafts as it booted, and draws them again only where they differ.
+  bridge?.sendViewport(viewMode, { startup: true });
   // The zoom is sent on every ready handshake, so the handles are
   // counter-scaled to admin size from the first render.
   bridge?.sendZoom(scale);
@@ -372,11 +373,11 @@ async function onReady() {
   // A copy made on another page pastes on this one.
   if (bridgeState.clipboard) bridge?.sendClipboard(bridgeState.clipboard);
   // A publish whose deploy is not out yet: the iframe has read the files from before it.
-  if (siteState.siteStore.hasDraft() || pageState.held.has('content/site.json')) siteState.pushSiteToPreview();
+  if (siteState.siteStore.hasDraft() || pageState.held.has('content/site.json')) siteState.pushSiteToPreview({ startup: true });
   // Unpublished pages do not exist on the server (the iframe falls back
   // to the front page): the editor's data is the source and must always be sent.
   const unpublished = !siteState.site.pages.some((p) => p.id === pageState.pageId);
-  if (pageState.store.hasDraft() || unpublished || pageState.held.has(pageState.pageEntry()?.file)) bridge?.sendPage(pageState.pageId, pageState.store.data);
+  if (pageState.store.hasDraft() || unpublished || pageState.held.has(pageState.pageEntry()?.file)) bridge?.sendPage(pageState.pageId, pageState.store.data, { startup: true });
   if (!chromeVisible) bridge?.sendChrome(false);
   if (shellState.gridOn) bridge?.sendShowGrid(true);
   if (shellState.spellcheckPref === 'off') bridge?.sendSpellcheck(false);

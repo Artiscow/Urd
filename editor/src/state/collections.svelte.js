@@ -14,6 +14,7 @@ import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
+import { copyJSON } from '../lib/json-copy.js';
 
 // Collections are shared site data (like nav/footer): an index file +
 // one file per collection, each with its own draftStore. Editing goes
@@ -127,7 +128,7 @@ async function initCollections() {
 function syncCollectionsView(pushPreview = true) {
   const view = {};
   for (const id of collectionIds) {
-    if (collectionStores[id]) view[id] = JSON.parse(JSON.stringify(collectionStores[id].data));
+    if (collectionStores[id]) view[id] = copyJSON(collectionStores[id].data);
   }
   collectionsView = view;
   // On click-and-type in the block itself the preview push is skipped:

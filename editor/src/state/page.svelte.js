@@ -36,6 +36,7 @@ import { pictureEditorState } from './picture-editor.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
+import { copyJSON } from '../lib/json-copy.js';
 
 let pageId = $state(null);
 
@@ -251,16 +252,16 @@ function syncSelectedBlock() {
     sizeMax: typeof block.sizeMax === 'number' ? block.sizeMax : undefined,
     // The block's own size on the phone, or undefined where the phone follows `size` (ADR-0019 decision 1).
     phoneSize: typeof block.phoneSize === 'number' ? block.phoneSize : undefined,
-    height: block.height ? JSON.parse(JSON.stringify(block.height)) : null,
-    props: JSON.parse(JSON.stringify(block.props)),
+    height: block.height ? copyJSON(block.height) : null,
+    props: copyJSON(block.props),
     frame: { ...block.frames.desktop },
     // The phone placement: the row the block is pinned to, or null while it flows in the reading order (ADR-0019).
     mobileRow: Number.isFinite(block.frames.mobile?.row) ? block.frames.mobile.row : null,
-    animation: block.animation ? JSON.parse(JSON.stringify(block.animation)) : null,
-    hover: block.hover === false ? false : block.hover ? JSON.parse(JSON.stringify(block.hover)) : null,
+    animation: block.animation ? copyJSON(block.animation) : null,
+    hover: block.hover === false ? false : block.hover ? copyJSON(block.hover) : null,
     // The type of the pointer effect the section gives the block while it has none of its own, its `blocksHover` ('' = none; a decor block takes none, pointerEffectOf in animations/core.js).
     blocksHoverType: !block.decor && section?.blocksHover?.type ? section.blocksHover.type : '',
-    sticky: block.sticky ? JSON.parse(JSON.stringify(block.sticky)) : null,
+    sticky: block.sticky ? copyJSON(block.sticky) : null,
   };
 }
 
@@ -1121,12 +1122,12 @@ function syncSectionMirrors(section) {
   sectionPhoneRoom = { top: Number.isFinite(section?.size?.mobilePadTop) ? section.size.mobilePadTop : null, bottom: Number.isFinite(section?.size?.mobilePadBottom) ? section.size.mobilePadBottom : null };
   sectionPhoneFollows = !Array.isArray(section?.phoneList);
   sectionReadable = { phone: forcesReadable(section, 'mobile'), desktop: forcesReadable(section, 'desktop') };
-  sectionBg = JSON.parse(JSON.stringify(section?.background?.layers ?? []));
-  sectionAnim = section?.animation ? JSON.parse(JSON.stringify(section.animation)) : null;
-  sectionHover = section?.hover ? JSON.parse(JSON.stringify(section.hover)) : null;
-  sectionBlocksHover = section?.blocksHover ? JSON.parse(JSON.stringify(section.blocksHover)) : null;
+  sectionBg = copyJSON(section?.background?.layers ?? []);
+  sectionAnim = section?.animation ? copyJSON(section.animation) : null;
+  sectionHover = section?.hover ? copyJSON(section.hover) : null;
+  sectionBlocksHover = section?.blocksHover ? copyJSON(section.blocksHover) : null;
   sectionTheme = section?.theme ?? '';
-  sectionDivider = section?.divider ? JSON.parse(JSON.stringify(section.divider)) : {};
+  sectionDivider = section?.divider ? copyJSON(section.divider) : {};
   sectionAnchor = section?.anchor ?? '';
 }
 

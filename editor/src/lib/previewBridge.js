@@ -216,11 +216,12 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendSection(pageId, section) {
       draftPost({ type: 'urd-preview', pageId, section });
     },
-    sendPage(pageId, page) {
-      draftPost({ type: 'urd-preview-full', pageId, page });
+    /** The page; `startup` marks the send made as the preview reports ready, which the preview skips where it already drew the same page. */
+    sendPage(pageId, page, { startup = false } = {}) {
+      draftPost({ type: 'urd-preview-full', pageId, page, ...(startup ? { startup } : {}) });
     },
-    sendSite(site) {
-      draftPost({ type: 'urd-site', site });
+    sendSite(site, { startup = false } = {}) {
+      draftPost({ type: 'urd-site', site, ...(startup ? { startup } : {}) });
     },
     sendChrome(visible) {
       post({ type: 'urd-chrome', visible });
@@ -243,8 +244,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendInsertTemplate(id) {
       draftPost({ type: 'urd-insert-template', id });
     },
-    sendViewport(mode) {
-      post({ type: 'urd-viewport', mode });
+    sendViewport(mode, { startup = false } = {}) {
+      post({ type: 'urd-viewport', mode, ...(startup ? { startup } : {}) });
     },
     /** The canvas zoom, so the editing handles can counter-scale and keep the
      *  same on-screen size as the admin panels at any zoom level. */

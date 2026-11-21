@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.4.2): copies, the theme's colours and the editor's opening
+
+- [ ] Open the editor on a page with a background picture, with and without unpublished changes: the background shows once, with no flicker
+- [ ] Drag a colour in the Theme panel: the page follows smoothly; light and dark mode and the menu's light and dark toggle still work after it
+- [ ] Change the theme's font and the long-words setting: the page is drawn with them, the menu fitting its new width
+- [ ] A section with a slideshow of several new pictures: selecting it and dragging its sliders feels quick
+- [ ] The picture editor on a new picture: dragging the crop and the sliders is smooth, Cancel puts the picture back, and undo inside the dialog steps back one drag at a time
+- [ ] Enable a plugin with blocks in the Plugins panel: its blocks draw on the canvas
+- [ ] Switch between the desktop and the phone view right after the editor opens: each is drawn
+
 ### Test batch (0.7.37.4.1): the undo history and the drafts' writes
 
 - [ ] A page with two or three new pictures not yet published: typing in a text feels as quick as on a page without them, and the text is all there after a reload made right after typing

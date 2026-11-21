@@ -5,7 +5,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { engineImport } from './_engine.mjs';
+import { readFileSync } from 'node:fs';
+import { engineImport, ENGINE_DIR } from './_engine.mjs';
 const {
   resolveThemeMode, activeTokens,
   sectionThemeVars, SECTION_THEMES, relativeLuminance, contrastRatio, inkOn,
@@ -235,4 +236,30 @@ test('wordsVars and buildThemeCss: long words kept whole as the standard, hyphen
   const tokens = { color: { bg: '#ffffff', text: '#111111' }, font: { body: 'Georgia, serif' } };
   assert.ok(buildThemeCss({ tokens, words: 'hyphenate' }).includes('--urd-text-hyphens: auto;'));
   assert.ok(buildThemeCss({ tokens }).includes('--urd-text-hyphens: manual;'), 'the standard is written too, so a draft wins over a published theme.css');
+});
+
+test('onlyColoursChanged: the theme\'s colours, its dark variant\'s, its colour sets and its scheme alone; anything else, or a dark variant appearing or going, is drawn again', async () => {
+  const { onlyColoursChanged } = await engineImport('theme.js');
+  const site = () => ({
+    site: { title: 'A' }, pages: [{ id: 'hjem' }], nav: { items: [] },
+    theme: { version: 1, words: 'whole', tokens: { color: { bg: '#fff', accent: '#0a0' }, font: { body: 'Inter' }, radius: { md: '8px' } }, alt: { tokens: { color: { bg: '#000' } }, auto: false }, colorSets: [] },
+  });
+  const changed = (fn) => { const s = site(); fn(s); return s; };
+  assert.equal(onlyColoursChanged(site(), changed((s) => { s.theme.tokens.color.accent = '#f00'; })), true);
+  assert.equal(onlyColoursChanged(site(), changed((s) => { s.theme.alt.tokens.color.bg = '#111'; })), true);
+  assert.equal(onlyColoursChanged(site(), changed((s) => { s.theme.colorSets = [{ id: 'a', colors: ['#123456'] }]; })), true);
+  assert.equal(onlyColoursChanged(site(), changed((s) => { s.theme.scheme = 'dark'; })), true);
+  assert.equal(onlyColoursChanged(site(), changed((s) => { s.theme.tokens.font.body = 'Lora'; })), false, 'a font changes what is measured');
+  assert.equal(onlyColoursChanged(site(), changed((s) => { s.theme.words = 'hyphenate'; })), false);
+  assert.equal(onlyColoursChanged(site(), changed((s) => { delete s.theme.alt; })), false, 'the toggle and the privacy page follow the dark variant');
+  assert.equal(onlyColoursChanged(site(), changed((s) => { s.nav.items.push({ page: 'hjem' }); })), false);
+  assert.equal(onlyColoursChanged(null, site()), false);
+  assert.equal(onlyColoursChanged(site(), site()), false, 'a site sent unchanged is sent to be drawn again');
+  const big = changed((s) => { s.nav.layers = [{ src: `data:image/webp;base64,${'A'.repeat(4_000_000)}` }]; });
+  const bigColour = changed((s) => { s.nav.layers = big.nav.layers; s.theme.tokens.color.accent = '#f00'; });
+  const t0 = performance.now();
+  assert.equal(onlyColoursChanged(big, bigColour), true);
+  assert.ok(performance.now() - t0 < 5, 'a site holding a picture is compared without writing it out');
+  const urd = readFileSync(new URL('urd.js', ENGINE_DIR), 'utf8');
+  assert.match(urd, /msg\?\.type === 'urd-site' && msg\.site && onlyColoursChanged\(state\.site, msg\.site\)\) \{[^}]*state\.site\.theme = msg\.site\.theme;\s+applyTheme\(state\.site\.theme\);\s+\}/, 'the engine draws the theme alone for it');
 });

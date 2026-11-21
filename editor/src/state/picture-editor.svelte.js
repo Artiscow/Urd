@@ -14,6 +14,7 @@ import { pageSettingsState } from './page-settings.svelte.js';
 import { collectionsState } from './collections.svelte.js';
 import { mediaState } from './media.svelte.js';
 import { shellState } from './shell.svelte.js';
+import { copyJSON, sameJSON } from '../lib/json-copy.js';
 
 /** The picture that is open: its kind and where it lives, and the frame's shape and size as the preview drew it (0 where they are not known). */
 let target = $state(null);
@@ -47,7 +48,21 @@ let openings = 0;
 /** The dialog's state before a slider's drag, set on its first move and kept as one step when it is let go. */
 let gestureBefore = null;
 
-const clone = (v) => JSON.parse(JSON.stringify(v));
+/** A gesture's latest picture, written to its place in the next frame, so a drag writes once a frame however often the pointer moves. */
+let queued = null;
+let queuedFrame = 0;
+
+/** Writes the gesture's latest picture now, where one waits. */
+function writeQueued() {
+  if (queuedFrame) cancelAnimationFrame(queuedFrame);
+  queuedFrame = 0;
+  if (!queued) return;
+  const next = queued;
+  queued = null;
+  write(next);
+}
+
+const clone = copyJSON;
 
 /** Every picture's stored settings in the open picture's gallery, by its place there. */
 function galleryStyles() {
@@ -73,7 +88,7 @@ function restore(step) {
   write(step.pic);
 }
 
-const sameStep = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const sameStep = sameJSON;
 
 /** Where the picture lives now, read from the draft; a baked picture's kept original comes with the opening, and a background's picture is read by the panel that opened it (`place`). */
 function readSource(t) {
@@ -99,6 +114,8 @@ function readSource(t) {
  *   place is a logo's ('nav' or 'footer'), or for a background's picture the panel's reader and writer ({read, mutate(key, fn)}); fresh marks a baked picture opened on a new upload, not yet stored
  */
 function open(t) {
+  // A gesture's last move on the picture open before goes to that picture.
+  writeQueued();
   if (!KIND_TOOLS[t?.kind]) return;
   if (t.kind === 'gallery' && !Number.isInteger(t.index)) return;
   const source = readSource(t);
@@ -229,7 +246,7 @@ function change(patch, { gesture = false } = {}) {
   const before = clone(pic);
   const next = { ...before, ...patch, style: patch.style ? { ...before.style, ...patch.style } : before.style };
   if (target.kind === 'image' && patch.ratio && patch.ratio !== before.ratio) next.frame = frameForRatio(before.frame, patch.ratio) ?? before.frame;
-  if (JSON.stringify(next) === JSON.stringify(before)) return;
+  if (sameJSON(next, before)) return;
   if (gesture) gestureBefore ??= snapshot();
   else {
     // A wheel's or a key's moves still open are a step of their own before this one.
@@ -238,11 +255,17 @@ function change(patch, { gesture = false } = {}) {
     redoSteps = [];
   }
   pic = next;
-  write(next);
+  if (gesture) {
+    queued = next;
+    queuedFrame ||= requestAnimationFrame(writeQueued);
+  } else {
+    write(next);
+  }
 }
 
-/** A slider let go: its moves become one of the dialog's steps. */
+/** A slider let go: its moves become one of the dialog's steps, its last move written first. */
 function endGesture() {
+  writeQueued();
   if (!gestureBefore) return;
   if (!sameStep(gestureBefore, snapshot())) {
     undoSteps = [...undoSteps, gestureBefore];
@@ -434,6 +457,7 @@ function cancel() {
 }
 
 function close() {
+  writeQueued();
   gestureBefore = null;
   target = null;
   pic = null;

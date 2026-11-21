@@ -11,7 +11,7 @@
  */
 import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
-import { applyTheme } from './theme.js';
+import { applyTheme, onlyColoursChanged, sameData } from './theme.js';
 import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrames, loadStylesheet } from './render.js';
 import { renderNav, refreshNavScroll, clearAnnounceDismissal, holdNavForJump } from './nav.js';
 import { isSafeImage, hashTarget, samePageHash, jumpOnArrival } from './nav-model.js';
@@ -358,6 +358,9 @@ function cleanTexts(on) {
   }
 }
 
+/** The registries' size, which grows as plugins define their types (a language pack defines none). */
+const definedCount = () => ['blocks', 'sections', 'backgrounds', 'animations', 'templates', 'commands'].reduce((n, kind) => n + Urd[kind].ids().length, 0);
+
 /**
  * Attaches postMessage listening and height reporting in preview mode.
  * state = { page, site, viewport } is shared with boot, so breakpoint
@@ -420,6 +423,8 @@ function enablePreview(state, opts) {
     // Only the editor on the same site, and only through the frame it holds: a window the page opened shares the origin but is not the editor.
     if (event.origin !== location.origin || event.source !== window.parent) return;
     const msg = event.data;
+    // The view, site and page the editor sends as the preview reports ready (marked `startup`) repeat what the preview drew from the same drafts as it booted: one that changes nothing draws nothing again, so the page does not flicker as the editor opens.
+    if (msg?.startup === true && ((msg.type === 'urd-viewport' && msg.mode === state.viewport) || (msg.type === 'urd-site' && sameData(msg.site, state.site)) || (msg.type === 'urd-preview-full' && sameData(msg.page, state.page)))) return;
     if (msg?.type === 'urd-preview' && msg.section) {
       const host = root.querySelector(`[data-section-id="${msg.section.id}"]`);
       if (host) typing(() => renderSection(msg.section, state.site, host, vp()));
@@ -640,12 +645,15 @@ function enablePreview(state, opts) {
       // The editor's plugin draft: load the enabled plugins (the files are
       // already in the repo) and rerender, so plugins work in the preview
       // BEFORE publishing.
+      const before = definedCount();
       loadPluginList(Urd, state.engine, msg.enabled).then(async () => {
         // The list may have contained a LANGUAGE PACK: if the draft's
         // language was unknown when the site draft arrived (or at boot), it
         // is loaded now.
-        if (langOutOfSync()) await syncSiteLocale();
-        renderPage(state.page, state.site, root, vp());
+        const language = langOutOfSync();
+        if (language) await syncSiteLocale();
+        // The page is drawn again only where a plugin defined something it may draw, or brought its language; a language pack for another language changes nothing drawn.
+        if (language || definedCount() !== before) renderPage(state.page, state.site, root, vp());
         // Report the plugin blocks back (type, label, defaults), so the
         // Blocks panel in admin can show them in its own "From plugins" section.
         const blocks = [];
@@ -714,6 +722,11 @@ function enablePreview(state, opts) {
       renderPage(state.page, state.site, root, vp());
       // The menu follows the view as well: a phone menu left open closes on the desktop, and its submenus take the view's own form.
       if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
+    } else if (msg?.type === 'urd-site' && msg.site && onlyColoursChanged(state.site, msg.site)) {
+      // A change of the theme's colours alone (a colour dragged in the Theme panel) is the theme's CSS: nothing is drawn again.
+      // The theme goes into the site the nav holds, so its light and dark toggle reads the new one.
+      state.site.theme = msg.site.theme;
+      applyTheme(state.site.theme);
     } else if (msg?.type === 'urd-site' && msg.site) {
       // Site draft from the editor (grid, theme, nav): everything that
       // depends on site.json is rerendered. Same truncation guard as in

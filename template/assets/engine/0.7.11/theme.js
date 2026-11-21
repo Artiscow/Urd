@@ -252,6 +252,40 @@ export function toggleThemeMode(theme) {
   return activeMode;
 }
 
+/** Whether two pieces of the drafts' plain data are the same: a walk that stops at the first difference, never writing the data out as text. */
+export function sameData(a, b) {
+  if (a === b) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null || Array.isArray(a) !== Array.isArray(b)) return false;
+  const keys = Object.keys(a);
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every((key) => Object.hasOwn(b, key) && sameData(a[key], b[key]));
+}
+
+/** Whether two objects are the same in every key but the ones named, compared as sameData does. */
+function sameBeside(a, b, skip) {
+  const keys = new Set([...Object.keys(a ?? {}), ...Object.keys(b ?? {})]);
+  for (const key of keys) if (!skip.includes(key) && !sameData(a?.[key], b?.[key])) return false;
+  return true;
+}
+
+/**
+ * Whether a site differs from the one before it in the theme's colours alone: its colour tokens, its dark variant's, its colour sets and its scheme, which the theme's CSS carries to the page by itself (urd.js draws nothing again for such a change, the theme alone).
+ * The dark variant appearing or going is no such change: the nav's light and dark toggle and the privacy page follow it; nor is a site sent unchanged, which is sent to be drawn again.
+ * Compared by a walk that stops at the first difference, so a site holding unpublished pictures is never written out as text.
+ * @param {object|null} before
+ * @param {object|null} after
+ */
+export function onlyColoursChanged(before, after) {
+  if (!before || !after || !sameBeside(before, after, ['theme'])) return false;
+  const a = before.theme ?? {};
+  const b = after.theme ?? {};
+  if (!sameBeside(a, b, ['colorSets', 'scheme', 'tokens', 'alt'])) return false;
+  if (!sameBeside(a.tokens, b.tokens, ['color'])) return false;
+  if (Boolean(a.alt?.tokens) !== Boolean(b.alt?.tokens)) return false;
+  if (!sameBeside(a.alt, b.alt, ['tokens']) || !sameBeside(a.alt?.tokens, b.alt?.tokens, ['color'])) return false;
+  return !sameData(a, b);
+}
+
 /**
  * Resolves a color value from content to CSS. Simple names ('accent', 'bg')
  * are interpreted as theme tokens and become var(--urd-color-<name>);
