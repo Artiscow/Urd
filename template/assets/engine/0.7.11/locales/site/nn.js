@@ -141,6 +141,7 @@ export default {
     'calendar.moreAbout': 'Meir om {name}',
     'calendar.openToAll': 'Ope for alle',
     'calendar.showAll': 'Vis alle {n} ({m} til)',
+    'calendar.showFewer': 'Vis færre',
     'calendar.join': 'Bli med',
     'calendar.addEvent': 'Legg i kalender',
     'calendar.close': 'Lukk',

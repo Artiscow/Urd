@@ -413,6 +413,7 @@ export default {
     'calendar.moreAbout': '{name} hakkında',
     'calendar.openToAll': 'Herkese açık',
     'calendar.showAll': 'Tümünü göster: {n} ({m} tane daha)',
+    'calendar.showFewer': 'Daha az göster',
     'calendar.join': 'Katıl',
     'calendar.addEvent': 'Takvime ekle',
     'calendar.close': 'Kapat',

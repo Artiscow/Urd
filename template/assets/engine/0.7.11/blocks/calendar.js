@@ -1014,9 +1014,10 @@ function openCard(dialog, from) {
     dialog.remove();
     if (back && from?.isConnected) from.focus({ preventScroll: true });
   });
-  // The card is given a place in the part of the page that is in view before it opens, so opening it (which moves the focus into it) never scrolls the page.
+  // The card is given a place in the part of the page that is in view before it opens, below the room a menu that stays on screen keeps at the top (scroll-padding-top, base.css), so opening it (which moves the focus into it) never scrolls the page.
+  const clear = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
   dialog.style.left = `${window.scrollX + 8}px`;
-  dialog.style.top = `${window.scrollY + 8}px`;
+  dialog.style.top = `${window.scrollY + clear + 8}px`;
   document.body.appendChild(dialog);
   dialog.show();
   placeOverCalendar(dialog, from);
@@ -1026,7 +1027,7 @@ function openCard(dialog, from) {
  * Lays the card over the calendar it belongs to, centred on the part of the calendar that is in view: at its own width and as tall as its content, so it may reach past the calendar's edges (a card never scrolls inside itself), never wider than the window and never over the navigation bar; a card taller than the window starts under the bar and the page scrolls.
  * It is placed on the page, so it scrolls away with its calendar, and placed again when the window changes or its own content unfolds.
  * The card is drawn at the calendar's own zoom (the block's drawn scale, render.js applyZoom), so it follows the size the owner gave the block. Its place is measured where it lands and set right from there (placeAt), so it lands where it should however the browser applies the zoom to its offsets.
- * The calendar is shaded behind it; the rest of the page is left as it is.
+ * The calendar and the rest of the page are left as they are.
  */
 const CARD_MAX_W = 460;
 
@@ -1045,8 +1046,6 @@ function placeAt(node, left, top, scale) {
 function placeOverCalendar(dialog, from) {
   const host = from?.closest?.('.urd-cal');
   if (!host) return;
-  const shade = el2('i', 'urd-cal-shade');
-  host.appendChild(shade);
   const place = () => {
     const box = host.getBoundingClientRect();
     const zoom = parseFloat(host.style.zoom) || 1;
@@ -1072,10 +1071,7 @@ function placeOverCalendar(dialog, from) {
   const watch = new AbortController();
   window.addEventListener('resize', place, { signal: watch.signal });
   dialog.addEventListener('toggle', place, { capture: true, signal: watch.signal });
-  dialog.addEventListener('close', () => {
-    watch.abort();
-    shade.remove();
-  });
+  dialog.addEventListener('close', () => watch.abort());
   place();
 }
 

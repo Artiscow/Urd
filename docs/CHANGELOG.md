@@ -8,6 +8,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.94 - Bug Fixes: an event's card opens without moving the page or shading its calendar, and the year wheel's months without a box and their lists folded after five - 21 November 2026
+
+- Opening an event in any calendar scrolled the page to the top (testing): the card was given its first place under the menu bar, where focusing its close button made the browser scroll. The card's first place is below the room the menu keeps at the top (`scroll-padding-top`).
+- An open card laid a black shade over its whole calendar. The shade is gone, its glass variant with it.
+- A month pressed on the year wheel drew a box round it in some browsers. A month never draws a focus box; the keyboard's focus thickens it.
+- A year wheel month with many events grew its list without end. It shows the first five, with «Show all» opening the whole month in a list that scrolls, as tall as the wheel beside it, and «Show fewer» closing it; «Show fewer» is a calendar word the owner can rewrite, in nb, nn, en-GB, tr and the Swedish pack.
+
+The independent review before the commit found these:
+
+1. In the editor a press on the year wheel button's words rewrites them, and the button had 2 px beside them, so it could hardly be pressed. It keeps the view switcher's room beside its words.
+2. The open list scrolled with nothing in it the keyboard could reach. It is a region named by its month, reachable by Tab, while open.
+3. The open list's height was worked out once, with the button's old words, in the screen's pixels where the calendar is zoomed; it is worked out with the new words, in the calendar's own pixels, and again as the wheel changes size.
+4. A phone's tap could still draw a box round a month; the tap's highlight is off on the ring. A comment in preview.css still named the shade, and the test did not pin the line that makes the open list scroll. Each is set right.
+
 ### 0.7.37.3.4 - Code by what a page holds, and a calendar that stands in its own design while its feed loads - 21 November 2026
 
 - Every page loaded the modules of all 27 block types, the 8 background types and the section templates, 78 modules and 410 KB compressed (audit V1). A page loads the modules of the types its nav, page and footer hold (`core-types.js`, ADR-0036), and the shells preload the boot's 39 modules, 235 KB.

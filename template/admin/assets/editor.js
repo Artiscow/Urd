@@ -3018,6 +3018,7 @@ var la = {
 		"calendar.moreAbout": "Mer om {name}",
 		"calendar.openToAll": "Åpent for alle",
 		"calendar.showAll": "Vis alle {n} ({m} til)",
+		"calendar.showFewer": "Vis færre",
 		"calendar.join": "Bli med",
 		"calendar.addEvent": "Legg i kalender",
 		"calendar.close": "Lukk",
@@ -6607,7 +6608,7 @@ var Zl = [
 	"noticeText",
 	"readWhole",
 	"moreInfo"
-], ru = /* @__PURE__ */ "all.signup.subscribe.subscribeMulti.addGoogle.swUpcoming.swWeek.swMonth.noMatch.earlier.showAll.zoneOf.zoneYours.weekN.range.moreN.dayNone.cancelled.allDay.until.timeAt.today.tomorrow.inDays.when.where.organizer.moreAbout.join.addEvent.addOne.addFile.addWhole.icalAddress.onMap.recurring".split("."), iu = [
+], ru = /* @__PURE__ */ "all.signup.subscribe.subscribeMulti.addGoogle.swUpcoming.swWeek.swMonth.noMatch.earlier.showAll.showFewer.zoneOf.zoneYours.weekN.range.moreN.dayNone.cancelled.allDay.until.timeAt.today.tomorrow.inDays.when.where.organizer.moreAbout.join.addEvent.addOne.addFile.addWhole.icalAddress.onMap.recurring".split("."), iu = [
 	"modern",
 	"next",
 	"ap",

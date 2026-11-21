@@ -211,6 +211,7 @@ export default {
     'calendar.moreAbout': 'Mer om {name}',
     'calendar.openToAll': 'Öppet för alla',
     'calendar.showAll': 'Visa alla {n} ({m} till)',
+    'calendar.showFewer': 'Visa färre',
     'calendar.join': 'Anslut',
     'calendar.addEvent': 'Lägg till i kalender',
     'calendar.close': 'Stäng',

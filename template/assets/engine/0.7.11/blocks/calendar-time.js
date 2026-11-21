@@ -549,10 +549,15 @@ function arcPath(cx, cy, r, a0, a1) {
   return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 }
 
-/** 08 Year wheel: twelve months on a ring, a dot per event, the past months dimmed and the current one in the accent; a list for the picked month. */
+/** The events a year wheel's month list shows before «Show all». */
+const WHEEL_SHOWN = 5;
+
+/** 08 Year wheel: twelve months on a ring, a dot per event, the past months dimmed and the current one in the accent; a list for the picked month, its first events shown and the rest behind «Show all». */
 export function yearWheel(host, occs, props, ics, ui) {
   const today = ui.today();
   let picked = today.getMonth();
+  // Whether the picked month's list shows all its events; a month picked anew starts with its first.
+  let whole = false;
   // The month at the top of the wheel is the owner's choice, and the wheel reads the season that starts there and holds today:
   // with August at the top, August this year to July next year. A month's place is counted from the top.
   const firstMonth = ics.seasonTop(ui.opt.firstMonth, today);
@@ -582,6 +587,7 @@ export function yearWheel(host, occs, props, ics, ui) {
     seg.setAttribute('aria-pressed', m === picked ? 'true' : 'false');
     const pick = () => {
       picked = m;
+      whole = false;
       paintList();
       for (const [i, s] of segments.entries()) {
         s.classList.toggle('urd-cal-wheel-picked', i === picked);
@@ -616,11 +622,45 @@ export function yearWheel(host, occs, props, ics, ui) {
   const side = ui.el('div', 'urd-cal-wheel-side');
   const sideLabel = ui.el('span', 'urd-cal-wheel-label');
   const list = ui.el('div', 'urd-cal-wheel-list');
-  side.append(sideLabel, list);
+  // The button under the list stays in view whatever the list holds: «Show all» opens the whole month in a list that scrolls, and «Show fewer» closes it.
+  const more = ui.el('button', 'urd-cal-wheel-more');
+  more.type = 'button';
+  // The height of the list it opened from, which the open list is never shorter than.
+  let openedAt = 0;
+  // The open list's height: beside the wheel it ends where the wheel does, and under it, it takes most of the screen, in the calendar's own zoomed pixels.
+  const fitOpen = () => {
+    list.style.removeProperty('max-height');
+    const chrome = side.offsetHeight - list.offsetHeight;
+    const beside = Math.abs(side.getBoundingClientRect().top - figure.getBoundingClientRect().top) < 2;
+    const zoom = parseFloat(wrap.closest('.urd-cal')?.style.zoom) || 1;
+    const room = beside ? figure.offsetHeight - chrome : Math.min(440, (window.innerHeight * 0.7) / zoom);
+    list.style.maxHeight = `${Math.round(Math.max(openedAt, room))}px`;
+  };
+  more.addEventListener('click', () => {
+    openedAt = list.offsetHeight;
+    whole = !whole;
+    paintList();
+    list.scrollTop = 0;
+    if (whole) fitOpen();
+  });
+  // The open list follows the wheel as the window or the column changes size.
+  if (typeof ResizeObserver === 'function') {
+    const watch = new ResizeObserver(() => {
+      if (!wrap.isConnected) {
+        watch.disconnect();
+        return;
+      }
+      if (whole) fitOpen();
+    });
+    watch.observe(figure);
+  }
+  side.append(sideLabel, list, more);
   const paintList = () => {
     sideLabel.textContent = dates().months[picked];
     list.replaceChildren();
-    for (const occ of inYear.filter((o) => dayOf(o).getMonth() === picked)) {
+    const inMonth = inYear.filter((o) => dayOf(o).getMonth() === picked);
+    const extra = inMonth.length - WHEEL_SHOWN;
+    for (const occ of whole ? inMonth : inMonth.slice(0, WHEEL_SHOWN)) {
       const d = dayOf(occ);
       const card = ui.tint(ui.el('div', 'urd-cal-wheel-card'), occ);
       const line = ui.el('strong');
@@ -631,6 +671,22 @@ export function yearWheel(host, occs, props, ics, ui) {
       list.appendChild(card);
     }
     if (!list.children.length) list.appendChild(ui.el('p', 'urd-cal-wheel-none', ui.tx('monthNone')));
+    more.hidden = extra <= 0;
+    more.setAttribute('aria-expanded', whole ? 'true' : 'false');
+    more.replaceChildren(whole ? ui.tx('showFewer') : ui.tx('showAll', null, { n: inMonth.length, m: extra }));
+    const open = whole && extra > 0;
+    list.classList.toggle('urd-cal-wheel-list-all', open);
+    // The open list scrolls, so the keyboard reaches it as a region named by its month.
+    if (open) {
+      list.tabIndex = 0;
+      list.setAttribute('role', 'region');
+      list.setAttribute('aria-label', dates().months[picked]);
+    } else {
+      list.removeAttribute('tabindex');
+      list.removeAttribute('role');
+      list.removeAttribute('aria-label');
+      list.style.removeProperty('max-height');
+    }
   };
   segments[picked].classList.add('urd-cal-wheel-picked');
   paintList();

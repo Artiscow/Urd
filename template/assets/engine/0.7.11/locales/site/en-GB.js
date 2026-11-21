@@ -414,6 +414,7 @@ export default {
     'calendar.moreAbout': 'More about {name}',
     'calendar.openToAll': 'Open to everyone',
     'calendar.showAll': 'Show all {n} ({m} more)',
+    'calendar.showFewer': 'Show fewer',
     'calendar.join': 'Join',
     'calendar.addEvent': 'Add to calendar',
     'calendar.close': 'Close',

@@ -690,7 +690,7 @@
   backdrop-filter: var(--urd-cal-set-blur);
 }
 
-/* The card lies over its calendar, under the navigation bar: the calendar is shaded, the page behind is left alone. */
+/* The card lies over its calendar, under the navigation bar; the calendar and the page behind are left as they are. */
 .urd-cal-dialog {
   z-index: 4000;
 }
@@ -787,14 +787,6 @@
   font-stretch: condensed;
   text-transform: uppercase;
   border-radius: 8px;
-}
-
-.urd-cal-shade {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  background: rgb(0 0 0 / 45%);
-  border-radius: inherit;
 }
 
 .urd-cal-dialog-close {
@@ -3903,6 +3895,7 @@
   stroke: var(--urd-cal-s-ring, color-mix(in srgb, var(--urd-color-text) 10%, transparent));
   cursor: pointer;
   transition: stroke 0.2s;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .urd-cal-wheel-past {
@@ -3917,7 +3910,15 @@
 .urd-cal-wheel-seg:hover,
 .urd-cal-wheel-seg:focus-visible {
   stroke: color-mix(in srgb, var(--urd-cal-accent) 70%, var(--urd-color-text));
+}
+
+/* A month shows focus in its own shape, never as the box round it a browser draws for a focused drawing: the keyboard's focus thickens it. */
+.urd-cal-wheel-seg:focus {
   outline: none;
+}
+
+.urd-cal-wheel-seg:focus-visible {
+  stroke-width: 48px;
 }
 
 .urd-cal-wheel-month {
@@ -3927,6 +3928,7 @@
   fill: currentcolor;
   opacity: 0.6;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .urd-cal-wheel-dot {
@@ -3990,6 +3992,42 @@
 .urd-cal-wheel-list {
   display: grid;
   gap: 8px;
+}
+
+/* The whole month, opened by «Show all»: a list that scrolls, as tall as the wheel beside it (its height written by calendar-time.js). */
+.urd-cal-wheel-list-all {
+  overflow-y: auto;
+  padding-inline-end: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, currentcolor 30%, transparent) transparent;
+}
+
+.urd-cal-wheel-list-all:focus-visible {
+  outline: 2px solid var(--urd-cal-accent);
+  outline-offset: 2px;
+  border-radius: var(--urd-radius-sm);
+}
+
+/* In the editor a press on the button's words rewrites them, so the button keeps room of its own beside them, as the view switcher's do; the words stand in line with the list. */
+.urd-cal-wheel-more {
+  justify-self: start;
+  padding: 6px 14px;
+  margin-inline-start: -14px;
+  font: inherit;
+  font-size: 0.9em;
+  font-weight: 600;
+  letter-spacing: var(--urd-cal-set-label-spacing);
+  color: var(--urd-cal-set-label);
+  text-transform: var(--urd-cal-set-label-case);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.urd-cal-wheel-more:focus-visible {
+  outline: 2px solid var(--urd-cal-accent);
+  outline-offset: 2px;
+  border-radius: var(--urd-radius-sm);
 }
 
 .urd-cal-wheel-card {
@@ -4236,7 +4274,6 @@
   }
 
   .urd-cal > :not(.urd-cal-print),
-  .urd-cal-shade,
   .urd-cal-dialog {
     display: none !important;
   }
@@ -5803,11 +5840,6 @@
   border-radius: 26px;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 95%), 0 30px 60px rgb(23 22 26 / 28%);
   backdrop-filter: blur(24px) saturate(1.4);
-}
-
-.urd-cal-card-glass .urd-cal-shade {
-  background: rgb(255 255 255 / 12%);
-  backdrop-filter: blur(6px);
 }
 
 .urd-cal-dlg-glass .urd-cal-dialog-date {

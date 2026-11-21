@@ -655,3 +655,28 @@ test('a calendar in the editor shows the example events by its bar\'s choice for
   assert.doesNotMatch(css, /urd-cal-note/);
   assert.match(css, /\.urd-edit-examples\[aria-pressed="true"\] \{/, 'the button is drawn pressed while the examples show');
 });
+
+test('the year wheel lists a month\'s first five events and the rest behind «Show all», in a list that then scrolls, and a month shows focus in its own shape', () => {
+  const src = readFileSync(new URL('blocks/calendar-time.js', ENGINE_DIR), 'utf8');
+  assert.match(src, /const WHEEL_SHOWN = 5;/);
+  assert.match(src, /for \(const occ of whole \? inMonth : inMonth\.slice\(0, WHEEL_SHOWN\)\) \{/);
+  assert.match(src, /more\.hidden = extra <= 0;\s+more\.setAttribute\('aria-expanded', whole \? 'true' : 'false'\);\s+more\.replaceChildren\(whole \? ui\.tx\('showFewer'\) : ui\.tx\('showAll', null, \{ n: inMonth\.length, m: extra \}\)\);/);
+  assert.match(src, /picked = m;\s+whole = false;/, 'a month picked anew starts with its first events');
+  assert.match(src, /list\.style\.maxHeight = `\$\{Math\.round\(Math\.max\(openedAt, room\)\)\}px`;/, 'never shorter than the list it opened from');
+  assert.match(src, /const open = whole && extra > 0;\s+list\.classList\.toggle\('urd-cal-wheel-list-all', open\);/, 'the open list scrolls');
+  assert.match(src, /if \(open\) \{\s+list\.tabIndex = 0;\s+list\.setAttribute\('role', 'region'\);\s+list\.setAttribute\('aria-label', dates\(\)\.months\[picked\]\);/, 'and the keyboard reaches it');
+  assert.match(src, /const watch = new ResizeObserver\(\(\) => \{[\s\S]{0,120}if \(whole\) fitOpen\(\);/, 'it follows the wheel as the size changes');
+  assert.ok(CAL_DESIGNS.find((d) => d.id === 'yearWheel').texts.includes('showFewer'), 'the owner can word «Show fewer»');
+  const css = readFileSync(new URL('blocks/calendar.css', ENGINE_DIR), 'utf8');
+  assert.match(css, /\.urd-cal-wheel-seg:focus \{\s+outline: none;\s+\}/, 'no box round a month on focus');
+  assert.match(css, /\.urd-cal-wheel-seg:focus-visible \{\s+stroke-width: 48px;\s+\}/, 'the keyboard\'s focus thickens the month');
+  assert.match(css, /\.urd-cal-wheel-list-all \{\s+overflow-y: auto;/);
+});
+
+test('an event\'s card opens without moving the page and leaves its calendar unshaded', () => {
+  const src = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
+  const open = src.slice(src.indexOf('function openCard('), src.indexOf('function placeAt('));
+  assert.match(open, /const clear = parseFloat\(getComputedStyle\(document\.documentElement\)\.scrollPaddingTop\) \|\| 0;\s+dialog\.style\.left = `\$\{window\.scrollX \+ 8\}px`;\s+dialog\.style\.top = `\$\{window\.scrollY \+ clear \+ 8\}px`;\s+document\.body\.appendChild\(dialog\);\s+dialog\.show\(\);/, 'placed in view below the menu\'s room before the focus moves into it, so the browser has nothing to scroll to');
+  const css = readFileSync(new URL('blocks/calendar.css', ENGINE_DIR), 'utf8');
+  assert.doesNotMatch(src + css, /urd-cal-shade/, 'no shade over the calendar');
+});

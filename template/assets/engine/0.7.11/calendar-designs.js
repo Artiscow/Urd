@@ -93,6 +93,7 @@ export const CAL_TEXTS = {
   range: 'calendar.range',
   earlier: 'calendar.earlier',
   showAll: 'calendar.showAll',
+  showFewer: 'calendar.showFewer',
   noMatch: 'calendar.noMatch',
   dayNone: 'calendar.dayNone',
   monthNone: 'calendar.monthNone',
@@ -158,7 +159,7 @@ const EVENT_TEXTS = ['when', 'where', 'organizer', 'moreAbout', 'join', 'addEven
 const TIME_TEXTS = ['cancelled', 'allDay', 'until', 'timeAt', 'today', 'tomorrow', 'inDays'];
 
 /** The words the block draws around a design: the place filter, the search, the folds, the zone line, and the view switcher's week and month. */
-const BLOCK_TEXTS = ['noMatch', 'earlier', 'showAll', 'zoneOf', 'zoneYours', 'weekN', 'range', 'moreN', 'dayNone'];
+const BLOCK_TEXTS = ['noMatch', 'earlier', 'showAll', 'showFewer', 'zoneOf', 'zoneYours', 'weekN', 'range', 'moreN', 'dayNone'];
 
 /** The texts every design with chips, sign-up and subscribe buttons shows. */
 const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth', ...BLOCK_TEXTS, ...TIME_TEXTS, ...EVENT_TEXTS];

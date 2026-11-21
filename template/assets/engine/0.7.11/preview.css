@@ -1669,7 +1669,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   outline: none;
 }
 
-/* A calendar's card opened while editing lies over its raised calendar and the shade on it, where its words are rewritten. */
+/* A calendar's card opened while editing lies over its raised calendar, where its words are rewritten. */
 .urd-preview:not(.urd-chrome-off) .urd-cal-dialog {
   z-index: 100000;
 }

@@ -686,6 +686,9 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
   Done when: a menu laid out in the editor from its own parts stands anywhere on the page, works by the keyboard and on touch, and survives an Urd update.
 
 ## Bugs, (bad) functions and stuff that needs fixing
+- [x] Opening an event in a calendar scrolled the page to the top and shaded the calendar black, in every design, DELIVERED 0.7.0.94 (21 November 2026)
+- [x] The year wheel drew a box round a month pressed, DELIVERED 0.7.0.94 (21 November 2026): a month shows the keyboard's focus in its own shape
+- [x] A year wheel month with many events grew its list without end, DELIVERED 0.7.0.94 (21 November 2026): five events, then «Show all» opening the month in a list that scrolls beside the wheel
 
 ## Suggestions, Ideas and Wishes
 - [ ] Static image as background - while you scroll, the image stays still
