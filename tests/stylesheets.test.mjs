@@ -118,8 +118,8 @@ test('the preview loads its sheet with the editing layer, and a calendar loads i
   assert.ok(boot.indexOf('const editing = preview') < boot.indexOf("await fetch('/content/site.json')"), 'as the boot starts, before the site is read');
   assert.match(boot, /if \(preview\) \{\s*\[window\.UrdPreviewEdit\] = await editing;/, 'and in place before the first render');
   assert.ok(boot.indexOf('= await editing;') < boot.indexOf('renderPage(state.page'));
-  const calendar = read(join(engine, 'blocks/calendar.js'));
-  assert.match(calendar, /const calendarParts = \(\) => Promise\.all\(\[[^\n]*loadStylesheet\(new URL\('\.\/calendar\.css', import\.meta\.url\)\.href\)\]\);/);
+  const calendar = read(join(engine, 'blocks/calendar-load.js'));
+  assert.match(calendar, /const calendarParts = \(\) => Promise\.all\(\[[^\n]*loadStylesheet\(new URL\('\.\/calendar\.css', import\.meta\.url\)\.href\)\]\)\.then\(\(parts\) => \(partsIn = parts\)\);/);
   const html = read(new URL('../template/index.html', import.meta.url));
   assert.doesNotMatch(html, /preview\.css|calendar\.css/, 'a visitor\'s page never asks for them');
 });

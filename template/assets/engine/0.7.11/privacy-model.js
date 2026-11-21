@@ -11,7 +11,7 @@ import { providerOf, embedUrl } from './embed-cover.js';
 import { parseLocation } from './osm.js';
 
 /**
- * How long a calendar block keeps a feed's events in the browser before it fetches them again (blocks/calendar.js reads it from here, so the privacy page's minutes are the code's).
+ * How long a calendar block keeps a feed's events in the browser before it fetches them again (blocks/calendar-load.js reads it from here, so the privacy page's minutes are the code's).
  */
 export const CALENDAR_FEED_MINUTES = 10;
 
@@ -30,7 +30,7 @@ export const BROWSER_KEEPS = [
   { id: 'cart', modules: ['shop.js'], until: 'ordered' },
   { id: 'order', modules: ['shop.js'], until: 'tab' },
   { id: 'payment', modules: ['blocks/checkout.js'], until: 'paid' },
-  { id: 'calendar', modules: ['blocks/calendar.js'], until: 'minutes', minutes: CALENDAR_FEED_MINUTES },
+  { id: 'calendar', modules: ['blocks/calendar-load.js'], until: 'minutes', minutes: CALENDAR_FEED_MINUTES },
   { id: 'calendarHeight', modules: ['blocks/calendar.js'], until: 'tab' },
   { id: 'embeds', modules: ['embed-cover.js'], until: 'taken' },
 ];

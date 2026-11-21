@@ -16,14 +16,14 @@
  * The sources, the view and the count are edited in the Properties panel; the help chip (ADR-0008) explains the conventions.
  */
 // t() for visitor texts (the site language), ta() for the editor chrome (the admin language), dates() for month and weekday names, tp() for plurals; never called at module level.
-import { t, ta, tp, pluralForm, themeString, taApiError, dates, adminLocaleReady } from '../i18n.js';
+import { t, ta, tp, pluralForm, themeString, dates, adminLocaleReady } from '../i18n.js';
 import { iconSvg } from '../icons.js';
 import { resolveColor, inkOn } from '../theme.js';
 import { setRichHtml, safeHtmlFragment, plainLines } from '../sanitize.js';
-import { WIDTH_QUERIES, loadStylesheet } from '../render.js';
+import { WIDTH_QUERIES } from '../render.js';
 import { NARROW_PX } from '../push-model.js';
 import { linkAttrs } from '../nav-model.js';
-import { CALENDAR_FEED_MINUTES } from '../privacy-model.js';
+import { fetchSource, takeReadied, DESIGN_MODULES, partsIn, designsIn, calendarParts, loadDesign, designModules } from './calendar-load.js';
 
 /** An element with its class and its content: a text, or a node such as a text the owner rewrites. */
 const el2 = (tag, className, content) => {
@@ -33,29 +33,6 @@ const el2 = (tag, className, content) => {
   else if (content != null) node.textContent = content;
   return node;
 };
-
-/* ---------- Fetching (proxy + short-lived cache) ---------- */
-
-const CACHE_TTL = CALENDAR_FEED_MINUTES * 60 * 1000;
-
-async function fetchSource(url) {
-  const key = `urd-cal-cache:${url}`;
-  try {
-    const cached = JSON.parse(sessionStorage.getItem(key) ?? 'null');
-    if (cached && Date.now() - cached.t < CACHE_TTL) return cached.text;
-    if (cached) sessionStorage.removeItem(key);
-  } catch { /* a corrupt cache entry is ignored */ }
-  const res = await fetch(`/api/ics?url=${encodeURIComponent(url)}`);
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    // The route answers every failure in JSON: a 404 without it is the route itself missing, as on a local server, where the site's functions do not run.
-    if (!body && res.status === 404) throw new Error(ta('calendar.noRoute'));
-    throw new Error(taApiError(body) ?? ta('calendar.feedStatus', { status: res.status }));
-  }
-  const text = await res.text();
-  try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), text })); } catch { /* a full store is fine */ }
-  return text;
-}
 
 /** All sources (resolved, ics.resolveSources) → sorted occurrences with category and signup link. */
 /**
@@ -70,7 +47,8 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetin
     if (!url) { errors.push(ta('calendar.unknownSource', { source: entry.url })); return; }
     try {
       // Every event remembers the source it came from (expandEvents keeps it on the occurrence): its name and colours, and from the site's registry its words, page, organizer and whether it stands in the filter.
-      const asked = early?.get(url);
+      const readied = takeReadied(url);
+      const asked = early?.get(url) ?? readied;
       early?.delete(url);
       const feed = ics.parseIcs(await (asked ?? fetchSource(url)));
       feedZone ??= feed.timezone;
@@ -1708,21 +1686,15 @@ function keepDesignVariants(cd) {
   designVariants = cd.CAL_DESIGNS.filter((d) => d.id !== 'plain').map((d) => ({ label: d.id, labelKey: d.labelKey, props: { design: d.id, view: d.view } }));
 }
 
-/** The renderer module of each design family, loaded when a calendar draws one (literal paths, so the modules stay out of the visitor closure and the preload list). */
-const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };
-
 /** Whether the calendar's own rules (calendar.css) are in: the drawing that waits hides its sample words with them. */
 let sheetIn = false;
-
-/** The parser, the design model, the formats and the links every calendar draws with, and the calendar's own rules (calendar.css), loaded together on the first render. */
-const calendarParts = () => Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js'), loadStylesheet(new URL('./calendar.css', import.meta.url).href)]);
 
 /**
  * Loads what a calendar draws with ahead of the first one, every design's renderer among it, so a calendar added in the editor draws at once; a part that cannot be loaded now is loaded when a calendar draws.
  * @returns {Promise<void>}
  */
 function warmCalendar() {
-  return calendarParts().then(() => Promise.all(Object.values(DESIGN_MODULES).map((load) => load()))).then(() => {}, () => {});
+  return calendarParts().then(() => Promise.all(Object.keys(DESIGN_MODULES).map(loadDesign))).then(() => {}, () => {});
 }
 
 // The editor's block menu lists the designs, so the preview loads the design model up front, and what a calendar draws with once the editor is idle (a timer where the browser has no idle callback); a visitor loads it with the first calendar on a page.
@@ -1747,9 +1719,12 @@ function renderCalendar(el, props, ctx) {
   // A calendar with a feed, an address of its own or a reference to the site's registry, stands in its loading state until the events are drawn.
   if ((props.sources ?? []).some((source) => (typeof source === 'string' ? source.trim() : source && (source.url || source.calendar)))) host.setAttribute('aria-busy', 'true');
   if (!copyLastDrawing(host, el, props) && host.hasAttribute('aria-busy')) host.appendChild(loadingNode(el, ctx));
-  // The feeds are asked for as soon as the parser is in, beside the other modules, so the events arrive with the code that draws them; the drawing takes these requests (loadOccurrences), and a copy drawn only to be measured asks for none.
+  // A calendar whose code is all in (readied before the page was drawn, prepareCalendar in calendar-load.js) is drawn as the page's drawing ends, in the same task, so it stands with the page from its first frame; its drawing takes the feeds its readying asked for (takeReadied).
+  const ready = partsIn ? designModules(partsIn[1], props) : null;
+  const inAlready = Boolean(ready?.every((name) => !name || designsIn.has(name)));
+  // Otherwise the feeds are asked for as soon as the parser is in, beside the other modules, so the events arrive with the code that draws them; the drawing takes these requests (loadOccurrences), and a copy drawn only to be measured asks for none.
   const early = new Map();
-  if (host.hasAttribute('aria-busy') && !ctx.measure) {
+  if (!inAlready && host.hasAttribute('aria-busy') && !ctx.measure) {
     import('../ics.js').then((ics) => {
       if (!host.isConnected) return;
       for (const entry of ics.resolveSources(props.sources, ctx.site?.site?.calendars)) {
@@ -1761,14 +1736,11 @@ function renderCalendar(el, props, ctx) {
       }
     }, () => {});
   }
-  // The parser and the design model are loaded together, on the first render, and the renderer modules the calendar draws with in one wave after them: the design's own, the week strip for the view switcher, and the phone's and the card's design (calPhoneView, calCardDesign) where they are a module's own.
-  calendarParts().then(async ([ics, cd, cf, maps, links, sheet]) => {
+  const draw = ([ics, cd, cf, maps, links, sheet], [mod, weekMod, phoneMod, cardMod]) => {
     sheetIn = sheet;
-    const design = cd.calDesign(props.design);
-    const wanted = [design.module, cd.calSwitcher(props) ? 'time' : null, cd.calPhoneDesignDef(cd.calPhoneView(props), props).module, cd.calCardDesignDef(cd.calCardDesign(props)).module];
-    const [mod, weekMod, phoneMod, cardMod] = await Promise.all(wanted.map((name) => (name ? DESIGN_MODULES[name]?.() ?? null : null)));
     if (host.isConnected) drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx, early);
-  }).catch((error) => {
+  };
+  const undrawn = (error) => {
     // A module that did not load, or a design that threw: the loading state gives way to the empty state.
     console.warn('Urd: the calendar could not be drawn', error);
     if (!host.isConnected) return;
@@ -1778,7 +1750,22 @@ function renderCalendar(el, props, ctx) {
     host.style.removeProperty('height');
     host.style.removeProperty('overflow');
     host.replaceChildren(emptyNode(props));
-  });
+  };
+  if (inAlready) {
+    queueMicrotask(() => {
+      try {
+        draw(partsIn, ready.map((name) => (name ? designsIn.get(name) : null)));
+      } catch (error) {
+        undrawn(error);
+      }
+    });
+    return;
+  }
+  // Otherwise the parser and the design model are loaded together, and the renderer modules the calendar draws with in one wave after them.
+  calendarParts().then(async (parts) => {
+    const modules = await Promise.all(designModules(parts[1], props).map((name) => (name ? loadDesign(name) ?? null : null)));
+    draw(parts, modules);
+  }).catch(undrawn);
 }
 
 function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx, early = null) {

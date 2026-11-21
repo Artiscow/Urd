@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { ENGINE_DIR, engineImport } from './_engine.mjs';
 
-const { CORE_BLOCKS, CORE_BACKGROUNDS, BLOCK_ALIASES, loadCoreTypes, reserveCoreTypes } = await engineImport('core-types.js');
+const { CORE_BLOCKS, CORE_BACKGROUNDS, BLOCK_ALIASES, CORE_BLOCK_READY, READY_WAIT_MS, loadCoreTypes, reserveCoreTypes, pageBlocks, prepareBlocks } = await engineImport('core-types.js');
 const { createRegistry } = await engineImport('registry.js');
 const { createStagedUrd, needsPlugins } = await engineImport('plugins.js');
 
@@ -90,6 +90,39 @@ test('a module that fails leaves its type undefined and the rest of the page loa
   assert.match(warned[0], /'broken' could not be loaded/);
 });
 
+test('the blocks a page and its footer hold are found wherever they stand, and the engine readies only its own on the visitor\'s screen, a failure drawn as it is and a slow one waited for at most a while', async () => {
+  const page = { sections: [{ blocks: [{ type: 'calendar', props: { design: 'next' } }, { type: 'text' }, { type: 'calendar', hideDesktop: true, props: { design: 'phone' } }] }, { blocks: [] }] };
+  const footer = { columns: [{ blocks: [{ type: 'kalender', props: { design: 'retro' } }, { type: 'aurora', props: {} }] }] };
+  assert.deepEqual(pageBlocks(page, footer).map((block) => block.type), ['calendar', 'text', 'calendar', 'kalender', 'aurora']);
+  assert.deepEqual(pageBlocks(null, {}), []);
+  const readied = [];
+  const ctx = { site: {}, preview: false, viewport: 'desktop' };
+  const calendar = CORE_BLOCK_READY.calendar;
+  CORE_BLOCK_READY.calendar = async () => (props, given) => { readied.push([props, given]); };
+  CORE_BLOCK_READY.quote = async () => () => Promise.reject(new Error('offline'));
+  CORE_BLOCK_READY.stats = async () => () => { throw new Error('broken'); };
+  CORE_BLOCK_READY.table = async () => () => new Promise(() => {});
+  try {
+    await prepareBlocks([...pageBlocks(page, footer), { type: 'quote' }, { type: 'stats' }, { type: 'unknown' }], ctx);
+    assert.deepEqual(readied, [[{ design: 'next' }, ctx]], 'a calendar with its props and the page\'s context; one hidden on this screen, an old id a plugin may still draw, a plugin\'s type and a readying that fails left be');
+    readied.length = 0;
+    await prepareBlocks(pageBlocks(page), { ...ctx, viewport: 'mobile' });
+    assert.equal(readied.length, 2, 'on the phone the calendar hidden on the desktop is readied');
+    readied.length = 0;
+    await prepareBlocks(pageBlocks(page), { ...ctx, preview: true });
+    assert.equal(readied.length, 2, 'the editor\'s preview readies every calendar');
+    const started = Date.now();
+    await prepareBlocks([{ type: 'table' }], ctx, 30);
+    assert.ok(Date.now() - started < 1000, 'a readying that never ends holds the page only for the wait');
+  } finally {
+    CORE_BLOCK_READY.calendar = calendar;
+    for (const type of ['quote', 'stats', 'table']) delete CORE_BLOCK_READY[type];
+  }
+  assert.equal(READY_WAIT_MS, 500, 'as long as the loading bars wait');
+  for (const type of Object.keys(CORE_BLOCK_READY)) assert.ok(Object.hasOwn(CORE_BLOCKS, type), `${type} is a core block type`);
+  assert.equal(typeof (await CORE_BLOCK_READY.calendar()), 'function', 'the calendar\'s readying loads');
+});
+
 test('a core id is the engine\'s before its module is in: a plugin is refused it, and a page using it never waits for the plugins', () => {
   const Urd = fresh();
   reserveCoreTypes(Urd);
@@ -122,6 +155,10 @@ test('the boot loads a page\'s types before it asks whether the page waits for t
   const early = urd.indexOf('    loadCoreTypes(Urd, pageTypes(site.footer));');
   assert.ok(early > 0 && early < urd.indexOf('const loaded = await pagePromise;'), 'the footer\'s modules come in beside the page file');
   assert.ok(urd.indexOf('state.page = freshPage;') > urd.indexOf('needsPlugins(pageTypes(freshPage, site.footer), Urd)'), 'a newer page file is shown only once its types are in');
+  // What the page's own blocks draw with is readied beside their types, and waited for before the page is drawn, the preview's too.
+  assert.match(urd, /const readied = prepareBlocks\(pageBlocks\(page, site\.footer\), \{ site, preview, viewport \}\);\s*if \(!preview\) await loadCoreTypes\(Urd, pageTypes\(page, site\.footer\)\);\s*if \(!preview && needsPlugins\(pageTypes\(page, site\.footer\), Urd\)\) await pluginsLoaded;\s*await readied;/);
+  assert.ok(urd.indexOf('await readied;') > urd.indexOf('{ all: true }') && urd.indexOf('await readied;') < urd.indexOf('renderPage(state.page, state.site, opts.root'), 'the first drawing');
+  assert.match(urd, /const freshReadied = prepareBlocks\(pageBlocks\(freshPage, site\.footer\), \{ site, preview, viewport: state\.viewport \}\);\s*await loadCoreTypes\(Urd, pageTypes\(freshPage, site\.footer\)\);\s*if \(needsPlugins\(pageTypes\(freshPage, site\.footer\), Urd\)\) await pluginsLoaded;\s*await freshReadied;\s*state\.page = freshPage;/, 'a newer page file');
   assert.match(urd, /loadCoreTypes\(Urd, null, \{ all: true \}\), import\('\.\/sections\/presets\.js'\)/);
   assert.ok(urd.indexOf('{ all: true }') < urd.indexOf('if (preview) enablePreview(state, opts);'), 'every type is in before the preview tells the editor it is ready');
 });

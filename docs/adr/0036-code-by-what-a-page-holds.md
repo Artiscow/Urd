@@ -27,6 +27,7 @@ ADR-0013 deferred loading by page, since a shell that differs from page to page 
 
 - A page's block modules are asked for once its page file is read, a round trip after the boot's own modules, where they came in the first wave before. The bytes saved outweigh that round trip: measured on the template's pages as a phone slowed four times, 21 November 2026, they fetch 23 to 39 % less JavaScript and show their first content 0.1 to 0.2 s sooner, and sooner still on a slow network.
 - A new core type is one entry in `core-types.js`; the palette test reads the core types from there.
+- A core block that draws with more than its own module (the calendar's parser, design model, stylesheet and renderers) is readied beside the page's types, and the page waits for it at most half a second (`CORE_BLOCK_READY` in `core-types.js`), so the block stands in its own design in the page's first frame without holding the page on a slow connection.
 - Anything that draws blocks outside a page, its nav and its footer must load their types first (`loadCoreTypes`).
 - A plugin cannot count on reading a core type's definition (`get`) when it registers or draws: on a visitor's page the engine defines only the types the page holds, while the editor's preview defines them all.
 - An open tab whose engine folder an update has deleted (ADR-0013 decision 5) can no longer load a type it did not hold, nor the basket's drawer: such a type is drawn as unknown, and the basket opens the checkout page.

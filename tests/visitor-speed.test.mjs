@@ -93,11 +93,29 @@ test('reads that force a layout are left out where nothing needs them', () => {
 
 test('the calendar asks for its feed with its modules, loads its design modules in one wave, and reads the week start only where a week is drawn', async () => {
   const calendar = source('blocks/calendar.js');
-  assert.match(calendar, /if \(host\.hasAttribute\('aria-busy'\) && !ctx\.measure\) \{\s+import\('\.\.\/ics\.js'\)\.then\(\(ics\) => \{\s+if \(!host\.isConnected\) return;/, 'a copy drawn to be measured asks for nothing');
+  assert.match(calendar, /if \(!inAlready && host\.hasAttribute\('aria-busy'\) && !ctx\.measure\) \{\s+import\('\.\.\/ics\.js'\)\.then\(\(ics\) => \{\s+if \(!host\.isConnected\) return;/, 'a calendar whose code is not in asks with its modules, and a copy drawn to be measured asks for nothing');
   assert.match(calendar, /early\.set\(url, asked\);/);
-  assert.match(calendar, /const asked = early\?\.get\(url\);\s+early\?\.delete\(url\);\s+const feed = ics\.parseIcs\(await \(asked \?\? fetchSource\(url\)\)\);/, 'the drawing takes the early request, once, a failed one too');
+  assert.match(calendar, /const readied = takeReadied\(url\);\s+const asked = early\?\.get\(url\) \?\? readied;\s+early\?\.delete\(url\);\s+const feed = ics\.parseIcs\(await \(asked \?\? fetchSource\(url\)\)\);/, 'the drawing takes the early or the readied request, once, a failed one too');
   assert.match(calendar, /loadOccurrences\(ics, cf, sources, [^\n]*, to, early\)/);
-  assert.match(calendar, /const \[mod, weekMod, phoneMod, cardMod\] = await Promise\.all\(wanted\.map/);
+  // A calendar whose code is all in draws as the page's drawing ends, in its task, so it stands with the page from its first frame; otherwise its renderers come in one wave after its parts.
+  assert.match(calendar, /const ready = partsIn \? designModules\(partsIn\[1\], props\) : null;\s*const inAlready = Boolean\(ready\?\.every\(\(name\) => !name \|\| designsIn\.has\(name\)\)\);/);
+  assert.match(calendar, /if \(inAlready\) \{\s*queueMicrotask\(\(\) => \{\s*try \{\s*draw\(partsIn, ready\.map/);
+  assert.match(calendar, /const modules = await Promise\.all\(designModules\(parts\[1\], props\)\.map\(\(name\) => \(name \? loadDesign\(name\) \?\? null : null\)\)\);\s*draw\(parts, modules\);/);
+  assert.match(source('blocks/calendar-load.js'), /\.then\(\(parts\) => \(partsIn = parts\)\);/, 'the parts are kept once they are in');
+  // Readied before the page is drawn: its parts, the renderers its settings draw with, and its feeds asked for, never waited for; one request per feed, shared with the drawing.
+  const load = source('blocks/calendar-load.js');
+  assert.match(load, /export async function prepareCalendar\(props, ctx\) \{\s*const \[ics, cd\] = await Promise\.all\(\[import\('\.\.\/ics\.js'\), import\('\.\.\/calendar-designs\.js'\)\]\);[\s\S]*?if \(!url \|\| READIED\.has\(url\)\) continue;\s*const asked = fetchSource\(url\);\s*asked\.catch\(\(\) => \{\}\);\s*READIED\.set\(url, asked\);\s*\}[\s\S]*?await Promise\.all\(\[calendarParts\(\), \.\.\.designModules\(cd, props\)\.map\(\(name\) => \(name \? loadDesign\(name\) : null\)\)\]\);/, 'the rules and the renderers in one wave');
+  assert.match(load, /export function takeReadied\(url\) \{\s*const asked = READIED\.get\(url\);\s*READIED\.delete\(url\);\s*return asked;/, 'the readied request is taken once');
+  assert.match(load, /if \(!ASKING\.has\(url\)\) \{\s*const asking = askSource\(url, key\);\s*ASKING\.set\(url, asking\);\s*asking\.then\(\(\) => ASKING\.delete\(url\), \(\) => ASKING\.delete\(url\)\);\s*\}\s*return ASKING\.get\(url\);/);
+  // The module that readies a calendar imports only what the boot has preloaded, so it runs as soon as it and the parts asked for beside it are in.
+  const preloaded = readFileSync(new URL('../template/index.html', import.meta.url), 'utf8');
+  for (const [, spec] of load.matchAll(/^import [^;]+ from '\.\.\/([^']+)';$/gm)) assert.ok(preloaded.includes(`/${spec}"`), `${spec} is preloaded`);
+  assert.doesNotMatch(load, /^import [^;]+ from '\.\/[^']+';$/m);
+  // The parts the core types' readying asks for beside the module are the scripts the calendar draws with.
+  const { CORE_BLOCK_READY } = await engineImport('core-types.js');
+  const loaderParts = String(CORE_BLOCK_READY.calendar).match(/import\('\.\/([^']+)'\)/g).map((m) => m.slice(10, -2));
+  const parts = load.match(/const calendarParts = \(\) => Promise\.all\(\[([^\n]*)\]\)/)[1].match(/import\('\.\.\/([^']+)'\)/g).map((m) => m.slice(11, -2));
+  assert.deepEqual(loaderParts, [...parts, 'blocks/calendar-load.js']);
   assert.match(calendar, /const weekStart = \(\) => \(weekStartDay \?\?= cf\.calWeekStart\(props, lang\)\);/);
   assert.match(calendar, /const weekFrom = switcher \|\| view === 'week' \?/);
   const { calWeekStart } = await engineImport('calendar-format.js');
@@ -122,7 +140,7 @@ test('a calendar stands in its own design while its feeds are on the way, a feed
   assert.ok(wait > 0 && wait < calendar.indexOf('loadOccurrences(ics, cf, sources, Math.max'), 'asked for before the feeds are read');
   assert.match(calendar, /if \(!ctx\.measure && !\('calCopy' in host\.dataset\)\) \{\s+requestAnimationFrame\(\(\) => \{\s+if \(settled \|\| !sheetIn \|\| !host\.isConnected\) return;/, 'a frame later, so a feed already in is drawn without it, and never without the rules that hide the words');
   assert.match(calendar, /const held = host\.offsetHeight;\s+waiting = true;\s+host\.classList\.add\('urd-cal-wait'\);\s+if \(held\) \{\s+host\.style\.height = `\$\{held\}px`;\s+host\.style\.overflow = 'hidden';\s+\}\s+draw\(demoOccurrences\(\)\);\s+rememberDrawing\(key, host, props, true\);/, 'at the height the loading state kept, so nothing around it moves');
-  assert.match(calendar, /calendarParts\(\)\.then\(async \(\[ics, cd, cf, maps, links, sheet\]\) => \{\s+sheetIn = sheet;/);
+  assert.match(calendar, /const draw = \(\[ics, cd, cf, maps, links, sheet\], \[mod, weekMod, phoneMod, cardMod\]\) => \{\s+sheetIn = sheet;/);
   assert.match(source('render.js'), /link\.addEventListener\('load', \(\) => resolve\(true\), \{ once: true \}\);\s+link\.addEventListener\('error', \(\) => resolve\(false\), \{ once: true \}\);/);
   assert.match(calendar, /LAST_DRAWN\.set\(id, \{ \.\.\.last, host \}\);\s+return true;/, 'a copy is remembered in its turn, so another calendar settling first never drops it');
   assert.match(calendar, /if \(!copyLastDrawing\(host, el, props\) && host\.hasAttribute\('aria-busy'\)\) host\.appendChild\(loadingNode\(el, ctx\)\);/, 'a calendar drawn again starts from its last drawing, never blank');

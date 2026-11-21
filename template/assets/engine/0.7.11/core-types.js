@@ -46,6 +46,16 @@ export const CORE_BACKGROUNDS = {
   video: () => import('./backgrounds/video.js').then((m) => m.videoLayer),
 };
 
+/**
+ * The core block types readied before a page is drawn, each with what readies a block of it (prepareBlocks): the calendar's, asked for in one wave with the parser, the design model, the formats and the links it draws with (calendarParts in blocks/calendar-load.js), beside the calendar's own module.
+ * Each gives what takes a block's props and the page's context once its own module is in; the parts asked for beside it come in on their own.
+ */
+export const CORE_BLOCK_READY = {
+  calendar: () => {
+    for (const part of [import('./ics.js'), import('./calendar-designs.js'), import('./calendar-format.js'), import('./map-links.js'), import('./meeting-links.js')]) part.catch(() => {});
+    return import('./blocks/calendar-load.js').then((m) => m.prepareCalendar);
+  },
+};
 /** The old plugin contract ids of blocks that are core since 0.7.18 (ADR-0021): a page holding one loads the type it stands for. */
 export const BLOCK_ALIASES = { kalender: 'calendar', kart: 'map', skjema: 'form' };
 
@@ -79,6 +89,48 @@ export async function loadCoreTypes(Urd, types, { all = false } = {}) {
     const [kind, type, def] = job;
     if (def && !Urd[kind].ids().includes(type)) (DEFINERS.get(Urd[kind]) ?? Urd[kind].define)(type, def);
   }
+}
+
+/**
+ * The blocks a page and its footer hold, wherever they stand, found as pageTypes in plugins.js finds their types.
+ * @param {...unknown} parts The page, the site's footer
+ * @returns {Array<{type: string, props?: object}>}
+ */
+export function pageBlocks(...parts) {
+  const found = [];
+  const seen = new Set();
+  const walk = (value, depth) => {
+    if (!value || typeof value !== 'object' || depth > 40 || seen.has(value)) return;
+    seen.add(value);
+    if (Array.isArray(value)) { for (const item of value) walk(item, depth + 1); return; }
+    for (const [key, child] of Object.entries(value)) {
+      if (key === 'blocks' && Array.isArray(child)) for (const block of child) if (typeof block?.type === 'string') found.push(block);
+      walk(child, depth + 1);
+    }
+  };
+  for (const part of parts) walk(part, 0);
+  return found;
+}
+
+/** How long a page waits for its blocks' readying at most: as long as a calendar's loading bars wait before they show (base.css), so on a slow connection the page is drawn and the calendar comes in as its code does. */
+export const READY_WAIT_MS = 500;
+
+/**
+ * Readies what the engine's own blocks on a page draw with beyond their module, before the page is drawn (CORE_BLOCK_READY: a calendar's parts, its designs, and its feeds asked for), so such a block stands in its own design from the page's first drawing.
+ * It runs beside the page's types (loadCoreTypes) and settles once they are readied or after `wait`, whichever comes first.
+ * Only a core id is readied, never an old one, which a plugin may still define and draw (ADR-0021); a block hidden on the visitor's screen is left until it shows, and a block whose readying fails is drawn as it is without it.
+ * @param {Array<{type: string, props?: object, hideDesktop?: boolean, hideMobile?: boolean}>} blocks pageBlocks
+ * @param {{site: object, preview: boolean, viewport: 'desktop'|'mobile'}} ctx
+ * @param {number} [wait]
+ * @returns {Promise<void>}
+ */
+export async function prepareBlocks(blocks, ctx, wait = READY_WAIT_MS) {
+  const readying = Promise.all(blocks.map((block) => {
+    if (!Object.hasOwn(CORE_BLOCK_READY, block.type)) return null;
+    if (!ctx.preview && (ctx.viewport === 'mobile' ? block.hideMobile : block.hideDesktop)) return null;
+    return CORE_BLOCK_READY[block.type]().then((ready) => ready(block.props ?? {}, ctx)).catch(() => {});
+  }));
+  await Promise.race([readying, new Promise((resolve) => setTimeout(resolve, wait))]);
 }
 
 /**

@@ -73,7 +73,7 @@ test('every kind the browser keeps has its words and its period, with the period
   }
   assert.equal(BROWSER_KEEPS.find((keep) => keep.id === 'calendar').minutes, CALENDAR_FEED_MINUTES);
   assert.equal(BROWSER_KEEPS.find((keep) => keep.id === 'pages').minutes, PREFETCH_MINUTES);
-  assert.match(code('blocks/calendar.js'), /CALENDAR_FEED_MINUTES \* 60 \* 1000/, 'blocks/calendar.js keeps a feed for the minutes the page names');
+  assert.match(code('blocks/calendar-load.js'), /CALENDAR_FEED_MINUTES \* 60 \* 1000/, 'blocks/calendar-load.js keeps a feed for the minutes the page names');
   assert.match(code('prefetch.js'), /PREFETCH_MINUTES \* 60 \* 1000/, 'prefetch.js keeps a fetched page for the minutes the page names');
   for (const [lang, strings] of Object.entries(DICTS)) {
     for (const keep of BROWSER_KEEPS) assert.ok(strings[`privacy.browser.${keep.id}`], `${lang} privacy.browser.${keep.id}`);

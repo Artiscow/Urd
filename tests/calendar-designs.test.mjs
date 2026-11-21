@@ -643,7 +643,7 @@ test('calProgramHref and calNoticeHref: the shared safe-URL gate, and the notice
 
 test('a calendar in the editor shows the example events by its bar\'s choice for the session, else while it has no sources or its feed cannot be fetched, with no note under it, and says when the route itself is missing', () => {
   const src = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
-  assert.match(src, /if \(!body && res\.status === 404\) throw new Error\(ta\('calendar\.noRoute'\)\);/, 'a 404 without the route\'s JSON is the route missing, as on a local server');
+  assert.match(readFileSync(new URL('blocks/calendar-load.js', ENGINE_DIR), 'utf8'), /if \(!body && res\.status === 404\) throw new Error\(ta\('calendar\.noRoute'\)\);/, 'a 404 without the route\'s JSON is the route missing, as on a local server');
   assert.match(src, /const examples = ctx\.preview && \(EXAMPLES\.get\(key\) \?\? sample\);/, 'the choice made on the bar, else the default, and never on the published page');
   assert.match(src, /const settle = \(occurrences, reason = null, sample = !sources\.length\) => \{/, 'a calendar without sources shows the examples until the bar says otherwise');
   assert.match(src, /const failed = \(error\) => settle\(\[\], \(\) => ta\('calendar\.feedFailed', \{ error \}\), true\);/, 'a feed that cannot be fetched shows the examples, its reason kept for the button');

@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.5): calendars with the page
+
+- [ ] Open the front page of the deployed site in a new tab: the calendars stand in their own design with the rest of the page from its first moment, with «Loading the events» (Norwegian «Henter arrangementene») on them until their events are in, and never come in after the page
+- [ ] The front page shows its first content about as soon as before, and a page without a calendar as soon as before
+- [ ] A page with two calendars of one feed: both fill with their events, and the browser's network list shows one request for that feed
+- [ ] The editor's canvas and the design picker draw the calendars as before
+- [ ] The privacy page still names the calendar's feed kept for some minutes
+
 ### Test batch (0.7.37.4.4): windows and panels loaded as they are first opened
 
 - [ ] Open the editor on the deployed site, then open Nav, Site, Legal, Theme, Footer, Collections, Plugins, History, Updates and the settings panel in turn: each is drawn at once, with its folds as they were left

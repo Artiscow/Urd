@@ -19,7 +19,7 @@ import { renderFooter } from './footer.js';
 import { whenSettled, FOOTER_WAIT_MS } from './footer-model.js';
 import { renderToTop } from './totop.js';
 import { coreAnimations } from './animations/core.js';
-import { loadCoreTypes, reserveCoreTypes } from './core-types.js';
+import { loadCoreTypes, reserveCoreTypes, prepareBlocks, pageBlocks } from './core-types.js';
 import { loadPlugins, loadPluginList, applyPluginSiteLocales, pluginBlockDesigns, pageTypes, needsPlugins, engineVersionOf } from './plugins.js';
 import { setCollectionsDraft, draftHasKind } from './collections.js';
 import { initSticky, refreshSticky } from './sticky.js';
@@ -893,9 +893,11 @@ export async function boot(opts) {
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   if (!Array.isArray(page.sections)) page.sections = [];
-  // A visitor's page loads the core types it and the footer use (core-types.js).
+  // A visitor's page loads the core types it and the footer use (core-types.js), and what its own blocks draw with beyond their module is readied beside them, so a calendar stands in its own design from the first drawing (prepareBlocks).
+  const readied = prepareBlocks(pageBlocks(page, site.footer), { site, preview, viewport });
   if (!preview) await loadCoreTypes(Urd, pageTypes(page, site.footer));
   if (!preview && needsPlugins(pageTypes(page, site.footer), Urd)) await pluginsLoaded;
+  await readied;
   if (drafts) setCollectionsDraft(drafts.collections);
   document.title = pageTitle(site, page, entry);
   // SEO metadata (description, canonical, og: fields, JSON-LD) is set only
@@ -951,8 +953,10 @@ export async function boot(opts) {
       const freshPage = liftPageFile(fresh.page, rawSite);
       if (!Array.isArray(freshPage.sections)) freshPage.sections = [];
       // A page published since with a type of its own waits for its module, and for the plugins where it uses a plugin's type, as the first drawing does; until then the page shown stays the one a redraw draws.
+      const freshReadied = prepareBlocks(pageBlocks(freshPage, site.footer), { site, preview, viewport: state.viewport });
       await loadCoreTypes(Urd, pageTypes(freshPage, site.footer));
       if (needsPlugins(pageTypes(freshPage, site.footer), Urd)) await pluginsLoaded;
+      await freshReadied;
       state.page = freshPage;
       document.title = pageTitle(site, state.page, entry);
       applyHeadMeta(site, state.page, location.origin, location.pathname, entry);
