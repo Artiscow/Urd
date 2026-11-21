@@ -1453,7 +1453,7 @@ textarea.urd-form-input {
   color: #e05252;
 }
 
-/* The loading state: quiet bars at the block's height while the feed is fetched, and the word for a screen reader. */
+/* The loading state: quiet bars at the block's height until the calendar's code is in and draws its own design (blocks/calendar.js), shown only once that takes half a second, and the word for a screen reader. */
 .urd-cal[aria-busy="true"] {
   height: 100%;
 }
@@ -1474,6 +1474,7 @@ textarea.urd-form-input {
 .urd-cal-loading i {
   background: color-mix(in srgb, currentColor 8%, transparent);
   border-radius: var(--urd-radius-sm);
+  animation: urd-cal-appear 0.2s 0.5s backwards;
 }
 
 .urd-cal-loading i:first-of-type {
@@ -1491,9 +1492,15 @@ textarea.urd-form-input {
 
 @media (prefers-reduced-motion: no-preference) {
   .urd-cal-loading i {
-    animation: urd-cal-loading 1.4s ease-in-out infinite alternate;
+    animation: urd-cal-appear 0.2s 0.5s backwards, urd-cal-loading 1.4s ease-in-out 0.7s infinite alternate;
   }
 
+}
+
+@keyframes urd-cal-appear {
+  from {
+    opacity: 0;
+  }
 }
 
 @keyframes urd-cal-loading {

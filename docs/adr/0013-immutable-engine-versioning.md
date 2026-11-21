@@ -1,6 +1,6 @@
 # ADR-0013: Immutable engine versioning and the copy-refresh duty
 
-Date: 5 August 2026. Status: accepted (v0.6, milestone 0.6.9); decision 2 amended 7 October 2026, earlier text in [amended/](amended/0013-immutable-engine-versioning-until-2026-10-11.md). How the release writes the headers and what the tests hold is described in [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md#releases-automated-from-069).
+Date: 5 August 2026. Status: accepted (v0.6, milestone 0.6.9); decision 2 amended 7 October 2026, earlier text in [amended/](amended/0013-immutable-engine-versioning-until-2026-10-11.md); the consequence on per-page loading rewritten 21 November 2026 by [ADR-0036](0036-code-by-what-a-page-holds.md), earlier text in [amended/](amended/0013-immutable-engine-versioning-until-2026-11-21.md). How the release writes the headers and what the tests hold is described in [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md#releases-automated-from-069).
 
 ## Context
 
@@ -17,7 +17,7 @@ The engine is served as raw ES modules, and without cache control every visitor 
 ## Consequences
 
 - An engine switch is a release action (phase release/updater), never an ongoing development action; local development and preview are unaffected (the paths are the same, just versioned).
-- Conditional per-page asset loading (former ELEMENTKART 5b.7, now in [CODE.md](../comparison/CODE.md#part-6-what-to-take)) is explicitly deferred: per-page-varying shells stand in direct tension with both the global modulepreload list (the anti-drift test) and the copy-refresh duty (the copies must be byte-identical). If it is taken up again, it must solve both.
+- Per-page asset loading (former ELEMENTKART 5b.7, now in [CODE.md](../comparison/CODE.md#part-6-what-to-take)) happens as the boot runs, never in the shells ([ADR-0036](0036-code-by-what-a-page-holds.md)): the boot imports the modules of the types a page holds from the versioned folder, so the global modulepreload list (the anti-drift test) and the copy-refresh duty stand. Per-page lists written into the shells (CODE.md T34, with the v0.8 baking) would stand in direct tension with both, and must solve both if they are taken up.
 - New engine modules that are to be plugin API require a new shell in `assets/urd/` and a line in the plugin README; everything else in the engine is internals and can be moved freely within the version directory.
 - A change of the template's `_headers` text reaches every site that never edited the file: the updater shows a «change by hand» note when a site's `_headers` differs from the template's at the target version.
 - The window of decision 5 is longer than seconds for a page held from before an update (a document prefetched by the speculation rules, a back/forward-cache restore, an open tab's lazy import), which can load files from the deleted directory. A recovery in the page (a boot guard that refetches the files the page names and reloads once) is open in BACKLOG under the updater hardening, since it would ship with the releases.

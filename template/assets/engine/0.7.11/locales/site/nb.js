@@ -431,6 +431,7 @@ export default {
     'calendar.zoneOf': 'Tidene vises i {zone}',
     'calendar.zoneYours': 'Tidene vises i din tidssone ({zone})',
     'calendar.loading': 'Laster kalenderen',
+    'calendar.loadingEvents': 'Henter arrangementene',
     'calendar.dayNone': 'Ingenting denne dagen',
     'calendar.earlier': 'Tidligere ({n})',
     'calendar.search': 'Søk i arrangementene',

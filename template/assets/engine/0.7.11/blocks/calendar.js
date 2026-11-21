@@ -116,6 +116,37 @@ const EXAMPLES = new Map();
 /** What each calendar in the editor shows, by block id, as last drawn: its box, whether the example events stand in for its own, why it has none of its own where a feed failed (read in the admin's language when asked), and its way to be drawn again. */
 const SHOWN = new Map();
 
+/** The last drawing of each calendar, by block id: its box, the settings it was drawn with, and whether it was the drawing that waits for the feeds. */
+const LAST_DRAWN = new Map();
+
+/** Keeps a calendar's drawing as its last, and lets go of those that have left the page. */
+function rememberDrawing(blockId, host, props, waiting) {
+  for (const [id, last] of LAST_DRAWN) if (!last.host.isConnected) LAST_DRAWN.delete(id);
+  if (blockId) LAST_DRAWN.set(blockId, { host, props: JSON.stringify(props), waiting });
+}
+
+/**
+ * Fills a calendar drawn again with a copy of its last drawing, where its settings are the same, out of reach until its own drawing replaces it, so a redraw (its section's, the editor's drafts arriving, the phone's width crossed) never leaves it blank.
+ * A copy of the drawing that waits keeps its words hidden (`data-cal-copy="wait"`).
+ * @returns {boolean} Whether there was one to copy
+ */
+function copyLastDrawing(host, el, props) {
+  const id = el.dataset.blockId ?? '';
+  const last = LAST_DRAWN.get(id);
+  if (!last || last.props !== JSON.stringify(props)) return false;
+  host.className = last.host.className;
+  host.style.cssText = last.host.style.cssText;
+  for (const child of last.host.children) {
+    const copy = child.cloneNode(true);
+    copy.inert = true;
+    host.appendChild(copy);
+  }
+  host.dataset.calCopy = last.waiting ? 'wait' : '';
+  // The copy is the calendar's drawing now, so a redraw before its own is in copies it in turn.
+  LAST_DRAWN.set(id, { ...last, host });
+  return true;
+}
+
 /** What a calendar in the editor shows, for its bar's button (preview-edit.js): whether the example events stand in for its own, and why its feed gave none where one failed; null until it is drawn. */
 export function calendarExamples(blockId) {
   const state = SHOWN.get(blockId);
@@ -1684,6 +1715,9 @@ function keepDesignVariants(cd) {
 /** The renderer module of each design family, loaded when a calendar draws one (literal paths, so the modules stay out of the visitor closure and the preload list). */
 const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };
 
+/** Whether the calendar's own rules (calendar.css) are in: the drawing that waits hides its sample words with them. */
+let sheetIn = false;
+
 /** The parser, the design model, the formats and the links every calendar draws with, and the calendar's own rules (calendar.css), loaded together on the first render. */
 const calendarParts = () => Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js'), loadStylesheet(new URL('./calendar.css', import.meta.url).href)]);
 
@@ -1715,10 +1749,8 @@ function renderCalendar(el, props, ctx) {
   ruler.setAttribute('aria-hidden', 'true');
   el.appendChild(ruler);
   // A calendar with a feed, an address of its own or a reference to the site's registry, stands in its loading state until the events are drawn.
-  if ((props.sources ?? []).some((source) => (typeof source === 'string' ? source.trim() : source && (source.url || source.calendar)))) {
-    host.setAttribute('aria-busy', 'true');
-    host.appendChild(loadingNode(el, ctx));
-  }
+  if ((props.sources ?? []).some((source) => (typeof source === 'string' ? source.trim() : source && (source.url || source.calendar)))) host.setAttribute('aria-busy', 'true');
+  if (!copyLastDrawing(host, el, props) && host.hasAttribute('aria-busy')) host.appendChild(loadingNode(el, ctx));
   // The feeds are asked for as soon as the parser is in, beside the other modules, so the events arrive with the code that draws them; the drawing takes these requests (loadOccurrences), and a copy drawn only to be measured asks for none.
   const early = new Map();
   if (host.hasAttribute('aria-busy') && !ctx.measure) {
@@ -1734,7 +1766,8 @@ function renderCalendar(el, props, ctx) {
     }, () => {});
   }
   // The parser and the design model are loaded together, on the first render, and the renderer modules the calendar draws with in one wave after them: the design's own, the week strip for the view switcher, and the phone's and the card's design (calPhoneView, calCardDesign) where they are a module's own.
-  calendarParts().then(async ([ics, cd, cf, maps, links]) => {
+  calendarParts().then(async ([ics, cd, cf, maps, links, sheet]) => {
+    sheetIn = sheet;
     const design = cd.calDesign(props.design);
     const wanted = [design.module, cd.calSwitcher(props) ? 'time' : null, cd.calPhoneDesignDef(cd.calPhoneView(props), props).module, cd.calCardDesignDef(cd.calCardDesign(props)).module];
     const [mod, weekMod, phoneMod, cardMod] = await Promise.all(wanted.map((name) => (name ? DESIGN_MODULES[name]?.() ?? null : null)));
@@ -1744,6 +1777,10 @@ function renderCalendar(el, props, ctx) {
     console.warn('Urd: the calendar could not be drawn', error);
     if (!host.isConnected) return;
     host.removeAttribute('aria-busy');
+    host.classList.remove('urd-cal-wait');
+    delete host.dataset.calCopy;
+    host.style.removeProperty('height');
+    host.style.removeProperty('overflow');
     host.replaceChildren(emptyNode(props));
   });
 }
@@ -1757,6 +1794,9 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   let activeCategory = null;
   let query = '';
   let shown = null;
+  // The drawing that waits for the feeds (wait, below): the calendar in its own design with the sample events, veiled.
+  let waiting = false;
+  let settled = false;
   const search = props.showSearch === true ? searchField((words) => {
     query = words;
     if (shown) draw(shown);
@@ -1769,6 +1809,8 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   const design = cd.calDesign(props.design);
   const view = cd.calView(props);
   host.className = `urd-cal urd-cal-d-${design.id} urd-cal-set-${design.set}`;
+  // A copy of the drawing that waits keeps its words hidden until the calendar's own drawing replaces it.
+  if (host.dataset.calCopy === 'wait') host.classList.add('urd-cal-wait');
   // The size of the finding tools (the switcher, the chips, the search and the week's and month's arrows): small, normal or large.
   if (props.toolsSize === 's' || props.toolsSize === 'l') host.classList.add(`urd-cal-tools-${props.toolsSize}`);
   for (const [name, value] of Object.entries(cd.calSlotVars(design, props.colors))) host.style.setProperty(name, value);
@@ -1835,7 +1877,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   const draw = (occurrences) => {
     shown = occurrences;
     for (const occ of occurrences) if (occ.geo && occ.location) ui.places.set(occ.location, occ.geo);
-    host.removeAttribute('aria-busy');
+    if (!waiting) host.removeAttribute('aria-busy');
     // A press on the view switcher or a category redraws the calendar: the focus goes back to the button that was pressed.
     const focused = host.contains(document.activeElement) ? document.activeElement.dataset.calKey : null;
     host.replaceChildren();
@@ -1958,16 +2000,30 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     const listed = own && !['next', ...SPAN_VIEWS].includes(view) ? limited : filtered.filter((occ) => (occ.end ?? occ.start) >= soon);
     if (listed.length) host.appendChild(printList(listed, ui));
     // Search engines get the same events as structured data, on the published page and from a real feed only.
-    if (!ctx.preview && sources.length) writeEventData(el, props.structuredData === false ? [] : listed, ics, ctx, ui.meetingHosts);
+    if (!ctx.preview && sources.length && !waiting) writeEventData(el, props.structuredData === false ? [] : listed, ics, ctx, ui.meetingHosts);
     if (focused) [...host.querySelectorAll('[data-cal-key]')].find((node) => node.dataset.calKey === focused)?.focus({ preventScroll: true });
+    // The waiting drawing stands behind the loading note, out of reach of the pointer, the keys and a screen reader, which hears the note.
+    if (waiting) {
+      for (const child of host.children) child.inert = true;
+      const note = el2('p', 'urd-cal-wait-note', t('calendar.loadingEvents'));
+      note.setAttribute('role', 'status');
+      host.appendChild(note);
+    }
   };
 
   // In the editor the example events stand in for the calendar's own while no calendar is connected that answers: by the choice made for the session on its bar's button (preview-edit.js), else while it has no sources or none of its feeds can be fetched, so its design can be seen and set; the reason a feed failed is kept for the button's tooltip.
   // Visitors see the calendar's own events, or its quiet empty state.
   const key = el.dataset.blockId ?? '';
   const settle = (occurrences, reason = null, sample = !sources.length) => {
+    settled = true;
+    waiting = false;
+    host.classList.remove('urd-cal-wait');
+    delete host.dataset.calCopy;
+    host.style.removeProperty('height');
+    host.style.removeProperty('overflow');
     const examples = ctx.preview && (EXAMPLES.get(key) ?? sample);
     draw(examples ? demoOccurrences() : occurrences);
+    if (!ctx.measure) rememberDrawing(key, host, props, false);
     if (!ctx.preview) return;
     // A calendar gone from the page (deleted, or drawn anew) leaves the list.
     for (const [id, state] of SHOWN) if (!state.host.isConnected) SHOWN.delete(id);
@@ -1995,6 +2051,24 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   const pagesBack = ['month', 'week', 'day'].includes(view) || switcher;
   const from = Math.min(pagesBack ? viewFrom - 365 * 24 * 3600 * 1000 : viewFrom, props.showEarlier === true ? Date.now() - EARLIER_DAYS * 24 * 3600 * 1000 : viewFrom);
   const to = season && !switcher ? season.to : pagesBack ? Date.now() + 400 * 24 * 3600 * 1000 : undefined;
+  // While the feeds are on the way the calendar stands in its own design, drawn with the sample events, their words and pictures hidden under a loading note, so the calendar is seen at once and its events fill it as they come.
+  // It waits a frame, so a feed already at hand (the session's copy) is drawn without it; a copy drawn only to be measured goes without it, and so does a calendar whose rules did not load, which could not hide the words.
+  // It stands at the height the loading state kept, the sample drawn into it, so nothing around the calendar moves until its events are in.
+  // A calendar showing its last drawing keeps it until its own is in.
+  if (!ctx.measure && !('calCopy' in host.dataset)) {
+    requestAnimationFrame(() => {
+      if (settled || !sheetIn || !host.isConnected) return;
+      const held = host.offsetHeight;
+      waiting = true;
+      host.classList.add('urd-cal-wait');
+      if (held) {
+        host.style.height = `${held}px`;
+        host.style.overflow = 'hidden';
+      }
+      draw(demoOccurrences());
+      rememberDrawing(key, host, props, true);
+    });
+  }
   loadOccurrences(ics, cf, sources, Math.max(1, props.limit ?? 6), view, from, zone, ui.meetingHosts, to, early).then(({ occurrences, errors, feedZone: fz }) => {
     if (!host.isConnected) return;
     feedZone = fz;

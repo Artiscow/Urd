@@ -112,6 +112,7 @@ const EDITOR_ONLY = [
   'color-picker.js', 'dropdown.js', 'glyphs.js', 'fonts.js', 'text-typo.js',
   'place.js', 'section-size.js', 'selection.js', 'lightbox.js', 'hint.js',
   'page-presets.js', 'anchored.js', 'text-whole.js', 'phone-moves.js', 'phone-layouts.js',
+  'sections/presets.js',
 ];
 
 test('the engine directory exists and is named what urd.json.engine says', () => {
@@ -212,6 +213,11 @@ test('the editor layer is NOT in the visitor-critical closure', () => {
   }
 });
 
+test('the block and background modules stay out of the visitor\'s static closure: a page loads those it holds (core-types.js, ADR-0036)', () => {
+  const typed = [...closure()].filter((name) => /^(?:blocks|backgrounds)\//.test(name));
+  assert.deepEqual(typed, []);
+});
+
 test('the closure walker excludes commented and dynamic imports', () => {
   const src = `
     import { a } from './a.js';
@@ -241,7 +247,7 @@ test('the boot reads the engine version from its own folder, and draws a page wi
   const navWait = urd.indexOf('needsPlugins(pageTypes(site.nav), Urd)');
   assert.ok(navWait > 0 && navWait < urd.indexOf('renderNav(site, opts.nav'), 'the nav waits for a plugin type before it is drawn');
   assert.match(urd, /needsPlugins\(pageTypes\(page, site\.footer\), Urd\)\) await pluginsLoaded;/);
-  assert.match(urd, /needsPlugins\(pageTypes\(state\.page, site\.footer\), Urd\)\) await pluginsLoaded;/, 'a newer page file waits as the first drawing does');
+  assert.match(urd, /needsPlugins\(pageTypes\(freshPage, site\.footer\), Urd\)\) await pluginsLoaded;/, 'a newer page file waits as the first drawing does');
   assert.match(urd, /whenSettled\(opts\.root, FOOTER_WAIT_MS\)\.then\(\(\) => \{\s+opts\.root\.insertAdjacentElement\('afterend', opts\.footer\);\s+drawFooter\(\);/, 'a visitor\'s footer is drawn as it joins the page');
   const privacy = readFileSync(new URL('blocks/privacy.js', ENGINE_DIR), 'utf8');
   assert.match(privacy, /host\.setAttribute\('aria-busy', 'true'\);[\s\S]{0,80}host\.removeAttribute\('aria-busy'\);/);

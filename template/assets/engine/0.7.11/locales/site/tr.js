@@ -427,6 +427,7 @@ export default {
     'calendar.zoneOf': 'Saatler {zone} saatine göre gösterilir',
     'calendar.zoneYours': 'Saatler sizin saat diliminize göre gösterilir ({zone})',
     'calendar.loading': 'Takvim yükleniyor',
+    'calendar.loadingEvents': 'Etkinlikler yükleniyor',
     'calendar.dayNone': 'Bu gün etkinlik yok',
     'calendar.earlier': 'Geçmiş ({n})',
     'calendar.search': 'Etkinliklerde ara',

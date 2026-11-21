@@ -3032,6 +3032,7 @@ var la = {
 		"calendar.zoneOf": "Tidene vises i {zone}",
 		"calendar.zoneYours": "Tidene vises i din tidssone ({zone})",
 		"calendar.loading": "Laster kalenderen",
+		"calendar.loadingEvents": "Henter arrangementene",
 		"calendar.dayNone": "Ingenting denne dagen",
 		"calendar.earlier": "Tidligere ({n})",
 		"calendar.search": "Søk i arrangementene",
@@ -58598,7 +58599,6 @@ function Nre(e) {
 		name: n[2]
 	} : null;
 }
-// ../template/assets/engine/0.7.11/blocks/video.js
 function Pre(e) {
 	let t;
 	try {

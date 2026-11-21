@@ -18,42 +18,8 @@ import { isSafeImage, hashTarget, samePageHash, jumpOnArrival } from './nav-mode
 import { renderFooter } from './footer.js';
 import { whenSettled, FOOTER_WAIT_MS } from './footer-model.js';
 import { renderToTop } from './totop.js';
-import { textBlock, termsBlock } from './blocks/text.js';
-import { imageBlock } from './blocks/image.js';
-import { buttonBlock } from './blocks/button.js';
-import { shapeBlock } from './blocks/shape.js';
-import { spacerBlock } from './blocks/spacer.js';
-import { videoBlock } from './blocks/video.js';
-import { iconBlock } from './blocks/icon.js';
-import { collectionBlock } from './blocks/collection.js';
-import { galleryBlock } from './blocks/gallery.js';
-import { faqBlock } from './blocks/faq.js';
-import { timelineBlock } from './blocks/timeline.js';
-import { quoteBlock } from './blocks/quote.js';
-import { statsBlock } from './blocks/stats.js';
-import { ribbonBlock } from './blocks/ribbon.js';
-import { tableBlock } from './blocks/table.js';
-import { shareBlock } from './blocks/share.js';
-import { contactBlock } from './blocks/contact.js';
-import { privacyBlock } from './blocks/privacy.js';
-import { countdownBlock } from './blocks/countdown.js';
-import { audioBlock } from './blocks/audio.js';
-import { productBlock } from './blocks/product.js';
-import { cartBlock } from './blocks/cart.js';
-import { checkoutBlock } from './blocks/checkout.js';
-import { mapBlock } from './blocks/map.js';
-import { formBlock } from './blocks/form.js';
-import { calendarBlock } from './blocks/calendar.js';
-import { colorLayer } from './backgrounds/color.js';
-import { gradientLayer } from './backgrounds/gradient.js';
-import { glowLayer } from './backgrounds/glow.js';
-import { grainLayer } from './backgrounds/grain.js';
-import { patternLayer } from './backgrounds/pattern.js';
-import { imageLayer } from './backgrounds/image.js';
-import { slideshowLayer } from './backgrounds/slideshow.js';
-import { videoLayer } from './backgrounds/video.js';
 import { coreAnimations } from './animations/core.js';
-import { registerSectionPresets } from './sections/presets.js';
+import { loadCoreTypes, reserveCoreTypes } from './core-types.js';
 import { loadPlugins, loadPluginList, applyPluginSiteLocales, pluginBlockDesigns, pageTypes, needsPlugins, engineVersionOf } from './plugins.js';
 import { setCollectionsDraft, draftHasKind } from './collections.js';
 import { initSticky, refreshSticky } from './sticky.js';
@@ -98,43 +64,9 @@ Urd.maler = Urd.templates;
 window.Urd = Urd;
 
 function registerCore() {
-  Urd.blocks.define('text', textBlock);
-  Urd.blocks.define('image', imageBlock);
-  Urd.blocks.define('button', buttonBlock);
-  Urd.blocks.define('shape', shapeBlock);
-  Urd.blocks.define('spacer', spacerBlock);
-  Urd.blocks.define('video', videoBlock);
-  Urd.blocks.define('icon', iconBlock);
-  Urd.blocks.define('collection', collectionBlock);
-  Urd.blocks.define('gallery', galleryBlock);
-  Urd.blocks.define('faq', faqBlock);
-  Urd.blocks.define('timeline', timelineBlock);
-  Urd.blocks.define('quote', quoteBlock);
-  Urd.blocks.define('stats', statsBlock);
-  Urd.blocks.define('table', tableBlock);
-  Urd.blocks.define('share', shareBlock);
-  Urd.blocks.define('contact', contactBlock);
-  Urd.blocks.define('privacy', privacyBlock);
-  Urd.blocks.define('terms', termsBlock);
-  Urd.blocks.define('countdown', countdownBlock);
-  Urd.blocks.define('audio', audioBlock);
-  Urd.blocks.define('product', productBlock);
-  Urd.blocks.define('cart', cartBlock);
-  Urd.blocks.define('checkout', checkoutBlock);
-  Urd.blocks.define('map', mapBlock);
-  Urd.blocks.define('form', formBlock);
-  Urd.blocks.define('calendar', calendarBlock);
-  Urd.blocks.define('ribbon', ribbonBlock);
-  Urd.backgrounds.define('color', colorLayer);
-  Urd.backgrounds.define('gradient', gradientLayer);
-  Urd.backgrounds.define('glow', glowLayer);
-  Urd.backgrounds.define('grain', grainLayer);
-  Urd.backgrounds.define('pattern', patternLayer);
-  Urd.backgrounds.define('image', imageLayer);
-  Urd.backgrounds.define('slideshow', slideshowLayer);
-  Urd.backgrounds.define('video', videoLayer);
+  // The block and background types are defined as a page asks for them (core-types.js, ADR-0036), and held as the engine's own from the start; the animations are few and every page may use them.
+  reserveCoreTypes(Urd);
   for (const [id, def] of Object.entries(coreAnimations)) Urd.animations.define(id, def);
-  registerSectionPresets(Urd);
   // Old plugin contract ids resolve to the renamed ids (ADR-0021): pages
   // built before the rename still carry the old ones. Map, form and calendar
   // are core blocks since 0.7.18; a plugin that still defines an old id wins
@@ -909,6 +841,14 @@ export async function boot(opts) {
   if (preview) document.body.classList.add('urd-preview');
 
   // The page id is known from the register, so a page the menu stays off (nav.hideOn) starts without it.
+  // The core types the nav draws with are loaded before it is drawn; the preview loads every core type, and the section presets, since the editor offers them all.
+  if (preview) {
+    await Promise.all([loadCoreTypes(Urd, null, { all: true }), import('./sections/presets.js').then(({ registerSectionPresets }) => registerSectionPresets(Urd))]);
+  } else {
+    // The footer's types are asked for at once, beside the page file, and the page's own load below waits for them with its own.
+    loadCoreTypes(Urd, pageTypes(site.footer));
+    await loadCoreTypes(Urd, pageTypes(site.nav));
+  }
   if (!preview && needsPlugins(pageTypes(site.nav), Urd)) await pluginsLoaded;
   if (opts.nav) renderNav(site, opts.nav, entry.id);
   // The shared footer: its own element right after the main content, created here since index.html is Urd-owned and cannot be changed by publishing.
@@ -933,6 +873,8 @@ export async function boot(opts) {
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   if (!Array.isArray(page.sections)) page.sections = [];
+  // A visitor's page loads the core types it and the footer use (core-types.js).
+  if (!preview) await loadCoreTypes(Urd, pageTypes(page, site.footer));
   if (!preview && needsPlugins(pageTypes(page, site.footer), Urd)) await pluginsLoaded;
   if (drafts) setCollectionsDraft(drafts.collections);
   document.title = pageTitle(site, page, entry);
@@ -994,10 +936,12 @@ export async function boot(opts) {
     // blocks measure), and the sticky blocks are re-pinned right away.
     const applyFreshPage = async (fresh) => {
       served.page = { text: fresh.text, etag: fresh.etag };
-      state.page = liftPageFile(fresh.page, rawSite);
-      if (!Array.isArray(state.page.sections)) state.page.sections = [];
-      // A page published since with a plugin's type waits for the plugins, as the first drawing does.
-      if (needsPlugins(pageTypes(state.page, site.footer), Urd)) await pluginsLoaded;
+      const freshPage = liftPageFile(fresh.page, rawSite);
+      if (!Array.isArray(freshPage.sections)) freshPage.sections = [];
+      // A page published since with a type of its own waits for its module, and for the plugins where it uses a plugin's type, as the first drawing does; until then the page shown stays the one a redraw draws.
+      await loadCoreTypes(Urd, pageTypes(freshPage, site.footer));
+      if (needsPlugins(pageTypes(freshPage, site.footer), Urd)) await pluginsLoaded;
+      state.page = freshPage;
       document.title = pageTitle(site, state.page, entry);
       applyHeadMeta(site, state.page, location.origin, location.pathname, entry);
       const y = window.scrollY;

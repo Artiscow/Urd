@@ -7,8 +7,7 @@
  * blocks/privacy.js only writes it out (tests/privacy-model.test.mjs).
  */
 import { siteContact, contactDesign } from './contact-model.js';
-import { providerOf } from './embed-cover.js';
-import { embedUrl } from './blocks/video.js';
+import { providerOf, embedUrl } from './embed-cover.js';
 import { parseLocation } from './osm.js';
 
 /**

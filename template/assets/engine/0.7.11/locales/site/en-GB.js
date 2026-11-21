@@ -428,6 +428,7 @@ export default {
     'calendar.zoneOf': 'Times are shown in {zone}',
     'calendar.zoneYours': 'Times are shown in your time zone ({zone})',
     'calendar.loading': 'Loading the calendar',
+    'calendar.loadingEvents': 'Loading the events',
     'calendar.dayNone': 'Nothing on this day',
     'calendar.earlier': 'Earlier ({n})',
     'calendar.search': 'Search the events',

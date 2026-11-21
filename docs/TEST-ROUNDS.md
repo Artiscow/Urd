@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.4): code by what a page holds, and the calendar's loading
+
+- [ ] Every page of the published site draws as before, on the desktop and on a phone; DevTools' network list on a page without a calendar, map or form shows no `blocks/calendar.js`, `blocks/map.js` or `blocks/form.js`
+- [ ] The editor: every block in «+ New block» and every section template can be added, and the Blocks panel lists them all
+- [ ] A site with a plugin that has blocks (if one is installed): its blocks draw on the published page and in the editor
+- [ ] The basket in the menu: pressed on any page it opens the drawer with the basket's lines; adding a product updates the count and the drawer
+- [ ] A page with a video block, and the privacy page: the video's cover shows, and the privacy page names the video service
+- [ ] The published front page: the calendar shows in its own design with «Loading the events» (in Norwegian «Henter arrangementene»), and the events fill it; no grey bars on an ordinary load
+- [ ] The front page reloaded: the events show at once, without the loading note
+- [ ] The editor: the calendar stays drawn as the editor opens and while other blocks in its section are edited; a new design for it shows that design
+- [ ] The front page with the window resized across the phone width: the calendar never blanks
+
 ### Test batch (0.7.37.3.3): the stylesheet in three
 
 - [ ] Every page of the published site looks as before, on the desktop and on a phone, in light and dark mode

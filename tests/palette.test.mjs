@@ -1,6 +1,6 @@
 /**
  * Guard against a core block that exists in the engine but cannot be reached.
- * A block type is registered in ONE place (registerCore in urd.js) but has to be listed in three more before an owner can insert it: the block palette (block-palette.js, which the canvas menu and the Blocks panel both read), and the editor's BLOCK_DEFAULTS (the seed) and BLOCK_LABELS (the Properties header).
+ * A block type is registered in ONE place (CORE_BLOCKS in core-types.js) but has to be listed in three more before an owner can insert it: the block palette (block-palette.js, which the canvas menu and the Blocks panel both read), and the editor's BLOCK_DEFAULTS (the seed) and BLOCK_LABELS (the Properties header).
  * Nothing fails when one of them is forgotten: the block simply never appears.
  * This test reads the palette as a module and the editor's lists as text, the way modulepreload.test.mjs reads the HTML shells, and holds them against the registry.
  */
@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import { ENGINE_DIR, engineImport } from './_engine.mjs';
 
 const { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, palettePicture, recentKinds, rememberKind, shopOn, paletteGroupsFor } = await engineImport('block-palette.js');
+const { CORE_BLOCKS } = await engineImport('core-types.js');
 
 // The seeds and the names stand in the blocks module (0.7.26.5).
 const APP = new URL('../editor/src/state/blocks.svelte.js', import.meta.url);
@@ -18,10 +19,11 @@ const BLOCKS = new URL('../editor/src/panels/BlocksPanel.svelte', import.meta.ur
 const read = (url) => readFileSync(url, 'utf8');
 const slice = (text, from, to) => text.slice(text.indexOf(from), text.indexOf(to, text.indexOf(from)));
 
-/** The core block types, in registration order. */
+/** The core block types, in the table's order. */
 function coreBlocks() {
-  const src = read(new URL('urd.js', ENGINE_DIR));
-  return [...src.matchAll(/Urd\.blocks\.define\('([^']+)'/g)].map((m) => m[1]);
+  const types = Object.keys(CORE_BLOCKS);
+  assert.ok(types.length > 20, `only ${types.length} core blocks read`);
+  return types;
 }
 
 /** The block types the palette adds, in the canvas menu and the Blocks panel alike: the entries that open a picker or build another kind (a gallery from pictures) are left out. */

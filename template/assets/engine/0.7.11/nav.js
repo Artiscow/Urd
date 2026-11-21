@@ -23,7 +23,6 @@ import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClas
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
-import { createCartDrawer } from './blocks/cart.js';
 import { iconSvg } from './icons.js';
 import { siteLinks, linkIconHtml, leavesSite } from './links-model.js';
 import { t, ta } from './i18n.js';
@@ -552,8 +551,14 @@ export function renderNav(site, host, pageId) {
     cartBtn.appendChild(cartBadge);
     // The checkout page: a page in the register (cart.page) or a path (cart.href).
     const checkoutLink = resolveLink(cartCfg, site.pages ?? []);
-    const drawer = createCartDrawer({ href: checkoutLink.missing ? '' : checkoutLink.href, currency: cartCfg.currency || 'kr' });
-    nav.insertBefore(drawer.dialog, keptSheet);
+    // The basket's drawer is the cart block's, loaded as a nav with a basket is drawn, so a site without one never fetches it; a press before it is in opens it as it comes.
+    let drawer = null;
+    const drawerReady = import('./blocks/cart.js').then(({ createCartDrawer }) => {
+      if (!cartBtn.isConnected) return null;
+      drawer = createCartDrawer({ href: checkoutLink.missing ? '' : checkoutLink.href, currency: cartCfg.currency || 'kr' });
+      nav.insertBefore(drawer.dialog, keptSheet?.parentNode === nav ? keptSheet : null);
+      return drawer;
+    }, () => null);
     const paintCart = () => {
       const count = cartCount(readCart());
       cartBadge.textContent = String(count);
@@ -563,9 +568,15 @@ export function renderNav(site, host, pageId) {
     // Tied to the button, which leaves the page with its render, and the listener with it; the bar itself can stay through a render.
     onCartChange(cartBtn, () => {
       paintCart();
-      drawer.refresh();
+      drawer?.refresh();
     });
-    cartBtn.addEventListener('click', () => drawer.open(), { signal });
+    // Without its drawer (the module could not be loaded) the basket opens the checkout page.
+    cartBtn.addEventListener('click', () => {
+      drawerReady.then((ready) => {
+        if (ready) ready.open();
+        else if (!checkoutLink.missing && checkoutLink.href) location.assign(checkoutLink.href);
+      });
+    }, { signal });
     toolEls.cart = cartBtn;
   }
 

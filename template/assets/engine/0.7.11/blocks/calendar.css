@@ -32,6 +32,65 @@
 }
 
 /*
+ * While the feeds are on the way (blocks/calendar.js): the calendar in its own design, drawn with the sample events into the height the loading state kept, from its top, their words and pictures hidden, and the loading note over it in the design's colours.
+ * Without a way to hide the words alone, the drawing is hidden and the note stands by itself.
+ * A calendar drawn again shows a copy of its last drawing instead (data-cal-copy), at the height that drawing had.
+ */
+.urd-block > .urd-cal.urd-cal-wait,
+.urd-block > .urd-cal[data-cal-copy] {
+  height: auto;
+}
+
+.urd-cal-wait {
+  align-content: start;
+}
+
+/* Each part of the drawing keeps its own layers to itself, so the note stands over every design. */
+.urd-cal-wait > :not(.urd-cal-wait-note) {
+  -webkit-text-fill-color: transparent;
+  isolation: isolate;
+}
+
+@supports not (-webkit-text-fill-color: transparent) {
+  .urd-cal-wait > :not(.urd-cal-wait-note) {
+    visibility: hidden;
+  }
+}
+
+.urd-cal-wait img {
+  visibility: hidden;
+}
+
+.urd-cal-wait-note {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  margin: 0;
+  padding: 0.45em 1em;
+  border: var(--urd-cal-set-frame);
+  border-radius: var(--urd-cal-set-chip-radius);
+  background: var(--urd-cal-set-bg);
+  color: var(--urd-cal-set-ink);
+  font-family: var(--urd-cal-set-font);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .urd-cal-wait-note {
+    animation: urd-cal-wait 1.4s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes urd-cal-wait {
+  to {
+    opacity: 0.55;
+  }
+}
+
+/*
  * The colour sets (calendar-designs.js `set`, the class `urd-cal-set-<id>` on the block and on its card): the event card, the switcher's week and month, the finding tools and the phone view are drawn from these variables alone, so a design overrides its set by redefining one under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
  * The theme set follows the site; the others take the design's colour slots with the values the Design canvas drew.
  */

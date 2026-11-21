@@ -50,7 +50,7 @@ import { loadSearchLanguages, searchLanguagesReady, searchItemsAny } from './sea
 import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { phoneLayouts, phoneLayoutChange, phoneLayoutSketch, phoneSameWidths } from './phone-layouts.js';
 import { presetThumb } from './preset-thumb.js';
-import { embedUrl } from './blocks/video.js';
+import { embedUrl } from './embed-cover.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
 import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneAfterLine, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup, phoneGroup, phoneUngroupAll, phoneAlignCells } from './phone-moves.js';

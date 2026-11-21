@@ -8,6 +8,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.37.3.4 - Code by what a page holds, and a calendar that stands in its own design while its feed loads - 21 November 2026
+
+- Every page loaded the modules of all 27 block types, the 8 background types and the section templates, 78 modules and 410 KB compressed (audit V1). A page loads the modules of the types its nav, page and footer hold (`core-types.js`, ADR-0036), and the shells preload the boot's 39 modules, 235 KB.
+- The core block and background ids are held as the engine's from the start (`reserve` in registry.js), so a plugin is refused one however its loading and the page's interleave, and a page using only core types never waits for the plugins.
+- The editor's preview loads every type and the section templates before it reports ready.
+- The menu's basket loaded the cart block's module on every page; it loads it as a menu with a basket is drawn.
+- The privacy page loaded the video block for its embed addresses; `embedUrl` stands in embed-cover.js.
+- ADR-0036 «Code by what a page holds» is written, and ADR-0013's consequence on per-page loading rewritten, its earlier text in docs/adr/amended/. AGENTS.md, ARCHITECTURE.md and the development guide in both languages say where a new type goes.
+- The palette test read the core blocks from urd.js's define calls, which had left, so four of its tests checked nothing. It reads `CORE_BLOCKS` and fails on too few.
+- `tests/core-types.test.mjs` holds the tables to the modules, the loading by type, the reserved ids and the boot's order, and an engine-wide check fails a module that uses a name it only re-exports.
+- Testing found a calendar showing grey bars and then its events at once, and blanking for a moment each time the editor drew the page again. A calendar stands in its own design while its feeds are on the way, the sample events' words and pictures hidden under «Loading the events» (nb, en-GB and tr); a calendar drawn again with the same settings keeps a copy of its last drawing until its own is in; the grey bars show only after half a second.
+- base.css's stamp is written anew in every HTML shell.
+- Measured in headless Brave on a phone slowed four times against the commit before: the template's pages fetch 23 to 39 % less JavaScript and show their first content 0.1 to 0.2 s sooner; the calendar's waiting drawing costs about 130 ms of main-thread time there.
+
+The independent review before the commit found these:
+
+1. The calendar's waiting drawing gave up the height the loading state kept, so on a phone the sections below would move down with the sample and back with the events. It is drawn into that height, from its top.
+2. With two calendars on a page, the one that settled first dropped the other's remembered drawing, so a second redraw blanked it. A copy is remembered in its turn.
+3. If calendar.css failed to load, the waiting drawing would have shown the sample words. `loadStylesheet` resolves to whether the sheet loaded, and a calendar without its rules skips the waiting drawing.
+4. The registry refused a core id only to a staged definition, so a plugin calling `define` directly took it. `define` refuses a reserved id, and the engine defines it through the definer `reserve` hands back.
+5. A newer page file was set before its types were in, so a redraw in between drew placeholders; it is set once they are. Without its drawer the basket did nothing; it opens the checkout page. A calendar that failed while showing a copy of the waiting drawing kept its words hidden; the wait is cleared.
+6. A plugin reading a core type's definition through `get` finds on a visitor's page only the types the page holds; ADR-0036 and the plugin README say so, with what a tab an update has outrun can no longer load.
+7. privacy-model.js imported twice from one module, ADR-0036 gave the closure as 407 KB where the CHANGELOG said 410, and ADR-0013's rewritten consequence read as a contradiction. Each is set right.
+
 ### 0.7.37.3.3 - The stylesheet in three: the visitor's base, the preview's own rules and the calendar's - 21 November 2026
 
 - Every page loaded all of base.css, 565 KB, of which the rules that need the preview were 16 % and the calendar's 39 % (audit V1). The rules that need the preview's body class stand in the engine's `preview.css`, loaded by the boot in the preview with the editing layer (`loadStylesheet` in render.js); base.css falls to 248 KB, 57 KB compressed from 111.

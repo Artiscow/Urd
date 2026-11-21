@@ -1,6 +1,6 @@
 # Plugins
 
-An Urd plugin is a folder here with a manifest (`plugin.json`) and an ES module (`index.js`) that exports `register(Urd)`. Plugins use the same define APIs as the core (blocks, section presets, backgrounds, animations, templates) and are bound by the same migration contract: a plugin update can never break existing content.
+An Urd plugin is a folder here with a manifest (`plugin.json`) and an ES module (`index.js`) that exports `register(Urd)`. Plugins use the same define APIs as the core (blocks, section presets, backgrounds, animations, templates) and are bound by the same migration contract: a plugin update can never break existing content. The core's ids are the engine's own, so a plugin cannot define one; and since a visitor's page loads only the core types it holds, a plugin cannot count on reading a core type's definition through `get`.
 
 The active plugins are listed in [`plugins.json`](plugins.json) (static hosts cannot list folders, hence an index file). The admin handles the list for you: the Plugins panel shows the folders here automatically (through the publishing layer, or the last known list), and switching a plugin on or off is published as an ordinary change.
 

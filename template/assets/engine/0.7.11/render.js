@@ -75,9 +75,9 @@ export function renderBackgroundLayers(host, background, { later = false, first 
 const sheets = new Map();
 
 /**
- * Adds a stylesheet to the document once, for the code that needs it alone (the preview's rules, a calendar's): resolves when it has loaded or failed, so the caller draws with it in place.
+ * Adds a stylesheet to the document once, for the code that needs it alone (the preview's rules, a calendar's): resolves when it has loaded or failed, so the caller draws with it in place, to whether it loaded.
  * @param {string} href
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>}
  */
 export function loadStylesheet(href) {
   if (!sheets.has(href)) {
@@ -85,8 +85,8 @@ export function loadStylesheet(href) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = href;
-      link.addEventListener('load', () => resolve(), { once: true });
-      link.addEventListener('error', () => resolve(), { once: true });
+      link.addEventListener('load', () => resolve(true), { once: true });
+      link.addEventListener('error', () => resolve(false), { once: true });
       document.head.appendChild(link);
     }));
   }

@@ -133,6 +133,10 @@ export function createStagedUrd(Urd, pluginName = null) {
       const warnings = [];
       for (const [kind] of KINDS) {
         for (const [id, def] of captured.get(kind)) {
+          if (Urd[kind].isReserved?.(id)) {
+            warnings.push(`${kind}/${id}: '${id}' is the engine's own`);
+            continue;
+          }
           try {
             Urd[kind].define(id, def);
           } catch (err) {
@@ -426,7 +430,7 @@ export function pageTypes(...parts) {
 }
 
 /**
- * Whether a page needs a plugin to be drawn: a type it uses that the engine has not defined itself.
+ * Whether a page needs a plugin to be drawn: a type it uses that is neither defined nor held by the engine as its own (a core type whose module is loaded as a page asks for it, core-types.js).
  * A type the engine knows only by an alias counts as not defined, since a plugin that still defines that old id wins for its own data (ADR-0021).
  * @param {{blocks: Set<string>, backgrounds: Set<string>, animations: Set<string>}} types pageTypes
  * @param {typeof window.Urd} Urd
@@ -434,7 +438,7 @@ export function pageTypes(...parts) {
 export function needsPlugins(types, Urd) {
   return ['blocks', 'backgrounds', 'animations'].some((kind) => {
     const own = new Set(Urd[kind].ids());
-    return [...types[kind]].some((type) => !own.has(type));
+    return [...types[kind]].some((type) => !own.has(type) && !Urd[kind].isReserved?.(type));
   });
 }
 

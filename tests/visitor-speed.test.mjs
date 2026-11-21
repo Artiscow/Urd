@@ -1,5 +1,5 @@
 /**
- * Visitor speed (0.7.37.3.2): the pictures below the first screen wait for their section, the first screen's are fetched first, the push pass reads and writes in phases, and the calendar asks for its feed with its modules.
+ * Visitor speed (0.7.37.3.2): the pictures below the first screen wait for their section, the first screen's are fetched first, the push pass reads and writes in phases, and the calendar asks for its feed with its modules and stands in its own design while it waits.
  * The background layers' wait runs on stand-ins for the DOM and the observer; the rest is held to the source.
  */
 import { test } from 'node:test';
@@ -114,4 +114,34 @@ test('the calendar asks for its feed with its modules, loads its design modules 
     Intl.Locale = RealLocale;
   }
   assert.equal(calWeekStart({ weekStart: 'sun' }, 'nb'), 0);
+});
+
+test('a calendar stands in its own design while its feeds are on the way, a feed at hand skipping it, a calendar drawn again shows its last drawing until its own is in, and the grey bars wait half a second', () => {
+  const calendar = source('blocks/calendar.js');
+  const wait = calendar.indexOf('if (settled || !sheetIn || !host.isConnected) return;');
+  assert.ok(wait > 0 && wait < calendar.indexOf('loadOccurrences(ics, cf, sources, Math.max'), 'asked for before the feeds are read');
+  assert.match(calendar, /if \(!ctx\.measure && !\('calCopy' in host\.dataset\)\) \{\s+requestAnimationFrame\(\(\) => \{\s+if \(settled \|\| !sheetIn \|\| !host\.isConnected\) return;/, 'a frame later, so a feed already in is drawn without it, and never without the rules that hide the words');
+  assert.match(calendar, /const held = host\.offsetHeight;\s+waiting = true;\s+host\.classList\.add\('urd-cal-wait'\);\s+if \(held\) \{\s+host\.style\.height = `\$\{held\}px`;\s+host\.style\.overflow = 'hidden';\s+\}\s+draw\(demoOccurrences\(\)\);\s+rememberDrawing\(key, host, props, true\);/, 'at the height the loading state kept, so nothing around it moves');
+  assert.match(calendar, /calendarParts\(\)\.then\(async \(\[ics, cd, cf, maps, links, sheet\]\) => \{\s+sheetIn = sheet;/);
+  assert.match(source('render.js'), /link\.addEventListener\('load', \(\) => resolve\(true\), \{ once: true \}\);\s+link\.addEventListener\('error', \(\) => resolve\(false\), \{ once: true \}\);/);
+  assert.match(calendar, /LAST_DRAWN\.set\(id, \{ \.\.\.last, host \}\);\s+return true;/, 'a copy is remembered in its turn, so another calendar settling first never drops it');
+  assert.match(calendar, /if \(!copyLastDrawing\(host, el, props\) && host\.hasAttribute\('aria-busy'\)\) host\.appendChild\(loadingNode\(el, ctx\)\);/, 'a calendar drawn again starts from its last drawing, never blank');
+  assert.match(calendar, /if \(!last \|\| last\.props !== JSON\.stringify\(props\)\) return false;/, 'only with the settings it was drawn with');
+  assert.match(calendar, /const copy = child\.cloneNode\(true\);\s+copy\.inert = true;/);
+  assert.match(calendar, /if \(host\.dataset\.calCopy === 'wait'\) host\.classList\.add\('urd-cal-wait'\);/, 'a copy of the waiting drawing keeps the sample words hidden');
+  assert.match(calendar, /if \(!ctx\.measure\) rememberDrawing\(key, host, props, false\);/);
+  assert.match(calendar, /settled = true;\s+waiting = false;\s+host\.classList\.remove\('urd-cal-wait'\);\s+delete host\.dataset\.calCopy;\s+host\.style\.removeProperty\('height'\);\s+host\.style\.removeProperty\('overflow'\);/);
+  assert.match(calendar, /host\.removeAttribute\('aria-busy'\);\s+host\.classList\.remove\('urd-cal-wait'\);\s+delete host\.dataset\.calCopy;\s+host\.style\.removeProperty\('height'\);\s+host\.style\.removeProperty\('overflow'\);\s+host\.replaceChildren\(emptyNode\(props\)\);/, 'a calendar that fails shows its empty state with its words');
+  assert.match(calendar, /const settle = \(occurrences, reason = null, sample = !sources\.length\) => \{\s+settled = true;\s+waiting = false;\s+host\.classList\.remove\('urd-cal-wait'\);/);
+  assert.match(calendar, /if \(!waiting\) host\.removeAttribute\('aria-busy'\);/, 'the footer still waits for the events');
+  assert.match(calendar, /sources\.length && !waiting\) writeEventData\(/, 'the sample events never reach the structured data');
+  assert.match(calendar, /if \(waiting\) \{\s+for \(const child of host\.children\) child\.inert = true;\s+const note = el2\('p', 'urd-cal-wait-note', t\('calendar\.loadingEvents'\)\);\s+note\.setAttribute\('role', 'status'\);/, 'out of reach behind the note a screen reader hears');
+  const css = source('blocks/calendar.css');
+  assert.match(css, /\.urd-cal-wait > :not\(\.urd-cal-wait-note\) \{\s+-webkit-text-fill-color: transparent;\s+isolation: isolate;\s+\}/);
+  assert.match(css, /@supports not \(-webkit-text-fill-color: transparent\) \{\s+\.urd-cal-wait > :not\(\.urd-cal-wait-note\) \{\s+visibility: hidden;/, 'without it the drawing is hidden, never the sample words shown');
+  assert.match(css, /\.urd-cal-wait img \{\s+visibility: hidden;/);
+  assert.match(css, /\.urd-block > \.urd-cal\.urd-cal-wait,\s+\.urd-block > \.urd-cal\[data-cal-copy\] \{\s+height: auto;/, 'both at their own height, not stretched to the frame');
+  const base = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  assert.match(base, /\.urd-cal-loading i \{[^}]*animation: urd-cal-appear 0\.2s 0\.5s backwards;/);
+  assert.match(base, /animation: urd-cal-appear 0\.2s 0\.5s backwards, urd-cal-loading /, 'the pulse keeps the wait');
 });
