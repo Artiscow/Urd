@@ -520,8 +520,7 @@ function endLook() {
   look = null;
   lookTurns += 1;
   bridge?.setLooking(false);
-  siteState.pushSiteToPreview();
-  bridge?.sendPage(pageState.pageId, pageState.store.data);
+  siteState.pushSiteToPreview({ page: true });
   bridge?.sendChrome(chromeVisible);
 }
 

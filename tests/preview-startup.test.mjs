@@ -13,7 +13,7 @@ const editorFile = (path) => readFileSync(new URL(`../editor/src/${path}`, impor
 const urd = readFileSync(new URL('urd.js', ENGINE_DIR), 'utf8');
 
 test('the view, site and page the editor marks as its ready handshake draw nothing where they change nothing', () => {
-  assert.match(urd, /if \(msg\?\.startup === true && \(\(msg\.type === 'urd-viewport' && msg\.mode === state\.viewport\) \|\| \(msg\.type === 'urd-site' && sameData\(msg\.site, state\.site\)\) \|\| \(msg\.type === 'urd-preview-full' && sameData\(msg\.page, state\.page\)\)\)\) return;/);
+  assert.match(urd, /if \(msg\?\.startup === true && \(\(msg\.type === 'urd-viewport' && msg\.mode === state\.viewport\) \|\| \(msg\.type === 'urd-site' && !msg\.page && sameData\(msg\.site, state\.site\)\) \|\| \(msg\.type === 'urd-preview-full' && sameData\(msg\.page, state\.page\)\)\)\) return;/);
   const skip = urd.indexOf('if (msg?.startup === true');
   assert.ok(skip > 0 && skip < urd.indexOf("if (msg?.type === 'urd-preview' && msg.section)"), 'before any message is handled');
   const ready = readFileSync(new URL('../editor/src/state/preview.svelte.js', import.meta.url), 'utf8');
@@ -76,4 +76,44 @@ test('the Legal panel reads the other pages and the beacon once the canvas has o
   const legal = editorFile('state/legal.svelte.js');
   assert.match(legal, /if \(siteState\.siteDraft && previewState\.canvasOpened\) readBeacon\(\);/);
   assert.match(legal, /if \(!draft \|\| !previewState\.canvasOpened\) return;/);
+});
+
+test('one change that moves the site and the page draws the page once: the site carries the page, and the canvas takes it before it draws', async () => {
+  globalThis.location ??= { origin: 'http://localhost' };
+  globalThis.window ??= globalThis;
+  globalThis.addEventListener ??= () => {};
+  globalThis.removeEventListener ??= () => {};
+  const { createPreviewBridge } = await import('../editor/src/lib/previewBridge.js');
+  const sent = [];
+  const bridge = createPreviewBridge({ contentWindow: { postMessage: (msg) => sent.push(msg) } });
+  bridge.sendSite({ v: 1 }, { page: { meta: { id: 'hjem' }, sections: [] } });
+  bridge.sendSite({ v: 2 });
+  bridge.sendLook('hjem', { meta: { id: 'hjem' }, sections: [1] }, { v: 3 });
+  bridge.sendLook('hjem', { meta: { id: 'hjem' }, sections: [2] });
+  bridge.destroy();
+  assert.deepEqual(sent, [
+    { type: 'urd-site', site: { v: 1 }, page: { meta: { id: 'hjem' }, sections: [] } },
+    { type: 'urd-site', site: { v: 2 } },
+    { type: 'urd-site', site: { v: 3 }, page: { meta: { id: 'hjem' }, sections: [1] } },
+    { type: 'urd-preview-full', pageId: 'hjem', page: { meta: { id: 'hjem' }, sections: [2] } },
+  ], 'a look with its own site settings is one message too');
+  // The canvas takes the page sent with the site before the one drawing, and never takes such a message as colours alone or as the handshake's repeat.
+  const handler = urd.slice(urd.indexOf("} else if (msg?.type === 'urd-site' && msg.site) {"));
+  assert.match(handler, /if \(msg\.page\) \{\s*state\.page = msg\.page;\s*if \(!Array\.isArray\(state\.page\.sections\)\) state\.page\.sections = \[\];\s*\}/);
+  assert.ok(handler.indexOf('state.page = msg.page;') < handler.indexOf('renderPage(state.page, state.site, root, vp());'));
+  assert.match(urd, /msg\?\.type === 'urd-site' && msg\.site && !msg\.page && onlyColoursChanged/);
+  // The editor sends what changed, both together where one change moved both.
+  const history = editorFile('state/history.svelte.js');
+  const restore = history.slice(history.indexOf('function restore(snap)'), history.indexOf('function restoreCollections'));
+  assert.match(restore, /const siteChanged = !sameJSON\(siteSnap, \$state\.snapshot\(siteState\.siteDraft\)\);\s*siteState\.siteStore\.replace\(siteSnap\);/, 'the site as it stood before the step is put back');
+  assert.match(restore, /const pageChanged = !sameJSON\(page, pageState\.store\.data\);\s*pageState\.store\.replace\(page\);/);
+  assert.match(restore, /\} else if \(siteChanged\) \{\s*siteState\.pushSiteToPreview\(\{ page: pageChanged \}\);\s*\} else if \(pageChanged\) \{\s*previewState\.bridge\?\.sendPage\(pageState\.pageId, pageState\.store\.data\);\s*\}/);
+  assert.equal((restore.match(/pushSiteToPreview\(\)/g) ?? []).length, 2, 'a step that leaves the page sends the site alone, the canvas reloading for the other page');
+  const site = editorFile('state/site.svelte.js');
+  assert.match(site, /const open = siteWithPage \? pageState\.store\?\.data \?\? null : null;\s*siteWithPage = false;\s*previewState\.bridge\?\.sendSite\(\$state\.snapshot\(siteDraft\), \{ \.\.\.options, page: open \}\);/);
+  const rename = site.slice(site.indexOf('function renamePage('), site.indexOf('/** Hide from search engines'));
+  assert.match(rename, /pushSiteToPreview\(\{ soon: true, page: true \}\);/, 'a page renamed goes with the site\'s own send');
+  assert.doesNotMatch(rename, /sendPage/);
+  assert.match(editorFile('state/preview.svelte.js'), /bridge\?\.setLooking\(false\);\s*siteState\.pushSiteToPreview\(\{ page: true \}\);/, 'the end of a look');
+  assert.match(editorFile('state/publish.svelte.js'), /\} else \{\s*siteState\.pushSiteToPreview\(\{ page: true \}\);\s*\}/, 'a discard');
 });

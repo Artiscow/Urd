@@ -1,16 +1,10 @@
 /**
- * The phone height of a block that fetches its content (0.7.21.7): a hidden
- * preview of the page at the phone width, where the editor asks for the
- * height such a block takes there once its content is drawn. The answer is
- * stored as the block's `mobileHeight`, and the loading state stands at it
- * on the phone, so the first load of a session does not jump.
+ * The phone height of a block that fetches its content (0.7.21.7): a hidden preview of the page at the phone width, where the editor asks for the height such a block takes there once its content is drawn.
+ * The answer is stored as the block's `mobileHeight`, and the loading state stands at it on the phone, so the first load of a session does not jump.
  *
- * The preview is the real page (`/?preview=1`) in the mobile viewport, as
- * the design picker draws its own: same engine, same CSS, the media queries
- * of a phone. It is created on the first request and kept for the session;
- * it is fed the same drafts as the main preview by `prepare`, and measures
- * with the main preview's own fit (`urd-fit-block`, answered with
- * `urd-grow`), which waits for a feed and skips a block still loading.
+ * The preview is the real page (`/?preview=1`) in the mobile viewport, as the design picker draws its own: same engine, same CSS, the media queries of a phone.
+ * It is created on the first request, and let go once it has been neither asked, fed nor answered for IDLE_MS, since it is the whole page with its pictures, films and feeds; the next request makes it again.
+ * It is fed the same drafts as the main preview by `prepare`, and measures with the main preview's own fit (`urd-fit-block`, answered with `urd-grow`), which waits for a feed and skips a block still loading.
  */
 import { PHONE_FILL_WIDTH } from './preview-width.js';
 
@@ -19,6 +13,9 @@ export const PHONE_W = PHONE_FILL_WIDTH;
 
 /** Edits close together are measured once. */
 const SETTLE_MS = 400;
+
+/** How long the hidden preview stays with nothing asked of it, fed to it or answered: a fit measures a block three times as its content comes in, so the wait runs from the last of them. */
+export const IDLE_MS = 30_000;
 
 /**
  * @param {{
@@ -34,12 +31,32 @@ export function createPhoneFit({ prepare, onHeight, title }) {
   let frame = null;
   let ready = false;
   let timer = null;
+  let idle = null;
   /** The page waiting to be measured, and its blocks with the request each asked for. */
   let pending = null;
   /** The page the hidden preview shows, so its answers are tied to it. */
   let shownPageId = null;
 
   const post = (msg) => frame?.contentWindow?.postMessage(msg, location.origin);
+
+  /** The hidden preview removed, its listener with it; the page it showed is forgotten, so a late answer is never tied to it. */
+  const dropFrame = () => {
+    window.removeEventListener('message', listener);
+    frame?.remove();
+    frame = null;
+    ready = false;
+    shownPageId = null;
+  };
+
+  /** The idle wait starts anew; once it runs out the hidden preview is let go, or waited for again while a request waits for it to be ready. */
+  const rest = () => {
+    clearTimeout(idle);
+    idle = setTimeout(() => {
+      idle = null;
+      if (pending) rest();
+      else dropFrame();
+    }, IDLE_MS);
+  };
 
   const flush = () => {
     timer = null;
@@ -50,6 +67,7 @@ export function createPhoneFit({ prepare, onHeight, title }) {
     prepare(post, false);
     post({ type: 'urd-preview-full', pageId, page });
     for (const [blockId, { sectionId, seq }] of blocks) post({ type: 'urd-fit-block', sectionId, blockId, seq });
+    rest();
   };
 
   const listener = (event) => {
@@ -62,6 +80,7 @@ export function createPhoneFit({ prepare, onHeight, title }) {
       post({ type: 'urd-chrome', visible: false });
       flush();
     } else if (msg?.type === 'urd-grow' && msg.fit && shownPageId) {
+      rest();
       onHeight(shownPageId, msg.blockId, msg.h, msg.seq ?? 0);
     }
   };
@@ -99,6 +118,7 @@ export function createPhoneFit({ prepare, onHeight, title }) {
       pending = { pageId, page, blocks };
       clearTimeout(timer);
       timer = setTimeout(flush, SETTLE_MS);
+      rest();
     },
     /** Forgets the request still waiting (an undo, a publish): its answer would measure a draft that is gone. */
     cancel() {
@@ -109,10 +129,9 @@ export function createPhoneFit({ prepare, onHeight, title }) {
     },
     destroy() {
       clearTimeout(timer);
-      window.removeEventListener('message', listener);
-      frame?.remove();
-      frame = null;
-      ready = false;
+      clearTimeout(idle);
+      pending = null;
+      dropFrame();
     },
   };
 }

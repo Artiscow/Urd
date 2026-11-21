@@ -82,24 +82,34 @@ function linkSiteDraft() {
 /** The send a panel's change waits for (siteMutate), so a drag sends the site once a frame however often the pointer moves. */
 let siteFrame = 0;
 
+/** Whether the next site sent carries the open page too (pushSiteToPreview with `page`). */
+let siteWithPage = false;
+
 /**
  * The site draft for the preview. ALWAYS through this: siteDraft is a
  * Svelte proxy, and postMessage (structured clone) throws DataCloneError
  * on proxies - $state.snapshot yields a plain object.
  * It is sent at once, or with `soon` in the next frame, together with every other change made before it; `startup` marks the send made as the preview reports ready.
- * @param {{soon?: boolean, startup?: boolean}} [options]
+ * With `page` the open page goes with it, where one change moved both, so the canvas draws the page once rather than once for each.
+ * @param {{soon?: boolean, startup?: boolean, page?: boolean}} [options]
  */
-function pushSiteToPreview({ soon = false, startup = false } = {}) {
+function pushSiteToPreview({ soon = false, startup = false, page = false } = {}) {
+  if (page) siteWithPage = true;
+  const send = (options) => {
+    const open = siteWithPage ? pageState.store?.data ?? null : null;
+    siteWithPage = false;
+    previewState.bridge?.sendSite($state.snapshot(siteDraft), { ...options, page: open });
+  };
   if (soon) {
     siteFrame ||= requestAnimationFrame(() => {
       siteFrame = 0;
-      previewState.bridge?.sendSite($state.snapshot(siteDraft));
+      send({});
     });
     return;
   }
   if (siteFrame) cancelAnimationFrame(siteFrame);
   siteFrame = 0;
-  previewState.bridge?.sendSite($state.snapshot(siteDraft), { startup });
+  send({ startup });
 }
 
 /* The slideshow layer: the image list is edited like the other
@@ -361,7 +371,7 @@ function renamePage(entry, rawTitle) {
     pageState.store.data.meta.title = title;
     pageState.store.save();
     historyState.updateDirty();
-    previewState.bridge?.sendPage(pageState.pageId, pageState.store.data);
+    pushSiteToPreview({ soon: true, page: true });
   } else {
     pageState.patchPageDraft(entry, (p) => { p.meta.title = title; });
   }

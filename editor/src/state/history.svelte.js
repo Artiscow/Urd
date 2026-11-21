@@ -12,6 +12,7 @@ import { unpublishedParts } from '../lib/unpublished.js';
 import { outSite } from '../lib/publish-pick.js';
 import { readNotLive, stillNotLive } from '../lib/not-live.js';
 import { partName } from '../lib/saved-model.js';
+import { sameJSON } from '../lib/json-copy.js';
 import { ta } from '$engine/i18n.js';
 import { contentHash } from '$engine/imageTools.js';
 import { collectionsState } from './collections.svelte.js';
@@ -395,11 +396,12 @@ function restore(snap) {
     if (doc) shellState.writeDraftKey(`urd-draft-${id}`, JSON.stringify(doc));
     else localStorage.removeItem(`urd-draft-${id}`);
   }
+  // The canvas is sent what the step changed: the site, the page, or both in one message, so the page is drawn once.
+  const siteChanged = !sameJSON(siteSnap, $state.snapshot(siteState.siteDraft));
   siteState.siteStore.replace(siteSnap);
   siteState.linkSiteDraft();
   siteState.siteStore.save();
   siteState.grid = { snap: true, ...siteState.siteDraft.grid };
-  siteState.pushSiteToPreview();
   // Collections/templates/plugins are restored BEFORE the page-switch
   // branch below, otherwise cross-page undo would lose those parts of the snapshot.
   restoreCollections(collectionsIndex, collections ?? {});
@@ -410,12 +412,14 @@ function restore(snap) {
   // The snapshot belongs to another page (undo across a page switch): put
   // the page content back as a draft THERE, and switch to it.
   if (snapPageId && snapPageId !== pageState.pageId && siteState.siteDraft.pages.some((p) => p.id === snapPageId)) {
+    if (siteChanged) siteState.pushSiteToPreview();
     shellState.writeDraftKey(`urd-draft-${snapPageId}`, JSON.stringify(page));
     pageState.selectPage(snapPageId, { keepHistory: true });
     updateDirty();
     return;
   }
 
+  const pageChanged = !sameJSON(page, pageState.store.data);
   pageState.store.replace(page);
   pageState.store.save();
   updateDirty();
@@ -427,8 +431,11 @@ function restore(snap) {
   // Undo can remove the page you are on (an undone page creation):
   // then switch to the front page instead of being left hanging.
   if (!siteState.siteDraft.pages.some((p) => p.id === pageState.pageId)) {
+    if (siteChanged) siteState.pushSiteToPreview();
     pageState.selectPage(siteState.siteDraft.pages[0].id, { keepHistory: true });
-  } else {
+  } else if (siteChanged) {
+    siteState.pushSiteToPreview({ page: pageChanged });
+  } else if (pageChanged) {
     previewState.bridge?.sendPage(pageState.pageId, pageState.store.data);
   }
 }

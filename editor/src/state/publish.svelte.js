@@ -274,12 +274,12 @@ function discard() {
   siteState.grid = { snap: true, ...siteState.siteDraft.grid };
   historyState.updateDirty();
   shellState.status = '';
-  siteState.pushSiteToPreview();
-  // Discarding can remove the page you are on (an unpublished new page).
+  // Discarding can remove the page you are on (an unpublished new page); otherwise the page as published goes with the site.
   if (!siteState.siteDraft.pages.some((p) => p.id === pageState.pageId)) {
+    siteState.pushSiteToPreview();
     pageState.selectPage(siteState.siteDraft.pages[0].id);
   } else {
-    previewState.bridge?.sendPage(pageState.pageId, freshPage);
+    siteState.pushSiteToPreview({ page: true });
   }
 }
 

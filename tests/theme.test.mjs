@@ -261,5 +261,5 @@ test('onlyColoursChanged: the theme\'s colours, its dark variant\'s, its colour 
   assert.equal(onlyColoursChanged(big, bigColour), true);
   assert.ok(performance.now() - t0 < 5, 'a site holding a picture is compared without writing it out');
   const urd = readFileSync(new URL('urd.js', ENGINE_DIR), 'utf8');
-  assert.match(urd, /msg\?\.type === 'urd-site' && msg\.site && onlyColoursChanged\(state\.site, msg\.site\)\) \{[^}]*state\.site\.theme = msg\.site\.theme;\s+applyTheme\(state\.site\.theme\);\s+\}/, 'the engine draws the theme alone for it');
+  assert.match(urd, /msg\?\.type === 'urd-site' && msg\.site && !msg\.page && onlyColoursChanged\(state\.site, msg\.site\)\) \{[^}]*state\.site\.theme = msg\.site\.theme;\s+applyTheme\(state\.site\.theme\);\s+\}/, 'the engine draws the theme alone for it');
 });

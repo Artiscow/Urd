@@ -6,7 +6,7 @@
  * Message format:
  *   editor → page: { type: 'urd-preview', pageId, section }    (one section)
  *                  { type: 'urd-preview-full', pageId, page }  (whole page)
- *                  { type: 'urd-site', site }                  (site draft: grid/theme/nav)
+ *                  { type: 'urd-site', site, page? }           (site draft: grid/theme/nav; with the open page where one change moved both, drawn in one pass)
  *                  { type: 'urd-plugins', enabled }            (the plugin draft's enabled list; loaded live in the preview)
  *                  { type: 'urd-collections', collections }    (the collection drafts: id → data; the preview uses them instead of the server files)
  *                  { type: 'urd-viewport', mode }              (the editor's viewport choice: desktop/mobile)
@@ -208,10 +208,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     setLooking(on) {
       looking = on;
     },
-    /** The version looked at, in the canvas while the draft's own sends wait: a page, and the site settings it stands in where they are the saved ones. */
+    /** The version looked at, in the canvas while the draft's own sends wait: a page, and the site settings it stands in where they are the saved ones, both in one message so the page is drawn once. */
     sendLook(pageId, page, site = null) {
-      if (site) post({ type: 'urd-site', site });
-      if (page) post({ type: 'urd-preview-full', pageId, page });
+      if (site) post({ type: 'urd-site', site, ...(page ? { page } : {}) });
+      else if (page) post({ type: 'urd-preview-full', pageId, page });
     },
     sendSection(pageId, section) {
       draftPost({ type: 'urd-preview', pageId, section });
@@ -220,8 +220,8 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendPage(pageId, page, { startup = false } = {}) {
       draftPost({ type: 'urd-preview-full', pageId, page, ...(startup ? { startup } : {}) });
     },
-    sendSite(site, { startup = false } = {}) {
-      draftPost({ type: 'urd-site', site, ...(startup ? { startup } : {}) });
+    sendSite(site, { startup = false, page = null } = {}) {
+      draftPost({ type: 'urd-site', site, ...(page ? { page } : {}), ...(startup ? { startup } : {}) });
     },
     sendChrome(visible) {
       post({ type: 'urd-chrome', visible });

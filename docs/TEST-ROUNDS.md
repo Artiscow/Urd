@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.4.5): one drawing per undo, and the hidden phone preview
+
+- [ ] Change a block's settings, then undo and redo several times: the canvas follows each step without flashing twice, and the page stays where it was scrolled
+- [ ] Change the theme or the menu, undo it, redo it: the canvas follows, the page and the menu included
+- [ ] Rename the open page in the Pages panel: the menu and the canvas show the new name; undo brings the old one back
+- [ ] Look at a saved draft from the Drafts window and end the look: the canvas shows this browser's draft again
+- [ ] Discard drafts on a page with changes: the canvas shows the published page
+- [ ] Edit a calendar or a collection block, then leave the editor alone for a minute and edit it again: its height on the phone is still measured (the block keeps its place on the phone after a reload)
+
 ### Test batch (0.7.37.3.5): calendars with the page
 
 - [ ] Open the front page of the deployed site in a new tab: the calendars stand in their own design with the rest of the page from its first moment, with «Loading the events» (Norwegian «Henter arrangementene») on them until their events are in, and never come in after the page
