@@ -14,20 +14,14 @@
   import { menu } from './menu/state.svelte.js';
   import Dropdown from './lib/Dropdown.svelte';
   import PagesPanel from './panels/PagesPanel.svelte';
-  import NavPanel from './panels/NavPanel.svelte';
-  import SitePanel from './panels/SitePanel.svelte';
-  import ThemePanel from './panels/ThemePanel.svelte';
   import BlocksPanel from './panels/BlocksPanel.svelte';
   import GridPanel from './panels/GridPanel.svelte';
   import PhonePanel from './panels/PhonePanel.svelte';
+  import PhoneDock from './panels/phone/PhoneDock.svelte';
   import PropertiesPanel from './panels/PropertiesPanel.svelte';
-  import FooterPanel from './panels/FooterPanel.svelte';
-  import LegalPanel from './panels/LegalPanel.svelte';
-  import CollectionsPanel from './panels/CollectionsPanel.svelte';
-  import PluginsPanel from './panels/PluginsPanel.svelte';
-  import HistoryPanel from './panels/HistoryPanel.svelte';
-  import UpdatePanel from './panels/UpdatePanel.svelte';
-  import DesignPicker from './lib/DesignPicker.svelte';
+  import CommandPalette from './lib/CommandPalette.svelte';
+  import LazyPart from './lib/LazyPart.svelte';
+  import { partsState } from './lib/parts.svelte.js';
   import { calDesign, calPhoneView, calCardDesign } from '$engine/calendar-designs.js';
   import { calendarDesignSource, blockDesignSource, blockDesigns, footerPresetSource, toTopDesignSource, blockPhoneDesignSource, SAME_DESIGN } from './lib/design-sources.js';
   import ColorPicker from './lib/ColorPicker.svelte';
@@ -41,12 +35,7 @@
   import PanelNav from './shell/PanelNav.svelte';
   import PanelStrip from './shell/PanelStrip.svelte';
   import PreviewStage from './shell/PreviewStage.svelte';
-  import LivePhone from './shell/LivePhone.svelte';
-  import PhoneDock from './panels/phone/PhoneDock.svelte';
   import ConfirmDialog from './shell/ConfirmDialog.svelte';
-  import PictureEditor from './lib/PictureEditor.svelte';
-  import RedirectsDialog from './shell/RedirectsDialog.svelte';
-  import SetupWizard from './shell/SetupWizard.svelte';
   import { mediaState } from './state/media.svelte.js';
   import { historyState } from './state/history.svelte.js';
   import { previewState } from './state/preview.svelte.js';
@@ -61,16 +50,6 @@
   import { bridgeState } from './state/bridge.svelte.js';
   import { publishState } from './state/publish.svelte.js';
   import { linkState } from './state/link.svelte.js';
-  import LinkDialog from './lib/LinkDialog.svelte';
-  import ShortcutSheet from './lib/ShortcutSheet.svelte';
-  import SettingsDialog from './settings/SettingsDialog.svelte';
-  import SettingsPanel from './panels/SettingsPanel.svelte';
-  import CollectionsTable from './panels/collections/CollectionsTable.svelte';
-  import ImportDialog from './panels/collections/ImportDialog.svelte';
-  import ImportTable from './panels/collections/ImportTable.svelte';
-  import PageSettingsDialog from './panels/pages/PageSettingsDialog.svelte';
-  import PageSettingsTable from './panels/pages/PageSettingsTable.svelte';
-  import CommandPalette from './lib/CommandPalette.svelte';
   import { paletteState } from './state/palette.svelte.js';
   import { pageSettingsState } from './state/page-settings.svelte.js';
   import { redirectsState } from './state/redirects.svelte.js';
@@ -78,14 +57,13 @@
   import { legalPanelState } from './state/legal.svelte.js';
   import { savedState } from './state/saved.svelte.js';
   import { draftsState } from './state/drafts.svelte.js';
-  import DraftsWindow from './shell/DraftsWindow.svelte';
   import { keepScroll } from './lib/scroll-place.js';
 
   const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState, pictureEditorState, legalPanelState, savedState, draftsState];
   const ed = {};
   for (const part of parts) Object.defineProperties(ed, Object.getOwnPropertyDescriptors(part));
-  /** The side panel's place: the docked menu's per block or section, the Collections panel's per open collection, a page's settings per page where the Pages panel steps into them, every other panel's its own. */
-  const panelPlace = $derived(ed.activePanel === 'properties' ? (ed.selectedBlock ? `menu:dock:${ed.selectedBlock.blockId}` : ed.activeSectionId ? `menu:dock:section:${ed.activeSectionId}` : null)
+  /** The side panel's place: the docked menu's per block or section, the Collections panel's per open collection, a page's settings per page where the Pages panel steps into them, every other panel's its own; none until the panel is drawn (ed.panelDrawn), so the way back starts as its content stands. */
+  const panelPlace = $derived(!ed.panelDrawn ? null : ed.activePanel === 'properties' ? (ed.selectedBlock ? `menu:dock:${ed.selectedBlock.blockId}` : ed.activeSectionId ? `menu:dock:section:${ed.activeSectionId}` : null)
     : ed.activePanel === 'collections' ? `panel:collections:${ed.panelCollection ?? ''}`
     : ed.activePanel === 'pages' && ed.pageSettingsPref === 'step' && ed.pageSettingsFor ? `page-settings:step:${ed.pageSettingsFor}`
     : ed.activePanel ? `panel:${ed.activePanel}` : null);
@@ -134,6 +112,10 @@
     || (ed.activePanel === 'collections' && ed.collectionsLayout === 'table' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection)
       && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded))));
   for (const part of parts) part.effects?.();
+  // Once the canvas has opened, the parts loaded on demand are fetched while the browser is idle (lib/parts.svelte.js).
+  $effect(() => {
+    if (ed.canvasOpened) partsState.preload();
+  });
   /** The two columns name the open collection in the panel's heading (panels/collections/CollectionHeading.svelte). */
   const collectionHeading = $derived(ed.activePanel === 'collections' && ed.collectionsLayout === 'columns' && ed.collectionIds.includes(ed.panelCollection) && ed.csvImport?.view !== 'panel');
   onMount(() => { ed.init(); });
@@ -195,13 +177,13 @@
           {#if ed.activePanel === 'pages'}
             <PagesPanel />
           {:else if ed.activePanel === 'nav'}
-            <NavPanel />
+            <LazyPart name="NavPanel" />
           {:else if ed.activePanel === 'site'}
-            <SitePanel />
+            <LazyPart name="SitePanel" />
           {:else if ed.activePanel === 'legal'}
-            <LegalPanel />
+            <LazyPart name="LegalPanel" />
           {:else if ed.activePanel === 'theme'}
-            <ThemePanel />
+            <LazyPart name="ThemePanel" />
           {:else if ed.activePanel === 'blocks'}
             <BlocksPanel />
           {:else if ed.activePanel === 'grid'}
@@ -211,17 +193,17 @@
           {:else if ed.activePanel === 'properties'}
             <PropertiesPanel />
           {:else if ed.activePanel === 'footer'}
-            <FooterPanel />
+            <LazyPart name="FooterPanel" />
           {:else if ed.activePanel === 'collections'}
-            <CollectionsPanel />
+            <LazyPart name="CollectionsPanel" />
           {:else if ed.activePanel === 'plugins'}
-            <PluginsPanel />
+            <LazyPart name="PluginsPanel" />
           {:else if ed.activePanel === 'history'}
-            <HistoryPanel />
+            <LazyPart name="HistoryPanel" />
           {:else if ed.activePanel === 'update'}
-            <UpdatePanel />
+            <LazyPart name="UpdatePanel" />
           {:else if ed.activePanel === 'settings'}
-            <SettingsPanel />
+            <LazyPart name="SettingsPanel" />
           {/if}
         {/if}
         </aside>
@@ -232,19 +214,19 @@
         <PreviewStage />
         <!-- The live phone beside the desktop canvas (0.7.36.1): in the desktop view alone, not in Clean view, not while a saved draft is looked at, which the canvas shows in the drafts' place, and not under a table that stands over the stage -->
         {#if ed.livePhoneOn && ed.viewMode === 'desktop' && ed.chromeVisible && !ed.looking && !stageTable}
-          <LivePhone />
+          <LazyPart name="LivePhone" />
         {/if}
         <!-- The Phone panel's blocks in their order in a column of their own at the stage's right edge, while the panel stands (Urd settings «Phone panel») -->
         {#if ed.activePanel === 'phone' && ed.phonePanelPref === 'dock' && ed.chromeVisible && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)}
           <PhoneDock />
         {/if}
         {#if ed.csvImport?.view === 'table' && ed.chromeVisible}
-          <ImportTable />
+          <LazyPart name="ImportTable" />
         {:else if ed.pageSettingsFor && ed.pageSettingsPref === 'table' && ed.chromeVisible}
-          <PageSettingsTable />
+          <LazyPart name="PageSettingsTable" />
         {:else if ed.activePanel === 'collections' && ed.collectionsLayout === 'table' && ed.panelCollection && ed.collectionIds.includes(ed.panelCollection) && ed.chromeVisible
           && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)}
-          <CollectionsTable />
+          <LazyPart name="CollectionsTable" />
         {/if}
       </div>
     </div>
@@ -260,7 +242,7 @@
     {#if stored && designs}
       <!-- The phone form chooses the design the block draws while narrow (phoneDesign), the first entry keeping its own -->
       {@const phone = ed.designPicker.phone === true && designs.phone}
-      <DesignPicker source={phone
+      <LazyPart name="DesignPicker" source={phone
           ? blockPhoneDesignSource({ block: $state.snapshot(stored), site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null, designs })
           : blockDesignSource({ block: $state.snapshot(stored), site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null, designs, sectionWidth: storedSection.size?.maxWidth })}
         site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
@@ -271,7 +253,7 @@
     {/if}
   {:else if ed.designPicker?.kind === 'footer'}
     <!-- The footer's presets: the picked one sets the footer's look and parts, its own content kept (footer-presets.js) -->
-    <DesignPicker source={footerPresetSource({ site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null })}
+    <LazyPart name="DesignPicker" source={footerPresetSource({ site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null })}
       site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
       plugins={$state.snapshot(ed.pluginsView)?.enabled ?? []} collections={$state.snapshot(ed.collectionsView) ?? null}
       place="footer"
@@ -279,14 +261,14 @@
       onclose={() => (ed.designPicker = null)} />
   {:else if ed.designPicker?.kind === 'totop'}
     <!-- The «Back to top» button's designs: the picked one is the site's button's design (site.layout.toTop) -->
-    <DesignPicker source={toTopDesignSource({ site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null })}
+    <LazyPart name="DesignPicker" source={toTopDesignSource({ site: ed.siteDraft ? $state.snapshot(ed.siteDraft) : null })}
       site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
       plugins={$state.snapshot(ed.pluginsView)?.enabled ?? []} collections={$state.snapshot(ed.collectionsView) ?? null}
       place="totop"
       onpick={(id) => { ed.setToTopDesign(id); ed.designPicker = null; }}
       onclose={() => (ed.designPicker = null)} />
   {:else if ed.designPicker && ed.designPicker.kind !== 'block' && ed.designPicker.kind !== 'totop'}
-    <DesignPicker source={calendarDesignSource({ mode: ed.designPicker.mode,
+    <LazyPart name="DesignPicker" source={calendarDesignSource({ mode: ed.designPicker.mode,
       current: ed.designPicker.mode === 'set' ? calDesign(ed.selectedBlock?.props.design).id : ed.designPicker.mode === 'phone' ? calPhoneView(ed.selectedBlock?.props) : ed.designPicker.mode === 'card' ? calCardDesign(ed.selectedBlock?.props) : null,
       design: calDesign(ed.selectedBlock?.props.design).id, props: ed.selectedBlock ? $state.snapshot(ed.selectedBlock.props) : {} })}
       site={ed.siteDraft ? $state.snapshot(ed.siteDraft) : null} page={ed.store?.data ? $state.snapshot(ed.store.data) : null}
@@ -298,27 +280,27 @@
   {#if ed.linkRequest}
     <!-- One link editor for every link: the request says how the host keeps the link and what applies it, and a new request draws a new dialog -->
     {#key ed.linkRequest}
-      <LinkDialog request={ed.linkRequest} onclose={ed.closeLink} />
+      <LazyPart name="LinkDialog" request={ed.linkRequest} onclose={ed.closeLink} />
     {/key}
   {/if}
 
   {#if ed.pageSettingsFor && ed.pageSettingsPref === 'dialog'}
     <!-- A page's settings over the admin, in the default layout -->
-    <PageSettingsDialog />
+    <LazyPart name="PageSettingsDialog" />
   {/if}
 
   {#if ed.csvImport?.view === 'dialog'}
     <!-- A CSV import waiting for the owner's word, in the default preview -->
-    <ImportDialog />
+    <LazyPart name="ImportDialog" />
   {/if}
 
   {#if ed.settingsOpen}
     <!-- Urd's own settings over the admin, as a dialog or a sheet by «Settings window»; the panel form stands in the panel column -->
-    <SettingsDialog onclose={() => (ed.settingsOpen = false)} />
+    <LazyPart name="SettingsDialog" onclose={() => (ed.settingsOpen = false)} />
   {/if}
 
   {#if ed.shortcutsOpen}
-    <ShortcutSheet onclose={() => (ed.shortcutsOpen = false)} />
+    <LazyPart name="ShortcutSheet" onclose={() => (ed.shortcutsOpen = false)} />
   {/if}
 
   {#if paletteState.paletteOpen}
@@ -326,11 +308,11 @@
     <CommandPalette commands={paletteState.buildCommands()} pinned={ed.siteDraft?.shortcuts ?? []} onpin={ed.siteDraft ? ed.toggleShortcut : null} onclose={() => (paletteState.paletteOpen = false)} />
   {/if}
 
-  <RedirectsDialog />
-  <PictureEditor />
+  <LazyPart name="RedirectsDialog" when={ed.redirectsOpen} />
+  <LazyPart name="PictureEditor" when={Boolean(ed.picture)} />
   <ConfirmDialog />
 
-  <SetupWizard />
+  <LazyPart name="SetupWizard" when={ed.showSetup} />
 
   {#if ed.status}
     <div class="toast" class:ok={ed.statusKind === 'ok'} class:error={ed.statusKind === 'error'}>
@@ -354,6 +336,6 @@
 
 {#if ed.site && ed.chromeVisible}
   <!-- The Drafts window over the canvas, or its pill, opened from the Drafts tab (state/drafts.svelte.js) -->
-  <DraftsWindow />
+  <LazyPart name="DraftsWindow" when={ed.draftsOpen || ed.draftsPill} />
 {/if}
 

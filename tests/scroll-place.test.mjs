@@ -114,7 +114,7 @@ test('the four windows keep their place by what they show', () => {
   const app = src('App.svelte');
   assert.match(app, /<aside class="panel"[^>]*\{@attach keepScroll\(panelPlace\)\}/, 'the side panel');
   assert.match(app, /ed\.activePanel === 'properties' \? \(ed\.selectedBlock \? `menu:dock:\$\{ed\.selectedBlock\.blockId\}`/, 'the docked menu per block');
-  assert.equal((app.match(/<DesignPicker /g) ?? []).length, (app.match(/\n\s+place=/g) ?? []).length, 'every design picker names its kind');
+  assert.equal((app.match(/<LazyPart name="DesignPicker" /g) ?? []).length, (app.match(/\n\s+place=/g) ?? []).length, 'every design picker names its kind');
   // The floating menu and the picker take their place as a string, so an edit of the block or a move of the menu is no other place; the docked and the floating menu keep apart, since their windows differ.
   const floating = src('menu/FloatingMenu.svelte');
   assert.match(floating, /const menuPlace = \$derived\(only \? null : pos\.section \? \(ed\.activeSectionId \? `menu:float:section:\$\{ed\.activeSectionId\}` : null\) : selectedBlock \? `menu:float:\$\{selectedBlock\.blockId\}` : null\);/, 'the floating menu per block and section');

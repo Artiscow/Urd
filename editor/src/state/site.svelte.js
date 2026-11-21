@@ -982,15 +982,16 @@ const activeThemePreset = $derived.by(() => {
 /** The effects of this module, run once by the shell at its start. */
 export function effects() {
 
+  // The Site panel's fields asked for are focused once the panel is drawn (shellState.panelDrawn), its code loaded on demand.
   $effect(() => {
     const id = focusSiteCalendar;
-    if (!id) return;
+    if (!id || !shellState.panelDrawn) return;
     focusSiteCalendar = null;
     tick().then(() => document.querySelector(`[data-cal-name="${id}"]`)?.focus());
   });
 
   $effect(() => {
-    if (!focusShopCurrency) return;
+    if (!focusShopCurrency || !shellState.panelDrawn) return;
     focusShopCurrency = false;
     tick().then(() => {
       const field = document.querySelector('[data-field="shop-currency"]');
@@ -1001,7 +1002,7 @@ export function effects() {
 
   $effect(() => {
     const id = focusSiteLink;
-    if (!id) return;
+    if (!id || !shellState.panelDrawn) return;
     focusSiteLink = null;
     tick().then(() => document.querySelector(`[data-link-label="${id}"]`)?.focus());
   });

@@ -8,6 +8,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.37.4.4 - Windows and panels opened now and then load as they are first opened, and the editor starts from a file a quarter smaller - 21 November 2026
+
+- The editor loaded every window and panel as it opened, the setup wizard and the Updates panel included (audit E6). Twenty-four windows and panels opened now and then are files of their own beside editor.js, each loaded as it is first opened and the rest fetched once the canvas has opened (`lib/parts.svelte.js`, drawn by `lib/LazyPart.svelte`); the editor starts from 1.35 MB, 390 KB compressed, against 1.77 MB and 496 KB.
+- A part whose file cannot be had, as after an update under an open tab, says so in the status line with a button that reloads the editor, in nb, en-GB and tr.
+- The canvas stands with its editing bars about 2.15 s after the editor is opened on a local server, against 2.3 s.
+- Found while building: split as the build does by default, the start was spread over 18 files that import each other. The code the admin starts with is one group joined to editor.js (vite.config.js), and main.js mounts the app from the dictionary's promise, since an await at its top keeps the build from joining them.
+- Found while building: the parts' styles were written after app.css, so a part's rule could win a tie that app.css is meant to win. The build moves app.css to the end of editor.css (`appCssLast` in vite.config.js).
+- ARCHITECTURE.md describes the parts loaded on demand.
+
+The independent review before the commit found these:
+
+1. The live phone came and went without its slide, since the block that waited for its code kept its transitions from playing. A part is drawn as a dynamic component, which waits for its code without that block.
+2. A panel opened at a fold before its code was in opened at its top: the fold asked for, the Footer's «Presets» pressed from the tab menu, the caret in a new collection's name and the Site panel's fields to focus were each looked for before the panel was drawn. Each waits until the panel's code is in (`panelDrawn` in state/shell.svelte.js).
+3. A panel whose code came in late, on a slow connection, opened at its top after a reload; the way back to its place starts once the panel is drawn.
+4. The Drafts pill showed only once the parts had been fetched; the Drafts window's code is asked for by its pill too.
+5. A part that could not be loaded raised its message again each time another part loaded, and after its window was closed. It is told once, and only while the part is still wanted.
+6. The test of the split passed with nothing split off, and comments in main.js and the new test broke sentences across lines. The test checks that editor.js asks for each part's file, and that admin/index.html loads editor.js by the plain address the parts import it by; the comments are set right.
+
 ### 0.7.37.4.3 - The editor opens about a second sooner, and its bundle is minified - 21 November 2026
 
 - The editor's bundle kept its whitespace, which a library build leaves in, at 2.33 MB (audit E5). It is minified in full (vite.config.js): 1.77 MB, 496 KB compressed.

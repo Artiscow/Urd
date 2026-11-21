@@ -18,6 +18,7 @@
   import { groupChip } from '../lib/legal-model.js';
   import { ICONS } from '../lib/icons.js';
   import DraftsMarks from './DraftsMarks.svelte';
+  import { partsState, PANEL_PARTS } from '../lib/parts.svelte.js';
   const ed = getContext('urd-editor');
   let { name, variant = 'tab', menus = true } = $props();
   /** The menu stands beside its button (a row, an icon, a word) rather than under it (a tab). */
@@ -281,11 +282,12 @@
     }
   }
 
-  /** The Collections panel at its list, with the caret in the new collection's name (panels/collections/CollectionList.svelte). */
+  /** The Collections panel at its list, with the caret in the new collection's name (panels/collections/CollectionList.svelte), once the panel's code is in (lib/parts.svelte.js). */
   async function newCollection() {
     now(false);
     ed.panelCollection = null;
     ed.activePanel = 'collections';
+    await partsState.load(PANEL_PARTS.collections).catch(() => {});
     await tick();
     await tick();
     document.querySelector('[data-new-collection]')?.focus();

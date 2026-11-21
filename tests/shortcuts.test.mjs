@@ -63,5 +63,5 @@ test('the sheet is reached from the page, the panels, the Urd settings and the s
   const wizard = read('../editor/src/shell/SetupWizard.svelte');
   assert.match(wizard, /onclick=\{ed\.openShortcuts\}/);
   assert.doesNotMatch(wizard, /setup\.keys/, 'the keys stand in the sheet, not in the wizard');
-  assert.match(read('../editor/src/App.svelte'), /\{#if ed\.shortcutsOpen\}\s*<ShortcutSheet /);
+  assert.match(read('../editor/src/App.svelte'), /\{#if ed\.shortcutsOpen\}\s*<LazyPart name="ShortcutSheet" /);
 });

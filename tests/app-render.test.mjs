@@ -119,6 +119,10 @@ test('a new Urd is told as a dot on Updates in every layout, or as a pill in the
 });
 
 test('the shell renders the workspace with every panel open in turn, from the modules\' own state', async () => {
+  // The panels and windows loaded on demand (lib/parts.svelte.js) are drawn once their code is in, here at once.
+  const { partsState } = await import('../editor/src/lib/parts.svelte.js');
+  await partsState.loadAll();
+  assert.equal(Object.keys(partsState.loaded).length, partsState.names.length, 'every part loads');
   const { default: App } = await import('../editor/src/App.svelte');
   const { siteState } = await import('../editor/src/state/site.svelte.js');
   const { shellState } = await import('../editor/src/state/shell.svelte.js');

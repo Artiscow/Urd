@@ -32,6 +32,7 @@ import { siteState } from './site.svelte.js';
 import { pictureEditorState } from './picture-editor.svelte.js';
 import { templatesState } from './templates.svelte.js';
 import { redirectsState } from './redirects.svelte.js';
+import { partsState, PANEL_PARTS } from '../lib/parts.svelte.js';
 import { updaterState } from './updater.svelte.js';
 
 /**
@@ -415,6 +416,9 @@ function setPanelsStart(v) {
 
 /** The open panel; set from the stored choice once the panels are known below. */
 let activePanel = $state(null);
+
+/** Whether the open panel is drawn: a panel loaded on demand (lib/parts.svelte.js) once its code is in, so what reaches into it (a fold asked for, the place it was left, a field to focus) waits for it. */
+const panelDrawn = $derived(!PANEL_PARTS[activePanel] || Boolean(partsState.loaded[PANEL_PARTS[activePanel]]));
 
 /**
  * How the panels are reached (the Urd settings, «Panel navigation»): an icon rail, the sidebar of words, tabs at the top of the panel in three groups, a strip of every panel under the top bar, or the page's panels as tabs with the site's in a menu.
@@ -1018,11 +1022,11 @@ export function effects() {
     if (foldsEmpty(adminLayout, activePanel) && !panelFolded) panelFolded = true;
   });
 
-  // A fold asked for: unfolded alone, brought into view, its heading focused and lit, once its panel has drawn it; a fold the panel does not draw now leaves the panel as it opens.
+  // A fold asked for: unfolded alone, brought into view, its heading focused and lit, once its panel has drawn it, a panel loaded on demand once its code is in; a fold the panel does not draw now leaves the panel as it opens.
   // The panel's other folds close with their own motion (app.css, 0.24 s), and the scroll waits for it, so the fold asked for is brought to where it stands once they have closed.
   $effect(() => {
     const want = foldFocus;
-    if (!want || activePanel !== want.panel || !panelEl) return;
+    if (!want || activePanel !== want.panel || !panelEl || !panelDrawn) return;
     tick().then(() => {
       if (foldFocus !== want) return;
       foldFocus = null;
@@ -1217,6 +1221,7 @@ export const shellState = {
   get PANELS_START_OPTIONS() { return PANELS_START_OPTIONS; },
   openedAtStart,
   get activePanel() { return activePanel; },
+  get panelDrawn() { return panelDrawn; },
   set activePanel(v) {
     if (WINDOW_TABS.includes(v)) {
       draftsState.openDrafts();

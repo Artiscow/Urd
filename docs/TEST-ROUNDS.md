@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.4.4): windows and panels loaded as they are first opened
+
+- [ ] Open the editor on the deployed site, then open Nav, Site, Legal, Theme, Footer, Collections, Plugins, History, Updates and the settings panel in turn: each is drawn at once, with its folds as they were left
+- [ ] Open the Drafts window, the Urd settings, the shortcut sheet («?»), the link editor, a design picker, the picture editor, a page's settings, the redirects and a CSV import: each opens and closes with its animation, as before
+- [ ] Reload with the Updates panel open, scrolled down: it opens again with the editor, where it was
+- [ ] The live phone slides in and out as it is turned on and off, the first time too, and the collections table shows as before
+- [ ] Fold Drafts to its pill and reload: the pill stands as the editor opens
+- [ ] Right after the editor opens, open the Footer's tab menu and press «Presets»: the Footer panel opens with the design picker; open the Nav panel at «Mobile» from its tab menu: it opens at that fold, lit
+- [ ] After an Urd update, in a tab opened before it: a window not yet opened there either opens, or the status line asks for a reload, and its button reloads the editor
+- [ ] The admin looks as before in the Drafts window, the Updates panel and the Urd settings: the buttons, the folds and the bin on dark red
+
 ### Test batch (0.7.37.4.3): the editor's opening
 
 - [ ] Open the editor on the deployed site: the canvas with its editing bars comes sooner than before, and the top bar, the panels and the canvas's bars speak the admin language chosen in the Urd settings (try English, Norsk bokmål and Türkçe)
