@@ -285,13 +285,10 @@ let adminLocaleReadyResolve;
 export const adminLocaleReady = new Promise((resolve) => { adminLocaleReadyResolve = resolve; });
 
 /**
- * Loads the admin dictionary: the nb base at the bottom, the chosen
- * language on top, the two read together. Runtime import from an absolute
- * path, so the same code works in the admin bundle AND in the preview
- * iframe, and the dictionaries are never bundled. A language that is not
- * built in is fetched from a language pack; if none exists, the bokmål base
- * stays. If loading fails entirely (vite dev without the template server)
- * the keys are shown.
+ * Loads the admin dictionary: the nb base at the bottom, the chosen language on top, the two read together.
+ * Runtime import from an absolute path, so the same code works in the admin bundle AND in the preview iframe, and the dictionaries are never bundled.
+ * A language that is not built in is fetched from a language pack; if none exists, the bokmål base stays.
+ * If loading fails entirely (vite dev without the template server) the keys are shown.
  */
 export async function initAdminLocale(lang = detectAdminLang()) {
   const load = (code) => import(/* @vite-ignore */ `/assets/urd/locales/admin/${code}.js`).then((m) => m.default.strings, () => null);

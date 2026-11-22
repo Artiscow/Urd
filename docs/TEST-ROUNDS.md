@@ -2,6 +2,10 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.93-0.7.37.5.1p): the push preparation's fix
+
+- [ ] In the phone view, drag a block in a section that holds a calendar, then change one of the calendar's settings: the calendar keeps its drawing until the new one is in, with no loading state between
+
 ### Test batch (0.7.37.5.1): the release key, CodeQL and the plugins' trust
 
 - [ ] After the push, the repository's Security tab lists a CodeQL analysis of the workflows (actions) beside the JavaScript one, and the CodeQL run stands green

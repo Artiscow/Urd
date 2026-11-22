@@ -150,7 +150,7 @@ export function buildRich(source, doc, { pages = null, dropClasses = [], pasted 
  * @param {{pages?: Array<{id: string, path: string}>|null, dropClasses?: string[]}} [options]
  * @returns {DocumentFragment}
  */
-export function richFragment(html, options) {
+function richFragment(html, options) {
   const parsed = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
   return buildRich(parsed.body, document, options);
 }

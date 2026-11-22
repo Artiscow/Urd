@@ -142,8 +142,8 @@ test('a calendar stands in its own design while its feeds are on the way, a feed
   assert.match(calendar, /const held = host\.offsetHeight;\s+waiting = true;\s+host\.classList\.add\('urd-cal-wait'\);\s+if \(held\) \{\s+host\.style\.height = `\$\{held\}px`;\s+host\.style\.overflow = 'hidden';\s+\}\s+draw\(demoOccurrences\(\)\);\s+rememberDrawing\(key, host, props, true\);/, 'at the height the loading state kept, so nothing around it moves');
   assert.match(calendar, /const draw = \(\[ics, cd, cf, maps, links, sheet\], \[mod, weekMod, phoneMod, cardMod\]\) => \{\s+sheetIn = sheet;/);
   assert.match(source('render.js'), /link\.addEventListener\('load', \(\) => resolve\(true\), \{ once: true \}\);\s+link\.addEventListener\('error', \(\) => resolve\(false\), \{ once: true \}\);/);
-  assert.match(calendar, /LAST_DRAWN\.set\(id, \{ \.\.\.last, host \}\);\s+return true;/, 'a copy is remembered in its turn, so another calendar settling first never drops it');
-  assert.match(calendar, /if \(!copyLastDrawing\(host, el, props\) && host\.hasAttribute\('aria-busy'\)\) host\.appendChild\(loadingNode\(el, ctx\)\);/, 'a calendar drawn again starts from its last drawing, never blank');
+  assert.match(calendar, /if \(!measure\) LAST_DRAWN\.set\(id, \{ \.\.\.last, host \}\);\s+return true;/, 'a copy is remembered in its turn, so another calendar settling first never drops it, and a copy drawn only to be measured never takes its place');
+  assert.match(calendar, /if \(!copyLastDrawing\(host, el, props, ctx\.measure\) && host\.hasAttribute\('aria-busy'\)\) host\.appendChild\(loadingNode\(el, ctx\)\);/, 'a calendar drawn again starts from its last drawing, never blank');
   assert.match(calendar, /if \(!last \|\| last\.props !== JSON\.stringify\(props\)\) return false;/, 'only with the settings it was drawn with');
   assert.match(calendar, /const copy = child\.cloneNode\(true\);\s+copy\.inert = true;/);
   assert.match(calendar, /if \(host\.dataset\.calCopy === 'wait'\) host\.classList\.add\('urd-cal-wait'\);/, 'a copy of the waiting drawing keeps the sample words hidden');

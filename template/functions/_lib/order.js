@@ -322,7 +322,7 @@ export async function readShop(origin) {
  * @param {'vipps'|'stripe'|'paypal'} provider
  * @param {'wallet'|'card'} [method] Vipps's way
  */
-export function offersPayment(pays, provider, method = 'wallet') {
+function offersPayment(pays, provider, method = 'wallet') {
   if (provider === 'stripe') return pays?.card === 'stripe';
   if (provider === 'paypal') return pays?.paypal === true;
   if (provider === 'vipps') return method === 'card' ? pays?.card === 'vipps' : pays?.vipps === true;

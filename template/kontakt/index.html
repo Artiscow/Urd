@@ -19,14 +19,11 @@
        @supports default theme remains; nothing breaks, just default colours. -->
   <link rel="stylesheet" href="/content/theme.css">
   <!--
-    The engine is served as raw ES modules. Without preloading the browser
-    discovers the imports layer by layer (a serial waterfall). These
-    modulepreload links are the full STATIC import closure of boot.js, so
-    the whole graph is fetched in one parallel wave. The editor layer
-    (preview-edit.js and friends) and the block and background modules a
-    page asks for (core-types.js) load dynamically and must NOT be listed
-    here. tests/modulepreload.test.mjs keeps the list in sync with the
-    source (the build fails on drift).
+    The engine is served as raw ES modules.
+    Without preloading the browser discovers the imports layer by layer (a serial waterfall).
+    These modulepreload links are the full STATIC import closure of boot.js, so the whole graph is fetched in one parallel wave.
+    The editor layer (preview-edit.js and friends) and the block and background modules a page asks for (core-types.js) load dynamically and must NOT be listed here.
+    tests/modulepreload.test.mjs keeps the list in sync with the source (the build fails on drift).
   -->
   <link rel="modulepreload" href="/assets/engine/0.7.11/boot.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/urd.js">

@@ -1,5 +1,5 @@
 /*
- * The calendar's rules: its views, designs, cards and the phone's forms of them, loaded by blocks/calendar.js with the calendar's modules, so a page without a calendar never fetches them.
+ * The calendar's rules: its views, designs, cards and the phone's forms of them, loaded by blocks/calendar-load.js with the calendar's modules, before the page is drawn on a page that holds a calendar, so a page without one never fetches them.
  * The loading state stands in base.css, since it shows before this sheet is in.
  */
 .urd-block[data-urd-align="stretch"] > .urd-cal {

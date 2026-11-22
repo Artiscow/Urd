@@ -4,13 +4,8 @@
  *
  *   "languages": [{ "code": "sv", "name": "Svenska", "site": true, "admin": false }]
  *
- * and puts the files in plugins/<id>/locales/site/<code>.js and
- * plugins/<id>/locales/admin/<code>.js, the same shape as the engine's own
- * locale files and the same overlay rule: the bokmal base sits underneath, so
- * a pack may cover everything or only parts. A pack cannot override a builtin
- * language (that would let a plugin hijack nb), and needs neither entry nor
- * provides: it has no entry module, though its dictionaries are modules too,
- * run where its language is shown.
+ * and puts the files in plugins/<id>/locales/site/<code>.js and plugins/<id>/locales/admin/<code>.js, the same shape as the engine's own locale files and the same overlay rule: the bokmal base sits underneath, so a pack may cover everything or only parts.
+ * A pack cannot override a builtin language (that would let a plugin hijack nb), and needs neither entry nor provides: it has no entry module, though its dictionaries are modules too, run where its language is shown.
  *
  * The module is DELIBERATELY outside the engine's static import closure (no
  * modulepreload): it is fetched only when something actually asks for a

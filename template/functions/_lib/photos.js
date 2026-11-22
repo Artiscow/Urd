@@ -128,7 +128,7 @@ export function safeTarget(raw, env, only) {
  * @param {{image?: boolean}} [options] `image`: the route answers pictures
  * @returns {boolean}
  */
-export function fromOwnPages(request, { image = false } = {}) {
+function fromOwnPages(request, { image = false } = {}) {
   const site = request.headers.get('sec-fetch-site');
   if (site) {
     const dest = request.headers.get('sec-fetch-dest');

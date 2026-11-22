@@ -108,7 +108,7 @@ function rememberDrawing(blockId, host, props, waiting) {
  * A copy of the drawing that waits keeps its words hidden (`data-cal-copy="wait"`).
  * @returns {boolean} Whether there was one to copy
  */
-function copyLastDrawing(host, el, props) {
+function copyLastDrawing(host, el, props, measure = false) {
   const id = el.dataset.blockId ?? '';
   const last = LAST_DRAWN.get(id);
   if (!last || last.props !== JSON.stringify(props)) return false;
@@ -120,8 +120,8 @@ function copyLastDrawing(host, el, props) {
     host.appendChild(copy);
   }
   host.dataset.calCopy = last.waiting ? 'wait' : '';
-  // The copy is the calendar's drawing now, so a redraw before its own is in copies it in turn.
-  LAST_DRAWN.set(id, { ...last, host });
+  // The copy is the calendar's drawing now, so a redraw before its own is in copies it in turn; a copy drawn only to be measured leaves the drawing where it stands.
+  if (!measure) LAST_DRAWN.set(id, { ...last, host });
   return true;
 }
 
@@ -1718,7 +1718,7 @@ function renderCalendar(el, props, ctx) {
   el.appendChild(ruler);
   // A calendar with a feed, an address of its own or a reference to the site's registry, stands in its loading state until the events are drawn.
   if ((props.sources ?? []).some((source) => (typeof source === 'string' ? source.trim() : source && (source.url || source.calendar)))) host.setAttribute('aria-busy', 'true');
-  if (!copyLastDrawing(host, el, props) && host.hasAttribute('aria-busy')) host.appendChild(loadingNode(el, ctx));
+  if (!copyLastDrawing(host, el, props, ctx.measure) && host.hasAttribute('aria-busy')) host.appendChild(loadingNode(el, ctx));
   // A calendar whose code is all in (readied before the page was drawn, prepareCalendar in calendar-load.js) is drawn as the page's drawing ends, in the same task, so it stands with the page from its first frame; its drawing takes the feeds its readying asked for (takeReadied).
   const ready = partsIn ? designModules(partsIn[1], props) : null;
   const inAlready = Boolean(ready?.every((name) => !name || designsIn.has(name)));
