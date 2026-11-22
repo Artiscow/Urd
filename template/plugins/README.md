@@ -6,6 +6,17 @@ The active plugins are listed in [`plugins.json`](plugins.json) (static hosts ca
 
 Urd ships one plugin: the Swedish language pack [`lang-sv/`](lang-sv/), which is the example of a language pack (see below). Calendar, form, map and visitor measurement were reference plugins up to and including 0.7.3, and are core blocks and a site setting from milestone 0.7.18 (24 September 2026); the patterns they showed are described below, with the core's code to read.
 
+## A plugin is trusted code
+
+A plugin is not sandboxed: its module runs as the site's own code, with every right the site has.
+
+- On a visitor's page it runs beside the engine, so it can read and change what the page shows and what the page keeps in the visitor's browser.
+- In the editor's canvas, and on any page of the site the owner opens while signed in, it runs on the site's own address, so it can do what the owner can: read and change the drafts, and publish to the repository with the owner's sign-in, which the browser sends with its requests.
+- A language pack is code too: its dictionaries are JavaScript modules, run wherever its language is shown, the editor itself included.
+- The CSP's list of hosts (ADR-0006) limits what a page may load and connect to; it stops neither a navigation that carries data in its address nor anything a plugin does with the owner's rights.
+
+Install a plugin as you would install a program: from a source you trust, having read its code, and switch it on only then.
+
 ## Developing a plugin locally
 
 1. Start the local server from the site's folder (`python3 dev-server.py`; in the Urd repo, from the repo root) and open `http://localhost:8000/admin/`. It sends nothing that can be cached, so an ordinary reload always loads the newest code of your plugin; an ordinary static server lets the browser keep old files until its cache is emptied.
@@ -13,7 +24,7 @@ Urd ships one plugin: the Swedish language pack [`lang-sv/`](lang-sv/), which is
 3. Switch it on in the Plugins panel (type the folder name if the panel cannot list folders locally). The preview loads the plugin from the DRAFT, so you see your blocks live without publishing.
 4. Manifest errors, engine version requirements and `provides` mismatches are logged in the browser console and shown in the panel.
 
-Manifest requirements: `requiresEngine` (a semver range against the engine version in urd.json; a bound with more than three numbers is read by engines from 0.7.7), `provides` (what the plugin defines), and optionally `csp` (the external origins the plugin needs; see ADR-0006: `_headers` is never changed automatically, and the admin shows the owner what has to be added). `entry` and `provides` are optional for pure language packs, which have no code (see below).
+Manifest requirements: `requiresEngine` (a semver range against the engine version in urd.json; a bound with more than three numbers is read by engines from 0.7.7), `provides` (what the plugin defines), and optionally `csp` (the external origins the plugin needs; see ADR-0006: `_headers` is never changed automatically, and the admin shows the owner what has to be added). `entry` and `provides` are optional for pure language packs, which have no entry module of their own (see below).
 
 **Sharing the plugin:** put it in a public GitHub repo of its own and give it the GitHub topic `urd-plugin`, so it can be found by topic search (templates shared as a repo use `urd-template`). Users install it by copying the folder into `plugins/` and switching it on in the Plugins panel.
 

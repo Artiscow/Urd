@@ -456,7 +456,8 @@ Optional manifest fields (all additive):
 - **`languages`** (additive from 0.6.8.10, ADR-0012): languages the plugin delivers as a LANGUAGE PACK, that is an entirely new language for Urd itself (not the plugin's own texts, that is `locales`). Each entry is `{ "code": "sv", "name": "Svenska", "site": true, "admin": false }`: `code` is a BCP 47 code that is NOT one of the built-in ones (`nb`, `nn`, `en-GB`, `se`, `tr`), `name` is the language's own name as shown in the language pickers, and `site`/`admin` say which registries the pack covers (at least one). The entries promise the files `locales/site/<code>.js` and `locales/admin/<code>.js`, which have the same form and keys as the engine's own - the bokmål base sits underneath, so a pack can cover everything or only parts.
 
 ```json
-// plugins/lang-sv/plugin.json - a PURE language pack has no code, and
+// plugins/lang-sv/plugin.json - a PURE language pack has no entry module
+// (its dictionaries are modules, run where its language is shown), and
 // therefore neither entry nor provides
 {
   "id": "lang-sv",

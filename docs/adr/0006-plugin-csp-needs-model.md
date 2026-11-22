@@ -18,3 +18,4 @@ Urd's CSP in `_headers` is deliberately strict: `connect-src 'self'`, `frame-src
 - The security model stands: no code path can extend the CSP; only the site owner, in the repo, with the line visible in the diff.
 - The friction is deliberate and small: activating a plugin with external needs is two steps (activate in admin, paste the line into _headers), and admin explains both.
 - `_headers` is permanently exempt from the updater, which shows diff instructions instead (ADR-0014), since the site owner may have added plugin exceptions.
+- A plugin is trusted code, not sandboxed: it runs as the site's own code on every visitor's page and in the editor, a language pack's dictionaries included, with the owner's rights while the owner is signed in, publishing included. The CSP limits what a page may load and connect to, never a navigation that carries data away nor what a plugin does with the owner's rights; the plugin README and the user guides say so.

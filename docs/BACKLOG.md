@@ -453,6 +453,7 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
     Measured after 0.7.37.4.5, 21 November 2026: on a page holding three unpublished pictures (1600×1200 JPEGs, a 5 MB draft) an undo takes 9.5 ms in its click at the median, 7 to 12.4 ms over six, and a redo the same, the canvas's next frame following at 14 ms; an undo of a text edit draws the canvas once.
     Done when: typing in a page holding three unpublished pictures writes to localStorage at most once a frame, an undo step of that page costs under 10 ms, a colour drag in the Theme panel redraws no section, and the editor bundle is under 1.8 MB raw.
   - [ ] 0.7.37.5 Policy and the long run: plugins named as full-trust code in the plugin README, the guides and ADR-0006 (S8); the release key behind a protected environment (S19); CodeQL with the actions language and a test against new {@html} with values that are not constants (S21); and a GitHub App with expiring tokens on the one repo, weighed in an ADR (S9).
+    Two commits: 0.7.37.5.1 the plugins named as trusted code, the release key's protected environment, and CodeQL on the workflows with the test of raw markup (S8, S19, S21); 0.7.37.5.2 the ADR on a GitHub App (S9), once one of its options is chosen. The environment `release` is set up on GitHub with the key as its secret, required approval and the rule for `v*` tags and `main` (22 November 2026); the repository secret goes once 0.7.37.5.1 is pushed (URGENT).
     Done when: the plugin README and the guides say what a plugin can do with the owner's rights, the release workflow runs in a protected environment, and a new {@html} of a variable fails a test.
   - [ ] 0.7.37.6 Unused code: the six unused exports (two checked against the plugin API first), the dictionary keys no code reads, and app.css's unused rules (U2 to U4).
     Done when: the report's sweeps find none of them, and the tests stand green.
@@ -705,6 +706,8 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - [ ] Figcraft support (I think they use .figcraft files with support for other exports)
  
 ## URGENT
+- [ ] Once the commit that puts the release workflow's sync job in the protected environment `release` is pushed (0.7.37.5), delete the repository secret `URD_TEMPLATE_PAT` in `Urd` (Settings → Secrets and variables → Actions → Repository secrets), so the environment's copy alone holds the token. Not before: the workflow live until then reads the repository secret.
+- [ ] At the next release, approve the Release run: Actions → the Release run waiting at «Waiting for review» → Review deployments → tick `release` → Approve and deploy; the run then syncs to `urd-template` as before. A failure at «Check out the template repo» means the environment secret `URD_TEMPLATE_PAT` has the wrong name or value. A run left waiting holds up every later release (`concurrency: release-sync`), so approve or reject it before publishing the next.
 - [x] Updates doesn't support markdown - it should, DELIVERED 0.7.0.93 (20 November 2026): a release's notes read as Markdown, headings, lists and GitHub's folds drawn by the panel itself
 - [x] The Updates panel links to the release on GitHub and names it with its version, with an update waiting and on the latest one, DELIVERED 0.7.0.93 (20 November 2026)
 
