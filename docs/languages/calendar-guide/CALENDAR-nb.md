@@ -2,7 +2,7 @@
 
 [English](CALENDAR-en-GB.md)
 
-Den engelske teksten er den kanoniske (ADR-0022): ved avvik gjelder [CALENDAR-en-GB.md](CALENDAR-en-GB.md). Knapp- og panelnavnene under er de norske admintekstene.
+Den engelske teksten er den kanoniske: ved avvik gjelder [CALENDAR-en-GB.md](CALENDAR-en-GB.md). Knapp- og panelnavnene under er de norske admintekstene.
 
 For deg som eier eller redigerer et nettsted bygget med Urd og vil vise arrangementer på det. Blokken **Kalender** viser en kalender du har et annet sted, i kalenderappen du allerede bruker. Du legger til og endrer arrangementer der, og nettstedet følger med av seg selv. Ingenting lagres i Urd.
 

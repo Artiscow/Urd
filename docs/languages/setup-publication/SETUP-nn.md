@@ -4,7 +4,7 @@
 
 Omsetjing av SETUP-nb.md. Den engelske teksten (SETUP-en-GB.md) er kanonisk og gjeld ved avvik.
 
-Denne guiden set opp «Publiser»-knappen: at admin kan committe endringar til GitHub-repoet, som Cloudflare Pages så deployar. Dette er ein eingongsjobb per nettside og tek rundt ti minutt. (Mønsteret er validert i produksjon i ApeironLF.)
+Denne guiden set opp «Publiser»-knappen: at admin kan committe endringar til GitHub-repoet, som Cloudflare Pages så deployar. Dette er ein eingongsjobb per nettside og tek rundt ti minutt.
 
 ## Føresetnader
 
@@ -111,7 +111,6 @@ git push
 - OAuth-tokenet blir bytt server-side og lagra i ein httpOnly-cookie; det når aldri nettlesar-JS.
 - `ALLOWED_LOGINS` blir handheva i alle muterande endepunkt, ikkje berre i UI-et.
 - Publisering kan berre skrive `content/**`, `media/**` og `plugins/plugins.json`. Kode (`functions/`, `admin/`, `assets/engine/`), workflows og tryggingsfiler er blokkerte på serversida, så ein kapra redaktørsesjon ikkje kan plante noko.
-- Sjå [ADR-0003](../../adr/0003-publishing-via-github-oauth-and-pages-functions.md) for heile grunngjevinga (på bokmål).
 
 ## Lokal testing av publiseringslaget (Urd-utviklarar)
 

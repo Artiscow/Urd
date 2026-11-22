@@ -263,6 +263,8 @@ async function save({ names = null, note = '', device = '', quiet = false, auto 
   if (busy || available === false) return false;
   busy = true;
   try {
+    // A sign-in about to be renewed is renewed before the save reaches GitHub.
+    await shellState.renewIfDue();
     for (let attempt = 0; attempt < 2; attempt++) {
       if (!(await readAgain())) return false;
       // The head the index was read at, posted as it is even where the index is read again meanwhile.

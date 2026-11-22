@@ -63,7 +63,7 @@ test('the saved drafts hold the stores back only where the meeting may let a par
   assert.match(saved, /function watchSaves\(\) \{\s*loadMeeting\.then\(noticeNew\);/, 'the first notice of new saves waits for the index');
   assert.match(saved, /async function discardSaved\(\) \{\s*await loadMeeting;/, 'a discard reads the index the meeting read');
   const publish = editorFile('state/publish.svelte.js');
-  assert.match(publish, /async function publishOnce\(\{ parts = null \} = \{\}\) \{\s*\/\/[^\n]*\n\s*shellState\.setStatus\(ta\('status\.publishing'\)\);\s*await savedState\.loadMeeting;/, 'and so does a publish, for the saved copies it makes stale, saying it has begun');
+  assert.match(publish, /async function publishOnce\(\{ parts = null \} = \{\}\) \{\s*\/\/[^\n]*\n\s*shellState\.setStatus\(ta\('status\.publishing'\)\);\s*\/\/[^\n]*\n\s*await shellState\.renewIfDue\(\);\s*await savedState\.loadMeeting;/, 'and so does a publish, for the saved copies it makes stale, saying it has begun, once a sign-in due for renewal is renewed');
   assert.match(publish, /async function publish\(opts\) \{\s*if \(publishing\) return;\s*publishing = true;/, 'one publish at a time');
   assert.match(publish, /if \(previewState\.looking \|\| discardAsked\) return false;\s*discardAsked = true;/, 'and one question of «Discard drafts»');
   assert.match(saved, /if \(mayLeave\) \{\s*for \(const name of met\.dropLocal\) \{\s*for \(const key of byPart\.get\(name\) \?\? \[\]\) dropDraft\(key\);/, 'a meeting not waited for lets go of nothing');

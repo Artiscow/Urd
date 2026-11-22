@@ -50,8 +50,8 @@ Fire slags mapper virker:
 
 Cloudflare-variablene settes samme sted som publiseringsvariablene, og hver
 endring i dem krever en ny deploy. Begge er beskrevet i
-[oppsettguiden](../setup-publication/SETUP-nb.md) (variablene er punkt 10 og
-11 der).
+[oppsettguiden](../setup-publication/SETUP-nb.md) (variablene står under
+«Valgfrie innstillinger» der).
 
 ## Google Drive
 
@@ -76,8 +76,8 @@ servert av nettstedet selv.
    En slik nøkkel kan bare lese det som er delt offentlig. Den ser ikke de
    private filene dine, og det er nettopp poenget.
 3. **Legg nøkkelen i Cloudflare.** I Pages-prosjektet: *Settings* →
-   *Environment variables* → *Add*. Type **Secret**, navn `DRIVE_API_KEY`,
-   verdi nøkkelen. Deploy så på nytt (en tom commit holder, se oppsettguiden).
+   *Variables and Secrets* → *Add*. Type **Secret**, navn `DRIVE_API_KEY`,
+   verdi nøkkelen. Deploy så på nytt (se steg 4 i oppsettguiden).
 4. **Lim inn lenka i redigereren.** Velg seksjonen, åpne *Bakgrunn*, og sett
    *Bilder fra* til *Delt mappe* i laget. Lim mappelenka inn i *Mappeadresse*,
    velg *Rekkefølge* og sett *Hent inntil*, og trykk *Sjekk mappa*. Bare

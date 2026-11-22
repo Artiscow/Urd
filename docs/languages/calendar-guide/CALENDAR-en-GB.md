@@ -2,7 +2,7 @@
 
 [Norsk (bokmål)](CALENDAR-nb.md)
 
-The canonical text (ADR-0022): on a discrepancy this English text applies. The button and panel names below are the English admin texts; if your admin is set to another language, the names follow that language.
+The canonical text: on a discrepancy this English text applies. The button and panel names below are the English admin texts; if your admin is set to another language, the names follow that language.
 
 For you who own or edit a site built with Urd and want to show events on it. The **Calendar** block shows a calendar you keep somewhere else, in the calendar app you already use. You add and change events there, and the site follows by itself. Nothing is stored in Urd.
 

@@ -61,7 +61,7 @@ Editoren og motorens besøkende-tekster finnes på nordsamisk, britisk engelsk, 
 | [docs/VEIKART.md](../../VEIKART.md) | Faser fra skjelett til v1.0 |
 | [Brukerveiledning](../user-guide/GUIDE-nb.md) | For sideeiere: hvordan editoren brukes, uten kode |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | For oss som utvikler Urd: oppsett, regler, vanlige oppgaver |
-| [Oppsett av publisering](../setup-publication/SETUP-nb.md) | Engangsoppsett av publisering: GitHub OAuth-app + Cloudflare |
+| [Oppsett av publisering](../setup-publication/SETUP-nb.md) | Engangsoppsett av publisering: en GitHub-app + Cloudflare |
 | [Bilder fra en delt mappe](../setup-photos/PHOTOS-nb.md) | Bakgrunnsbilder fra en Google Drive-mappe, et Google Foto-album eller en Nextcloud-deling, og Cloudflare-variablene de trenger |
 | [Kalenderen](../calendar-guide/CALENDAR-nb.md) | For nettstedeiere: kalendertjenester, møtelenker, påmelding, kart og hva kalenderblokken leser fra et arrangement |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpende oppgaveliste: gjøremål, bugs og forslag (nyere innslag på engelsk) |

@@ -253,8 +253,17 @@ function onKeydown(e) {
 }
 
 async function init() {
-  // The sign-in is asked for at once, beside the rest of the load.
+  // The sign-in is asked for at once, beside the rest of the load; one due for renewal is renewed before any other call reaches GitHub, since a renewal ends the sign-in such a call carries.
+  const due = renewDue();
   const signedIn = checkAuth();
+  if (due) await signedIn;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && renewDue()) checkAuth();
+  });
+  // A tab showing the sign-in as ended asks again as another tab plans a new renewal, which it does only with a sign-in that holds.
+  window.addEventListener('storage', (event) => {
+    if (event.key === RENEW_KEY && event.newValue && !auth?.loggedIn) checkAuth();
+  });
   // The saved drafts are met before any store is built where the meeting may let a part here go (ADR-0032); where it cannot, it goes on beside the load (meetOnLoad).
   // The site is set together with its draft once both are read, so nothing drawn meanwhile finds a site without one.
   const meeting = savedState.meetOnLoad();
@@ -609,18 +618,85 @@ function loadPanelData() {
 /** Reduced motion: exit transitions (the draft cluster) become a plain cut. */
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-async function checkAuth() {
+/** Where the time the sign-in is next renewed is kept, in milliseconds since 1970: a personal workspace value, shared by the editor's tabs. */
+const RENEW_KEY = 'urd-sign-in-renew';
+/** How long before the planned renewal a call that reaches GitHub renews first, in milliseconds: the status call's `soon` (RENEW_SOON in functions/_lib/session.js). */
+const RENEW_LEAD = 5 * 60 * 1000;
+/** The longest wait planned, in seconds, so a far time never overflows the timer. */
+const RENEW_LONGEST = 24 * 60 * 60;
+let renewTimer = null;
+/** The status call on its way, which a second ask in this tab shares. */
+let asking = null;
+
+function renewAt() {
   try {
-    const res = await fetch('/api/github/me');
-    if (res.ok) {
-      auth = await res.json();
-    } else if (res.status !== 503) {
-      auth = null;
-    }
-    // 503 = GitHub is down at the moment: keep the login status we have.
+    return Number(localStorage.getItem(RENEW_KEY)) || 0;
   } catch {
-    auth = null;
+    return 0;
   }
+}
+
+/** Whether the sign-in is due for renewal (functions/_lib/session.js), or within `lead` milliseconds of it. */
+function renewDue(lead = 0) {
+  const at = renewAt();
+  return at > 0 && Date.now() >= at - lead;
+}
+
+/** Asks for the sign-in again in `seconds`, where the status gave a time; without one, nothing is planned and the kept time goes. */
+function planRenewal(seconds) {
+  clearTimeout(renewTimer);
+  renewTimer = null;
+  const wait = typeof seconds === 'number' && seconds > 0 ? Math.min(seconds, RENEW_LONGEST) : 0;
+  try {
+    if (wait) localStorage.setItem(RENEW_KEY, String(Date.now() + wait * 1000));
+    else localStorage.removeItem(RENEW_KEY);
+  } catch { /* storage refused: the timer below still asks */ }
+  if (wait) renewTimer = setTimeout(() => checkAuth(), wait * 1000);
+}
+
+/** Renews the sign-in first where it falls due within RENEW_LEAD, before a call that reaches GitHub (a publish, a save of drafts), so the planned renewal does not end the sign-in under it. */
+async function renewIfDue() {
+  if (renewDue(RENEW_LEAD)) await checkAuth({ soon: true });
+}
+
+/** The status call, one at a time across the editor's tabs where the browser has Web Locks, so a tab asking after another asks with the cookies the other was given. */
+function askStatus(soon) {
+  const ask = () => fetch(soon ? '/api/github/me?soon=1' : '/api/github/me');
+  return navigator.locks?.request ? navigator.locks.request('urd-sign-in', ask) : ask();
+}
+
+/**
+ * The sign-in status (api/github/me.js), which renews a sign-in that has fallen due; asked once at a time in a tab.
+ * A refused renewal is asked once more a moment later: another tab may have renewed the sign-in with the same key, and its answer brings the cookies this tab then sends.
+ * Without an answer, or with the host or GitHub down, the sign-in shown is kept, and a renewal due is asked for again in a minute.
+ * @param {{soon?: boolean}} [opts] soon: renew where the sign-in falls due within RENEW_LEAD
+ */
+function checkAuth(opts) {
+  asking ??= readStatus(opts).finally(() => { asking = null; });
+  return asking;
+}
+
+async function readStatus({ soon = false } = {}, retried = false) {
+  let data = null;
+  try {
+    const res = await askStatus(soon);
+    if (res.ok) data = await res.json();
+    else if (res.status < 500) {
+      auth = null;
+      planRenewal();
+      return;
+    }
+  } catch { /* no answer: handled below */ }
+  if (!data) {
+    if (renewDue()) planRenewal(60);
+    return;
+  }
+  if (data.renewFailed && !data.loggedIn && !retried) {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    return readStatus({ soon }, true);
+  }
+  auth = data;
+  if (!data.renewFailed) planRenewal(data.renewIn);
 }
 
 /** «Sign out» (TopBar): the server expires the session and revokes its token (api/github/logout.js), and the sign-in status is read again. */
@@ -628,6 +704,8 @@ async function signOut() {
   try {
     const res = await fetch('/api/github/logout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
     if (!res.ok) throw new Error(String(res.status));
+    // A status call already on its way carries the cookies from before; the status is read anew after it.
+    await asking;
     await checkAuth();
     setStatus(ta('status.signedOut'));
   } catch {
@@ -1246,6 +1324,7 @@ export const shellState = {
   loadPanelData,
   reducedMotion,
   checkAuth,
+  renewIfDue,
   signOut,
   get guidesOn() { return guidesOn; },
   set guidesOn(v) { guidesOn = v; },

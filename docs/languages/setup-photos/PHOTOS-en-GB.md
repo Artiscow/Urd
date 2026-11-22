@@ -51,7 +51,7 @@ Four kinds of folder work:
 The Cloudflare variables are set in the same place as the publishing
 variables, and every change to them needs a new deploy. Both are described in
 [the setup guide](../setup-publication/SETUP-en-GB.md) (the variables are
-items 10 and 11 there).
+under «Optional settings» there).
 
 ## Google Drive
 
@@ -77,9 +77,8 @@ sees pictures served by the site.
    A key of this kind can only read what is shared publicly. It cannot see
    your private files, which is exactly the point.
 3. **Put the key in Cloudflare.** In the Pages project: *Settings* →
-   *Environment variables* → *Add*. Type **Secret**, name `DRIVE_API_KEY`,
-   value the key. Then deploy again (an empty commit is enough, see the setup
-   guide).
+   *Variables and Secrets* → *Add*. Type **Secret**, name `DRIVE_API_KEY`,
+   value the key. Then deploy again (see step 4 of the setup guide).
 4. **Paste the link in the editor.** Select the section, open *Background*,
    and in the layer set *Pictures from* to *Shared folder*. Paste the folder
    link in *Folder address*, choose the *Order* and set *Take up to*, then

@@ -6,7 +6,7 @@ SETUP-nb.md jorgalus. Dárogiella (bokmål) lea kanonalaš ja gusto go leat eroh
 
 > MERKE: dát lea maskiinjorgaluvvon vuosttašárvalus mii dárbbaša geahčadeami olbmos geas lea davvisámegiella eatnigiellan.
 
-Dát rávvagat heivehit «Almmut»-boalu: ahte admin sáhttá committet rievdadusaid GitHub-repoi, maid Cloudflare Pages de deployere. Dát lea ovttageardánis bargu juohke neahttasiiddu ovddas ja ádjána sullii logi minuhta. (Minsttar lea dárkkistuvvon produkšuvnnas ApeironLF:s.)
+Dát rávvagat heivehit «Almmut»-boalu: ahte admin sáhttá committet rievdadusaid GitHub-repoi, maid Cloudflare Pages de deployere. Dát lea ovttageardánis bargu juohke neahttasiiddu ovddas ja ádjána sullii logi minuhta.
 
 ## Eaktun
 
@@ -113,7 +113,6 @@ git push
 - OAuth-token lonuhuvvo server-bealde ja vurkejuvvo httpOnly-cookiei; dat ii goassege olat fierpmádatlohkki JS:ii.
 - `ALLOWED_LOGINS` čađahuvvo buot rievdadeaddji čuoggáin, ii dušše UI:s.
 - Almmuheapmi sáhttá dušše čállit `content/**`, `media/**` ja `plugins/plugins.json`. Koda (`functions/`, `admin/`, `assets/engine/`), workflows ja sihkkarvuođafiillat leat caggojuvvon server-bealde, nu ahte suollemasat váldojuvvon doaimmaheaddjisešuvdna ii sáhte bidjat maidege.
-- Geahča [ADR-0003](../../adr/0003-publishing-via-github-oauth-and-pages-functions.md) olles ákkastallama várás (dárogillii).
 
 ## Almmuhandási báikkálaš geahččaleapmi (Urd-ovddideaddjit)
 

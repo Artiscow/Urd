@@ -2,151 +2,146 @@
 
 [Sámegiella](SETUP-se.md) · **🇬🇧 English** · [🇳🇴 Bokmål](SETUP-nb.md) · [🇳🇴 Nynorsk](SETUP-nn.md) · [🇹🇷 Türkçe](SETUP-tr.md)
 
-The canonical text (ADR-0022): on a discrepancy this English text applies. The Norwegian (bokmål) version is [SETUP-nb.md](SETUP-nb.md).
+The canonical text: on a discrepancy this English text applies. The Norwegian (bokmål) version is [SETUP-nb.md](SETUP-nb.md).
 
-This guide sets up the «Publish» button: letting admin commit changes to the GitHub repo, which Cloudflare Pages then deploys. This is a one-time job per website and takes about ten minutes. (The pattern is validated in production in ApeironLF.)
+This guide puts your site online and sets up the «Publish» button in the editor: the editor saves your changes to your GitHub repo, and Cloudflare Pages puts them on the site. You do it once per website, and it takes about ten minutes.
 
-## Prerequisites
+## What you need
 
-- The website repo is on GitHub (for Urd development: the Urd repo itself).
-- A Cloudflare account (the free tier goes a long way).
+- A GitHub account.
+- A Cloudflare account (the free plan is enough).
 
-## 0. Create the website repo
+Building Urd itself? Your website is the `template` folder in the Urd repo, so skip step 1 and use the Urd repo. The steps say where anything else differs.
 
-A new site starts from the template repository [urd-template](https://github.com/Artiscow/urd-template): press **Use this template** → **Create a new repository** on GitHub and name your repo. The repo you get IS the website; everything else in this guide is done against it. Later Urd versions are fetched with the **Updates** panel in the admin, which checks against the template repository, warns about files you have hand-edited, and writes the update as one commit. (For Urd development, the Urd monorepo itself is used instead; the website is then the `template` subfolder.)
+## 1. Create the website repo
 
-## 1. Connect the repo to Cloudflare Pages
+1. Open [urd-template](https://github.com/Artiscow/urd-template) on GitHub.
+2. Press **Use this template** → **Create a new repository**.
+3. Give the repo a name, choose **Public** or **Private**, and press **Create repository**.
 
-1. The Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-2. Choose the repo, and choose the **project name with care**: the name becomes the address
-   (`<name>.pages.dev`), it is shared globally with all Cloudflare customers (if the name is
-   taken, you get a random suffix), and it CANNOT be changed later - then the project must be
-   deleted and created anew. Lowercase letters, digits and hyphens only.
-3. Under the build settings:
-   - **Build command:** (empty - Urd has no build step)
+The repo you get is your website. New versions of Urd come in later through the **Updates** panel in the editor.
+
+## 2. Put the site on Cloudflare Pages
+
+1. In the Cloudflare dashboard, go to **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**.
+2. Choose **GitHub** and sign in if asked. Choose the repo from step 1, press **Install & Authorize**, then **Begin setup**.
+3. **Project name:** choose it with care. It becomes the site's address, `<name>.pages.dev`, and it cannot be changed later (you would have to delete the project and start again). Names are shared by everyone on Cloudflare, so if yours is taken, Cloudflare adds a few random letters to it. Use lowercase letters, digits and hyphens only.
+4. Fill in the build settings:
+   - **Production branch:** `main`
+   - **Framework preset:** None
+   - **Build command:** leave it empty (Urd has no build step)
    - **Build output directory:** `/`
-   - **Root directory:** `template` (in a clean cloned template repo where the content is at the root: leave empty)
-4. Deploy. The site is now live at `<project>.pages.dev`, and the `functions/` folder is picked up automatically.
-5. Recommended: leave the saved drafts' branch out of the preview builds (see [Saved drafts](#saved-drafts)).
+   - **Root directory:** leave it empty. For the Urd repo itself, open **Root directory (advanced)** and set **Path** to `template`.
+5. Press **Save and Deploy**. When it is done, the site is live at `https://<name>.pages.dev`.
 
-## 2. Create a GitHub OAuth app
+Note the address: the next steps use it. Where this guide writes `<name>.pages.dev`, use your own.
 
-1. GitHub → **Settings** → **Developer settings** → **OAuth Apps** → **New OAuth App**.
+## 3. Create the GitHub App
+
+The app lets you log in to the editor with your GitHub account, and lets the editor save to the site's repo and nothing else.
+
+1. On GitHub, click your profile picture (top right) → **Settings** → **Developer settings** (at the bottom of the left menu) → **GitHub Apps** → **New GitHub App**. If the repo belongs to an organisation, start from the organisation instead: **Your organizations** → **Settings** next to it → **Developer settings** → **GitHub Apps** → **New GitHub App**.
 2. Fill in:
-   - **Application name:** e.g. «Urd publishing - My club»
-   - **Homepage URL:** `https://<project>.pages.dev`
-   - **Authorization callback URL:** `https://<project>.pages.dev/api/github/callback`
-3. Create it, and note the **Client ID**.
-4. **Generate a new client secret**, and note the secret (it is shown only once).
+   - **GitHub App name:** a name nobody else on GitHub has taken, at most 34 characters, e.g. «Urd publishing my-site»
+   - **Homepage URL:** `https://<name>.pages.dev`
+   - **Callback URL:** `https://<name>.pages.dev/api/github/callback`
+   - Leave **Expire user authorization tokens** ticked. Your login then lasts eight hours at a time, and the editor renews it by itself.
+   - Leave **Request user authorization (OAuth) during installation** unticked.
+   - Under **Webhook**, untick **Active**.
+   - Under **Permissions** → **Repository permissions**, set **Contents** to **Read and write**. Leave the others as they are.
+   - **Where can this GitHub App be installed?** Choose **Only on this account**.
+3. Press **Create GitHub App**.
+4. On the app's page, copy the **Client ID** and keep it for step 4.
+5. Press **Generate a new client secret** and copy the secret. GitHub shows it only once; if you lose it, generate a new one. The app needs no private key, so leave that part of the page alone.
+6. Install the app on the site's repo: in the app's menu on the left, press **Install App**, then **Install** next to your account. Choose **Only select repositories**, pick the repo from step 1, and press **Install**.
 
-If you use your own domain later, update both URLs in the OAuth app.
+## 4. Give Cloudflare the keys
 
-On Cloudflare's free plan, Cloudflare turns its own visit counting (Web Analytics) on by itself for a domain you add, and puts its script on your pages. The privacy page then tells your visitors so, and the Legal panel names it. If you do not want it: Cloudflare's dashboard, the domain, **Web Analytics**, **Manage RUM Settings**, **Disable**; Cloudflare does not turn it on again. The Legal panel sees it only on the front page as Cloudflare serves it to you, and Cloudflare leaves the script out for some visitors (those its EU and UK data centres serve), so the setting in Cloudflare is the one to check.
+1. In the Cloudflare dashboard, go to **Workers & Pages** → your project → **Settings** → **Variables and Secrets**.
+2. For each variable below, press **Add**, fill in **Type**, **Variable name** and **Value**, and press **Save**. A **Secret** is hidden once saved; a **Text** stays readable.
 
-## 3. Set the environment variables in Cloudflare
+Always needed:
 
-Go to the project → **Settings** → **Variables and Secrets** → **Add**.
+| Type | Variable name | Value |
+|---|---|---|
+| Text | `GITHUB_REPO` | Your repo as `owner/name`, e.g. `Artiscow/my-site` |
+| Text | `GITHUB_CLIENT_ID` | The Client ID from step 3 |
+| **Secret** | `GITHUB_CLIENT_SECRET` | The secret from step 3 |
+| Text | `ALLOWED_LOGINS` | The GitHub usernames allowed to publish, separated by commas, e.g. `Artiscow` |
 
-The form has three fields: **Type**, **Variable name** and **Value**.
-Fill them in exactly as below. Save, and repeat for all six:
+Only in these cases:
 
-1. Type: Text
-   Name: `GITHUB_REPO`
-   Value: the repo to publish to. For this site: `Artiscow/Urd`
+| Type | Variable name | Value | When |
+|---|---|---|---|
+| Text | `GITHUB_BRANCH` | The branch name (never `urd-drafts`) | The site is published from a branch other than `main` |
+| Text | `GITHUB_ROOT_DIR` | `template` | The site is the Urd repo itself |
 
-2. Type: Text
-   Name: `GITHUB_CLIENT_ID`
-   Value: the Client ID from the OAuth app (step 2)
+3. Deploy again, since the variables take effect from the next deploy: in the project, open **Deployments**, then the **⋯** menu on the latest deployment → **Retry deployment**.
 
-3. Type: **Secret**
-   Name: `GITHUB_CLIENT_SECRET`
-   Value: the secret from the OAuth app (step 2)
+## 5. Check that it works
 
-4. Type: Text
-   Name: `GITHUB_BRANCH`
-   Value: `main`
+1. Open `https://<name>.pages.dev/admin/`, press **Log in with GitHub**, and then **Authorize** on GitHub's page.
+2. Your GitHub username appears in the top bar. A warning sign in front of it means the username is not in `ALLOWED_LOGINS`: check the spelling, and deploy again.
+3. Change a text, press **Publish**, then **Publish now**. After a moment the change is saved in your repo, and about a minute later it is on the site.
 
-5. Type: Text
-   Name: `GITHUB_SCOPE`
-   Value: `public_repo` (public repo) or `repo` (private repo)
+The site is set up. The rest of this guide is for when you need it.
 
-6. Type: Text
-   Name: `ALLOWED_LOGINS`
-   Value: the GitHub usernames allowed to publish, separated by commas. E.g. `Artiscow`
+## Optional settings
 
-7. Type: Text
-   Name: `GITHUB_ROOT_DIR`
-   Value: the subfolder in the repo that is the website root, that is the same value as
-   «Root directory» in step 1. For the Urd monorepo: `template`.
-   (If the website is at the repo root, as in a cloned template repo: drop this entirely.)
+Set these the same way as in step 4, and deploy again after each change.
 
-8. Type: Text (optional - normally not needed)
-   Name: `URD_TEMPLATE_REPO`
-   Value: the template repository the Updates panel fetches new Urd versions
-   from. Without it the default `Artiscow/urd-template` is used; set it only
-   if the site should follow a fork of the template.
+| Type | Variable name | Value | When |
+|---|---|---|---|
+| **Secret** | `DEPLOY_HOOK_URL` | A deploy hook address: in the project, **Settings** → **Deploy Hooks** → the plus sign → branch `main` | A publish now and then never reaches the site, though the change is in the repo. With this set, publishing starts the deploy itself. |
+| **Secret** | `DRIVE_API_KEY` | An API key from Google Cloud with the Drive API turned on | A background takes its pictures from a shared Google Drive folder. See [Pictures from a shared folder](../setup-photos/PHOTOS-en-GB.md). Google Photos albums need no key. |
+| Text | `PHOTO_HOSTS` | The hosts pictures may come from, separated by commas, e.g. `sky.example.org` | Pictures come from a Nextcloud or ownCloud share, or from a picture list at another address. Google's own hosts are built in. |
+| Text | `ICS_HOSTS` | The hosts calendars may come from, separated by commas, e.g. `calendar.proton.me` | A calendar comes from a service other than Google Calendar. See [The calendar](../calendar-guide/CALENDAR-en-GB.md). |
+| Text | `URD_TEMPLATE_REPO` | A template repo as `owner/name` | The site should take its updates from a copy of urd-template instead of `Artiscow/urd-template`. |
 
-9. Type: **Secret** (optional - normally not needed)
-   Name: `DEPLOY_HOOK_URL`
-   Value: a Deploy Hook URL (Settings → Deploy Hooks → the plus sign → branch `main`).
-   In rare cases Cloudflare skips a deploy even though the commit is correct;
-   with this set, publishing triggers the deploy itself. Turn it on only if you
-   experience publishes not appearing.
+## A site set up with an OAuth App
 
-10. Type: **Secret** (optional - only for pictures from a Google Drive folder)
-    Name: `DRIVE_API_KEY`
-    Value: an API key from Google Cloud with the Drive API enabled. The image
-    gallery background layer can take its pictures from a shared Drive folder; the folder is read by the site's own function on the
-    server, so the key never reaches the browser or the site's files. Google
-    Photos albums need no key.
+A site set up with an OAuth App, before this guide used a GitHub App, keeps working. An OAuth App's login reaches every repo you can reach, though, so moving to a GitHub App is safer:
 
-11. Type: Text (optional - only for pictures from Nextcloud or another list)
-    Name: `PHOTO_HOSTS`
-    Value: the hosts the site may fetch pictures from, separated by commas.
-    E.g. `sky.example.org`. Needed for a Nextcloud or ownCloud share and for
-    a picture list at another address; Google's own hosts are built in.
+1. Create a GitHub App as in step 3, with the site's address.
+2. In Cloudflare, under **Variables and Secrets**, give `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` the app's values, and remove `GITHUB_SCOPE` if it is there. Deploy again (step 4).
+3. In the editor, press **Log out** beside your username in the top bar, and log in again.
+4. Delete the old OAuth App: **Settings** → **Developer settings** → **OAuth Apps** → the app → **Delete application**.
 
-12. Type: Text (optional - only for a calendar from another service than Google)
-    Name: `ICS_HOSTS`
-    Value: the hosts the calendar block may fetch calendars from, separated by
-    commas. E.g. `calendar.proton.me` or `sky.example.org`. Google Calendar is
-    built in. See [The calendar](../calendar-guide/CALENDAR-en-GB.md).
+While a site uses an OAuth App, a private repo needs the variable `GITHUB_SCOPE` with the value `repo`.
 
-Finally a new deploy is needed (the variables only take effect from the next deploy).
-The simplest way is an empty commit:
+## Your own domain
 
-```bash
-git commit --allow-empty -m "Redeploy for miljøvariabler"
-git push
-```
+1. In the project, open **Custom domains** → **Set up a custom domain**, and follow Cloudflare's steps.
+2. On GitHub, open the app from step 3 (**Settings** → **Developer settings** → **GitHub Apps** → **Edit** next to the app), change the **Homepage URL** and the **Callback URL** to the new domain, and press **Save changes**.
 
-(Alternatively in the dashboard: **Deployments** → the ⋯ menu on the latest deploy → **Retry deployment**.)
+On Cloudflare's free plan, Cloudflare turns on its own visit counting (Web Analytics) for a domain you add, and puts its script on your pages. The privacy page then tells your visitors so, and the Legal panel names it. To turn it off: in the Cloudflare dashboard, open the domain → **Web Analytics** → **Manage RUM Settings** → **Disable**; Cloudflare does not turn it on again. Check the setting in Cloudflare rather than relying on the Legal panel: the panel only sees the front page as Cloudflare serves it to you, and Cloudflare leaves the script out for visitors served from its EU and UK data centres.
 
-## 4. Verify
+## Taking payments (optional)
 
-1. Go to `https://<project>.pages.dev/admin/` → «Log in with GitHub» → authorise.
-2. Your username appears in the top bar (a ⚠ in front means you are missing an `ALLOWED_LOGINS` entry).
-3. Change a text and press **Publish**. After a moment the commit is in the repo, and Cloudflare deploys it (~1 minute).
+The Checkout block can take the payment through Vipps MobilePay, Stripe or PayPal. Without a provider, the order form sends the order by email or to an order address instead. Each provider needs its own agreement and keys, and you switch each one on per Checkout block under **Payment** in the block's menu. The buyer always pays on the provider's own page, so the site never sees a card.
 
-## 5. The payment layer (optional)
+First, set the shop's currency in the Site panel, group **Shop** → **Shop currency** (a code such as NOK, DKK or EUR). The prices are in that currency, and every provider charges in it.
 
-The Checkout block can take the payment through a provider ([ADR-0020](../../adr/0020-optional-payment-layer-vipps-checkout.md), [ADR-0028](../../adr/0028-payment-providers-in-the-optional-layer.md)). It is an optional layer: without it the order form sends the order by email or to an endpoint, as before. Each provider needs its own agreement and keys, and each is switched on per Checkout block under **Payment** in the block's menu. The buyer always pays on the provider's own page, so the site never sees a card.
+Good to know before you test:
 
-First set the shop's currency in the Site panel's **Shop** group (**Shop currency**, an ISO code such as NOK, DKK or EUR); the catalogue's prices are in that currency, and every provider charges in it.
-
-In the editor a click on a pay button tells you whether the provider's keys are in place; nothing is sent from there. Until the keys are in place the published button tells the buyer that payment is not set up yet. **Test the payment** in the checkout block's Payment group opens the checkout page in a new tab as it stands in the editor, unpublished changes and your basket included, where a test payment runs against the site's functions and comes back to the same view; the payment itself is priced from the published products, takes only a way to pay the published checkout block offers, and follows its capture for Stripe, so publish the checkout page and the products before you test them: a way to pay not yet published is refused with a line saying so, a product not yet published is refused, and a price changed only in the editor is charged as published. While a provider runs on its test keys, the published checkout shows a line saying that payments draw no money; it goes when the live keys are in.
+- In the editor, pressing a pay button tells you whether the provider's keys are in place. Nothing is sent from there.
+- Until the keys are in place, the published pay button tells the buyer that payment is not set up yet.
+- **Test the payment**, in the Checkout block's Payment group, opens the checkout page in a new tab with your unpublished changes and your basket. The payment itself uses what is published, so publish the checkout page and the products first. A way to pay or a product that is not published yet is refused, and a price changed only in the editor is charged at its published price.
+- While a provider runs on test keys, the published checkout shows a line saying that payments draw no money. It goes away when the live keys are in.
 
 ### Vipps MobilePay
 
-The layer needs a Vipps MobilePay agreement for payment on the web (the ePayment API) and the four keys of the sales unit. A Danish or Finnish MobilePay sales unit follows the same steps against the same servers, with the shop currency DKK or EUR; its reservations are shorter (step 6).
+You need a Vipps MobilePay agreement for payment on the web (the ePayment API) and the four keys of your sales unit. A Danish or Finnish MobilePay sales unit follows the same steps, with the shop currency DKK or EUR; its reservations are shorter (step 6).
 
-1. In the Vipps MobilePay business portal, click **For developers** in the side menu and choose **Production**. Find the sales unit and click **Show keys**, then copy `client_id`, `client_secret` and the primary `Ocp-Apim-Subscription-Key`, and the Merchant Serial Number (MSN) shown with the sales unit.
-2. Add them in Cloudflare as in step 3, all four as **Secret**: `VIPPS_CLIENT_ID`, `VIPPS_CLIENT_SECRET`, `VIPPS_SUBSCRIPTION_KEY` and `VIPPS_MSN`.
-3. For the test payment, choose **Test** under **For developers** instead: a test sales unit comes with the product, and **Add test sales unit** makes another. Use its keys (**Show keys**) in the four secrets, and add one more, Type: Text, `VIPPS_API_BASE` with the value `https://apitest.vipps.no`. Make a test user on the **Test users** tab with **Add a new test user**; the portal gives it a phone number and an identity number. Install the Vipps MT test app (TestFlight on iOS, Google Play on Android after joining Vipps's test group; the developer pages link both), sign in with the test user's phone number and identity number, and confirm with the code 0000 or 000000. Your own Vipps account cannot pay in the test environment.
-4. Redeploy (as at the end of step 3). In the editor, open the Checkout block's menu, tick **Payment** → «Pay with Vipps» button, and publish.
-5. The test payment: with the test keys in, the checkout page shows the test-mode line at the top of its form. Put a product in the basket, open the checkout page and press «Pay with Vipps». On a phone the test app opens; on a desktop Vipps asks for the test user's number and sends the request to the app. The app first asks the buyer to share the name, email and phone with the shop, then to approve the payment. Back on the checkout page the basket is empty and the page thanks the buyer by name; the payment is in the portal with the order lines in its description, and the receipt is in the app. When it works, swap in the production keys and remove `VIPPS_API_BASE`.
-6. The money is reserved, not moved. When the goods ship, find the reserved order among the portal's transactions and click **Capture** (enter an amount to capture only a part). A Norwegian sales unit has 180 days to capture; a Danish or Finnish one has 14, unless Vipps has approved late capture. The rules forbid a capture before the goods are ready. To call an order off, select it and click **Cancel transaction**, which releases the reservation at once; the portal offers this for Norwegian sales units only. A reservation never captured is released when the window ends.
-7. Optional, for the order notices the shop of v1.1 sends: register a webhook, so Vipps tells the site about payment events. The site stores nothing yet, but the endpoint `/api/pay/vipps/webhook` is in place and refuses every delivery that is not signed with the registration's secret. Register it with the API, and put the `secret` the answer returns in Cloudflare as **Secret** `VIPPS_WEBHOOK_SECRET`:
+1. In the Vipps MobilePay business portal, click **For developers** in the side menu and choose **Production**. Find the sales unit and click **Show keys**. Copy `client_id`, `client_secret`, the primary `Ocp-Apim-Subscription-Key`, and the Merchant Serial Number (MSN) shown with the sales unit.
+2. Add them in Cloudflare as in step 4, all four as **Secret**: `VIPPS_CLIENT_ID`, `VIPPS_CLIENT_SECRET`, `VIPPS_SUBSCRIPTION_KEY` and `VIPPS_MSN`.
+3. To test first, choose **Test** under **For developers** instead. A test sales unit comes with the agreement, and **Add test sales unit** makes another. Use its keys (**Show keys**) in the four secrets, and add one more: Type Text, `VIPPS_API_BASE`, value `https://apitest.vipps.no`.
+   - Make a test user on the **Test users** tab with **Add a new test user**. The portal gives it a phone number and an identity number.
+   - Install the Vipps MT test app (TestFlight on iOS; Google Play on Android after joining Vipps's test group; the developer pages link both). Sign in with the test user's phone number and identity number, and confirm with the code 0000 or 000000. Your own Vipps account cannot pay in the test environment.
+4. Deploy again (as in step 4). In the editor, open the Checkout block's menu, tick **Payment** → «Pay with Vipps» button, and publish.
+5. Test it: with the test keys in, the checkout page shows the test line at the top of its form. Put a product in the basket, open the checkout page and press «Pay with Vipps». On a phone the test app opens; on a computer, Vipps asks for the test user's number and sends the request to the app. The app asks the buyer to share their name, email and phone with the shop, and then to approve the payment. Back on the checkout page, the basket is empty and the page thanks the buyer by name. The payment is in the portal with the order lines in its description, and the receipt is in the app. When it works, swap in the production keys and remove `VIPPS_API_BASE`.
+6. The money is reserved, not moved. When the goods ship, find the order among the portal's transactions and click **Capture** (enter an amount to capture only part of it). A Norwegian sales unit has 180 days to capture; a Danish or Finnish one has 14, unless Vipps has approved late capture. The rules forbid capturing before the goods are ready. To call an order off, select it and click **Cancel transaction**, which releases the reservation at once; the portal offers this for Norwegian sales units only. A reservation never captured is released when the time runs out.
+7. Optional, for the order notices coming with the shop in v1.1: register a webhook, so Vipps tells the site about payments. The site stores nothing yet, but the address `/api/pay/vipps/webhook` is in place and refuses every delivery not signed with the registration's secret. Register it with the commands below, and put the `secret` from the answer in Cloudflare as **Secret** `VIPPS_WEBHOOK_SECRET`:
 
 ```bash
 # The access token (valid 24 hours in production, 1 hour in the test environment).
@@ -165,69 +160,74 @@ curl -X POST https://api.vipps.no/webhooks/v1/webhooks \
 
 ### Stripe (card, Apple Pay, Google Pay, Klarna and more)
 
-Stripe's hosted page takes card, Apple Pay, Google Pay, Klarna, MobilePay and the other methods you switch on in the Stripe dashboard, in most currencies.
+Stripe's page takes cards, Apple Pay, Google Pay, Klarna, MobilePay and the other methods you switch on in the Stripe dashboard, in most currencies.
 
-1. Create a Stripe account, and test in a sandbox first (**Sandboxes** in the Dashboard's account picker). On the **API keys** page (`dashboard.stripe.com/apikeys`) Stripe recommends a restricted key over the full secret key: click **Create restricted key**, give **Checkout Sessions** Write and **Payment Intents** Read, and leave the rest at None. Add the key (`rk_test_…`; a secret key `sk_test_…` also works) in Cloudflare as **Secret** `STRIPE_SECRET_KEY`, and redeploy. If a test payment fails, the key's **View request logs** names the permission it lacked.
-2. Under **Settings** → **Payment methods**, switch on the methods you want. Apple Pay and Google Pay show on Stripe's page without anything more, on the devices that support them. Leave off the methods that settle over days (SEPA Direct Debit, bank transfers): the checkout page confirms only what is confirmed at once, so the buyer would not be thanked.
-3. In the editor, open the Checkout block's menu, **Payment** → **Card payment**: Stripe. **Take the money** says when: *When I ship* holds the amount and you capture it in the Stripe dashboard when the goods ship (cards are held 7 days, Klarna 28); *At the order* takes it at once, for what is delivered at once, such as a membership or a ticket. Publish.
-4. The test payment: with the test key in, the checkout page shows the test-mode line at the top of its form. Put a product in the basket and press «Pay with card». On Stripe's page pay with the card number `4242 4242 4242 4242`, any future date and any three digits. Back on the checkout page the basket is empty and the page thanks the buyer by the name Stripe collected. In the sandbox's payments the payment stands as **Uncaptured** (When I ship; open it and click **Capture** when the goods ship) or **Succeeded** (At the order); `4000 0000 0000 9995` shows a declined card, and the basket stays.
-5. Optional, for the order notices the shop of v1.1 sends: on the **Webhooks** page in Workbench (`dashboard.stripe.com/webhooks`) click **Create an event destination**, choose **Your account** and the **Snapshot** payload, select the event `checkout.session.completed`, choose **Webhook endpoint**, and give the address `https://<site>/api/pay/stripe/webhook`. Click **Reveal secret** and copy the signing secret (`whsec_…`) into Cloudflare as **Secret** `STRIPE_WEBHOOK_SECRET`. The endpoint stores nothing yet, and refuses every delivery that is not signed with the secret or is older than five minutes. With the destination in place, Stripe waits up to ten seconds for the site's answer before it sends the buyer back; the endpoint answers at once.
-6. When it works, switch the **API keys** page from sandbox to live mode and complete Stripe's go-live checklist, which activates the account. Make a live restricted key the same way (`rk_live_…`; Stripe shows it only once), create the webhook destination again in live mode, since it has its own signing secret, and put both in Cloudflare instead of the sandbox values.
+1. Create a Stripe account, and test in a sandbox first (**Sandboxes** in the dashboard's account picker). On the **API keys** page (`dashboard.stripe.com/apikeys`), click **Create restricted key**, give **Checkout Sessions** Write and **Payment Intents** Read, and leave the rest at None (Stripe recommends this over the full secret key). Add the key (`rk_test_…`; a secret key `sk_test_…` also works) in Cloudflare as **Secret** `STRIPE_SECRET_KEY`, and deploy again. If a test payment fails, the key's **View request logs** names the permission it lacked.
+2. Under **Settings** → **Payment methods**, switch on the methods you want. Apple Pay and Google Pay show on Stripe's page by themselves, on the devices that support them. Leave off the methods that take days to settle (SEPA Direct Debit, bank transfers): the checkout page only confirms what is confirmed at once, so the buyer would not be thanked.
+3. In the editor, open the Checkout block's menu, **Payment** → **Card payment**: Stripe. **Take the money** says when:
+   - *When I ship* holds the amount, and you capture it in the Stripe dashboard when the goods ship (cards are held 7 days, Klarna 28).
+   - *At the order* takes it at once, for what is delivered at once, such as a membership or a ticket.
+
+   Publish.
+4. Test it: with the test key in, the checkout page shows the test line at the top of its form. Put a product in the basket and press «Pay with card». On Stripe's page, pay with the card number `4242 4242 4242 4242`, any future date and any three digits. Back on the checkout page, the basket is empty and the page thanks the buyer by the name Stripe collected. Among the sandbox's payments, the payment stands as **Uncaptured** (When I ship: open it and click **Capture** when the goods ship) or **Succeeded** (At the order). The card `4000 0000 0000 9995` shows a declined card, and the basket stays.
+5. Optional, for the order notices coming with the shop in v1.1: on the **Webhooks** page in Workbench (`dashboard.stripe.com/webhooks`), click **Create an event destination**, choose **Your account** and the **Snapshot** payload, select the event `checkout.session.completed`, choose **Webhook endpoint**, and give the address `https://<site>/api/pay/stripe/webhook`. Click **Reveal secret** and copy the signing secret (`whsec_…`) into Cloudflare as **Secret** `STRIPE_WEBHOOK_SECRET`. The site stores nothing yet, and refuses every delivery not signed with the secret or older than five minutes.
+6. When it works, switch the **API keys** page from sandbox to live mode and complete Stripe's go-live checklist, which activates the account. Make a live restricted key the same way (`rk_live_…`; Stripe shows it only once). Create the webhook destination again in live mode, since it has its own signing secret. Put both in Cloudflare instead of the sandbox values.
 
 ### PayPal
 
-PayPal's own page takes the buyer's PayPal account, or a card without an account where PayPal offers that, in the currencies PayPal takes (NOK, DKK, SEK, EUR, GBP, USD and others; not ISK, and HUF, JPY and TWD in whole units only). PayPal takes the money at the order: it guarantees a held payment for 3 days only, which is shorter than most shipping, so an order you cannot fill is refunded in the PayPal account.
+PayPal's page takes the buyer's PayPal account, or a card without an account where PayPal offers that, in the currencies PayPal takes (NOK, DKK, SEK, EUR, GBP, USD and others; not ISK, and HUF, JPY and TWD in whole units only). PayPal takes the money at the order, since it guarantees a held payment for 3 days only, so an order you cannot fill is refunded in the PayPal account.
 
-1. Log in at `developer.paypal.com` with the association's PayPal Business account (**Log in to Dashboard**). Under **Apps & Credentials**, with the **Sandbox** toggle on, use the **Default Application** or **Create App**, and copy its **Client ID** and **Secret**. Add them in Cloudflare as **Secret** `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET`, and add Type: Text `PAYPAL_API_BASE` with the value `https://api-m.sandbox.paypal.com`. Redeploy.
+1. Log in at `developer.paypal.com` with your PayPal Business account (**Log in to Dashboard**). Under **Apps & Credentials**, with the **Sandbox** toggle on, use the **Default Application** or **Create App**, and copy its **Client ID** and **Secret**. Add them in Cloudflare as **Secret** `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET`, and add Type Text `PAYPAL_API_BASE` with the value `https://api-m.sandbox.paypal.com`. Deploy again.
 2. In the editor, open the Checkout block's menu, **Payment** → tick «Pay with PayPal» button, and publish.
-3. The test payment: with the sandbox keys in, the checkout page shows the test-mode line at the top of its form. Under **Testing Tools** → **Sandbox Accounts** the developer account has a personal (buyer) sandbox account; **⋮** → **View/Edit Account** shows its email and password. Put a product in the basket, press «Pay with PayPal» and log in on PayPal's page with that buyer account. Back on the checkout page the basket is empty and the page thanks the buyer by name; the payment stands completed in the business sandbox account at `sandbox.paypal.com`. Pressing «Cancel» on PayPal's page returns to the checkout with the basket kept.
-4. Optional, for the order notices the shop of v1.1 sends: on the app's page, add a webhook with the address `https://<site>/api/pay/paypal/webhook` and the event `PAYMENT.CAPTURE.COMPLETED`, and copy the webhook's ID into Cloudflare as Type: Text `PAYPAL_WEBHOOK_ID`. The endpoint stores nothing yet; for each delivery it asks PayPal whether PayPal signed it for that webhook, and refuses the rest. The sandbox and the live app have separate webhook IDs.
-5. Going live needs a verified PayPal Business (or Premier) account. Switch **Apps & Credentials** to **Live**, take the live app's **Client ID** and **Secret** (PayPal may review the app first, within 24 to 72 hours), put them in the two secrets, remove `PAYPAL_API_BASE` so the live API `https://api-m.paypal.com` is used, and add the webhook again for the live app if you use it.
+3. Test it: with the sandbox keys in, the checkout page shows the test line at the top of its form. Under **Testing Tools** → **Sandbox Accounts**, the developer account has a personal (buyer) sandbox account; **⋮** → **View/Edit Account** shows its email and password. Put a product in the basket, press «Pay with PayPal», and log in on PayPal's page with that buyer account. Back on the checkout page, the basket is empty and the page thanks the buyer by name; the payment stands completed in the business sandbox account at `sandbox.paypal.com`. Pressing «Cancel» on PayPal's page returns to the checkout with the basket kept.
+4. Optional, for the order notices coming with the shop in v1.1: on the app's page, add a webhook with the address `https://<site>/api/pay/paypal/webhook` and the event `PAYMENT.CAPTURE.COMPLETED`, and copy the webhook's ID into Cloudflare as Type Text `PAYPAL_WEBHOOK_ID`. The site stores nothing yet; for each delivery it asks PayPal whether PayPal sent it, and refuses the rest. The sandbox and the live app have separate webhook IDs.
+5. Going live needs a verified PayPal Business (or Premier) account. Switch **Apps & Credentials** to **Live**, and take the live app's **Client ID** and **Secret** (PayPal may review the app first, within 24 to 72 hours). Put them in the two secrets, remove `PAYPAL_API_BASE` so the live service is used, and add the webhook again for the live app if you use it.
 
 ## Saved drafts
 
-The admin's Drafts window saves drafts to GitHub for another device, on a branch of their own, `urd-drafts`, which the first save makes. Nothing has to be set up for it, but three things are good to know:
+The editor's Drafts window saves drafts to GitHub, so you can pick them up on another device. They go on a branch of their own, `urd-drafts`, which the first save creates. Nothing has to be set up for it, but three things are good to know:
 
-- **The marker.** Every save is a commit whose message begins with `[CF-Pages-Skip]`, so Cloudflare builds nothing from the branch: a save never reaches the live site, never uses one of the project's builds, and never stands in History.
-- **Preview branches.** A Cloudflare Pages project builds a preview of every branch by default. As a safeguard beside the marker, leave `urd-drafts` out: the project → **Settings** → **Builds & deployments** → **Preview branch control** (in newer dashboards **Build** → **Branch control**), then **None**, or **Custom branches** with `*` under Include and `urd-drafts` under Exclude.
-- **A ruleset.** A GitHub ruleset or branch protection rule that covers every branch (one that restricts creating branches or requires a pull request, say) also stops the saves, and Drafts says «GitHub refused the branch the saved drafts live on (urd-drafts); see the setup guide». Leave the branch out: the repo → **Settings** → **Rules** → **Rulesets** → the ruleset → **Target branches** → **Add target** → **Exclude by pattern** → `urd-drafts`. A classic protection rule under **Settings** → **Branches** whose pattern is `*` is narrowed to `main`.
+- **Saves never reach the site.** Every save is marked so that Cloudflare builds nothing from it: it never reaches the live site, never uses one of the project's builds, and never shows in History.
+- **Leave the branch out of preview builds.** Cloudflare builds a preview of every branch by default. To be safe, leave `urd-drafts` out: in the project, **Settings** → **Builds & deployments** → **Preview branch control** (in newer dashboards **Build** → **Branch control**), then choose **None**, or **Custom branches** with `*` under Include and `urd-drafts` under Exclude.
+- **Rules on every branch block the saves.** A GitHub ruleset or branch protection rule that covers every branch (one that restricts creating branches or requires a pull request, say) also stops the saves, and Drafts says «GitHub refused the branch the saved drafts live on (urd-drafts); see the setup guide». Leave the branch out: in the repo, **Settings** → **Rules** → **Rulesets** → the ruleset → **Target branches** → **Add target** → **Exclude by pattern** → `urd-drafts`. For a classic protection rule under **Settings** → **Branches** with the pattern `*`, change the pattern to `main`.
 
-On a public repo anyone can read the saved drafts and the notes on them, as they can read the rest of the repo. `GITHUB_BRANCH` is never `urd-drafts`; the saves refuse it.
+On a public repo, anyone can read the saved drafts and the notes on them, as they can read the rest of the repo.
 
-## The security model (in brief)
+## How publishing is kept safe
 
-- The OAuth token is exchanged server-side and stored in an httpOnly cookie; it never reaches browser JS.
-- `ALLOWED_LOGINS` is enforced in all mutating endpoints, not only in the UI.
-- Publishing can only write `content/**`, `media/**` and `plugins/plugins.json`. Code (`functions/`, `admin/`, `assets/engine/`), workflows and security files are blocked server-side, so a hijacked editor session cannot plant anything.
-- Saving drafts writes only the `urd-drafts` branch, never the site's branch, and each saved part holds only its own draft texts.
-- See [ADR-0003](../../adr/0003-publishing-via-github-oauth-and-pages-functions.md) for the full reasoning (in Norwegian).
+- Your login reaches the site's repo alone and lasts eight hours at a time; the editor renews it by itself. It is kept in a cookie the page's own scripts cannot read.
+- Only the usernames in `ALLOWED_LOGINS` can publish; the site checks this on every change, not only in the editor.
+- Publishing can only write the site's content and media, the plugin list, the sitemap, `robots.txt`, the redirects and each page's copy of the site's own `index.html`, and can delete a plugin's folder. The site's code and security files are refused, so someone who took over an editor session could not plant code.
+- Saving drafts writes only the `urd-drafts` branch, never the site's own branch.
 
-## Local testing of the publishing layer (Urd developers)
+## Testing the publishing locally (Urd developers)
 
 ```bash
 cd template
-# legg testverdier i .dev.vars (gitignorert, ALDRI committ ekte hemmeligheter):
+# Put test values in .dev.vars (ignored by git; never commit real secrets):
 #   GITHUB_REPO=test/test
 #   GITHUB_CLIENT_ID=fake
 #   GITHUB_CLIENT_SECRET=fake
-#   ALLOWED_LOGINS=dittbrukernavn
+#   ALLOWED_LOGINS=yourusername
 npx wrangler pages dev . --port 8788
 ```
 
-Then the site, admin and functions all run on `http://localhost:8788`. Full OAuth login requires a real OAuth app with a callback to localhost, but the 401/503 flows and the path guard can be tested without it.
+The site, the editor and the functions then all run on `http://localhost:8788`. A full login needs a real GitHub App with its callback on localhost, but the error answers and the path checks can be tested without one.
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
+| What you see | Likely cause |
 |---|---|
-| «Publisering er ikke konfigurert: miljøvariabelen X mangler» (503) | The variable is missing in Cloudflare, or the deploy is older than the variable |
-| «Ugyldig OAuth-state» when logging in | The callback URL in the OAuth app does not match the domain, or cookies are blocked |
-| «har ikke publiseringstilgang» (403) | The username is not in `ALLOWED_LOGINS` (check the spelling; the field is case-insensitive) |
-| «Kunne ikke committe til GitHub» (502) | The token lacks scope (a private repo needs `repo`), or the branch has moved |
-| Publishing succeeds, but the site does not change | `GITHUB_ROOT_DIR` is missing/wrong: the commit lands outside the website root folder (check which paths the commit changed on GitHub) |
-| «Payment is not set up for this site yet» on the checkout page | One of the four Vipps secrets is missing in Cloudflare, or the deploy is older than the secrets (step 5) |
-| «Pay with card» at Stripe answers that payment is not set up | `STRIPE_SECRET_KEY` is missing, is the publishable key (`pk_…`) instead of the secret one, or the deploy is older than the key |
-| «Pay with PayPal» answers that PayPal does not take the currency | The shop currency is one PayPal lacks (ISK), or a price has øre or cents in HUF, JPY or TWD, which PayPal takes in whole units only |
-| The Vipps payment fails before the app opens | `VIPPS_API_BASE` points at the test environment with production keys, or the other way round; the keys and the base belong to the same environment |
-| The commit is correct, but no deploy appears | The git webhook was missed by the host (happens now and then). Set up `DEPLOY_HOOK_URL` (variable 9), and publishing triggers the deploy itself |
+| «Publishing is not configured: the environment variable X is missing» | The variable is missing in Cloudflare, or the site has not been deployed since it was added (step 4) |
+| «Invalid OAuth state (try signing in again)» when logging in | The **Callback URL** in the GitHub App does not match the site's address, or the browser blocks cookies |
+| GitHub shows a 404 page when you log in | The Client ID in Cloudflare is not the app's, or the site has not been deployed since it was added |
+| «GitHub rejected the login (expired token?) - sign in again» when publishing, or «Invalid or expired sign-in» in Drafts, History or Updates | The login has run out, or it was ended on GitHub's side. Log out and in again |
+| «The GitHub user "X" does not have publishing access» | The username is not in `ALLOWED_LOGINS` (check the spelling; capital letters do not matter) |
+| «Could not commit to GitHub» | The GitHub App is not installed on the site's repo, or its **Contents** permission is not **Read and write**; with an OAuth App, the repo is private and `GITHUB_SCOPE` is not `repo`. It can also be someone changing the branch at the same moment |
+| Publishing works, but the site does not change | `GITHUB_ROOT_DIR` is missing or wrong, so the change lands outside the website's folder (check which files the change touched on GitHub) |
+| «Payment is not set up for this site yet» on the checkout page | One of the four Vipps secrets is missing in Cloudflare, or the site has not been deployed since they were added |
+| «Pay with card» answers that payment is not set up | `STRIPE_SECRET_KEY` is missing, is the publishable key (`pk_…`) instead of the secret one, or the site has not been deployed since it was added |
+| «Pay with PayPal» answers that PayPal does not take the currency | The shop currency is one PayPal does not take (ISK), or a price has decimals in HUF, JPY or TWD, which PayPal takes in whole units only |
+| The Vipps payment fails before the app opens | `VIPPS_API_BASE` points at the test environment while the keys are production keys, or the other way round |
+| The change is in the repo, but no deploy appears | Cloudflare missed the change (it happens now and then). Set `DEPLOY_HOOK_URL` (see Optional settings), and publishing starts the deploy itself |
 | «GitHub refused the branch the saved drafts live on (urd-drafts)» in Drafts | A ruleset or branch protection rule covers every branch; leave `urd-drafts` out of it (see [Saved drafts](#saved-drafts)) |

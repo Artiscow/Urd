@@ -4,7 +4,7 @@
 
 SETUP-nb.md dosyasının çevirisi. İngilizce metin (SETUP-en-GB.md) kanoniktir ve farklılık durumunda geçerlidir.
 
-Bu kılavuz «Yayımla» düğmesini kurar: adminin değişiklikleri GitHub deposuna commit edebilmesini ve Cloudflare Pages'in bunu dağıtmasını sağlar. Bu, her web sitesi için tek seferlik bir iştir ve yaklaşık on dakika sürer. (Desen, ApeironLF'de üretimde doğrulanmıştır.)
+Bu kılavuz «Yayımla» düğmesini kurar: adminin değişiklikleri GitHub deposuna commit edebilmesini ve Cloudflare Pages'in bunu dağıtmasını sağlar. Bu, her web sitesi için tek seferlik bir iştir ve yaklaşık on dakika sürer.
 
 ## Ön koşullar
 
@@ -111,7 +111,6 @@ git push
 - OAuth belirteci sunucu tarafında değiştirilir ve httpOnly çerezde saklanır; tarayıcı JS'sine hiçbir zaman ulaşmaz.
 - `ALLOWED_LOGINS` yalnızca arayüzde değil, değişiklik yapan tüm uç noktalarda uygulanır.
 - Yayımlama yalnızca `content/**`, `media/**` ve `plugins/plugins.json` yazabilir. Kod (`functions/`, `admin/`, `assets/engine/`), iş akışları ve güvenlik dosyaları sunucu tarafında engellenir; böylece ele geçirilmiş bir editör oturumu hiçbir şey yerleştiremez.
-- Tüm gerekçe için [ADR-0003](../../adr/0003-publishing-via-github-oauth-and-pages-functions.md) belgesine bak (Norveççe).
 
 ## Yayımlama katmanının yerel testi (Urd geliştiricileri)
 

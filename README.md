@@ -69,7 +69,7 @@ English is the project's canonical language. Documents not yet translated are ma
 | [Roadmap](docs/languages/ROADMAP-en-GB.md) | Phases from skeleton to v1.0 |
 | [User guide](docs/languages/user-guide/GUIDE-en-GB.md) | For site owners: how the editor is used, without code |
 | [Development](docs/languages/DEVELOPMENT-en-GB.md) | For those of us developing Urd: setup, rules, common tasks |
-| [Publishing setup](docs/languages/setup-publication/SETUP-en-GB.md) | One-time publishing setup: GitHub OAuth app + Cloudflare |
+| [Publishing setup](docs/languages/setup-publication/SETUP-en-GB.md) | One-time publishing setup: a GitHub App + Cloudflare |
 | [Pictures from a shared folder](docs/languages/setup-photos/PHOTOS-en-GB.md) | Background pictures from a Google Drive folder, a Google Photos album or a Nextcloud share, and the Cloudflare variables they need |
 | [The calendar](docs/languages/calendar-guide/CALENDAR-en-GB.md) | For site owners: calendar services, meeting links, sign-up, maps and what the Calendar block reads from an event |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Running task list: to-dos, bugs and suggestions (older entries in Norwegian) |

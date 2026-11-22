@@ -331,6 +331,8 @@ async function publish(opts) {
 async function publishOnce({ parts = null } = {}) {
   // The saved drafts' index as the editor loaded is read first, so the saved copies this publish makes stale are found; the status line says the publish has begun meanwhile.
   shellState.setStatus(ta('status.publishing'));
+  // A sign-in due for renewal is renewed before publishing reaches GitHub.
+  await shellState.renewIfDue();
   await savedState.loadMeeting;
   // What goes out is read from the stored drafts.
   flushDrafts();
