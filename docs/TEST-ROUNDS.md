@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.8): render.js with short comments
+
+- [ ] The pages draw as before on the desktop and on a phone: sections, backgrounds, blocks pushed by content that grows, blocks pinned on scroll and on the phone
+- [ ] In the editor, dragging and resizing blocks, the phone view and its layouts behave as before
+
 ### Test batch (0.7.37.3.7): base.css with labels
 
 - [ ] Every page of the site looks as before, on the desktop and on a phone, the menu, the footer and «Back to top» included

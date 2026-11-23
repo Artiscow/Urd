@@ -1,16 +1,6 @@
 /**
- * The render loop: page → sections → background layers + blocks.
- *
- * All data is lifted via migrate.lift() before rendering. Unknown types and
- * render errors yield neutral placeholders (blocks) or are skipped
- * (background layers are decorative) - the page never crashes on bad data.
- *
- * Two viewports (opts.viewport):
- *  - 'desktop': absolute positioning from frames.desktop.
- *  - 'mobile': the row grid (ADR-0019), one path for all sections.
- *    Blocks without frames.mobile are auto-placed in reading order (stackOrder in phone-order.js, by the section's rule, its stacks, its blocks' exceptions and its custom order).
- *    Blocks with row in frames.mobile are pinned to explicit row tracks.
- *    hideMobile blocks are omitted, text and auto-growing blocks get natural height, and the section height follows from the grid.
+ * The render loop: sections, their background layers and their blocks, on either viewport; bad data never crashes the page.
+ * Notes: docs/engine-notes/render.md (Urd repository).
  */
 import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, phoneRoomOf, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
 import { forcesReadable, phoneHandoff, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, phoneSized, phoneFrame, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
@@ -25,12 +15,7 @@ import { isAnchorName } from './nav-model.js';
 import { textDesign } from './doc-look.js';
 
 /**
- * Draws the background layers (color/gradient/glow/grain/image/slideshow)
- * into host as `div.urd-bg-layer` elements, bottom-up. Shared by sections
- * (render.js), nav (nav.js) and footer (footer.js) - the same layer model
- * everywhere. Each layer is lifted via lift() before render; unknown types
- * and render errors are skipped with a warning (backgrounds are decorative,
- * they never topple the page).
+ * Draws the background layers into host as div.urd-bg-layer, bottom-up; shared by sections, nav and footer, and an unknown or failing layer is skipped.
  * @param {HTMLElement} host The element the layers are built into
  * @param {{layers?: Array<{type: string, version?: number, props?: object}>}} [background]
  * @param {{later?: boolean, first?: boolean}} [options] `later` (a section below the first, on a visitor's page as it arrives): a layer whose definition loads pictures (`pictures: true`) is placed at once and drawn as its section comes within a screen of the viewport, or before the page is printed, so the pictures below the first screen wait for their turn; without an IntersectionObserver it is drawn at once. `first` (the page's first section on a visitor's page): the layer is told so, and fetches its picture ahead of the rest.
@@ -75,7 +60,7 @@ export function renderBackgroundLayers(host, background, { later = false, first 
 const sheets = new Map();
 
 /**
- * Adds a stylesheet to the document once, for the code that needs it alone (the preview's rules, a calendar's): resolves when it has loaded or failed, so the caller draws with it in place, to whether it loaded.
+ * Adds a stylesheet to the document once; resolves when it has loaded or failed, to whether it loaded.
  * @param {string} href
  * @returns {Promise<boolean>}
  */
@@ -113,44 +98,25 @@ function drawWaiting(el) {
 if (typeof window !== 'undefined') window.addEventListener?.('beforeprint', () => { for (const el of [...waitingLayers.keys()]) drawWaiting(el); });
 
 /**
- * Translates a frame to CSS positioning.
- * Pure function (no DOM), tested in tests/render.test.mjs.
- *
- * Frames are in PHYSICAL units: x/w as a percentage of the
- * section width (flows with the screen), y/h in px. The grid is only a
- * snapping tool while editing and never affects placement.
- *
+ * Translates a frame to CSS positioning (frameToCss).
  * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} frame
  * @returns {{left: string, top: string, width: string, height: string, zIndex: string, transform: string}}
  */
 /**
- * Writes the site's layout tokens on the root element (ADR-0018). The canvas
- * in every section reads them, so one write governs the whole page.
- *
- * Lives here rather than in its own module on purpose: new engine modules
- * are pulled into the static import closure, which the modulepreload test
- * forces into every HTML shell.
- *
+ * Writes the site's layout tokens on the root element (ADR-0018); the canvas in every section reads them.
  * @param {object} site site.json (lifted)
  * @param {HTMLElement} [root] The element the tokens are set on
  */
 export function applySiteLayout(site, root = document.documentElement) {
   const width = site?.layout?.contentWidth ?? 1440;
-  // The gutter is a PERCENTAGE OF THE VIEWPORT WIDTH (vw), not pixels: it only
-  // acts in the band where the width does not bind yet, and there the
-  // breathing room should follow the screen.
+  // The gutter is a percentage of the viewport width (vw), not pixels.
   const gutter = site?.layout?.gutter ?? 6;
   root.style.setProperty('--urd-canvas-w', width === 'full' ? '100%' : `${width}px`);
   root.style.setProperty('--urd-canvas-gutter-desktop', `${Number(gutter) || 0}vw`);
 }
 
 /**
- * Raises the section's min-height so content down to `bottom` px (in content
- * surface coordinates) fits. Used by auto-growing blocks. The section is
- * content-box with the nav clearance as padding (base.css), so both the
- * computed min-height and `bottom` are pure content heights, and the
- * inline value stays a plain length (the compatibility surface plugin
- * copies rely on, see SCHEMA.md).
+ * Raises the section's min-height so content down to `bottom` px fits, the inline value a plain length.
  * @param {HTMLElement} sectionEl The section element
  * @param {number} bottom The content's bottom edge in px
  */
@@ -160,9 +126,7 @@ export function growSectionTo(sectionEl, bottom) {
 }
 
 /**
- * Whether the browser answers container queries: a block that follows its own
- * width (followsWidth) then lays itself out by its box (ADR-0025 decision 7),
- * and without them by the window, as the page's phone view.
+ * Whether the browser answers container queries, so a block that follows its own width lays itself out by its box.
  */
 export const WIDTH_QUERIES = typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('container-type', 'inline-size');
 
@@ -173,7 +137,7 @@ const pushHosts = new Set();
 let pushSuspended = 0;
 
 /**
- * A block's width across the canvas as drawn, in percent of the canvas: a width floor draws a picture wider than its frame on a narrow canvas (frameToCss), and the push reads the width a visitor sees, never less than the frame's.
+ * A block's width across the canvas as drawn, in percent of the canvas, a width floor included.
  * @param {HTMLElement} el The block element
  * @param {HTMLElement} canvas The section's canvas
  * @param {{w: number}} frame The block's desktop frame
@@ -184,12 +148,7 @@ export function drawnWidth(el, canvas, frame, across = canvas.clientWidth) {
 }
 
 /**
- * Measures every block against its frame and moves the blocks below a block
- * whose content grew (pure rules in push-model.js). The shifts live only on
- * the elements (style.top and data-urd-shift), never in the frames; the
- * section grows when the pushed content needs more than its design height,
- * and returns to it when the growth is gone. A pinned block keeps its stash
- * up to date instead of its inline top, so a release lands right.
+ * Measures every block against its frame and moves the blocks below one whose content grew (push-model.js); the shifts live on the elements only.
  * @param {HTMLElement} host The section element
  */
 function applyPush(host) {
@@ -201,9 +160,7 @@ function applyPush(host) {
   const section = host._urdPushSection;
   const canvas = host.querySelector(':scope > .urd-canvas');
   if (!section || !canvas) return;
-  // While editing has the push suspended, every block stays where the
-  // last pass put it: the drag draws its block with the block's own shift
-  // (pushShiftOf), and the resume pushes again from the new frames.
+  // While editing has the push suspended, every block stays where the last pass put it.
   if (pushSuspended) return;
   const blocks = [];
   for (const el of canvas.querySelectorAll(':scope > .urd-block')) {
@@ -213,17 +170,10 @@ function applyPush(host) {
     const frame = block?.frames?.desktop;
     if (frame) blocks.push({ el, block, frame });
   }
-  // The pass reads and writes in phases, so the reads of most blocks share one layout rather than one each (a block that follows its content, or holds the editor's own parts, measures with writes of its own): the canvas's width first, before anything is written.
+  // The pass reads and writes in phases, so most blocks' reads share one layout; the canvas's width is read first.
   const across = canvas.clientWidth;
   const ratio = canvasRatioAt(canvas, across);
-  // The box follows its content down to the design height and never
-  // below it: taller content grows it, content that fits again (a wider
-  // window, a text set to shrink) gives the design height back. Measured
-  // with the box at the design height, since the content's min-height
-  // follows the box. A block whose height follows its content (ADR-0025)
-  // is drawn at the content's own height, also below the design height,
-  // while the blocks below keep their places, since the push moves blocks
-  // down only.
+  // The box follows its content down to the design height, never below; a block that follows its content is drawn at the content's own height.
   for (const { el, block, frame } of blocks) {
     el.style.height = `${frame.h}px`;
     fitContent(el, frame.h, block, ratio);
@@ -233,9 +183,7 @@ function applyPush(host) {
     // An image block's picture fills its frame and never grows it: a zoomed or turned picture overflows its clipping frame, which is no content to make room for.
     const measure = () => (followsContent(block) ? hugHeight(el) : 0) || (block.type === 'image' ? frame.h : Math.max(frame.h, Math.round(contentHeight(el))));
     it.needed = measure();
-    // The editor's own parts (the adders, the placeholders of empty fields)
-    // are drawn but never push: the growth is the content a visitor sees, so
-    // the editor's section heights are the published page's.
+    // The editor's own parts are drawn but never push, so the editor's section heights are the published page's.
     it.seen = el.querySelector(EDITOR_ONLY) ? asVisitor(el, measure) : it.needed;
     it.w = drawnWidth(el, canvas, frame, across);
   }
@@ -243,9 +191,7 @@ function applyPush(host) {
   for (const { el, frame, needed, seen, w } of blocks) {
     if (needed !== frame.h) el.style.height = `${needed}px`;
     const grow = Math.max(0, seen - frame.h);
-    // The drawn box is kept, so a redraw between passes (a drag, the arrow
-    // keys, align) can put it back instead of the design height. The shift
-    // is kept the same way, below.
+    // The drawn box is kept, so a redraw between passes can put it back; the shift is kept the same way.
     if (needed !== frame.h) el.dataset.urdDrawn = String(needed);
     else delete el.dataset.urdDrawn;
     items.push({ id: el.dataset.blockId, x: frame.x, w, y: frame.y, h: frame.h, grow, el });
@@ -263,16 +209,9 @@ function applyPush(host) {
  */
 function writePush(host, items, skipBox) {
   const { shifts } = pushLayout(items);
-  // The section's own height, the line a block has to stay inside to have a
-  // say in it. A block placed past it lies across the sections below instead
-  // of stretching the one it belongs to; a section with no height of its own
-  // still follows every block. The height is the owner's: in the editor the
-  // growth never raises it, and a block that outgrows it lies over the
-  // section below, where the owner sees it; on the published page the
-  // growth raises it, so a visitor's content never lies over the next
-  // section (ADR-0025 decision 8).
+  // The section's own height, which the growth raises on the published page and never in the editor (ADR-0025 decision 8).
   host.style.minHeight = host.dataset.urdMinHeight ?? '';
-  // A section with no height of its own reaches the bottom of its blocks' frames as they stand now, a frame a typed text has written since the section was drawn included; between draws it only grows, so the section a dragged block leaves keeps its height.
+  // A section with no height of its own reaches the bottom of its blocks' frames as they stand now; between draws it only grows.
   const own = Boolean(host._urdPushSection?.size?.minHeight);
   const framesBottom = own ? 0 : Math.max(0, ...items.filter((it) => !skipBox?.has(it.id)).map((it) => it.y + it.h));
   if (framesBottom > (Number.parseFloat(host.style.minHeight) || 0)) host.style.minHeight = `${framesBottom}px`;
@@ -283,9 +222,7 @@ function writePush(host, items, skipBox) {
   let bottom = 0;
   for (const it of items) {
     const shift = shifts.get(it.id) ?? 0;
-    // A block being dragged is drawn where the pointer holds it, but it does
-    // not decide how tall the section is, so the section it is leaving keeps
-    // its height and the drop target stays uncovered.
+    // A block being dragged does not decide the section's height, so the section it leaves keeps its height.
     if (!skipBox?.has(it.id) && inside(it)) {
       grew = grew || it.grow > 0;
       bottom = Math.max(bottom, it.y + shift + it.h + it.grow);
@@ -304,15 +241,7 @@ function writePush(host, items, skipBox) {
 }
 
 /**
- * The push as it will be after a drag ends, drawn live during the drag:
- * the growth measured by the last pass is kept, the frames of the blocks
- * being dragged come from `frames` (block id to frame), and every block's
- * top is written as the pass would write it, so the release changes
- * nothing the owner has not already seen. A block whose content changes
- * height under the drag (one that follows its content, dragged narrower)
- * brings its growth as it is now in `grown`. The blocks being moved are left
- * out of the section height by default; a resize keeps its block in it, so a
- * section that follows its blocks follows the resize.
+ * The push as it will be after a drag ends, drawn live during the drag, so the release changes nothing the owner has not seen.
  * @param {HTMLElement} host The section element
  * @param {Map<string, {x: number, y: number, w: number, h: number}>} frames
  * @param {Map<string, number>} [grown] Block id to its growth past its frame, in px
@@ -334,11 +263,7 @@ export function pushPreview(host, frames, grown, skip = new Set(frames.keys())) 
 }
 
 /**
- * New frames for blocks that are already drawn, put in place without
- * drawing the section again, so a caret in the block's text stays where it
- * is (the editor's fit of a frame to its content, ADR-0025). The frames go
- * into the section the push pass holds, the one the editing layer reads too,
- * and the pass draws the heights and the places from them.
+ * New frames for blocks already drawn, put in place without drawing the section again, so a caret stays where it is.
  * @param {HTMLElement} host The section element
  * @param {Object<string, {x: number, y: number, w: number, h: number}>} frames Block id to desktop frame
  */
@@ -354,22 +279,7 @@ export function updateFrames(host, frames) {
 }
 
 /**
- * The content's zoom on the desktop: the block's drawn scale (ADR-0025
- * decision 6, block.size times its type's scale, drawnScale) times its fit
- * below the design width (ADR-0024, block.fit).
- * «Shrink» follows the canvas in proportion: the zoom is the canvas width
- * over the design width, down to the block's floor (block.fitMin, a share
- * of the design size), so the content keeps its lines and nothing is
- * measured; under the floor the box is narrower than the content and it
- * wraps like any other. «Both» zooms only as much as the frame needs and
- * lets the content wrap: the largest zoom from 1 down to the floor at which
- * the content fits the design height is found by bisection; content that
- * fits at full size is left alone, and content that does not fit at the
- * floor keeps the floor, wraps, and is pushed like any other. A block
- * without the field (wrap), or of a type that shrinks by its frame instead,
- * is drawn at its drawn scale alone, so a switch back needs no re-render. The
- * bisection measures with the box at the design height and the content's
- * min-height off, since the content otherwise fills the box.
+ * The content's zoom on the desktop: the block's drawn scale times its fit below the design width, «Shrink» in proportion and «Both» by bisection.
  * @param {HTMLElement} el The block element
  * @param {number} designH The frame's design height in px
  * @param {object} block The block data
@@ -409,9 +319,7 @@ function fitContent(el, designH, block, ratio = canvasRatio(el)) {
 }
 
 /**
- * How much narrower than its design width the block's canvas is: 1 at the
- * design width and above, and where nothing has a design size (a
- * full-width site or section, renderSection).
+ * How much narrower than its design width the block's canvas is: 1 at the design width and above, and where nothing has a design size.
  * @param {HTMLElement} el The block element
  * @returns {number}
  */
@@ -433,10 +341,7 @@ function contentChild(el) {
 }
 
 /**
- * Draws the content at a zoom: everything in it, text included, scales
- * alike, so the content keeps its lines at any size. A bound the owner
- * gives the base text stops the size there (sizeRange); the shrink below
- * the design width multiplies it.
+ * Draws the content at a zoom, text included, so it keeps its lines at any size; an owner's bound on the base text stops it.
  * @param {HTMLElement} child The content element
  * @param {number} zoom The drawn scale times the shrink
  */
@@ -446,10 +351,7 @@ function applyZoom(child, zoom) {
 }
 
 /**
- * Pins a group of blocks on the phone while the page scrolls (`sticky.phone`, 0.7.3.10).
- * A grid item may stick only inside its own grid area, which in the row grid is the block's own rows, so the blocks stand in a holder over the whole grid instead: a layer as large as the grid, where the holder sticks below the menu (`--urd-scroll-clear`) at the group's offset and lets go where the section ends, natively.
- * With a release at a later section (`until`) the layer reaches down to that section's foot, over the sections between, so the holder lets go once it has passed.
- * Each block keeps a slot of its size in the grid, so the blocks around it keep their places, and stands in the holder where its slot stands in the grid (placeStuck), measured again as the blocks or the grid change size.
+ * Pins a group of blocks on the phone while the page scrolls: a holder in a layer as large as the grid sticks, each block keeping a slot.
  * @param {HTMLElement} flow The section's row grid
  * @param {{offset: number, until?: string|null}} lead The group's first block's `sticky`
  * @param {HTMLElement[]} els The blocks, in reading order, each with its slot in the grid
@@ -484,8 +386,7 @@ function watchStuck(target) {
 const SLOT_PLACE = ['gridRow', 'gridColumn', 'width', 'marginLeft', 'marginRight', 'justifySelf'];
 
 /**
- * Brings the blocks pinned on the phone in a holder to their slots: each slot as tall as its block, the holder over the group's slots, and each block where its slot stands (stuckBox in sticky-model.js).
- * Exported for the editing layer, which moves a slot by the keys.
+ * Brings the blocks pinned on the phone in a holder to their slots (stuckBox in sticky-model.js); exported for the editing layer.
  * @param {HTMLElement} holder The holder (`.urd-stick`), or a block in it
  */
 export function placeStuck(holder) {
@@ -509,7 +410,7 @@ export function placeStuck(holder) {
     const slot = el._urdStickSlot;
     if (slot.style.gridColumn) Object.assign(el.style, { left: `${slot.offsetLeft}px`, right: 'auto', width: `${slot.offsetWidth}px`, marginLeft: '0px', marginRight: '0px' });
   });
-  // A release at a later section: the layer reaches down to that section's foot, watched with the page's sections as they change size, since a section between moves it too.
+  // A release at a later section: the layer reaches down to that section's foot.
   const layer = box.parentElement;
   const flow = layer?.parentElement;
   const until = box._urdUntil ? document.querySelector(`.urd-section[data-section-id="${CSS.escape(box._urdUntil)}"]`) : null;
@@ -521,7 +422,7 @@ export function placeStuck(holder) {
   }
 }
 
-/* The row grids holding blocks pinned on the phone, those blocks, and the sections they are released at with the page that holds the sections: a change of a block's size or of the grid's moves the slots, and a section's the foot the layer reaches, so each holder is placed again in the next frame. */
+/* The row grids, the blocks pinned on the phone and the sections they are released at, watched so each holder is placed again in the next frame as sizes change. */
 const stickWatch = typeof ResizeObserver === 'function' ? new ResizeObserver((entries) => {
   const holders = new Set();
   for (const entry of entries) {
@@ -540,7 +441,7 @@ const stickWatch = typeof ResizeObserver === 'function' ? new ResizeObserver((en
 }) : null;
 
 /**
- * A block's zoom on the phone: its drawn scale (ADR-0025 decision 6), and for a block that shrinks there (shrinksOnPhone in push-model.js) the share that keeps the lines it has at the design width (phoneFitZoom), read again as its width changes (a phone turned, the editor's phone made wider).
+ * A block's zoom on the phone: its drawn scale, and for a block that shrinks there the share that keeps its lines (phoneFitZoom).
  * @param {HTMLElement} el The block element, standing in the row grid
  * @param {object} block
  * @param {number} designW The section's design width in px, 0 where the block has none to follow
@@ -575,7 +476,7 @@ function fitOnPhone(el) {
   if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / zoom)}px`);
 }
 
-/* The phone blocks that shrink, each zoomed again in the next frame as its width changes; one observer for every block, and the zoom waits for the frame since it changes the block's height, which a zoom inside the notification would report back to it. */
+/* The phone blocks that shrink, each zoomed again in the next frame as its width changes; one observer for every block. */
 const phoneFitWatch = typeof ResizeObserver === 'function' ? new ResizeObserver((entries) => {
   for (const entry of entries) {
     const el = entry.target;
@@ -596,10 +497,7 @@ const phoneFitWatch = typeof ResizeObserver === 'function' ? new ResizeObserver(
 const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-phone-words, .urd-hint-chip, .urd-hint-card, .urd-phone-num, .urd-block-ruler, dialog';
 
 /**
- * The height the block's content needs, in the block's own px. Measured on
- * the content children, not on the block, so the editing handles that hang
- * below the box never count; a zoomed child (a text set to shrink) is
- * converted from its own zoom to the block's.
+ * The height the block's content needs, in the block's own px, measured on the content children.
  * @param {HTMLElement} el The block element
  * @returns {number}
  */
@@ -619,13 +517,7 @@ function childrenHeight(el) {
 }
 
 /**
- * The height a block's content takes when the box leaves it its own, in the
- * block's px (ADR-0025). The box is set to auto for the measure, so content
- * that fills its box (a height or a min-height of 100 %) comes back to the
- * height it needs, and the box gets its height back after. The box's own
- * height covers content stacked in several children, and each child's scroll
- * height covers content that overflows it. Demo content is measured too: the
- * editor fits a frame to what the preview shows.
+ * The height a block's content takes when the box leaves it its own, in the block's px (ADR-0025); demo content is measured too.
  * @param {HTMLElement} el The block element
  * @returns {number} 0 when there is nothing to measure
  */
@@ -641,9 +533,7 @@ export function naturalHeight(el) {
 }
 
 /**
- * The height the open `<details>` of a block add beyond their summaries, in
- * the block's px: an FAQ answer or a calendar's fold that a visitor has
- * unfolded is view state, never the design.
+ * The height the open `<details>` of a block add beyond their summaries, in the block's px: view state, never the design.
  * @param {HTMLElement} el The block element
  * @returns {number}
  */
@@ -658,7 +548,7 @@ function unfoldedHeight(el) {
     const closed = (details.querySelector(':scope > summary')?.offsetHeight ?? 0) + edges;
     unfolded += Math.max(0, details.offsetHeight - closed) * ((details.currentCSSZoom ?? 1) / z);
   }
-  // A text drawn as questions stands in the editor with every part open to be written in (blocks/text.js): what lies between one question's row and the next is an open part, as an unfolded fold's answer is.
+  // A text drawn as questions stands open in the editor, so what lies between one question's row and the next counts as unfolded.
   for (const text of el.querySelectorAll('.urd-text-doc[data-design="questions"] .urd-text')) {
     const rows = [...text.querySelectorAll(':scope > h2')];
     rows.forEach((row, i) => {
@@ -670,9 +560,7 @@ function unfoldedHeight(el) {
 }
 
 /**
- * The editor's own parts inside a block: the image adders, the «+ Product» card, the placeholders of empty fields and the hints of a calendar's removed or empty lines.
- * They are drawn in the preview but are never part of the page, so the push and the fit measure a block without them.
- * base.css hides the same list under `.urd-fit-measure`, and a test holds the two equal.
+ * The editor's own parts inside a block, which the push and the fit leave out; base.css hides the same list under `.urd-fit-measure`.
  */
 export const EDITOR_ONLY = '.urd-collection-image-adder, .urd-product-adder, .urd-collection-placeholder:empty, .urd-cal-gone';
 
@@ -695,10 +583,7 @@ function asVisitor(el, measure) {
 }
 
 /**
- * A block's heights as a visitor sees it, without the editor's own parts
- * (ADR-0025): `natural` with what a visitor has unfolded, the growth the
- * push answers; and `resting` without it, the height the editor's fit and a
- * settled gesture write into the frame.
+ * A block's heights as a visitor sees it, without the editor's own parts: `natural` with what is unfolded, `resting` without it.
  * @param {HTMLElement} el The block element
  * @returns {{natural: number, resting: number}} 0 when there is nothing to measure
  */
@@ -711,9 +596,7 @@ export function visitorHeights(el) {
 }
 
 /**
- * Whether a block that follows its content is drawn at it: a block still
- * loading its content (`aria-busy`) holds the frame's height so the page
- * does not jump when the content arrives.
+ * Whether a block that follows its content is drawn at it; one still loading holds the frame's height.
  * @param {HTMLElement} el The block element
  * @returns {boolean}
  */
@@ -722,9 +605,7 @@ export function drawsAtContent(el) {
 }
 
 /**
- * The height a block that follows its content is drawn at, or 0 to keep its
- * frame's: while it is not drawn at its content (drawsAtContent), and when
- * it has nothing to show, so the box can still be found and selected.
+ * The height a block that follows its content is drawn at, or 0 to keep its frame's.
  * @param {HTMLElement} el The block element
  * @returns {number}
  */
@@ -733,9 +614,7 @@ export function hugHeight(el) {
 }
 
 /**
- * Writes a section's design height for the push pass from the section data:
- * its own height, or the blocks' extent when it has none, the way
- * renderSection writes it. Called after frames change without a redraw.
+ * Writes a section's design height for the push pass from the section data, as renderSection does.
  * @param {HTMLElement} host The section element
  */
 export function syncSectionHeight(host) {
@@ -755,15 +634,7 @@ function schedulePush(host) {
 }
 
 /**
- * Wires the push pass for a freshly rendered desktop section: a first pass
- * after the blocks' own measurements (they queue their frames before this
- * one), and a ResizeObserver on every block and its content for fonts,
- * images, feeds and width changes. The observer runs the pass synchronously:
- * its notifications are delivered after layout and before paint, so a text
- * that wrapped at the new width is fitted and pushed before the frame is
- * drawn. The pass is deterministic, so a second delivery in the same frame
- * finds the same sizes and the loop ends. Hosts that left the document (a
- * page switch in the preview) are dropped here with their observers.
+ * Wires the push pass for a freshly drawn desktop section: a first pass, and a ResizeObserver on every block that runs it before paint.
  * @param {HTMLElement} host The section element
  * @param {object} section The section data
  */
@@ -786,10 +657,7 @@ function wirePush(host, section, preview) {
     applyPush(host);
   });
   for (const el of host.querySelectorAll(':scope > .urd-canvas > .urd-block')) {
-    // A block that follows its content is watched through its content alone:
-    // the pass writes its box at every change of the content, and a box the
-    // observer watches, resized inside its own callback, would come back as
-    // a notification it cannot deliver in the same frame.
+    // A block that follows its content is watched through its content alone, since the pass writes its box at every change.
     if (el.dataset.urdHeight === 'content') {
       for (const child of el.children) if (!child.matches(BLOCK_CHROME)) ro.observe(child);
       continue;
@@ -816,12 +684,7 @@ function unwirePush(host) {
 }
 
 /**
- * Editing that writes geometry is starting: the push pass stands still, so
- * every block stays where the owner sees it, pushed or not, and nothing
- * jumps when a drag begins. The drag draws its own block with the block's
- * shift on top of the frame (pushShiftOf), and the frame it writes stays
- * free of the shift. Paired with resumePush, which pushes again from the
- * new frames.
+ * Editing that writes geometry is starting: the push pass stands still until resumePush pushes again from the new frames.
  */
 export function suspendPush() {
   pushSuspended += 1;
@@ -838,10 +701,7 @@ export function pushShiftOf(el) {
 }
 
 /**
- * The height the last push pass drew a block at, or 0 when that was its
- * frame's: taller when the content grew past the frame, and shorter for a
- * block that follows its content (ADR-0025). A redraw between passes draws
- * this instead of the frame's height.
+ * The height the last push pass drew a block at, or 0 when that was its frame's.
  * @param {HTMLElement} el
  * @returns {number}
  */
@@ -865,7 +725,7 @@ export function resumePush() {
   if (pushSuspended > 0) pushSuspended -= 1;
   if (pushSuspended === 0) {
     for (const host of pushHosts) schedulePush(host);
-    // A block with a phone design that a gesture took across its width's line is drawn again once the gesture is over, in the frame after the gesture's own messages (watchPhoneDesign).
+    // A block with a phone design that a gesture took across its width's line is drawn again after the gesture (watchPhoneDesign).
     requestAnimationFrame(() => {
       for (const host of pushHosts) for (const el of host.querySelectorAll('.urd-block')) if (el._urdPhone) redrawForWidth(el);
     });
@@ -873,9 +733,7 @@ export function resumePush() {
 }
 
 /**
- * The inline min-height of a desktop section: the stored size, or the
- * blocks' extent when the section has none. Always a plain CSS length,
- * never a calc(): plugin copies parse it with parseFloat.
+ * The inline min-height of a desktop section: the stored size, or the blocks' extent; always a plain CSS length.
  * @param {object} section The section data
  * @param {number} maxBottomPx The lowest block edge in px
  * @returns {string}
@@ -886,16 +744,12 @@ export function sectionMinHeight(section, maxBottomPx) {
 
 export function applyFrameCss(el, frame, floorPx = 0) {
   Object.assign(el.style, frameToCss(frame, floorPx));
-  // The rotation as a custom property too, so the editing chrome can turn
-  // itself back upright. A custom property cannot go through the style map
-  // frameToCss returns, since Object.assign does not reach them.
+  // The rotation as a custom property too, so the editing chrome can turn itself back upright.
   el.style.setProperty('--urd-block-rot', `${frame.rot || 0}deg`);
 }
 
 export function frameToCss(frame, floorPx = 0) {
-  // A width floor (a block set to shrink, fitFloorPx in push-model.js): the
-  // frame never gets narrower than the floor, and is capped at the canvas's
-  // right edge so it never overhangs into the gutter.
+  // A width floor: the frame never gets narrower than the floor, capped at the canvas's right edge.
   const width = floorPx > 0
     ? `min(max(${frame.w}%, ${floorPx}px), calc(100% - ${frame.x}%))`
     : `${frame.w}%`;
@@ -910,7 +764,7 @@ export function frameToCss(frame, floorPx = 0) {
 }
 
 /**
- * Whether a block's height on the phone follows its content in the row grid: text and the terms of sale always, and a type that says so with `autoGrow` on its definition, either a flag or a function of the block's props (a gallery grows in its grid views and keeps its frame's height as a ribbon).
+ * Whether a block's height on the phone follows its content in the row grid: text, the terms of sale, and types that say so (autoGrow).
  * @param {{type?: string, props?: object}} block
  * @param {{autoGrow?: boolean|((props: object) => boolean)}|undefined} def
  * @returns {boolean}
@@ -920,7 +774,7 @@ export function autoGrows(block, def) {
   return typeof def?.autoGrow === 'function' ? Boolean(def.autoGrow(block.props ?? {})) : Boolean(def?.autoGrow);
 }
 
-/** Whether a block's words are measured by the desktop's «Force readable text» (ADR-0034 decision 3): a text block in its plain design, whose width handle stops at the readable floor and whose section shows its phone layout under the width it would fall under it (phoneHandoff). */
+/** Whether a block's words are measured by the desktop's «Force readable text» (ADR-0034 decision 3): a text block in its plain design. */
 function measuredText(block) {
   return block?.type === 'text' && textDesign(block.props?.design) === 'plain';
 }
@@ -934,7 +788,7 @@ function drawsWords(block, Urd) {
 const handoffWatches = new Map();
 
 /**
- * Watches the window width under which a section shows its phone layout, so it is drawn again as the window crosses it; a section drawn anew drops its earlier watch, and one no longer on the page drops its own.
+ * Watches the window width under which a section shows its phone layout, so it is drawn again as the window crosses it.
  * @param {HTMLElement} host The section element
  * @param {number} width The width (phoneHandoff), or 0 for none
  * @param {() => void} redraw
@@ -964,9 +818,7 @@ function syncCellWords(cell) {
 export { PHONE_COLUMNS, phoneCells, phoneHeight };
 
 /**
- * The place in the row grid of what stands in cells: a cell of flowing blocks (render.js wraps the blocks one after another in the same cells in one, so they stand under each other and the next block in other cells shares their line), or a block pinned in cells.
- * Its grid columns, and its inner edges half the space between blocks in, so two cells side by side stand that space apart while the outer edges line up with a block across the full row.
- * The grid's first line is the row's outer edge (base.css), so cell column c starts at line c + 1.
+ * The place in the row grid of what stands in cells: its grid columns, and its inner edges half the space between blocks in.
  * @param {{col: number, cols: number}} cells
  * @returns {object} Style map
  */
@@ -982,24 +834,7 @@ export function phoneCellCss({ col, cols }) {
 }
 
 /**
- * Translates a mobile placement to CSS for the row grid (ADR-0019).
- * Pure function (no DOM), tested in tests/render.test.mjs.
- *
- * `placement` is the block's frames.mobile: null means the block follows
- * desktop entirely, an object without `row` overrides only the fields it
- * contains (the block still flows), and an object with `row` pins the block
- * to explicit row tracks. The rows are minmax(MOBILE_ROW, auto) and grow
- * with the content, so a row position is a position in the composition, not
- * a frozen pixel distance.
- * A placement with cells (`col` and `cols`, phoneCells) stands in those of
- * the eight cell columns: pinned, as a grid item of its own (phoneCellCss);
- * flowing, in its cell's whole width, the cell placed by render.js. A block
- * whose size is its frame keeps its desktop shape there, its height
- * following its width.
- * A flowing block's own height on the phone (`height`) takes the desktop
- * height's place: a least height for a block that grows with its content,
- * and the whole height for any other, a picture or a film then filling it.
- *
+ * Translates a mobile placement (frames.mobile) to CSS for the row grid (ADR-0019): followed, overridden, pinned to rows or in cells.
  * @param {{x?: number, w?: number, row?: number, rows?: number, col?: number, cols?: number, height?: number, z?: number, rot?: number}|null} placement
  * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} desktop The block's desktop frame
  * @param {{autoGrow?: boolean, gap?: number, byWidth?: boolean, designWidth?: number}} [opts] autoGrow: text and data blocks with natural height; gap: the space under a flowing block in px (mobileGapOf), MOBILE_GAP without it; byWidth: a block whose size is its frame (FIT_BY_WIDTH), with designWidth the width its desktop frame's percent is of
@@ -1016,9 +851,7 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
 
   const cells = phoneCells(placement);
   if (Number.isFinite(placement?.row)) {
-    // Pinned: explicit row tracks. Without rows the span is derived from
-    // the desktop height. Height is not set: the element stretches to its
-    // tracks (grid stretch), and when the content grows, the tracks grow too.
+    // Pinned: explicit row tracks; without `rows` the span is derived from the desktop height.
     const rows = Number.isFinite(placement.rows)
       ? placement.rows
       : Math.max(1, Math.ceil(desktop.h / MOBILE_ROW));
@@ -1030,8 +863,7 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
     return css;
   }
 
-  // Flowing: auto-placed. Partial overrides apply only to the fields
-  // actually present in the placement. A block in cells stands in its cell's whole width (phoneCellCss places the cell).
+  // Flowing: auto-placed, partial overrides applying only to the fields present.
   if (cells) {
     css.width = '100%';
   } else {
@@ -1041,22 +873,21 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
       css.justifySelf = 'start';
     }
   }
-  // The block's own height on the phone (`height`) stands in the desktop height's place: a block that grows with its content stands at least that tall, any other that tall.
+  // The block's own height on the phone stands in the desktop height's place.
   const own = phoneHeight(placement);
-  // A block whose size is its frame, in cells narrower than the row: its desktop shape, the height following the cells' width and the row growing to it, until it has a height of its own, which the picture then fills.
+  // A block whose size is its frame, in cells narrower than the row, keeps its desktop shape until it has a height of its own.
   const shape = !own && cells && opts.byWidth && opts.designWidth > 0 && desktop.w > 0 && desktop.h > 0
     ? (desktop.w / 100) * opts.designWidth / desktop.h : 0;
   if (shape) {
     css.aspectRatio = String(Math.round(shape * 1000) / 1000);
   } else if (opts.autoGrow && !(own && opts.byWidth)) {
-    // Its content's height, or at least its own height on the phone, the content growing it past; a picture or a film with a shape takes its own height whole, and fills it.
+    // Its content's height, or at least its own height on the phone; a picture or a film with a shape takes its own height whole.
     if (own) css.minHeight = `${own}px`;
   } else if (cells) {
     // In a cell the block is no grid item: its height, the cell growing to its blocks.
     css.height = `${own ?? desktop.h}px`;
   } else {
-    // A fixed height, the span holding the block and the gap under it (margin-bottom, `--urd-mobile-gap` in base.css).
-    // The span holds the standard gap at most: a larger gap grows the row tracks, as a text block's margin does, so a block placed by hand below keeps its distance and no flowing block jumps past it.
+    // A fixed height: the span holds the block and the gap under it, at most the standard gap.
     const gap = Math.min(Number.isFinite(opts.gap) ? opts.gap : MOBILE_GAP, MOBILE_GAP);
     const height = own ?? desktop.h;
     css.height = `${height}px`;
@@ -1092,9 +923,7 @@ export function renderPage(page, site, root, opts = {}) {
 }
 
 /**
- * The spots of a section a link can land on, beyond the section's own id: the section's name, each drawn block's name, and the ids and names of the blocks hidden on the screen (on a phone those hidden there, on the desktop those shown on phones only), which land on the section's top instead.
- * Each spot names the section or block it stands for (`of`).
- * Names that do not follow the naming rule are left out.
+ * The spots of a section a link can land on beyond its own id: its name, each drawn block's name, and the hidden blocks' ids and names.
  * @param {object} section
  * @param {'desktop'|'mobile'} viewport
  * @returns {{section: Array<{id: string, of: string}>, blocks: Map<string, Array<{id: string, of: string}>>}} The spots drawn at the section's top, and the names per drawn block
@@ -1112,8 +941,7 @@ export function anchorTargets(section, viewport) {
 }
 
 /**
- * Draws a spot a link can land on as a zero-size marker at the top of `host`; a name records the section or block it names (data-spot), so urd.js can show the name in the address.
- * An id already on the page is left where it is, so the first spot to claim a name keeps it.
+ * Draws a spot a link can land on as a zero-size marker at the top of `host`; an id already on the page is left where it is.
  * @param {HTMLElement} host
  * @param {{id: string, of: string}} spot
  */
@@ -1132,7 +960,7 @@ function placeBlockSpots(el, block, names = []) {
   for (const spot of names) placeSpot(el, spot);
 }
 
-/** The width a side menu's column takes beside the page, in px: the body's room for it (base.css `urd-side-left`, `urd-side-right`), as nav.js sets it; 0 without one. */
+/** The width a side menu's column takes beside the page, in px, as nav.js sets it; 0 without one. */
 function sideColumn() {
   const body = document.body;
   if (!body.classList.contains('urd-side-left') && !body.classList.contains('urd-side-right')) return 0;
@@ -1160,7 +988,7 @@ export function renderSection(section, site, host, opts = {}) {
     else renderSection(section, site, host, { ...opts, gutter: undefined, side: undefined, arriving: false });
   });
   const viewport = handoff && window.matchMedia(`(max-width: ${handoff}px)`).matches ? 'mobile' : asked;
-  // `handoff`: a section showing its phone layout on a desktop page keeps the desktop's measure on its texts (blocks/text.js), its row being as wide as the desktop's canvas.
+  // `handoff`: a section showing its phone layout on a desktop page keeps the desktop's measure on its texts.
   const ctx = { site, section, grid, viewport, handoff: viewport !== asked, preview: Boolean(opts.preview || opts.measure), measure: Boolean(opts.measure), first: Boolean(opts.first) };
 
   host.className = 'urd-section';
@@ -1168,8 +996,7 @@ export function renderSection(section, site, host, opts = {}) {
   host.classList.toggle('urd-handoff', viewport !== asked);
   if (handoff) host.dataset.urdHandoff = String(handoff);
   else delete host.dataset.urdHandoff;
-  // The DOM id makes the section a spot a link lands on by its id (#<section-id>); a name, when it has one, is a marker drawn further down.
-  // The jump itself is shaped by base.css and followed by urd.js.
+  // The DOM id makes the section a spot a link lands on by its id; a name is a marker drawn further down.
   if (typeof section.id === 'string' && section.id) host.id = section.id;
   const spots = anchorTargets(section, viewport);
   // Ready-made section theme (role set, additive field): overrides the section's
@@ -1177,7 +1004,7 @@ export function renderSection(section, site, host, opts = {}) {
   applySectionTheme(host, section.theme);
   host.replaceChildren();
 
-  // The pictures of a section below the first wait until it comes near, as a visitor's page arrives; a later drawing (a breakpoint, a newer page file) draws them at once.
+  // The pictures of a section below the first wait until it comes near; a later drawing draws them at once.
   renderBackgroundLayers(host, section.background, { later: Boolean(opts.arriving) && !opts.first && !ctx.preview, first: Boolean(opts.first) && !ctx.preview });
 
   // The shape dividers: over the background, under the content.
@@ -1195,30 +1022,20 @@ export function renderSection(section, site, host, opts = {}) {
     host.appendChild(el);
   }
 
-  // The content surface (ADR-0018): the section is full window width and owns
-  // the background, the canvas binds the content to the design width and
-  // centers it. Block x/w are percentages OF THIS, not of the window, so the
-  // layout stops growing with the screen. The width is set in CSS (base.css),
-  // not here, so the editor can MEASURE it instead of computing it.
+  // The content surface (ADR-0018): the canvas binds the content to the design width; its width is set in base.css.
   const canvas = document.createElement('div');
   canvas.className = 'urd-canvas';
-  // Per-section override: 'full' unbinds the content from the design width, inside the site's side margin (heroes, dividers), and a CSS length gives this section a width of its own.
+  // Per-section override: 'full' unbinds the content from the design width, and a CSS length gives the section a width of its own.
   const secWidth = section.size?.maxWidth;
   if (secWidth) canvas.style.setProperty('--urd-canvas-w', secWidth === 'full' ? '100%' : secWidth);
-  // The width the canvas has at the design width, for the proportional
-  // shrink (fitContent): the site's content width, or the section's own px
-  // width when that is narrower; none on a full-width site or section, or a
-  // section width that is not in px, where nothing has a design size. The
-  // editor's designWidth() computes the same.
+  // The width the canvas has at the design width, for the proportional shrink (fitContent); none where nothing has a design size.
   const siteW = typeof site.layout?.contentWidth === 'number' ? site.layout.contentWidth : 0;
   const secPx = typeof secWidth === 'string' && /^\d+(\.\d+)?px$/.test(secWidth) ? parseFloat(secWidth) : 0;
   canvas._urdDesignW = !secWidth ? siteW : secPx ? (siteW ? Math.min(secPx, siteW) : secPx) : 0;
   host.appendChild(canvas);
 
   if (viewport === 'mobile') {
-    // The mobile row grid (ADR-0019): one path for all sections. Untouched
-    // blocks are auto-placed in reading order, pinned ones get explicit
-    // row tracks, and the minmax rows let the content grow without JS.
+    // The mobile row grid (ADR-0019): untouched blocks auto-placed in reading order, pinned ones on explicit row tracks.
     const flow = document.createElement('div');
     flow.className = 'urd-flow';
     // The space between the flowing blocks: the section's own, the site's, or the standard.
@@ -1231,7 +1048,7 @@ export function renderSection(section, site, host, opts = {}) {
     if (!forcesReadable(section, 'mobile')) flow.dataset.urdFreeWords = '';
     // On the page before its blocks are drawn, so a spot's id is checked against the section's own blocks too.
     canvas.appendChild(flow);
-    // The blocks pinned on the phone while the page scrolls, by their pinning group (each alone without one), the group's first block in the section's order speaking for it as on the desktop (stickyLeads).
+    // The blocks pinned on the phone while the page scrolls, by their pinning group, the group's first block speaking for it.
     const leads = stickyLeads(section.blocks);
     const stuck = new Map();
     /** The cell the flowing blocks one after another in the same cells stand in, under each other, as one grid item (phoneCellCss). */
@@ -1250,7 +1067,7 @@ export function renderSection(section, site, host, opts = {}) {
       if (block.decor) el.dataset.decor = '1';
       const key = block.sticky?.group || `solo-${block.id}`;
       const sticks = Boolean(block.sticky) && pinsOnPhone(leads.get(key));
-      // A flowing block in cells stands in a cell with the blocks before it in the same cells, or opens one; a block pinned on the phone while the page scrolls is a grid item of its own, through its slot.
+      // A flowing block in cells joins a cell with the blocks before it in the same cells, or opens one.
       const own = phoneCells(block.frames.mobile);
       const head = stackHead.get(block.id);
       const cells = pinned ? null : head && head !== block && !Number.isFinite(head.frames.mobile?.row) ? phoneCells(head.frames.mobile) : own;
@@ -1268,10 +1085,7 @@ export function renderSection(section, site, host, opts = {}) {
         cell = null;
       }
       const into = cell ?? flow;
-      // Auto-growing blocks (text, and def.autoGrow: faq/gallery/collection
-      // and plugin blocks with content of their own) get natural height: a
-      // fixed desktop height would clip taller mobile content.
-      // A block in cells keeps its desktop shape there where its size is its frame, and a cell holding words narrower than they read well stands across the row (the floor in base.css).
+      // Auto-growing blocks get natural height on the phone, since a fixed desktop height would clip taller content.
       const placing = { gap, byWidth: FIT_BY_WIDTH.has(block.type), designWidth: canvas._urdDesignW };
       const placement = pinned || cells === own ? block.frames.mobile : { ...block.frames.mobile, ...(cells ?? { col: 1, cols: PHONE_COLUMNS }) };
       el._urdPhonePlace = placement;
@@ -1283,13 +1097,13 @@ export function renderSection(section, site, host, opts = {}) {
         if (cells && sticks) Object.assign(el.style, phoneCellCss(cells));
       };
       place(autoGrows(block, Urd.blocks.get(block.type)));
-      // A block with a phone design stands in the flow before it is drawn, so its own width says whether it draws that design (renderBlock), and its layout follows the design it draws.
+      // A block with a phone design stands in the flow before it is drawn, so its own width says whether it draws that design.
       const phone = hasPhoneDesign(block.type, block.props);
       if (phone) into.appendChild(el);
       const narrow = phone && isNarrowBlock(el, block, ctx);
       const drawn = drawnBlock(block, narrow);
       if (drawn !== block) place(autoGrows(drawn, Urd.blocks.get(block.type)));
-      // Words in cells: the cell, the block pinned in cells, or the slot of a block pinned while the page scrolls, stands across the row where too narrow (the floor in base.css).
+      // A cell, a block pinned in cells or the slot of a block pinned while scrolling, holding words, stands across the row where too narrow (the floor in base.css).
       if (drawsWords(drawn, Urd)) el.dataset.urdWords = '1';
       if (pinned && own) el.dataset.cols = String(own.cols);
       if (cell) syncCellWords(cell);
@@ -1300,12 +1114,10 @@ export function renderSection(section, site, host, opts = {}) {
       if (followsWidth(drawn)) el.dataset.urdWidth = 'own';
       const align = heightAlign(drawn);
       if (align !== 'top') el.dataset.urdAlign = align;
-      // A block that fetches its content stands at the height the editor measured at the phone width while it loads (0.7.21.7, base.css).
-      // The reserve stands inside the content, which the block's drawn scale zooms, so it is written in the content's own px; a block that shrinks on the phone writes it again at its zoom (fitOnPhone).
+      // A block that fetches its content stands at the height the editor measured at the phone width while it loads.
       const loadingH = mobileLoadingHeight(block);
       if (loadingH) el.style.setProperty('--urd-loading-h', `${Math.round(loadingH / drawnScale(phoneSized(block)))}px`);
-      // Screen docking applies on mobile too: sticky.js docks the block against its own measured size.
-      // Pinning while scrolling is the row grid's own on the phone (stickOnPhone), so it is not marked here.
+      // Screen docking applies on mobile too; pinning while scrolling is the row grid's own on the phone (stickOnPhone).
       if (block.sticky && typeof block.sticky.offset === 'number' && block.sticky.mode === 'screen') {
         el.classList.add('urd-sticky-able');
         el.dataset.stickyOffset = String(block.sticky.offset);
@@ -1326,7 +1138,7 @@ export function renderSection(section, site, host, opts = {}) {
         el.style.gridRow = '';
         el.style.gridColumn = '';
         el.style.justifySelf = '';
-        // A block placed by hand stretches to its rows in the grid, which grow with its content; in the holder it takes their height itself, and more where its content needs it (placeStuck).
+        // A block placed by hand stretches to its rows in the grid; in the holder it takes their height itself (placeStuck).
         if (pinned && !el.style.height) {
           const rows = Number.isFinite(block.frames.mobile.rows) ? block.frames.mobile.rows : Math.max(1, Math.ceil(phoneFrame(block).h / MOBILE_ROW));
           if (autoGrows(block, Urd.blocks.get(block.type))) el.style.minHeight = `${rows * MOBILE_ROW}px`;
@@ -1373,23 +1185,17 @@ export function renderSection(section, site, host, opts = {}) {
       if (block.decor) el.dataset.decor = '1';
       const frame = block.frames.desktop;
       applyFrameCss(el, frame, fitFloorPx(block, canvas._urdDesignW));
-      // A block with a phone design stands on the canvas before it is drawn, so its own width says whether it draws that design (renderBlock), and its layout follows the design it draws.
+      // A block with a phone design stands on the canvas before it is drawn, so its own width says whether it draws that design.
       const phone = hasPhoneDesign(block.type, block.props);
       if (phone) canvas.appendChild(el);
       const narrow = phone && isNarrowBlock(el, block, ctx);
       const drawn = drawnBlock(block, narrow);
-      // The push pass draws this block at its content's height (ADR-0025),
-      // and the editing layer stops a drag of its height at the content. A
-      // block with its own height places its content in the box (base.css),
-      // and a block with columns or cards lays itself out by its own width.
+      // The push pass draws this block at its content's height (ADR-0025), and the editing layer stops a drag of its height there.
       if (followsContent(drawn)) el.dataset.urdHeight = 'content';
       const align = heightAlign(drawn);
       if (align !== 'top') el.dataset.urdAlign = align;
       if (followsWidth(drawn)) el.dataset.urdWidth = 'own';
-      // Sticky ("pin on scroll", additive field): only marking here; the
-      // pinning itself is done by sticky.js on scroll. The mobile branch
-      // above marks screen docking only (scroll pinning belongs to
-      // absolute layout).
+      // Sticky (pin on scroll): only marked here; sticky.js pins the block on scroll.
       if (block.sticky && typeof block.sticky.offset === 'number') {
         el.classList.add('urd-sticky-able');
         el.dataset.stickyOffset = String(block.sticky.offset);
@@ -1406,10 +1212,7 @@ export function renderSection(section, site, host, opts = {}) {
       if (typeof block.id === 'string' && block.id) placeBlockSpots(el, block, spots.blocks.get(block.id));
     }
 
-    // The section height belongs to the user: blocks may deliberately hang
-    // past the edge (sections never clip). Without a set height, the
-    // blocks' extent is used. The nav clearance is the section's padding
-    // (base.css), so the content surface keeps this height when pushed down.
+    // The section's height is the user's, or the blocks' extent where it has none; blocks may hang past it, as sections never clip.
     host.style.minHeight = sectionMinHeight(section, maxBottomPx);
     host.dataset.urdMinHeight = host.style.minHeight;
     wirePush(host, section, ctx.preview);
@@ -1418,9 +1221,7 @@ export function renderSection(section, site, host, opts = {}) {
   // The section's name, and on a phone the blocks hidden there, land on the section's top.
   for (const spot of spots.section) placeSpot(host, spot);
 
-  // Optional section animation (additive field). The entrance animation
-  // (animation) and the pointer effect (hover, additive field) are
-  // independent and can be combined.
+  // Optional section animation; the entrance and the pointer effect are independent and can be combined.
   renderAnimation(Urd, host, section.animation, ctx);
   renderAnimation(Urd, host, section.hover, ctx);
 
@@ -1443,8 +1244,7 @@ function renderBlock(Urd, el, block, ctx, measured = null) {
   const lifted = lift(block, def);
   if (lifted.ok) {
     try {
-      // A block with a phone design draws it while it is narrow (measured by the section's layout, which places the block first), and is drawn again when it crosses the line (watchPhoneDesign).
-      // On the phone the block reads its own words where it has some (phoneProps, ADR-0033), in the desktop's place, lifted by its migrations as its props are.
+      // A block with a phone design draws it while it is narrow; on the phone the block reads its own words where it has some (ADR-0033).
       const phoneProps = ctx.viewport === 'mobile' ? liftPhoneWords(block, def, lifted.props) : null;
       const props = propsForViewport({ ...block, phoneProps }, lifted.props, ctx.viewport);
       const phone = hasPhoneDesign(block.type, props);
@@ -1453,13 +1253,7 @@ function renderBlock(Urd, el, block, ctx, measured = null) {
       const blockCtx = ctx.preview && phoneProps ? { ...ctx, phoneWords: phoneProps } : ctx;
       def.render(el, propsForWidth(block.type, props, narrow), blockCtx);
       if (phone) watchPhoneDesign(el, { def, type: block.type, props, block, ctx: blockCtx, narrow });
-      // Entrance animation and pointer effect are independent fields and
-      // can be combined; the pointer effect is the block's own, else the one
-      // its section gives every element (pointerEffectOf). Cardwise blocks
-      // (animPerCard) spread the fields onto their cards themselves via
-      // renderCardAnimations once the cards are fetched; the marker is set
-      // synchronously here: the section stagger picks its targets in the
-      // same task, before the cards and their classes exist.
+      // Entrance animation and pointer effect are independent; cardwise blocks spread them onto their cards themselves (renderCardAnimations).
       const isPointer = (type) => Urd.animations.get(type)?.entrance === false;
       const hover = pointerEffectOf(block, ctx.section, isPointer);
       // The entrance on this screen: none on a phone where the block switches it off there (entranceOf).
@@ -1482,8 +1276,7 @@ function renderBlock(Urd, el, block, ctx, measured = null) {
 }
 
 /**
- * Whether a block is narrow (NARROW_PX): its own width as its content has it (the block's drawn scale zooms the content, so a block drawn smaller has the room it had; a block set to shrink has its width at the design width), read once it stands in a laid-out page; a block not yet laid out counts as narrow on a phone's page.
- * A block narrow before counts as wide again only 16 px past the line.
+ * Whether a block is narrow (NARROW_PX), by its own width as its content has it; a block narrow before counts as wide again only 16 px past the line.
  * @param {HTMLElement} el
  * @param {object} block
  * @param {{viewport?: string}} ctx
@@ -1500,7 +1293,7 @@ function isNarrowBlock(el, block, ctx, wasNarrow = false) {
   return width < NARROW_PX + (wasNarrow ? 16 : 0);
 }
 
-/* The blocks drawn in a phone design or watched for one, each with what it is drawn again from; one observer for every block, which hears the width and draws again in the next frame. */
+/* The blocks drawn in a phone design or watched for one; one observer for every block, which draws again in the next frame. */
 const phoneWatch = typeof ResizeObserver === 'function' ? new ResizeObserver((entries) => {
   for (const entry of entries) {
     const el = entry.target;
@@ -1527,8 +1320,7 @@ function watchPhoneDesign(el, state) {
 }
 
 /**
- * A watched block drawn again when its width has crossed the line.
- * In the editor's preview the editor is asked for the section (urd-redraw-section), since what the owner has typed since the section was drawn lives in the editor's draft; on the published page the block's content is made anew in the other design, its layout marks follow it, the editing handles are kept, and the content push is told of the new content.
+ * A watched block drawn again when its width has crossed the line: the editor is asked in the preview, the content made anew on the page.
  */
 function redrawForWidth(el) {
   const state = el._urdPhone;
@@ -1595,13 +1387,7 @@ function redrawForWidth(el) {
 }
 
 /**
- * Cardwise animation for blocks with the animPerCard flag: the block's
- * animation and hover fields are spread onto the cards instead of the
- * block element. The cards only exist after data fetching, so the block
- * calls this itself once they are built; without cards the block can pass
- * itself as the only target, so the fields never sit dead. The registry is
- * read from window.Urd (set by urd.js before the first render; a direct
- * import would create a cycle).
+ * Cardwise animation: the block's animation and hover fields spread onto its cards, called by the block once the cards are built.
  */
 export function renderCardAnimations(el, cards, block, ctx) {
   if (!window.Urd) return;
@@ -1614,10 +1400,7 @@ export function renderCardAnimations(el, cards, block, ctx) {
 }
 
 /**
- * Optional animation on a block/section. An unknown or failing animation
- * shows the content unanimated - animation is decor and never topples the
- * page. The apply parameter lets the cardwise path share the lifting and
- * guarding here.
+ * Optional animation on a block or a section; an unknown or failing one shows the content unanimated.
  */
 function renderAnimation(Urd, el, animation, ctx, apply = applyAnimation) {
   if (!animation?.type || ctx?.measure) return;
