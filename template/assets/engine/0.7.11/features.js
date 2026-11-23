@@ -15,6 +15,7 @@ const withSheet = (main, sheet) => Promise.all([main, loadEngineSheet(sheet)]).t
 /** The boot's features, each loading to the parts the engine draws it with. */
 export const CORE_FEATURES = {
   shop: () => withSheet(import('./shop.js'), 'nav-cart.css'),
+  launcher: () => withSheet(import('./nav-launcher.js'), 'nav-launcher.css'),
   contact: () => beside(import('./contact-model.js'), import('./contact-profiles.js'), import('./contact-checks.js')),
   footer: () => withSheet(Promise.all([import('./footer.js'), import('./footer-model.js')]).then(([view, model]) => ({ renderFooter: view.renderFooter, whenSettled: model.whenSettled, FOOTER_WAIT_MS: model.FOOTER_WAIT_MS })), 'footer.css'),
   sticky: () => Promise.all([import('./sticky.js'), import('./sticky-model.js')]).then(([pins, model]) => ({ ...model, ...pins })),
@@ -89,7 +90,7 @@ function holdsValue(value, depth = 0) {
 }
 
 /**
- * The features a site holds on a page: the menu's basket, contact details, the back-to-top button and its own shape, and the footer where it shows.
+ * The features a site holds on a page: the menu's basket and launcher, contact details, the back-to-top button and its shape, the footer where it shows.
  * @param {object} site
  * @param {string|null} pageId
  * @returns {Set<string>}
@@ -97,6 +98,7 @@ function holdsValue(value, depth = 0) {
 export function siteFeatures(site, pageId) {
   const held = new Set();
   if (site?.nav?.cart?.show) held.add('shop');
+  if (site?.nav?.launcher?.show === true) held.add('launcher');
   if (holdsValue(site?.site?.contact)) held.add('contact');
   const toTop = site?.layout?.toTop;
   if (!(toTop && typeof toTop === 'object' && toTop.show === false)) {

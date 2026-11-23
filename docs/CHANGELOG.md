@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.38.2.4 - Every page without the menu's launcher loads 3 KB less - 23 November 2026
+
+- Every page loaded the menu's link launcher, its button, grid and phone section in nav.js and its rules in base.css, whether the site showed it or not. It is a feature of its own (`nav-launcher.js` and `nav-launcher.css`), loaded where `nav.launcher.show` is on, and nav.js draws the menu without it otherwise; nav.js is 1.7 KB and base.css 1.3 KB compressed smaller.
+- The launcher's sheet stands first among the engine's own (`ENGINE_SHEETS`), where its rules stood in base.css.
+- BACKLOG holds 0.7.39, the editor's canvas shown as soon as the open page's own code is in, behind a loading screen.
+
+The independent review before the commit found these:
+
+1. The phone section's tile rule would have won over a later side menu rule where a site's phone breakpoint lies above 900 px, which the order check's pages never drew; it stays in base.css, its place kept.
+2. Nothing tested the launcher's condition in features.js, and the notes, the development guides and ARCHITECTURE.md named the features and sheets without it; a test holds it, each names it, and ADR-0036's addendum lists it among decision 8's features.
+
 ### 0.7.38.2.3 - A gallery loads 17 KB less unless it draws the ribbon - 23 November 2026
 
 - Every gallery loaded the ribbon block's band code, its model and ribbon.css, which only its ribbon view draws with, and the photo layer's layout module, of which its mosaic and polaroid views use the die alone (24.7 KB compressed with the gallery's own code). The ribbon view stands in `blocks/gallery-ribbon.js`, readied before the page is drawn where a gallery draws the ribbon on either screen (`prepareGallery` and `loadRibbonView` in blocks/gallery.js), drawn as it comes where it comes later, and loaded by the preview with every type.

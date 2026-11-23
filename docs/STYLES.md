@@ -468,66 +468,6 @@ A bar without its logo (nav.logo.show false): on the phone, where the list has l
 
 The tool cluster at the start (nav.style.tools.side): before the logo, so the burger sits on the left on mobile; the auto margin then belongs on the list
 
-### `.urd-nav-launcher-wrap`
-
-The link launcher (nav.launcher): a grid button first in the cluster with the links as a grid of tiles under it. The wrapper is the positioning context for the disclosure branch; the popover branch is placed against the button's anchor name and lives in the top layer, so it needs no positioned ancestor.
-
-### `.urd-nav-launcher-btn svg`
-
-The icons from the library are drawn at 100 % of their parent (icons.js), so the button sets the size the same way the cart does.
-
-### `.urd-nav-launcher`
-
-The panel takes the submenu's surface, so the launcher reads as part of the menu rather than as a page element. Any number of shortcuts is allowed, so the panel scrolls rather than growing past the viewport. Its width, the marks and the names follow the size's scale (--urd-launcher-s), or each its own px value (--urd-launcher-w, -icon, -text; launcherVars in nav-model.js).
-
-### `.urd-nav-launcher-btn-img`
-
-The owner's own mark on the button, in place of the nine dots.
-
-### `.urd-nav-launcher-wrap.open .urd-nav-launcher`
-
-The disclosure branch: a box under the button, inside the nav.
-
-### `.urd-nav-tools-start .urd-nav-launcher-wrap.open .urd-nav-launcher, .urd-nav-side-host-left .urd-nav-launcher-wrap.open .urd-nav-launcher`
-
-A cluster at the start, and the left column: the grid opens to the right.
-
-### `@supports (anchor-name: --a) { .urd-nav-launcher[popover]`
-
-The popover branch: the top layer, placed under the button by the anchor and flipped away from the viewport edge by the browser.
-
-### `.urd-nav-launcher-grid`
-
-The three designs (nav.launcher.view, and mobileView in the mobile menu) share one markup: the class on the list decides the shape, so the desktop panel and the mobile section can stand in different designs at once.
-
-### `.urd-nav-launcher-missing`
-
-A shortcut whose target is not a usable link: the tile stands, dimmed, so the owner sees the row is unfinished rather than losing it.
-
-### `.urd-nav-launcher-name`
-
-A name never sets the panel's or a column's width: it takes the width its tile has (contain: inline-size), and a name too long for it is cut with an ellipsis or folded onto more lines (nav.launcher.longNames). The grid's name stretches across its tile, the list's fills the row beside the mark, and the cover's spans its card already.
-
-### `.urd-nav-launcher-view-grid`
-
-Grid: three columns of tiles, the mark on a soft plate over the label.
-
-### `.urd-nav-launcher-view-list`
-
-List: one row per shortcut, the full name beside a small mark.
-
-### `.urd-nav-launcher-view-cover`
-
-Cover: two columns of cards where the image fills the tile and the name lies on a scrim along the bottom. A shortcut without an image keeps its drawn mark in the middle of the card.
-
-### `.urd-nav-launcher-view-cover .urd-nav-launcher-link:not(.urd-nav-launcher-photo) .urd-nav-launcher-name`
-
-Without an image there is no photo for white text to sit on.
-
-### `.urd-nav-launcher-title`
-
-The title above the grid in the mobile menu; the button's own label is its accessible name instead.
-
 ### `.urd-nav-theme`
 
 The light/dark toggle (shown only when the theme has an alternate counterpart)
@@ -620,17 +560,9 @@ No arrow on a submenu in the phone menus (nav.style.mobileSubArrow false): a clo
 
 The bar alone beside the full-screen menu (nav.style.sheetBarTools false): the theme button, the cart and the site's links leave the phone's bar and stand in the menu's foot, which nav.js moves them into while it is open.
 
-### `.urd-nav-launcher-row`
-
-The link launcher in the mobile menu: the grid is a section at the foot of the list, since the mobile view hides the cluster's button along with the rest of the desktop menu. The section travels into the full-screen sheet with the list.
-
 ### `body.urd-mobile .urd-nav-list .urd-nav-launcher-link, .urd-nav-mobile .urd-nav-list .urd-nav-launcher-link`
 
 The tiles keep their own shape: the mobile rows turn every menu link into a full-width block, which would flatten the designs.
-
-### `.urd-nav-launcher-more`
-
-Any number of shortcuts is allowed, and the mobile menu is the page's own list: the first mobileMax stand open and the rest are a native fold that opens in place, so the menu never runs away in length.
 
 ### `.urd-nav-sheet`
 
@@ -959,6 +891,76 @@ A jump to a spot on the page (a link's fragment, the arrival jump in urd.js, and
 ### `.urd-anchor`
 
 A named spot (render.js placeSpot): a zero-size marker at the top of its section or block, which a link's fragment lands on and which moves with the block.
+
+# nav-launcher.css, rule by rule
+
+### `.urd-nav-launcher-wrap`
+
+The link launcher (nav.launcher): a grid button first in the cluster with the links as a grid of tiles under it. The wrapper is the positioning context for the disclosure branch; the popover branch is placed against the button's anchor name and lives in the top layer, so it needs no positioned ancestor.
+
+### `.urd-nav-launcher-btn svg`
+
+The icons from the library are drawn at 100 % of their parent (icons.js), so the button sets the size the same way the cart does.
+
+### `.urd-nav-launcher`
+
+The panel takes the submenu's surface, so the launcher reads as part of the menu rather than as a page element. Any number of shortcuts is allowed, so the panel scrolls rather than growing past the viewport. Its width, the marks and the names follow the size's scale (--urd-launcher-s), or each its own px value (--urd-launcher-w, -icon, -text; launcherVars in nav-model.js).
+
+### `.urd-nav-launcher-btn-img`
+
+The owner's own mark on the button, in place of the nine dots.
+
+### `.urd-nav-launcher-wrap.open .urd-nav-launcher`
+
+The disclosure branch: a box under the button, inside the nav.
+
+### `.urd-nav-tools-start .urd-nav-launcher-wrap.open .urd-nav-launcher, .urd-nav-side-host-left .urd-nav-launcher-wrap.open .urd-nav-launcher`
+
+A cluster at the start, and the left column: the grid opens to the right.
+
+### `@supports (anchor-name: --a) { .urd-nav-launcher[popover]`
+
+The popover branch: the top layer, placed under the button by the anchor and flipped away from the viewport edge by the browser.
+
+### `.urd-nav-launcher-grid`
+
+The three designs (nav.launcher.view, and mobileView in the mobile menu) share one markup: the class on the list decides the shape, so the desktop panel and the mobile section can stand in different designs at once.
+
+### `.urd-nav-launcher-missing`
+
+A shortcut whose target is not a usable link: the tile stands, dimmed, so the owner sees the row is unfinished rather than losing it.
+
+### `.urd-nav-launcher-name`
+
+A name never sets the panel's or a column's width: it takes the width its tile has (contain: inline-size), and a name too long for it is cut with an ellipsis or folded onto more lines (nav.launcher.longNames). The grid's name stretches across its tile, the list's fills the row beside the mark, and the cover's spans its card already.
+
+### `.urd-nav-launcher-view-grid`
+
+Grid: three columns of tiles, the mark on a soft plate over the label.
+
+### `.urd-nav-launcher-view-list`
+
+List: one row per shortcut, the full name beside a small mark.
+
+### `.urd-nav-launcher-view-cover`
+
+Cover: two columns of cards where the image fills the tile and the name lies on a scrim along the bottom. A shortcut without an image keeps its drawn mark in the middle of the card.
+
+### `.urd-nav-launcher-view-cover .urd-nav-launcher-link:not(.urd-nav-launcher-photo) .urd-nav-launcher-name`
+
+Without an image there is no photo for white text to sit on.
+
+### `.urd-nav-launcher-title`
+
+The title above the grid in the mobile menu; the button's own label is its accessible name instead.
+
+### `.urd-nav-launcher-row`
+
+The link launcher in the mobile menu: the grid is a section at the foot of the list, since the mobile view hides the cluster's button along with the rest of the desktop menu. The section travels into the full-screen sheet with the list.
+
+### `.urd-nav-launcher-more`
+
+Any number of shortcuts is allowed, and the mobile menu is the page's own list: the first mobileMax stand open and the rest are a native fold that opens in place, so the menu never runs away in length.
 
 # nav-cart.css, rule by rule
 

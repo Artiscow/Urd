@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.38.2.4): the menu's launcher with the site that shows it
+
+- [ ] A site with the launcher on shows its button and its shortcuts as before, in each of its views, on the bar, a floating bar and a side menu: the grid opens and closes, a shortcut followed closes it, and Escape closes it
+- [ ] On a phone, the launcher's shortcuts stand at the foot of the menu, the rest behind «Show more»
+- [ ] In the editor, switching on «Link launcher» in the Nav panel shows it on the canvas at once
+- [ ] On a site with the launcher off, DevTools' network list shows no nav-launcher.js or nav-launcher.css
+
 ### Test batch (0.7.38.2.3): the gallery's ribbon with its view
 
 - [ ] A gallery in each view (Grid, Carousel, «Slideshow (advances automatically)», Ribbon, Mosaic, Polaroid) looks and works as before on the desktop and on a phone: the ribbon rolls and pauses, the slideshow advances and its pause button works, the mosaic and the polaroids keep their layout, and a picture opens in the lightbox

@@ -44,3 +44,7 @@ ADR-0013 deferred loading by page, since a shell that differs from page to page 
 - A module the editor bundles never imports `features.js`, since its loaders would then be bundled into the admin: the footer's contact column and legal line and the head's organisation data take the contact model as an argument, and the back-to-top button's own shape the shape model, which the boot passes from the loaded feature and the editor from its own import.
 - An open tab whose engine folder an update has deleted can no longer load a feature it did not hold: the page draws without it, as without a feature that is not set.
 - Per-page module lists in the shells, which would let a page's modules come in the first wave, stay with the v0.8 baking, which must keep the copy-refresh duty when it writes them.
+
+## Addendum
+
+23 November 2026 (0.7.38.2.4): the menu's link launcher is one of decision 8's features, its code and sheet (`nav-launcher.js`, `nav-launcher.css`) loaded where the site shows it.

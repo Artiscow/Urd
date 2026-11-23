@@ -4,7 +4,7 @@ The full text of the longer comments in the engine's `features.js`, in the file'
 
 ## The module
 
-The boot's own features, each with the modules it draws with (ADR-0036 decision 8): the basket in the menu, contact details, the footer, the back-to-top button, pinned blocks, animations, section dividers and the collection drafts. A visitor's page loads those its site and page hold, in the waves the boot already has, and the editor's preview loads them all before it tells the editor it is ready.
+The boot's own features, each with the modules it draws with (ADR-0036 decision 8): the basket and the link launcher in the menu, contact details, the footer, the back-to-top button, pinned blocks, animations, section dividers and the collection drafts. A visitor's page loads those its site and page hold, in the waves the boot already has, and the editor's preview loads them all before it tells the editor it is ready.
 The loaders name their modules literally, so the modules stay out of the boot's static closure and the shells' preload list, as the type loaders in core-types.js do. The modules that draw a page (render.js, nav.js, footer.js, urd.js) read a feature through `feature` as they draw; a module the editor bundles never imports this one, since its loaders would then be bundled into the admin, so the footer's and the head's contact parts take the contact model as an argument instead, and the back-to-top button's shape path the shape model.
 
 ## `const CORE_ANIMATION_IDS`
@@ -29,7 +29,7 @@ Whether a value holds anything: a string with characters, a number, true, or a l
 
 ## `siteFeatures`
 
-The features a site holds on a page, known once site.json is read: the basket in the menu (`nav.cart.show`), the contact details, the back-to-top button unless it is switched off (`layout.toTop.show: false`, toTopOf in totop.js) and the shape model for a button with a shape of its own (`layout.toTop.shape`), and the footer where it is shown and not hidden on this page (`footer.show`, `footer.hideOn`, as renderFooter reads them).
+The features a site holds on a page, known once site.json is read: the basket in the menu (`nav.cart.show`), the link launcher (`nav.launcher.show: true`, as launcherModel in nav-model.js reads it), the contact details, the back-to-top button unless it is switched off (`layout.toTop.show: false`, toTopOf in totop.js) and the shape model for a button with a shape of its own (`layout.toTop.shape`), and the footer where it is shown and not hidden on this page (`footer.show`, `footer.hideOn`, as renderFooter reads them).
 
 ## `pageFeatures`
 

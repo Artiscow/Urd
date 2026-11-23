@@ -21,7 +21,7 @@ The base sheet's link, found by its address as every shell names it: the engine 
 
 ## `const ENGINE_SHEETS`
 
-The engine's own sheets beside the modules that draw with them, in the order their rules stood in base.css: the menu's basket, the footer, the documents and the back-to-top button. The features load theirs (features.js), and the text, terms and privacy blocks the documents' (`loadDocs` in blocks/text.js, the privacy block's loader in core-types.js).
+The engine's own sheets beside the modules that draw with them, in the order their rules stood in base.css: the menu's launcher and basket, the footer, the documents and the back-to-top button. The features load theirs (features.js), and the text, terms and privacy blocks the documents' (`loadDocs` in blocks/text.js, the privacy block's loader in core-types.js).
 
 ## `afterEngineSheets`
 

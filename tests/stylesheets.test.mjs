@@ -288,12 +288,12 @@ test('each block module\'s sheet holds its own rules: every rule names a class i
 });
 
 test('each engine sheet holds its own rules, loads with the code that draws them before the block sheets, with one-line labels and its reasoning in docs/STYLES.md', async () => {
-  const OWN = { 'nav-cart.css': /^urd-nav-cart/, 'footer.css': /^urd-footer/, 'doc-look.css': /^urd-(text-)?doc(-|$)/, 'totop.css': /^urd-totop/ };
+  const OWN = { 'nav-launcher.css': /^urd-nav-launcher/, 'nav-cart.css': /^urd-nav-cart/, 'footer.css': /^urd-footer/, 'doc-look.css': /^urd-(text-)?doc(-|$)/, 'totop.css': /^urd-totop/ };
   const { CORE_FEATURES } = await engineImport('features.js');
   const { CORE_BLOCKS } = await engineImport('core-types.js');
   const text = readFileSync(new URL('blocks/text.js', ENGINE_DIR), 'utf8');
   // Each sheet's loaders: a feature's own, and for the documents the privacy block's and the text block's document designs (loadDocs).
-  const loaders = { 'nav-cart.css': [CORE_FEATURES.shop], 'footer.css': [CORE_FEATURES.footer], 'doc-look.css': [CORE_BLOCKS.privacy, text.match(/export function loadDocs\(\) \{[^}]*\}/)?.[0]], 'totop.css': [CORE_FEATURES.totop] };
+  const loaders = { 'nav-launcher.css': [CORE_FEATURES.launcher], 'nav-cart.css': [CORE_FEATURES.shop], 'footer.css': [CORE_FEATURES.footer], 'doc-look.css': [CORE_BLOCKS.privacy, text.match(/export function loadDocs\(\) \{[^}]*\}/)?.[0]], 'totop.css': [CORE_FEATURES.totop] };
   const sheets = engineSheets();
   assert.deepEqual(sheets.map((sheet) => sheet.file), Object.keys(OWN), 'the sheets in the order their rules stood in base.css');
   for (const sheet of sheets) {

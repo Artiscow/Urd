@@ -51,7 +51,7 @@ export function placeInOrder(group, rank, after = () => null) {
 export const baseSheet = () => document.head.querySelector('link[rel="stylesheet"][href*="/assets/styles/base.css"]');
 
 /** The engine's own sheets beside the modules that draw with them, in the order their rules stood in base.css, which they follow. */
-const ENGINE_SHEETS = ['nav-cart.css', 'footer.css', 'doc-look.css', 'totop.css'];
+const ENGINE_SHEETS = ['nav-launcher.css', 'nav-cart.css', 'footer.css', 'doc-look.css', 'totop.css'];
 
 /** An engine sheet (ENGINE_SHEETS), placed after base.css in their order; resolves to whether it loaded. */
 export const loadEngineSheet = (file) => loadStylesheet(new URL(`./${file}`, import.meta.url).href, placeInOrder('engine', ENGINE_SHEETS.indexOf(file), baseSheet));

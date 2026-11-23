@@ -106,6 +106,9 @@ test('the footer is held where it shows on the page, the basket where the menu s
   assert.ok(siteFeatures(s({}, { show: true }), 'a').has('shop'));
   assert.ok(!siteFeatures(s({}, { show: false }), 'a').has('shop'));
   assert.ok(!siteFeatures(s({}, undefined), 'a').has('shop'));
+  const launcher = (value) => siteFeatures({ ...site, nav: { ...site.nav, launcher: { show: value } } }, 'a').has('launcher');
+  assert.ok(launcher(true), 'the launcher loads where the site shows it');
+  for (const value of [false, undefined, 'true', 1]) assert.ok(!launcher(value), `launcher.show ${JSON.stringify(value)} draws no launcher (launcherModel)`);
   const top = (toTop) => siteFeatures({ ...site, layout: { ...site.layout, toTop } }, 'a').has('totop');
   assert.ok(top(undefined) && top({}) && top({ show: true }) && top(true), 'the back-to-top button stands unless it is off');
   assert.ok(!top({ show: false }));

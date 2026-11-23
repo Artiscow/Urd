@@ -23,7 +23,7 @@ const VISITOR_MODULES = [
   'contact-profiles.js', 'core-types.js', 'divider-model.js', 'doc-designs.js', 'doc-look.js', 'embed-cover.js', 'features.js', 'footer-cta.js',
   'footer-model.js', 'footer.js', 'form-model.js', 'gallery-layout.js', 'gallery-model.js', 'i18n.js', 'icons.js',
   'ics.js', 'keep-minutes.js', 'layout-die.js', 'links-model.js', 'locales/site/nb.js', 'map-links.js', 'meeting-links.js',
-  'migrate.js', 'nav-model.js', 'nav.js', 'osm.js', 'phone-order.js', 'photo-source.js', 'picture.js', 'plugins.js',
+  'migrate.js', 'nav-launcher.js', 'nav-model.js', 'nav.js', 'osm.js', 'phone-order.js', 'photo-source.js', 'picture.js', 'plugins.js',
   'prefetch.js', 'privacy-model.js', 'push-model.js', 'registry.js', 'render.js', 'ribbon-model.js', 'sanitize.js',
   'seo.js', 'shape-model.js', 'sheets.js', 'shop.js', 'sticky-model.js', 'sticky.js', 'theme.js', 'totop.js', 'urd.js',
 ];
