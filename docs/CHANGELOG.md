@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.37.6 - The code, the words and the editor's CSS nothing uses are gone - 23 November 2026
+
+- Five exports nothing used, not even their own file (`CAL_CLOCKS`, `CAL_WEEK_STARTS`, `COLLECTION_SCHEMA_VERSION`, `MOSAIC_GAP`, `loadPluginById`), and plugins.js's `inFlight`, which shared no fetch since the list loads run one after another, are removed; `relativeDays` stays, as the plugin API's i18n.js re-exports it.
+- 20 admin keys no code reads, among them `lbl.sheetBg`, `lbl.ribbonVariant` and `group.accessibility`, are gone from the six admin dictionaries, and five app.css classes no source writes (`num-stepper`, `nav-item-main`, `nav-item-name`, `nav-item-target`, `nav-more`) with their rules.
+- The report's other keys and classes are in use: the design pickers read the `opt.*Variant.*` and `opt.galleryView.*` keys, and Svelte builds `po-*`, `pp-way-stack` and `tab-menu-is-*`.
+
+The independent review before the commit found these:
+
+1. The stage's Done when asked for the report's six exports gone and its sweeps clean, where `relativeDays` and the keys and classes in use stay; it asks for a fresh sweep that finds nothing unread beside those named.
+2. A loader test's title said concurrent loads of one id share a fetch, which the queue now keeps to one; it says so.
+
 ### 0.7.37.3.17 - Visitor speed is delivered: the block rules base.css keeps for their order stay - 23 November 2026
 
 - BACKLOG's 0.7.37.3 is delivered. A sharper order check (subjects of different element types never meet, and pairs about 280 recorded pages never saw meet) freed 15 of the 92 block rules base.css keeps for their order, 0.1 KB, so they stay, and the Done when leaves them out (decided 23 November 2026).

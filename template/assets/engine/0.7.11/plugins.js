@@ -199,11 +199,6 @@ export function pluginBlockDesigns(def, translate) {
 const loadedPlugins = new Set();
 
 /**
- * Each plugin's preparation in flight, by id; it is empty whenever a list load starts, since the list loads run one after another (listQueue).
- */
-const inFlight = new Map();
-
-/**
  * Network seam: everything the loader fetches or imports goes through here, so tests in node can replace it.
  */
 export const io = {
@@ -333,11 +328,6 @@ function commitPlugin(Urd, id, prepared) {
   loadedPlugins.add(id);
 }
 
-/** Loads ONE plugin (fetch, then register). Shared with the list loader. */
-export async function loadPluginById(Urd, engineVersion, id) {
-  await loadPluginList(Urd, engineVersion, [id]);
-}
-
 /** List loads run one after another, so two overlapping lists (a draft toggled while a load is in flight) commit in the order they were asked for. */
 let listQueue = Promise.resolve();
 
@@ -348,12 +338,7 @@ let listQueue = Promise.resolve();
 export function loadPluginList(Urd, engineVersion, ids, { packs = true } = {}) {
   const run = listQueue.then(async () => {
     const wanted = [...new Set(ids ?? [])].filter((id) => !loadedPlugins.has(id));
-    const prepared = await Promise.all(wanted.map((id) => {
-      if (!inFlight.has(id)) {
-        inFlight.set(id, preparePlugin(engineVersion, id, packs).finally(() => inFlight.delete(id)));
-      }
-      return inFlight.get(id);
-    }));
+    const prepared = await Promise.all(wanted.map((id) => preparePlugin(engineVersion, id, packs)));
     wanted.forEach((id, i) => {
       if (prepared[i] && !loadedPlugins.has(id)) commitPlugin(Urd, id, prepared[i]);
     });

@@ -4,10 +4,6 @@
  * Loaded by the block on its first render, with ics.js and the design model, never in the visitor closure; it never touches the DOM.
  */
 
-/** The block's own choices: the clock is 24 hours unless set to 12; the week's `auto` (or nothing) follows the site language. */
-export const CAL_CLOCKS = ['24', '12'];
-export const CAL_WEEK_STARTS = ['auto', 'mon', 'sun'];
-
 /** A language tag Intl accepts: the legacy `no` is Bokmål, and an unknown tag is Bokmål too, so the site never follows the visitor's browser (ADR-0012). */
 function localeOf(lang) {
   const tag = lang === 'no' ? 'nb' : lang;

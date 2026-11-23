@@ -206,7 +206,7 @@ test('loader: plugins are fetched in one wave and registered in list order', asy
   assert.deepEqual(Urd.blocks.ids(), ['ld-a-block', 'ld-b-block']);
 });
 
-test('loader: concurrent loads of the same id share one fetch, and a loaded id is never fetched again', async () => {
+test('loader: concurrent loads of the same id fetch it once, the later waiting for the earlier, and a loaded id is never fetched again', async () => {
   const log = fakeNetwork({
     '/plugins/ld-c/plugin.json': manifest('ld-c', ['ld-c-block']),
     '/plugins/ld-c/index.js': entry('ld-c-block'),

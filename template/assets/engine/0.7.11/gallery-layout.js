@@ -109,9 +109,8 @@ export const MOTION_TIME = { min: 0.5, max: 90, dflt: 30 };
 /** Seconds a picture stands before the next takes its place. */
 export const PICTURE_TIME = { min: 0.5, max: 90, dflt: 12 };
 
-/** Columns in the mosaic wall, and the gap between its tiles. */
+/** Columns in the mosaic wall. */
 export const MOSAIC_COLS = 4;
-export const MOSAIC_GAP = 10;
 
 /** Tiles in a mosaic wall: it starts with more than the frames, since a wall has to be filled. */
 export const MOSAIC_COUNT = { min: 4, max: 20, dflt: 12 };

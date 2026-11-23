@@ -4,9 +4,6 @@
  */
 import { dates } from './i18n.js';
 
-/** Current version of the collection file format (content/samlinger/<id>.json). */
-export const COLLECTION_SCHEMA_VERSION = 1;
-
 /**
  * Sorts entries newest date first (oldest when newestFirst is false); undated entries keep their order and come last. Never mutates the input.
  */

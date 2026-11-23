@@ -43,13 +43,6 @@ A plugin block's designs, for the editor's design picker (the design contract, a
 The labels and descriptions are resolved with `translate` (the preview's ta, where the plugin's dictionary lives); an item is kept only when its id is a short word, unseen before, and keeps its picture only when it is a picture file on the site itself.
 Fewer than two such designs is no choice, and gives null, as do a `prop` that is not a short name and `items` that is not a list.
 
-## `const inFlight`
-
-The preparations in flight per plugin id. The list loads run one after
-another (listQueue), and an entry leaves the map as its preparation
-settles, so the map is empty whenever a list load starts and shares no
-fetch between two of them.
-
 ## `const io`
 
 Network seam: everything the loader fetches or imports goes through here,
@@ -115,8 +108,9 @@ plugins resolve the same way regardless of which download finished first.
 
 Loads a list of plugin ids (the enabled list for visitors, the editor's
 draft in the preview): every plugin is fetched in parallel, then
-registered one by one in list order. An id already loaded, or in flight
-from an earlier call, is never fetched again.
+registered one by one in list order. An id already loaded is never
+fetched again; a list asked for while another loads waits for it
+(listQueue), so an id that list loads is not fetched twice.
 
 ## `pageTypes`
 

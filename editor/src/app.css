@@ -2242,44 +2242,6 @@
     background: rgb(150 35 35 / 30%);
   }
 
-  /* Number stepper (−/[number]/+), like the size field in the text editor. */
-  .num-stepper {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
-    width: 3.4rem;
-    text-align: center;
-    appearance: textfield;
-    -moz-appearance: textfield;
-  }
-
-  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *))::-webkit-outer-spin-button,
-  .num-stepper input[type='number']:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *))::-webkit-inner-spin-button{
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  .num-stepper button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
-    width: 2.2rem;
-    height: 2.2rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    color: inherit;
-    background: transparent;
-    border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 6px;
-    cursor: pointer;
-  }
-
-  .num-stepper button:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
-    background: rgb(255 255 255 / 10%);
-  }
-
   /* The page and nav rows: title/label takes the space, the tools are narrow */
   .page-row {
     display: flex;
@@ -2730,29 +2692,6 @@
     opacity: 0.8;
   }
 
-  .nav-item-main {
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  /* The name is the row's text: no frame until it has focus (the selector
-     outranks the panel's shared field rule) */
-  .panel-body input.nav-item-name:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
-    height: 1.5rem;
-    padding: 0 0.2rem;
-    border-color: transparent;
-    background: transparent;
-    font-size: 0.85rem;
-  }
-
-  .panel-body input.nav-item-name:focus:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
-    border-color: var(--urd-color-accent);
-    outline: none;
-  }
-
   /* The row kit's drag (lib/rows/row-drag.svelte.js), the one look of a row moved anywhere in the admin.
      The row dims in its place, its card of one line stands under the pointer, and a dashed slot with the card's faint copy, or the line chosen in the Urd settings, marks where it will land.
      Once it has landed, the row flashes the accent. */
@@ -2936,11 +2875,6 @@
     display: grid;
   }
 
-  .nav-item:hover .nav-more,
-  .nav-item.selected .nav-more {
-    display: none;
-  }
-
   .panel-body .nav-act {
     width: 1.5rem;
     height: 1.4rem;
@@ -2951,32 +2885,10 @@
     justify-content: center;
   }
 
-  .nav-item-target {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    min-width: 0;
-  }
-
-  .nav-item-target > .dd {
-    flex: 0 1 auto;
-    max-width: 100%;
-  }
-
   .nav-item-sub {
     flex: 0 0 auto;
     display: inline-flex;
     opacity: 0.55;
-  }
-
-  .panel-body .nav-more {
-    height: 1.8rem;
-    width: 1.8rem;
-    opacity: 0.55;
-  }
-
-  .nav-item:hover .nav-more {
-    opacity: 1;
   }
 
   /* An open shortcut's card: the tile drawn as the menu draws it, which is the mark picker's own trigger, beside the shortcut's fields. */

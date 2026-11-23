@@ -2,6 +2,12 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.6): unused code, words and CSS removed
+
+- [ ] Every panel of the editor shows its words as before in nb, English and Turkish, the Nav panel's rows and the phone's menu settings included, with no raw key showing
+- [ ] A site with the Swedish language pack shows its editor and its pages in Swedish as before
+- [ ] Turning a plugin on and off in the Plugins panel loads and unloads it in the preview as before
+
 ### Test batch (0.7.37.3.16): each block's CSS with its code
 
 - [ ] Every page of the site looks as before on the desktop and on a phone, the blocks' designs, the gallery, the contact block and the shop included
