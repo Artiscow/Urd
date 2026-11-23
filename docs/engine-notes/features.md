@@ -4,7 +4,7 @@ The full text of the longer comments in the engine's `features.js`, in the file'
 
 ## The module
 
-The boot's own features, each with the modules it draws with (ADR-0036 decision 8): the basket and the link launcher in the menu, contact details, the footer, the back-to-top button, pinned blocks, animations, section dividers and the collection drafts. A visitor's page loads those its site and page hold, in the waves the boot already has, and the editor's preview loads them all before it tells the editor it is ready.
+The boot's own features, each with the modules it draws with (ADR-0036 decision 8): the basket and the link launcher in the menu, contact details, the footer, the back-to-top button, pinned blocks, animations, section dividers and the collection drafts. A visitor's page loads those its site and page hold, in the waves the boot already has, and the editor's preview loads those of the page it opens with the collection drafts before it tells the editor it is ready, and every other feature in the background after (preview-queue.js).
 The loaders name their modules literally, so the modules stay out of the boot's static closure and the shells' preload list, as the type loaders in core-types.js do. The modules that draw a page (render.js, nav.js, footer.js, urd.js) read a feature through `feature` as they draw; a module the editor bundles never imports this one, since its loaders would then be bundled into the admin, so the footer's and the head's contact parts take the contact model as an argument instead, and the back-to-top button's shape path the shape model.
 
 ## `const CORE_ANIMATION_IDS`

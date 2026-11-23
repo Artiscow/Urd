@@ -161,6 +161,7 @@ const DRAWN_LATER = {
   'map-links.js': 'a contact block\'s directions link',
   'hint.js': 'the editor\'s help chips, in the preview',
   'preview-edit.js': 'the editor\'s preview',
+  'preview-queue.js': 'the editor\'s preview',
   'sections/presets.js': 'the editor\'s preview',
   'drafts.js': 'the draft view and the preview',
 };

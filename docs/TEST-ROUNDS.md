@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.39.1): the canvas draws the open page first
+
+- [ ] Opening the editor on each template page shows the page on the canvas as before, menu, footer and every block in its own design, and the live phone shows it too
+- [ ] Right after the editor opens, a block of a kind the page does not hold (a map, a form, a gallery) added from «+ New block» stands at once in its own design, fitted to its content, never as a grey box with its type's name
+- [ ] Right after the editor opens, a block's design picker shows a preview of every design
+- [ ] Right after the editor opens on a page without pinned blocks, turning on «Pin on scroll» for a block pins it as the canvas scrolls
+- [ ] Switching pages, switching to the phone view, and changing the site's colours or turning the footer on, right after the editor opens, each draw as before
+- [ ] With a language pack for another language enabled (Swedish on a Norwegian site), the canvas does not flicker or jump as the editor opens
+- [ ] In DevTools' network list for the canvas frame, the block modules of types the open page does not hold are fetched after the frame's urd-ready, not before the canvas shows
+
 ### Test batch (0.7.38.3): a hidden menu loads no basket
 
 - [ ] With a page unticked under the Nav panel's «Show nav on pages» and «On the pages without it» set to «Hidden», that page shows no menu, and DevTools' network list shows no shop.js, nav-cart.css or nav-launcher.js; set to «Pull tab», the tab opens the menu with its basket as before

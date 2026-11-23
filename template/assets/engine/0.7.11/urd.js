@@ -320,13 +320,16 @@ function cleanTexts(on) {
   }
 }
 
-/** The registries' size, which grows as plugins define their types (a language pack defines none). */
-const definedCount = () => ['blocks', 'sections', 'backgrounds', 'animations', 'templates', 'commands'].reduce((n, kind) => n + Urd[kind].ids().length, 0);
+/** How many types the plugins have defined (a language pack defines none); the engine's own, which the preview defines as they come in, are not counted. */
+const definedCount = () => ['blocks', 'sections', 'backgrounds', 'animations', 'templates', 'commands'].reduce((n, kind) => n + Urd[kind].ids().filter((id) => !Urd[kind].isReserved(id)).length, 0);
 
 /**
- * Attaches the listener for the editor's messages in preview mode; `state` is shared with boot, so every message works on the same data.
+ * Attaches the editor's message listener in preview mode, in the draw queue's order; `state` is shared with boot, so every message works on the same data.
+ * @param {object} state
+ * @param {object} opts
+ * @param {typeof import('./preview-queue.js')} queue
  */
-function enablePreview(state, opts) {
+function enablePreview(state, opts, queue) {
   const root = opts.root;
   const vp = () => ({ preview: true, viewport: state.viewport });
 
@@ -367,15 +370,14 @@ function enablePreview(state, opts) {
   /** The measures waiting per block for the editor's fit of its frame (urd-fit-block). */
   const fitTimers = new Map();
 
-  // The bars' choices in the Urd settings (BAR_CHOICES in bar-tools.js) stand in the storage the editor shares, so a change there draws the page anew.
-  window.addEventListener('storage', (event) => {
-    if (['urd-block-toolbar', 'urd-toolbar-look', 'urd-toolbar-gear', 'urd-toolbar-phone', 'urd-toolbar-size', 'urd-toolbar-design', 'urd-toolbar-phone-place'].includes(event.key) && state.page) keepScroll(() => typing(() => renderPage(state.page, state.site, root, vp())));
-  });
-
-  window.addEventListener('message', (event) => {
-    // Only the editor on the same site, and only through the frame it holds: a window the page opened shares the origin but is not the editor.
-    if (event.origin !== location.origin || event.source !== window.parent) return;
-    const msg = event.data;
+  /** One message from the editor, or the preview's own redraw, handled in its turn. */
+  const handle = (msg) => {
+    // Pinning is wired once its module is in, which a page opened without a pinned block loads only as one comes.
+    feature('sticky')?.initSticky();
+    if (msg === queue.REDRAW) {
+      if (state.page) keepScroll(() => typing(() => renderPage(state.page, state.site, root, vp())));
+      return;
+    }
     // A `startup` view, site or page that matches what the preview already holds is skipped, so the page does not flicker as the editor opens.
     if (msg?.startup === true && ((msg.type === 'urd-viewport' && msg.mode === state.viewport) || (msg.type === 'urd-site' && !msg.page && sameData(msg.site, state.site)) || (msg.type === 'urd-preview-full' && sameData(msg.page, state.page)))) return;
     if (msg?.type === 'urd-preview' && msg.section) {
@@ -679,11 +681,35 @@ function enablePreview(state, opts) {
         rerender();
       }
     }
+  };
+
+  // Until every type, part and feature is in, a message that draws loads what it draws first, and the messages after it wait in turn (preview-queue.js).
+  let allIn = false;
+  const pending = (msg) => {
+    if (allIn) return null;
+    const drawn = queue.drawnBy(msg, state);
+    return drawn ? queue.loadDrawn(Urd, drawn, msg?.type === 'urd-viewport' ? msg.mode : state.viewport) : null;
+  };
+  const take = queue.drawQueue(handle, pending);
+
+  // The bars' choices in the Urd settings (BAR_CHOICES in bar-tools.js) stand in the storage the editor shares, so a change there draws the page anew.
+  window.addEventListener('storage', (event) => {
+    if (['urd-block-toolbar', 'urd-toolbar-look', 'urd-toolbar-gear', 'urd-toolbar-phone', 'urd-toolbar-size', 'urd-toolbar-design', 'urd-toolbar-phone-place'].includes(event.key)) take(queue.REDRAW);
+  });
+
+  window.addEventListener('message', (event) => {
+    // Only the editor on the same site, and only through the frame it holds: a window the page opened shares the origin but is not the editor.
+    if (event.origin !== location.origin || event.source !== window.parent) return;
+    take(event.data);
   });
 
   // Tell the editor the listener is attached: drafts sent before this
   // point would be lost (the iframe load happens before boot finishes).
   window.parent?.postMessage({ type: 'urd-ready' }, location.origin);
+  // Every other core type, design part and feature comes in the background at the first idle time after ready, so the canvas can add any of them.
+  const rest = () => queue.loadEverything(Urd).then(() => { allIn = true; });
+  if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(rest, { timeout: 2000 });
+  else setTimeout(rest, 300);
 }
 
 /**
@@ -720,8 +746,8 @@ export async function boot(opts) {
   const served = { site: null, page: null };
   const params = new URLSearchParams(location.search);
   const preview = params.get('preview') === '1';
-  // In the preview alone, the editing layer, its preview.css and the admin language (ADR-0012) are asked for as the boot starts, beside the site and the page.
-  const editing = preview ? Promise.all([import('./preview-edit.js'), loadStylesheet(new URL('./preview.css', import.meta.url).href), initAdminLocale()]) : null;
+  // In the preview alone, the editing layer, its draw queue, preview.css and the admin language (ADR-0012) are asked for as the boot starts, beside the site.
+  const editing = preview ? Promise.all([import('./preview-edit.js'), import('./preview-queue.js'), loadStylesheet(new URL('./preview.css', import.meta.url).href), initAdminLocale()]) : null;
   // The rejection is consumed here; the failure is handled where the promise is awaited.
   editing?.catch(() => {});
   // The draft view (?draft=1) draws this browser's editor drafts as a visitor's page, ?draft=look a saved draft; the preview reads them too, beside site.json.
@@ -780,24 +806,22 @@ export async function boot(opts) {
     console.warn(`Urd: could not load page file '${entry.file}' - rendering an empty page`);
     return { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   });
-  // The site's features (features.js) are asked for beside the page file; the footer's is awaited only as the footer joins the page.
-  const siteHeld = preview ? new Set() : siteFeatures(site, entry.id);
+  // The site's features (features.js) are asked for beside the page file; a visitor's footer is awaited only as the footer joins the page.
+  const siteHeld = siteFeatures(site, entry.id);
   const siteLoaded = loadFeatures(Urd, [...siteHeld].filter((name) => name !== 'footer'));
   const footerLoaded = loadFeatures(Urd, siteHeld.has('footer') ? ['footer'] : []);
-  // The preview loads every core type and feature and the section presets; a visitor's page asks for its menu's, footer's and page's types as soon as each is known.
-  if (preview) {
-    await Promise.all([loadCoreTypes(Urd, null, { all: true }), loadFeatures(Urd, null, { all: true }), import('./sections/presets.js').then(({ registerSectionPresets }) => registerSectionPresets(Urd))]);
-  } else {
-    loadCoreTypes(Urd, pageTypes(site.footer));
-  }
-  const navTypes = preview ? null : loadCoreTypes(Urd, pageTypes(site.nav));
+  // The menu's, footer's and page's types are asked for as soon as each is known, the preview's as a visitor's; the rest come once it is ready (enablePreview).
+  loadCoreTypes(Urd, pageTypes(site.footer));
+  const presets = preview ? import('./sections/presets.js').then(({ registerSectionPresets }) => registerSectionPresets(Urd)) : null;
+  const navTypes = loadCoreTypes(Urd, pageTypes(site.nav));
   // With the page file read, its types, its blocks' readying and the first section's pictures are asked for together, so menu, page and background draw as one.
   const pageReady = pageLifted.then((lifted) => {
     if (!Array.isArray(lifted.sections)) lifted.sections = [];
     const readied = prepareBlocks(pageBlocks(lifted, site.footer), { site, preview, viewport });
     const pictures = preview ? null : askLayerPictures(lifted.sections[0]?.background);
-    const features = preview ? null : loadFeatures(Urd, [...pageFeatures(lifted, site), ...(drafts ? ['collections'] : [])]);
-    return Promise.all([preview ? null : loadCoreTypes(Urd, pageTypes(lifted, site.footer)), readied, pictures, siteLoaded, features]).then(() => lifted);
+    const features = loadFeatures(Urd, [...pageFeatures(lifted, site), ...(preview || drafts ? ['collections'] : [])]);
+    const previewParts = preview ? Promise.all([footerLoaded, presets]) : null;
+    return Promise.all([loadCoreTypes(Urd, pageTypes(lifted, site.footer)), readied, pictures, siteLoaded, features, previewParts]).then(() => lifted);
   });
   await navTypes;
   if (!preview && needsPlugins(pageTypes(site.nav), Urd)) await pluginsLoaded;
@@ -822,8 +846,9 @@ export async function boot(opts) {
   };
   if (preview) drawFooter();
 
+  let queue = null;
   if (preview) {
-    [window.UrdPreviewEdit] = await editing;
+    [window.UrdPreviewEdit, queue] = await editing;
     refreshShopGate(site);
   }
 
@@ -919,5 +944,5 @@ export async function boot(opts) {
     }
   }
 
-  if (preview) enablePreview(state, opts);
+  if (preview) enablePreview(state, opts, queue);
 }

@@ -217,10 +217,10 @@ test('no base rule is the twin of an engine sheet\'s rule: an override under an 
 
 test('the preview loads its sheet with the editing layer, and a calendar loads its own with its modules', () => {
   const urd = read(join(engine, 'urd.js'));
-  assert.match(urd, /const editing = preview \? Promise\.all\(\[import\('\.\/preview-edit\.js'\), loadStylesheet\(new URL\('\.\/preview\.css', import\.meta\.url\)\.href\), initAdminLocale\(\)\]\) : null;/, 'the editing layer, its sheet and the admin dictionary are asked for together');
+  assert.match(urd, /const editing = preview \? Promise\.all\(\[import\('\.\/preview-edit\.js'\), import\('\.\/preview-queue\.js'\), loadStylesheet\(new URL\('\.\/preview\.css', import\.meta\.url\)\.href\), initAdminLocale\(\)\]\) : null;/, 'the editing layer, its draw queue, its sheet and the admin dictionary are asked for together');
   const boot = urd.slice(urd.indexOf('export async function boot('));
   assert.ok(boot.indexOf('const editing = preview') < boot.indexOf("await fetch('/content/site.json')"), 'as the boot starts, before the site is read');
-  assert.match(boot, /if \(preview\) \{\s*\[window\.UrdPreviewEdit\] = await editing;/, 'and in place before the first render');
+  assert.match(boot, /if \(preview\) \{\s*\[window\.UrdPreviewEdit, queue\] = await editing;/, 'and in place before the first render');
   assert.ok(boot.indexOf('= await editing;') < boot.indexOf('renderPage(state.page'));
   const calendar = read(join(engine, 'blocks/calendar-load.js'));
   assert.match(calendar, /const calendarParts = \(\) => Promise\.all\(\[[^\n]*loadSheet\('calendar'\)\]\)\.then\(\(parts\) => \(partsIn = parts\)\);/);
