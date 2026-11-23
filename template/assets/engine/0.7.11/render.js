@@ -605,6 +605,15 @@ function schedulePush(host) {
 }
 
 /**
+ * Runs the push pass again for the section a block stands in, for a block whose content took a new shape after it was drawn (blocks/text.js).
+ * @param {HTMLElement} el The block element
+ */
+export function pushAgain(el) {
+  const host = el.closest('.urd-section');
+  if (host?._urdPushSection) schedulePush(host);
+}
+
+/**
  * Wires the push pass for a freshly drawn desktop section: a first pass, and a ResizeObserver on every block that runs it before paint.
  * @param {HTMLElement} host The section element
  * @param {object} section The section data

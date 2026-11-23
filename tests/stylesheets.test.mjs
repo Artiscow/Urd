@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ENGINE_DIR, calendarSheets, blockSheets, featureSheets, engineImport, engineClosure } from './_engine.mjs';
+import { ENGINE_DIR, calendarSheets, blockSheets, engineSheets, engineImport, engineClosure } from './_engine.mjs';
 import { visitorModules } from '../scripts/engine-notes.mjs';
 
 const engine = fileURLToPath(ENGINE_DIR);
@@ -200,6 +200,21 @@ test('no base rule shares a preview rule\'s subject, its specificity and a prope
   }
 });
 
+test('no base rule is the twin of an engine sheet\'s rule: an override under an at-rule (reduced motion, a fallback) stands after its rule in the same sheet', () => {
+  const norm = (sel) => sel.replace(/\s+/g, ' ').trim();
+  const base = rulesOf(BASE);
+  for (const sheet of engineSheets()) {
+    for (const rule of rulesOf(sheet.text)) {
+      for (const sel of rule.sels.map(norm)) {
+        for (const b of base) {
+          const shared = [...b.props].filter((prop) => rule.props.has(prop));
+          if (shared.length && b.sels.map(norm).includes(sel)) assert.fail(`«${sel}» sets ${shared.join(', ')} in ${sheet.file} and in base.css, which loads before it`);
+        }
+      }
+    }
+  }
+});
+
 test('the preview loads its sheet with the editing layer, and a calendar loads its own with its modules', () => {
   const urd = read(join(engine, 'urd.js'));
   assert.match(urd, /const editing = preview \? Promise\.all\(\[import\('\.\/preview-edit\.js'\), loadStylesheet\(new URL\('\.\/preview\.css', import\.meta\.url\)\.href\), initAdminLocale\(\)\]\) : null;/, 'the editing layer, its sheet and the admin dictionary are asked for together');
@@ -270,20 +285,26 @@ test('each block module\'s sheet holds its own rules: every rule names a class i
   for (const [, name] of styles.matchAll(/^# blocks\/([a-z]+)\.css, rule by rule$/gm)) assert.ok(owners.has(name), `STYLES.md's ${name}.css is a block sheet`);
 });
 
-test('each feature\'s sheet holds its own rules, loads with its feature before the block sheets, with one-line labels and its reasoning in docs/STYLES.md', async () => {
-  const OWN = { 'nav-cart.css': /^urd-nav-cart/, 'footer.css': /^urd-footer/, 'totop.css': /^urd-totop/ };
+test('each engine sheet holds its own rules, loads with the code that draws them before the block sheets, with one-line labels and its reasoning in docs/STYLES.md', async () => {
+  const OWN = { 'nav-cart.css': /^urd-nav-cart/, 'footer.css': /^urd-footer/, 'doc-look.css': /^urd-(text-)?doc(-|$)/, 'totop.css': /^urd-totop/ };
   const { CORE_FEATURES } = await engineImport('features.js');
-  const sheets = featureSheets();
+  const { CORE_BLOCKS } = await engineImport('core-types.js');
+  const text = readFileSync(new URL('blocks/text.js', ENGINE_DIR), 'utf8');
+  // Each sheet's loaders: a feature's own, and for the documents the privacy block's and the text block's document designs (loadDocs).
+  const loaders = { 'nav-cart.css': [CORE_FEATURES.shop], 'footer.css': [CORE_FEATURES.footer], 'doc-look.css': [CORE_BLOCKS.privacy, text.match(/export function loadDocs\(\) \{[^}]*\}/)?.[0]], 'totop.css': [CORE_FEATURES.totop] };
+  const sheets = engineSheets();
   assert.deepEqual(sheets.map((sheet) => sheet.file), Object.keys(OWN), 'the sheets in the order their rules stood in base.css');
   for (const sheet of sheets) {
-    for (const sel of selectorsOf(sheet.text).flat()) assert.ok(classes(sel).some((name) => OWN[sheet.file].test(name)), `${sheet.file}: «${sel}» names none of its feature's classes`);
-    assert.equal(Object.values(CORE_FEATURES).filter((load) => String(load).includes(`'${sheet.file}'`)).length, 1, `${sheet.file} loads with one feature`);
+    for (const sel of selectorsOf(sheet.text).flat()) assert.ok(classes(sel).some((name) => OWN[sheet.file].test(name)), `${sheet.file}: «${sel}» names none of its own classes`);
+    for (const load of loaders[sheet.file]) assert.ok(String(load).includes(`'${sheet.file}'`), `${sheet.file} loads with ${String(load).slice(0, 60)}`);
+    const elsewhere = [...Object.values(CORE_FEATURES), ...Object.values(CORE_BLOCKS)].filter((load) => String(load).includes(`'${sheet.file}'`) && !loaders[sheet.file].includes(load));
+    assert.deepEqual(elsewhere, [], `${sheet.file} loads with its own code alone`);
     const comments = [...sheet.text.matchAll(/\/\*([\s\S]*?)\*\//g)].map((m) => m[1].trim());
     const [header, ...labels] = comments;
     assert.match(header, /docs\/STYLES\.md/, `${sheet.file} names where its reasoning stands`);
     for (const label of labels) assert.ok(!label.includes('\n') && label.length <= 72, `${sheet.file}: a label is one short line: ${label.slice(0, 60)}`);
   }
-  // The footer's and the back-to-top button's rules all left base.css; the basket's and the animations' that a later rule meets stay there for their order.
+  // The footer's and the back-to-top button's rules all left base.css; the basket's, the documents' and the animations' that a later rule meets stay there for their order.
   for (const list of selectorsOf(BASE)) {
     const theirs = list.every((sel) => classes(sel).length && classes(sel).every((name) => /^urd-(footer|totop)/.test(name)));
     assert.ok(!theirs, `base.css: «${list.join(', ')}» belongs to footer.css or totop.css`);
@@ -291,7 +312,7 @@ test('each feature\'s sheet holds its own rules, loads with its feature before t
   const styles = readFileSync(new URL('../docs/STYLES.md', import.meta.url), 'utf8');
   for (const { file } of sheets) assert.match(styles, new RegExp(`^# ${file.replace('.', '\\.')}, rule by rule$`, 'm'));
   const types = readFileSync(new URL('core-types.js', ENGINE_DIR), 'utf8');
-  assert.match(types, /placeInOrder\('blocks', BLOCK_SHEETS\.indexOf\(name\), afterFeatures\)/, 'the block sheets follow the feature sheets');
+  assert.match(types, /placeInOrder\('blocks', BLOCK_SHEETS\.indexOf\(name\), afterEngineSheets\)/, 'the block sheets follow the engine sheets');
 });
 
 test('base.css, which every page loads, carries one-line labels, its reasoning in docs/STYLES.md', () => {

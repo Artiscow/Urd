@@ -13,7 +13,7 @@ globalThis.document ??= {
   createElement: () => ({ dataset: {}, listeners: {}, addEventListener(type, fn) { this.listeners[type] = fn; } }),
   head: { querySelector: () => null, querySelectorAll: () => [], appendChild: answer },
 };
-const { CORE_BLOCKS, CORE_BACKGROUNDS, BLOCK_ALIASES, CORE_BLOCK_READY, READY_WAIT_MS, loadCoreTypes, reserveCoreTypes, pageBlocks, prepareBlocks } = await engineImport('core-types.js');
+const { CORE_BLOCKS, CORE_BACKGROUNDS, BLOCK_ALIASES, CORE_BLOCK_READY, CORE_BLOCK_PARTS, READY_WAIT_MS, loadCoreTypes, reserveCoreTypes, pageBlocks, prepareBlocks } = await engineImport('core-types.js');
 const { createRegistry } = await engineImport('registry.js');
 const { createStagedUrd, needsPlugins } = await engineImport('plugins.js');
 
@@ -33,7 +33,7 @@ function exported(folder, suffix) {
 /** The definitions the tables load, read from their loaders' text: the first module a loader names is its type's own, any after it asked for beside it. */
 function loaded(table) {
   return Object.values(table).map((load) => {
-    const m = String(load).match(/^\(\) => (?:withSheets\()?(?:beside\()?import\('\.\/([^']+)'\)(?:, import\('\.\/[^']+'\))*\)?(?:, '[a-z]+')*\)?\.then\(\(m\) => m\.(\w+)\)$/);
+    const m = String(load).match(/^\(\) => (?:withSheets\()?(?:beside\()?import\('\.\/([^']+)'\)(?:, import\('\.\/[^']+'\))*\)?(?:, '[a-z.-]+')*\)?\.then\(\(m\) => m\.(\w+)\)$/);
     assert.ok(m, `a loader names its module and export literally: ${load}`);
     return `${m[1]}:${m[2]}`;
   }).sort();
@@ -41,12 +41,15 @@ function loaded(table) {
 
 test('a type loads the sheet of every block module it draws with, and only those, each sheet standing in blocks/', () => {
   const sheets = new Set(readdirSync(new URL('blocks/', ENGINE_DIR)).filter((f) => /^[a-z]+\.css$/.test(f) && f !== 'calendar.css').map((f) => f.slice(0, -4)));
+  // The text block's sheet holds its document designs' rules alone, so it comes with them (loadDocs), as does doc-look.js.
+  const withDocs = new Set(['text']);
   for (const [type, load] of Object.entries(CORE_BLOCKS)) {
     const text = String(load);
     const modules = [...text.matchAll(/import\('\.\/blocks\/([a-z]+)\.js'\)/g)].map(([, name]) => name);
     const named = [...text.matchAll(/, '([a-z]+)'/g)].map(([, name]) => name);
-    assert.deepEqual(named, modules.filter((name) => sheets.has(name)), `${type} loads the sheets of its block modules`);
+    assert.deepEqual(named, modules.filter((name) => sheets.has(name) && !withDocs.has(name)), `${type} loads the sheets of its block modules`);
   }
+  assert.match(read('blocks/text.js'), /export function loadDocs\(\) \{\s+docsLoading \?\?= Promise\.all\(\[import\('\.\.\/doc-look\.js'\), loadEngineSheet\('doc-look\.css'\), loadBlockSheet\('text'\)\]\)/, 'a document design loads doc-look.js, its sheet and the text block\'s');
   const listed = read('core-types.js').match(/^const BLOCK_SHEETS = \[([^\n]*)\];$/m)[1].match(/'[a-z]+'/g).map((s) => s.slice(1, -1));
   assert.deepEqual([...listed].sort(), [...sheets].sort(), 'BLOCK_SHEETS names every block sheet, each once');
 });
@@ -184,6 +187,18 @@ test('the blocks a page and its footer hold are found wherever they stand, and t
   assert.equal(READY_WAIT_MS, 500, 'as long as the loading bars wait');
   for (const type of Object.keys(CORE_BLOCK_READY)) assert.ok(Object.hasOwn(CORE_BLOCKS, type), `${type} is a core block type`);
   assert.equal(typeof (await CORE_BLOCK_READY.calendar()), 'function', 'the calendar\'s readying loads');
+});
+
+test('a text in a document design readies the documents\' code before the page is drawn, plain text nothing, and the preview loads it with every type', async () => {
+  const { prepareText, prepareTerms } = await engineImport('blocks/text.js');
+  for (const design of [undefined, 'plain', 'nope']) assert.equal(prepareText({ design }), null, `${design}: plain text readies nothing`);
+  const look = await prepareText({ design: 'contents' });
+  assert.equal(typeof look.applyDocLook, 'function', 'a document design readies doc-look.js');
+  assert.equal(await prepareTerms({}), look, 'the terms of sale are always a document');
+  for (const type of ['text', 'terms']) assert.equal(typeof (await CORE_BLOCK_READY[type]()), 'function', `${type} is readied before the page is drawn`);
+  assert.equal(await CORE_BLOCK_PARTS[0](), look, 'the preview\'s parts load the documents');
+  assert.match(read('core-types.js'), /if \(all\) for \(const load of CORE_BLOCK_PARTS\) jobs\.push\(load\(\)\.then\(\(\) => null, \(\) => null\)\);/, 'with every type');
+  assert.doesNotMatch(read('blocks/text.js'), /^import .*doc-look\.js/m, 'plain text never imports doc-look.js');
 });
 
 test('a core id is the engine\'s before its module is in: a plugin is refused it, and a page using it never waits for the plugins', () => {

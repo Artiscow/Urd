@@ -2,16 +2,16 @@
  * The engine's own block and background types, each with the module that defines it (ADR-0036): a page loads the modules of the types it uses.
  * Notes: docs/engine-notes/core-types.md (Urd repository).
  */
-import { loadStylesheet, placeInOrder, afterFeatures } from './sheets.js';
+import { loadStylesheet, placeInOrder, afterEngineSheets, loadEngineSheet } from './sheets.js';
 
 /** The block modules' own sheets (blocks/<name>.css), in the order they are placed in after base.css. */
 const BLOCK_SHEETS = ['stats', 'countdown', 'quote', 'faq', 'shape', 'timeline', 'table', 'share', 'audio', 'map', 'form', 'product', 'cart', 'checkout', 'collection', 'video', 'icon', 'image', 'gallery', 'ribbon', 'text', 'privacy', 'contact', 'button'];
 
-/** A block module's own sheet, placed after base.css and the feature sheets in BLOCK_SHEETS' order; resolves to whether it loaded. */
-export const loadBlockSheet = (name) => loadStylesheet(new URL(`./blocks/${name}.css`, import.meta.url).href, placeInOrder('blocks', BLOCK_SHEETS.indexOf(name), afterFeatures));
+/** A block module's own sheet, placed after base.css and the engine sheets in BLOCK_SHEETS' order; resolves to whether it loaded. */
+export const loadBlockSheet = (name) => loadStylesheet(new URL(`./blocks/${name}.css`, import.meta.url).href, placeInOrder('blocks', BLOCK_SHEETS.indexOf(name), afterEngineSheets));
 
-/** A type's module, once the sheets of the block modules it draws with are in too; a sheet that fails leaves the type drawing without it. */
-const withSheets = (main, ...names) => Promise.all([main, ...names.map(loadBlockSheet)]).then(([module]) => module);
+/** A type's module once the sheets it draws with are in too, a block module's by name and an engine sheet by its file; one that fails is left out. */
+const withSheets = (main, ...names) => Promise.all([main, ...names.map((name) => (name.endsWith('.css') ? loadEngineSheet(name) : loadBlockSheet(name)))]).then(([module]) => module);
 
 /**
  * A type's module asked for in one wave with the modules it imports that the boot does not load, so no module waits for its importer to arrive.
@@ -26,8 +26,8 @@ export const beside = (main, ...parts) => {
 
 /** The core block types and the modules that define them. */
 export const CORE_BLOCKS = {
-  text: () => withSheets(beside(import('./blocks/text.js'), import('./box-style.js'), import('./doc-look.js'), import('./sanitize.js')), 'text').then((m) => m.textBlock),
-  terms: () => withSheets(beside(import('./blocks/text.js'), import('./box-style.js'), import('./doc-look.js'), import('./sanitize.js')), 'text').then((m) => m.termsBlock),
+  text: () => beside(import('./blocks/text.js'), import('./box-style.js'), import('./sanitize.js')).then((m) => m.textBlock),
+  terms: () => beside(import('./blocks/text.js'), import('./box-style.js'), import('./sanitize.js')).then((m) => m.termsBlock),
   image: () => withSheets(beside(import('./blocks/image.js'), import('./picture.js')), 'image').then((m) => m.imageBlock),
   button: () => withSheets(import('./blocks/button.js'), 'button').then((m) => m.buttonBlock),
   shape: () => withSheets(import('./blocks/shape.js'), 'shape').then((m) => m.shapeBlock),
@@ -43,7 +43,7 @@ export const CORE_BLOCKS = {
   table: () => withSheets(import('./blocks/table.js'), 'table').then((m) => m.tableBlock),
   share: () => withSheets(import('./blocks/share.js'), 'share').then((m) => m.shareBlock),
   contact: () => withSheets(beside(import('./blocks/contact.js'), import('./blocks/map.js'), import('./contact-checks.js'), import('./contact-model.js'), import('./contact-profiles.js'), import('./embed-cover.js'), import('./footer.js'), import('./footer-model.js'), import('./osm.js'), import('./picture.js')), 'contact', 'map').then((m) => m.contactBlock),
-  privacy: () => withSheets(beside(import('./blocks/privacy.js'), import('./contact-checks.js'), import('./contact-model.js'), import('./contact-profiles.js'), import('./doc-look.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js'), import('./privacy-model.js')), 'privacy').then((m) => m.privacyBlock),
+  privacy: () => withSheets(beside(import('./blocks/privacy.js'), import('./contact-checks.js'), import('./contact-model.js'), import('./contact-profiles.js'), import('./doc-look.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js'), import('./privacy-model.js')), 'privacy', 'doc-look.css').then((m) => m.privacyBlock),
   countdown: () => withSheets(import('./blocks/countdown.js'), 'countdown').then((m) => m.countdownBlock),
   audio: () => withSheets(import('./blocks/audio.js'), 'audio').then((m) => m.audioBlock),
   product: () => withSheets(beside(import('./blocks/product.js'), import('./blocks/collection.js'), import('./collections.js'), import('./picture.js'), import('./sanitize.js'), import('./shop.js')), 'product', 'collection').then((m) => m.productBlock),
@@ -75,7 +75,12 @@ export const CORE_BLOCK_READY = {
     for (const part of [import('./ics.js'), import('./calendar-designs.js'), import('./calendar-format.js'), import('./map-links.js'), import('./meeting-links.js')]) part.catch(() => {});
     return import('./blocks/calendar-load.js').then((m) => m.prepareCalendar);
   },
+  text: () => import('./blocks/text.js').then((m) => m.prepareText),
+  terms: () => import('./blocks/text.js').then((m) => m.prepareTerms),
 };
+
+/** The parts of core blocks' designs the preview loads with every type (`loadCoreTypes` with `all`), so a design added on the canvas draws at once. */
+export const CORE_BLOCK_PARTS = [() => import('./blocks/text.js').then((m) => m.loadDocs())];
 /** The old plugin contract ids of the core blocks calendar, map and form (ADR-0021): a page holding one loads the type it stands for. */
 export const BLOCK_ALIASES = { kalender: 'calendar', kart: 'map', skjema: 'form' };
 
@@ -103,6 +108,7 @@ export async function loadCoreTypes(Urd, types, { all = false } = {}) {
       }));
     }
   }
+  if (all) for (const load of CORE_BLOCK_PARTS) jobs.push(load().then(() => null, () => null));
   // A module that fails leaves its type undefined, so its blocks are drawn as an unknown type and the rest of the page as usual.
   for (const job of await Promise.all(jobs)) {
     if (!job) continue;

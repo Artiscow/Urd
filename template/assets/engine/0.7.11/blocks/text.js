@@ -10,9 +10,10 @@ import { boxStyleCss } from '../box-style.js';
 // The seed rule (ADR-0012): ta() is called only in defaults(), on insertion in preview, never at module level.
 import { ta } from '../i18n.js';
 import { typedFrames, PHONE_WORDS, forcesReadable } from '../push-model.js';
-import { drawnWidth } from '../render.js';
-import { textDesign, termsDesign } from '../doc-designs.js';
-import { applyDocLook, buildContents, foldParts, addFormPrint, storedDocHtml } from '../doc-look.js';
+import { drawnWidth, pushAgain } from '../render.js';
+import { textDesign, termsDesign, storedDocHtml } from '../doc-designs.js';
+import { loadBlockSheet } from '../core-types.js';
+import { loadEngineSheet } from '../sheets.js';
 
 /** Per text block, the section's frames before the typing in it began, and the last few frames the typing wrote. */
 const typingFrom = new Map();
@@ -21,6 +22,26 @@ const typingFrom = new Map();
 const framesKey = (section) => JSON.stringify(section.blocks.map((b) => [b.id, b.frames?.desktop ?? null]));
 
 const sameFrame = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/** The document designs' drawing (doc-look.js) once it is in; a text in a document design draws with it. */
+let docs = null;
+/** Its loading, asked for once. */
+let docsLoading = null;
+
+/**
+ * Loads what a document design draws with: doc-look.js, its sheet and the text block's own; plain text needs none of them.
+ * @returns {Promise<object>} doc-look.js
+ */
+export function loadDocs() {
+  docsLoading ??= Promise.all([import('../doc-look.js'), loadEngineSheet('doc-look.css'), loadBlockSheet('text')]).then(([module]) => (docs = module));
+  return docsLoading;
+}
+
+/** Readies a text block before the page is drawn (CORE_BLOCK_READY): a document design's drawing, nothing for plain text. */
+export const prepareText = (props) => (textDesign(props.design) === 'plain' ? null : loadDocs());
+
+/** Readies a terms block, always a document, before the page is drawn. */
+export const prepareTerms = () => loadDocs();
 
 export const textBlock = {
   version: 1,
@@ -82,7 +103,7 @@ export const textBlock = {
       const key = headings.map((h) => h.textContent).join('\n');
       if (key === contentsKey && doc.querySelector('.urd-doc-toc')) return;
       contentsKey = key;
-      const { nav, fold } = buildContents(headings, prefix);
+      const { nav, fold } = docs.buildContents(headings, prefix);
       const oldNav = doc.querySelector('.urd-doc-toc');
       if (oldNav) oldNav.replaceWith(nav);
       else doc.querySelector('.urd-doc-cols').prepend(nav);
@@ -97,23 +118,34 @@ export const textBlock = {
       doc.className = 'urd-doc urd-text-doc';
       doc.style.cssText = 'width:100%;min-height:100%;';
       content.style.minHeight = '';
-      applyDocLook(doc, design, props);
-      if (design === 'contents') {
-        const cols = document.createElement('div');
-        cols.className = 'urd-doc-cols';
-        const body = document.createElement('div');
-        body.className = 'urd-doc-body';
-        body.appendChild(content);
-        cols.appendChild(body);
-        doc.appendChild(cols);
-        drawContents();
-      } else {
-        doc.appendChild(content);
-      }
-      // For a visitor the questions fold out and a withdrawal form prints alone; in the editor the text is typed into, so it keeps its own shape there.
-      if (!ctx.preview) {
-        if (design === 'questions') foldParts(content, prefix);
-        addFormPrint(content);
+      doc.appendChild(content);
+      const lay = (look) => {
+        look.applyDocLook(doc, design, props);
+        if (design === 'contents') {
+          const cols = document.createElement('div');
+          cols.className = 'urd-doc-cols';
+          const body = document.createElement('div');
+          body.className = 'urd-doc-body';
+          body.appendChild(content);
+          cols.appendChild(body);
+          doc.appendChild(cols);
+          drawContents();
+        }
+        // For a visitor the questions fold out and a withdrawal form prints alone; in the editor the text is typed into, so it keeps its own shape there.
+        if (!ctx.preview) {
+          if (design === 'questions') look.foldParts(content, prefix);
+          look.addFormPrint(content);
+        }
+      };
+      // The document's look, readied before the page was drawn (prepareText), is laid at once; one that comes later is laid as it comes, the text plain until then.
+      if (docs) lay(docs);
+      else {
+        loadDocs().then((look) => {
+          if (!doc.isConnected) return;
+          lay(look);
+          // Folded questions take less room than the plain text did, so the push pass measures the block again.
+          pushAgain(el);
+        }, () => {});
       }
       el.appendChild(doc);
     }
@@ -194,7 +226,7 @@ export const textBlock = {
           if (!/\[[^\]]*\]/.test(part.textContent)) part.removeAttribute('data-urd-fill');
         }
         // The contents follow the headings as they are typed.
-        if (design === 'contents') drawContents();
+        if (design === 'contents' && docs) drawContents();
 
         post({
           type: 'urd-edit',

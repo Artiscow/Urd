@@ -50,5 +50,11 @@ export function placeInOrder(group, rank, after = () => null) {
 /** The base sheet's link, which the engine's own sheets follow. */
 export const baseSheet = () => document.head.querySelector('link[rel="stylesheet"][href*="/assets/styles/base.css"]');
 
-/** The last feature sheet, else the base sheet: the block sheets follow it, so the features' rules stand before theirs as in base.css. */
-export const afterFeatures = () => [...document.head.querySelectorAll('link[data-urd-sheet-group="features"]')].at(-1) ?? baseSheet();
+/** The engine's own sheets beside the modules that draw with them, in the order their rules stood in base.css, which they follow. */
+const ENGINE_SHEETS = ['nav-cart.css', 'footer.css', 'doc-look.css', 'totop.css'];
+
+/** An engine sheet (ENGINE_SHEETS), placed after base.css in their order; resolves to whether it loaded. */
+export const loadEngineSheet = (file) => loadStylesheet(new URL(`./${file}`, import.meta.url).href, placeInOrder('engine', ENGINE_SHEETS.indexOf(file), baseSheet));
+
+/** The last engine sheet, else the base sheet: the block sheets follow it, so the engine sheets' rules stand before theirs as in base.css. */
+export const afterEngineSheets = () => [...document.head.querySelectorAll('link[data-urd-sheet-group="engine"]')].at(-1) ?? baseSheet();

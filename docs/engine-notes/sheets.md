@@ -13,8 +13,16 @@ A caller whose rules must keep their order among sheets of its own passes `place
 
 ## `placeInOrder`
 
-The one way an engine sheet is placed among sheets of its own kind: the block modules' sheets (core-types.js), the features' (features.js) and the calendar's (calendar-load.js) each keep the order their rules stood in when they were one sheet, whatever order the browser fetches them in, since a rule that meets another at equal specificity wins by its place. A group's first sheet follows `after()` (the block and feature sheets follow base.css, where their rules stood), and without it goes at the head's end.
+The one way an engine sheet is placed among sheets of its own kind: the block modules' sheets (core-types.js), the engine's own (`ENGINE_SHEETS`) and the calendar's (calendar-load.js) each keep the order their rules stood in when they were one sheet, whatever order the browser fetches them in, since a rule that meets another at equal specificity wins by its place. A group's first sheet follows `after()` (the engine and block sheets follow base.css, where their rules stood), and without it goes at the head's end.
 
 ## `baseSheet`
 
-The base sheet's link, found by its address as every shell names it: the block and feature sheets are placed after it, where their rules stood in base.css.
+The base sheet's link, found by its address as every shell names it: the engine and block sheets are placed after it, where their rules stood in base.css.
+
+## `const ENGINE_SHEETS`
+
+The engine's own sheets beside the modules that draw with them, in the order their rules stood in base.css: the menu's basket, the footer, the documents and the back-to-top button. The features load theirs (features.js), and the text, terms and privacy blocks the documents' (`loadDocs` in blocks/text.js, the privacy block's loader in core-types.js).
+
+## `afterEngineSheets`
+
+The last engine sheet, else the base sheet: the block sheets follow it, so the engine sheets' rules stand before the block sheets' as they did in base.css, whichever comes first. A rule of an engine sheet that met a block sheet's at equal specificity keeps the order it had.

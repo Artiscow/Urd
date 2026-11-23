@@ -4,7 +4,7 @@ The full text of the longer comments in the engine's `doc-designs.js`, in the fi
 
 ## The module
 
-The designs a document is drawn in (the privacy page, the terms of sale, a text) and the design a stored value reads as. They stand apart from doc-look.js, which draws the documents, since the boot reads them on every page (render.js asks whether a text is drawn plain, migrate.js lifts the terms of sale into the text block's designs) while only a page that holds a document draws one.
+The designs a document is drawn in (the privacy page, the terms of sale, a text), the design a stored value reads as, and the text a document stores (`storedDocHtml`, which the editor's typing sends for every text, plain text included). They stand apart from doc-look.js, which draws the documents, since the boot reads them on every page (render.js asks whether a text is drawn plain, migrate.js lifts the terms of sale into the text block's designs) while only a page that holds a document draws one.
 
 ## `const TEXT_DESIGNS`
 

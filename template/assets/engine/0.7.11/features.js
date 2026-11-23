@@ -4,16 +4,13 @@
  */
 import { pageTypes } from './plugins.js';
 import { pageBlocks, beside } from './core-types.js';
-import { loadStylesheet, placeInOrder, baseSheet } from './sheets.js';
+import { loadEngineSheet } from './sheets.js';
 
 /** The core animations' ids (animations/core.js), reserved as the engine's own before their module loads. */
 export const CORE_ANIMATION_IDS = ['fade-in', 'slide-up', 'zoom-in', 'hover-lift', 'stagger'];
 
-/** The features' own sheets beside their modules, in the order their rules stood in base.css, which they follow. */
-const FEATURE_SHEETS = ['nav-cart.css', 'footer.css', 'totop.css'];
-
 /** A feature's parts once its sheet is in too; a sheet that fails leaves the feature drawing without it. */
-const withSheet = (main, sheet) => Promise.all([main, loadStylesheet(new URL(`./${sheet}`, import.meta.url).href, placeInOrder('features', FEATURE_SHEETS.indexOf(sheet), baseSheet))]).then(([parts]) => parts);
+const withSheet = (main, sheet) => Promise.all([main, loadEngineSheet(sheet)]).then(([parts]) => parts);
 
 /** The boot's features, each loading to the parts the engine draws it with. */
 export const CORE_FEATURES = {

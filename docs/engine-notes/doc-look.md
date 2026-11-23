@@ -19,11 +19,11 @@ The side the contents stand on belongs to the contents design alone; the placeme
 
 ## `applyDocLook`
 
-Writes a document's design and look onto its root: the design as `data-design`, the lines taken away as `data-rules="off"`, the contents on the right as `data-side="right"`, the document centred in its block as `data-align="center"`, which it is unless set to the left, and which base.css draws for the privacy page and for a document with contents (with the contents, the text centred in the block and the contents in a column beside it, in a block wide enough), the look as custom properties.
+Writes a document's design and look onto its root: the design as `data-design`, the lines taken away as `data-rules="off"`, the contents on the right as `data-side="right"`, the document centred in its block as `data-align="center"`, which it is unless set to the left, and which doc-look.css draws for the privacy page and for a document with contents (with the contents, the text centred in the block and the contents in a column beside it, in a block wide enough), the look as custom properties.
 
 ## `buildContents`
 
-The contents of a document, from its headings: a list beside the text, and the same list folded into one row for a narrow block (base.css shows one or the other by the document's own width).
+The contents of a document, from its headings: a list beside the text, and the same list folded into one row for a narrow block (doc-look.css shows one or the other by the document's own width).
 Each heading gets an id the list links to, so a link is a plain jump the page's own scrolling shapes; the part the reader is in is marked as they scroll.
 
 ## `watchCurrent`

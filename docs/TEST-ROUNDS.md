@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.38.2.1): the document designs with their design
+
+- [ ] The privacy page and the terms of sale in each of its designs (Long read, Contents at the side, At a glance, Questions, Numbered clauses) look and work as before on the desktop and on a phone: the contents, the folding questions, the numbered clauses and a withdrawal form's print button
+- [ ] With reduced motion asked for in the system, opening a question on a privacy page or terms of sale drawn as Questions shows its answer at once, without the slide
+- [ ] In the editor, adding the terms of sale and switching its design in the design picker show the design at once; typing in terms drawn with contents keeps the contents in step with the headings
+- [ ] On om-oss, DevTools' network list shows no doc-look.js, doc-look.css or text.css; on personvern it shows doc-look.css
+
 ### Test batch (0.7.38.1): the boot's features by what a page holds
 
 - [ ] Every page of the site looks and works as before on the desktop and on a phone: the menu with its basket count, the footer, the back-to-top button, the pinned blocks on om-oss and shop, and the animations and the wave divider on kaker

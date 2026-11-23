@@ -1,5 +1,5 @@
 /**
- * The designs a document is drawn in (the privacy page, the terms of sale, a text) and the design a stored value reads as; doc-look.js draws them.
+ * The designs a document is drawn in (the privacy page, the terms of sale, a text), the design a stored value reads as, and the text a document stores.
  * Notes: docs/engine-notes/doc-designs.md (Urd repository).
  */
 
@@ -25,4 +25,19 @@ export function textDesign(value) {
 /** The terms of sale's design a stored value reads as. */
 export function termsDesign(value) {
   return TERMS_DESIGNS.includes(value) ? value : 'long';
+}
+
+/**
+ * A text's HTML as it is stored: what the drawing added to it (the contents' ids on its headings) taken off a copy, so the stored text is the owner's alone.
+ * @param {HTMLElement} content
+ * @returns {string}
+ */
+export function storedDocHtml(content) {
+  if (!content.querySelector('[data-urd-doc-id]')) return content.innerHTML;
+  const copy = content.cloneNode(true);
+  for (const h of copy.querySelectorAll('[data-urd-doc-id]')) {
+    h.removeAttribute('id');
+    h.removeAttribute('data-urd-doc-id');
+  }
+  return copy.innerHTML;
 }

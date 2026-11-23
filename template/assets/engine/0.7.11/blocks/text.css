@@ -1,5 +1,5 @@
 /*
- * The text block's own rules (blocks/text.js), loaded with the module by core-types.js, placed after base.css in the order BLOCK_SHEETS keeps.
+ * The text block's own rules (blocks/text.js), all for its document designs, loaded with them (loadDocs), placed after base.css in the order BLOCK_SHEETS keeps.
  * Its reasoning stands in docs/STYLES.md, under blocks/text.css.
  */
 .urd-text-doc .urd-text > :first-child {

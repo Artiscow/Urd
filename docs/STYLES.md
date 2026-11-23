@@ -884,62 +884,6 @@ The site's links as a tool in the menu's cluster (nav.js): the same box as the t
 
 The site's contact details (site.site.contact) as an `<address>`, without the italic browsers give it: lines in the contact column, one wrapping row in the plain and the large CTA builds.
 
-### `.urd-doc`
-
-Documents (doc-look.js): a long text in one of its designs, the privacy page (blocks/privacy.js) and a text block's document designs (blocks/text.js). The root's own width picks the narrow layout (a container query), so a phone and a narrow block both get it. The look comes as custom properties the owner sets (the accent, the headings' and the cards' colours, the corners, the fonts), each falling back to the theme; data-rules="off" takes the lines between the parts away.
-
-### `.urd-text-doc .urd-text > h1`
-
-A text in a document design: room above each heading and between the paragraphs, the text's own sizes kept.
-
-### `.urd-doc:not([data-rules="off"]):is([data-design="long"], [data-design="contents"], [data-design="glance"], [data-design="ledger"], [data-design="ledger-cards"]) :is(.urd-text > h2, .urd-doc-part > h2)`
-
-The lines between the parts: a short rule in the accent over each part's heading, in the long read, the contents, the main points and the ledgers.
-
-### `.urd-text-doc [data-urd-form]`
-
-A withdrawal form in a text (data-urd-form, the terms of sale): a card with a dashed edge, set apart to be filled in or printed.
-
-### `.urd-doc-cols`
-
-Contents beside: the parts listed in a column that follows the reader down, the part they are in marked; a narrow document folds the list into one row above the text.
-
-### `.urd-doc[data-align="center"] .urd-doc-cols`
-
-The text centred: it stands in the middle column and the list at the block's outer edge, an empty column of the list's width on the other side, so a block as wide as the page centres its text on the page.
-
-### `.urd-doc-glance, .urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul)`
-
-The main points at a glance: cards above the page, a marker in the accent beside each label. In a text they are its first list before the first heading, each item a bold label over its words.
-
-### `@container urd-doc (min-width: 560px) { .urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul):has(> li:nth-child(3):last-child)`
-
-The cards fill their rows: two by two, three or four across where the document is wide enough for them, one under the other in a very narrow one.
-
-### `.urd-doc-fact > b::before, .urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul) > li > strong:first-child::before`
-
-The marker's foot stands on the label's baseline and its height is about the capitals', so it centres on the uppercase label in any font.
-
-### `.urd-doc[data-design="questions"] :is(.urd-doc-part, .urd-text > h2)`
-
-Questions: each part a row that folds out, a line between the rows (data-rules="off" takes the lines away). For a visitor each is a `<details>`; in the editor the text is typed into, so its headings are drawn as open rows.
-
-### `.urd-doc .urd-doc-part > summary`
-
-The row's room is the heading's own (in its own size), so a row is as tall in the editor, where the heading is the row, as on the page.
-
-### `.urd-doc[data-design="questions"] .urd-text > h2`
-
-In the editor a question's row is its heading itself, a plain block so its formatted words keep their spaces, the chevron at its right.
-
-### `.urd-doc-ledger-wrap`
-
-The ledgers: what is collected, why, who gets it and how long, at the text's own width and with the same look on a phone. The table puts it in three columns, who gets it under the why in a quieter line; the cards give each kind its own card, the names beside their lines.
-
-### `@container urd-doc (max-width: 480px) { .urd-doc-ledger`
-
-A narrow document keeps the table, a little tighter.
-
 ### `@media print { html.urd-print-form body > :not(:has([data-urd-printing])), html.urd-print-form #urd-root > :not(:has([data-urd-printing])), html.urd-print-form .urd-section:has([data-urd-printing]) > :not(:has([data-urd-printing])), html.urd-print-form .urd-canvas:has([data-urd-printing]) > :not(:has([data-urd-printing])), html.urd-print-form :is(.urd-doc, .urd-doc-cols, .urd-doc-body, .urd-text, .urd-doc-answer):has([data-urd-printing]) > :not([data-urd-printing], :has([data-urd-printing])), html.urd-print-form details.urd-doc-part:has([data-urd-printing]) > summary`
 
 A withdrawal form printed alone (doc-look.js addFormPrint): everything else on the page is left out of the print.
@@ -947,14 +891,6 @@ A withdrawal form printed alone (doc-look.js addFormPrint): everything else on t
 ### `@media print { html.urd-print-form :is(.urd-section, .urd-canvas, .urd-block, .urd-doc, .urd-text):has([data-urd-printing])`
 
 The blocks and sections carry their sizes inline (render.js frameToCss), so the print's reset has to outweigh them, or the form prints with the section's height of blank paper after it.
-
-### `@container urd-doc (min-width: 641px) { .urd-privacy .urd-doc-cols`
-
-Beside its contents the privacy page keeps its text at its measure, on either side; a narrow page has the one column every document has.
-
-### `@container urd-doc (min-width: 641px) and (max-width: 940px) { .urd-doc[data-align="center"] .urd-doc-cols`
-
-Contents and text centred between them need room for both columns and the text: a document narrower than that stands beside its list, centred again once the block is wide enough.
 
 ### `.urd-bg-pan-runner, .urd-bg-orbit-runner`
 
@@ -1107,6 +1043,72 @@ Newsletter form.
 ### `.urd-footer-hp`
 
 Honeypot: completely hidden from humans, visible to bots.
+
+# doc-look.css, rule by rule
+
+### `.urd-doc`
+
+Documents (doc-look.js): a long text in one of its designs, the privacy page (blocks/privacy.js) and a text block's document designs (blocks/text.js). The root's own width picks the narrow layout (a container query), so a phone and a narrow block both get it. The look comes as custom properties the owner sets (the accent, the headings' and the cards' colours, the corners, the fonts), each falling back to the theme; data-rules="off" takes the lines between the parts away.
+
+### `.urd-text-doc .urd-text > h1`
+
+A text in a document design: room above each heading and between the paragraphs, the text's own sizes kept.
+
+### `.urd-doc:not([data-rules="off"]):is([data-design="long"], [data-design="contents"], [data-design="glance"], [data-design="ledger"], [data-design="ledger-cards"]) :is(.urd-text > h2, .urd-doc-part > h2)`
+
+The lines between the parts: a short rule in the accent over each part's heading, in the long read, the contents, the main points and the ledgers.
+
+### `.urd-text-doc [data-urd-form]`
+
+A withdrawal form in a text (data-urd-form, the terms of sale): a card with a dashed edge, set apart to be filled in or printed.
+
+### `.urd-doc-cols`
+
+Contents beside: the parts listed in a column that follows the reader down, the part they are in marked; a narrow document folds the list into one row above the text.
+
+### `.urd-doc[data-align="center"] .urd-doc-cols`
+
+The text centred: it stands in the middle column and the list at the block's outer edge, an empty column of the list's width on the other side, so a block as wide as the page centres its text on the page.
+
+### `.urd-doc-glance, .urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul)`
+
+The main points at a glance: cards above the page, a marker in the accent beside each label. In a text they are its first list before the first heading, each item a bold label over its words.
+
+### `@container urd-doc (min-width: 560px) { .urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul):has(> li:nth-child(3):last-child)`
+
+The cards fill their rows: two by two, three or four across where the document is wide enough for them, one under the other in a very narrow one.
+
+### `.urd-doc-fact > b::before, .urd-text-doc[data-design="glance"] .urd-text > ul:not(h2 ~ ul, ul ~ ul) > li > strong:first-child::before`
+
+The marker's foot stands on the label's baseline and its height is about the capitals', so it centres on the uppercase label in any font.
+
+### `.urd-doc[data-design="questions"] :is(.urd-doc-part, .urd-text > h2)`
+
+Questions: each part a row that folds out, a line between the rows (data-rules="off" takes the lines away). For a visitor each is a `<details>`; in the editor the text is typed into, so its headings are drawn as open rows.
+
+### `.urd-doc .urd-doc-part > summary`
+
+The row's room is the heading's own (in its own size), so a row is as tall in the editor, where the heading is the row, as on the page.
+
+### `.urd-doc[data-design="questions"] .urd-text > h2`
+
+In the editor a question's row is its heading itself, a plain block so its formatted words keep their spaces, the chevron at its right.
+
+### `.urd-doc-ledger-wrap`
+
+The ledgers: what is collected, why, who gets it and how long, at the text's own width and with the same look on a phone. The table puts it in three columns, who gets it under the why in a quieter line; the cards give each kind its own card, the names beside their lines.
+
+### `@container urd-doc (max-width: 480px) { .urd-doc-ledger`
+
+A narrow document keeps the table, a little tighter.
+
+### `@container urd-doc (min-width: 641px) { .urd-privacy .urd-doc-cols`
+
+Beside its contents the privacy page keeps its text at its measure, on either side; a narrow page has the one column every document has.
+
+### `@container urd-doc (min-width: 641px) and (max-width: 940px) { .urd-doc[data-align="center"] .urd-doc-cols`
+
+Contents and text centred between them need room for both columns and the text: a document narrower than that stands beside its list, centred again once the block is wide enough.
 
 # totop.css, rule by rule
 

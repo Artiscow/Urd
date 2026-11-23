@@ -9,7 +9,7 @@ The loaders name their modules literally, so the modules stay out of the boot's 
 
 ## `const withSheets`
 
-A type is defined once its module and the sheets of the block modules it draws with are in (ADR-0036 decision 7), so the page that waits for its types is drawn with their rules in place, and a block module two types draw with (the image in the gallery, the timeline in the quote) brings its sheet with either. The sheets are fetched in the wave the modules are, so they cost no round trip of their own. Each is placed after base.css and the feature sheets (`afterFeatures` in sheets.js) in the order `BLOCK_SHEETS` keeps, the order their rules stood in base.css (`placeInOrder` in sheets.js), since a rule that meets another at equal specificity wins by its place; base.css's link is found by its address, as the shells all name it. A sheet that fails resolves as not loaded, and its type draws without it, as a type whose module fails is drawn as unknown.
+A type is defined once its module and the sheets of the block modules it draws with are in (ADR-0036 decision 7), so the page that waits for its types is drawn with their rules in place, and a block module two types draw with (the image in the gallery, the timeline in the quote) brings its sheet with either. The sheets are fetched in the wave the modules are, so they cost no round trip of their own. Each is placed after base.css and the engine sheets (`afterEngineSheets` in sheets.js) in the order `BLOCK_SHEETS` keeps, the order their rules stood in base.css (`placeInOrder` in sheets.js), since a rule that meets another at equal specificity wins by its place; base.css's link is found by its address, as the shells all name it. An engine sheet a type draws with (the documents' `doc-look.css`, which the privacy block draws with) is named by its file and placed with the engine's own (`loadEngineSheet` in sheets.js). A sheet that fails resolves as not loaded, and its type draws without it, as a type whose module fails is drawn as unknown.
 
 ## `const beside`
 
@@ -18,8 +18,12 @@ tests/visitor-speed.test.mjs holds every type's loader to name them all.
 
 ## `const CORE_BLOCK_READY`
 
-The core block types readied before a page is drawn, each with what readies a block of it (prepareBlocks): the calendar's, asked for in one wave with the parser, the design model, the formats and the links it draws with (calendarParts in blocks/calendar-load.js), beside the calendar's own module.
+The core block types readied before a page is drawn, each with what readies a block of it (prepareBlocks): the calendar's, asked for in one wave with the parser, the design model, the formats and the links it draws with (calendarParts in blocks/calendar-load.js), beside the calendar's own module; and a text or terms block's document design, which draws with doc-look.js, its sheet and the text block's (`prepareText`, `prepareTerms` and `loadDocs` in blocks/text.js), while plain text readies nothing.
 Each gives what takes a block's props and the page's context once its own module is in; the parts asked for beside it come in on their own.
+
+## `const CORE_BLOCK_PARTS`
+
+The parts of the core blocks' designs the preview loads with every type (`loadCoreTypes` with `all`, ADR-0036 decisions 4 and 9): the editor offers every design, so a document design added on the canvas draws its look at once rather than as its code comes. The calendar's design families are not among them: a calendar draws its loading state until its family's renderer is in, in the preview as on a visitor's page.
 
 ## `loadCoreTypes`
 

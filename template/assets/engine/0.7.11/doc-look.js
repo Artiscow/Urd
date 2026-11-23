@@ -219,18 +219,3 @@ export function addFormPrint(content) {
     form.after(button);
   }
 }
-
-/**
- * A text's HTML as it is stored: what the drawing added to it (the contents' ids on its headings) taken off a copy, so the stored text is the owner's alone.
- * @param {HTMLElement} content
- * @returns {string}
- */
-export function storedDocHtml(content) {
-  if (!content.querySelector('[data-urd-doc-id]')) return content.innerHTML;
-  const copy = content.cloneNode(true);
-  for (const h of copy.querySelectorAll('[data-urd-doc-id]')) {
-    h.removeAttribute('id');
-    h.removeAttribute('data-urd-doc-id');
-  }
-  return copy.innerHTML;
-}
