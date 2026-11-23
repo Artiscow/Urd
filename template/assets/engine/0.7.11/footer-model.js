@@ -1,7 +1,6 @@
 /**
- * Pure footer logic: brand, columns, social links and baseline are built from
- * site.footer and the page registry. No DOM - the module is importable in node
- * and covered by tests/footer.test.mjs; the DOM building lives in footer.js.
+ * Builds the footer's parts from the site file and the page registry, among them the brand, columns, social links and baseline; footer.js builds the DOM.
+ * Notes: docs/engine-notes/footer-model.md (Urd repository).
  */
 
 import { resolveItem, isSafeUrl } from './nav-model.js';
@@ -12,15 +11,11 @@ import { siteContact, legalParts, contactParts } from './contact-model.js';
 // here for footer.js and the tests that import it from here.
 export { isSafeUrl };
 
-// Safe to string: hand-edited site.json can hold numbers/booleans where the
-// model expects text. An empty string keeps .trim()/.split() from throwing and
-// toppling the whole footer render (the page never dies of bad data).
+// Text or an empty string, so a number or boolean hand-edited into site.json never makes .trim() or .split() throw.
 const str = (v) => (typeof v === 'string' ? v : '');
 
 /**
- * The brand column: explicit title plus optional tagline. No fallback to the
- * site title - a footer that was just switched on should be empty, not filled
- * with the site name. Null when there is nothing to show.
+ * The brand column from footer.brand, with no fallback to the site title, so a footer just switched on stays empty; null when there is nothing to show.
  * @param {object} site
  * @returns {{title: string, tagline: string}|null}
  */
@@ -38,9 +33,7 @@ export function footerBrand(site) {
 }
 
 /**
- * The columns with resolved links (page → path, href → external). Links without
- * a label are skipped, and a column with no valid links is not rendered (a lone
- * title is not worth a column in the finished footer).
+ * The columns with resolved links: links without a label are skipped, and a column with no labelled links is left out.
  * @param {object} site
  * @returns {Array<{title: string, links: Array<{label: string, href: string, external: boolean, missing: boolean}>}>}
  */
@@ -76,7 +69,7 @@ export function footerBaselineLinks(site) {
 }
 
 /**
- * The link to the site's privacy page (`footer.privacyPage`, a page id, additive from 0.7.24.2.2): drawn with the page's title on every page's footer, so the page is one press away as the privacy rules ask; nothing where no page is chosen or the chosen one is gone or hidden.
+ * The link to the privacy page chosen in `footer.privacyPage`, with the page's title; null when no page is chosen or the chosen page is gone or hidden.
  * @param {object} site
  * @returns {{label: string, href: string}|null}
  */
@@ -114,10 +107,7 @@ export function footerLinkRow(site) {
 }
 
 /**
- * The call to action (CTA, additive since v0.6): normalized or null.
- * `kind` is 'button' (button as a link) or 'newsletter' (email field). `big`
- * gives the large centered variant. A button CTA requires button text; a
- * newsletter requires at least a heading - otherwise the CTA is empty (null).
+ * The call to action, normalized, or null: a button needs its button text, a newsletter a heading or button text; `big` is the large centred variant.
  * @param {object} site
  * @returns {{kind: string, heading: string, sub: string, label: string, big: boolean, target: object|null, endpoint: string, recipient: string, success: string}|null}
  */
@@ -146,9 +136,7 @@ export function footerCta(site) {
 }
 
 /**
- * The footer's row of the site's links (site.links, links-model.js; before
- * 0.7.0.52 the footer's own `social`, lifted by the site migration 4 -> 5),
- * unless the footer leaves them out (`footer.links: false`).
+ * The site's links (site.links) for the footer's row, unless the footer leaves them out (`footer.links: false`).
  * @param {object} site
  * @returns {Array<{id: string, icon: string, image: string, label: string, url: string}>}
  */
@@ -166,8 +154,7 @@ export function footerContact(site) {
 }
 
 /**
- * The legal line's parts (the legal name, the organisation numbers, the VAT number and the representative), unless the footer leaves them out (`footer.legal: false`).
- * On by default once filled, since most countries ask for them to be easy to find.
+ * The legal line's parts (legal name, organisation numbers, VAT and representative), unless the footer leaves them out (`footer.legal: false`).
  * @param {object} site
  * @returns {ReturnType<typeof legalParts> | null} null when there is nothing to show
  */
@@ -194,9 +181,7 @@ export function footerBaseline(site) {
 export const FOOTER_DESIGNS = ['chapters', 'split'];
 
 /**
- * The design (footer.design, additive from v0.7): `chapters` numbers the
- * link columns under a rule each, `split` gives the brand half the width on
- * a tinted panel. '' for the standard footer and for anything unknown.
+ * The design: `chapters` numbers the columns under a rule each, `split` puts the brand on a tinted half-width panel; '' for the standard or an unknown one.
  * @param {object} site
  * @returns {string}
  */
@@ -227,7 +212,7 @@ export function hasRichFooter(site) {
 export const FOOTER_WAIT_MS = 3000;
 
 /**
- * Resolves once no element under `root` is busy fetching its content (`aria-busy="true"`, which the collection, product, calendar and privacy blocks set while they load), or after `ms`.
+ * Resolves once no element under `root` is busy (`aria-busy="true"`, set by the collection, product, calendar and privacy blocks while they load), or after `ms`.
  * @param {Element} root
  * @param {number} ms
  * @returns {Promise<void>}

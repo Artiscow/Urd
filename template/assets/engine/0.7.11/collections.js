@@ -1,7 +1,6 @@
 /**
- * Collections (the data block pattern, ADR-0007): data fetching and pure helpers.
- * The helpers are DOM-free and tested in tests/collections.test.mjs; the
- * collection block (blocks/collection.js) uses them.
+ * Collections (the data block pattern, ADR-0007): fetching a collection, and DOM-free helpers that the collection block (blocks/collection.js) uses.
+ * Notes: docs/engine-notes/collections.md (Urd repository).
  */
 import { dates } from './i18n.js';
 
@@ -9,9 +8,7 @@ import { dates } from './i18n.js';
 export const COLLECTION_SCHEMA_VERSION = 1;
 
 /**
- * Sorts entries: newest date first (or oldest when newestFirst is false).
- * Entries without a date keep their relative order and end up last.
- * Never mutates the input.
+ * Sorts entries newest date first (oldest when newestFirst is false); undated entries keep their order and come last. Never mutates the input.
  */
 export function sortEntries(entries, newestFirst = true) {
   const dated = entries.filter((e) => e.date);
@@ -21,9 +18,7 @@ export function sortEntries(entries, newestFirst = true) {
 }
 
 /**
- * Groups entries by year (from the date), newest year first; entries without a
- * date end up last in the group with year null. The entries within each group
- * are sorted newest first.
+ * Groups entries by the year of their date, newest year first and each group newest first; undated entries form the last group, with year null.
  * @returns {Array<{year: string|null, entries: object[]}>}
  */
 export function groupByYear(entries) {
@@ -37,9 +32,7 @@ export function groupByYear(entries) {
 }
 
 /**
- * Date badge parts from an ISO date: {day: '19', month: 'jul', year: '2026'}.
- * The month name follows the visitor language (Intl via i18n.js, nb without init).
- * An invalid or missing date gives null (the view drops the badge).
+ * Badge parts {day, month, year} from a YYYY-MM-DD date, the month's short name in the visitor's language; null for another shape or a month outside 1-12.
  */
 export function dateBadge(date) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date ?? '');
@@ -71,9 +64,7 @@ export function draftHasKind(kind) {
 const fetched = new Map();
 
 /**
- * Fetches a collection: the draft from the editor wins (preview), otherwise the
- * server file. null for a missing or invalid file - the block shows its empty
- * state, never a crash.
+ * Fetches a collection: the editor's draft wins (preview), otherwise the server file; a missing or invalid file gives null, and the block shows its empty state.
  */
 export function getCollection(id) {
   if (draftCollections && Object.hasOwn(draftCollections, id)) {

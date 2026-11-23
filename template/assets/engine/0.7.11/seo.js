@@ -1,9 +1,6 @@
 /**
- * SEO metadata in the document head (the SEO pack): description, canonical,
- * og fields (Open Graph) and JSON-LD for the site. The engine sets the tags
- * when rendering for visitors (the index shell is Urd-owned and static, so
- * per-page metadata has to be added client side until the v0.8 baking).
- * The tags are built pure (node-tested); only applyHeadMeta touches the DOM.
+ * The SEO tags and the site's JSON-LD in the document head, among them the description, canonical and Open Graph; applyHeadMeta writes them for visitors.
+ * Notes: docs/engine-notes/seo.md (Urd repository).
  */
 
 import { siteContact, organizationContact } from './contact-model.js';
@@ -32,8 +29,7 @@ export function pageTitleOwn(page, entry) {
 }
 
 /**
- * The document title of a page, as the browser tab and the search results show it: the page's own part and the site title in the site's format.
- * A part that is empty is left out with its hyphen, so a site without a title shows the page alone.
+ * A page's document title: its own part and the site title in the site's format, an empty part left out with its hyphen.
  * @param {object} site the site.json content (migrated)
  * @param {{meta?: {title?: string, searchTitle?: string}}} page
  * @param {{title?: string}} [entry] The page's entry in the page registry
@@ -48,12 +44,7 @@ export function pageTitle(site, page, entry) {
 }
 
 /**
- * The meta tags for a page: [{tag, attrs}] in insertion order.
- * The og fields fall back stepwise: og.title -> search title -> page title, og.description
- * -> page description -> site description, og.image -> the site icon.
- * The X/Twitter card needs only the card tag (the rest is read from the og fields).
- * A hidden page (noindex in the page registry) gets robots-noindex and no
- * canonical, but keeps the sharing fields (sharing is a deliberate choice).
+ * A page's meta tags as [{tag, attrs}] in insertion order, the og fields with stepwise fallbacks; a noindex page gets robots-noindex and no canonical link.
  * @param {object} site the site.json content (migrated)
  * @param {{meta?: {title?: string, description?: string, og?: {title?: string, description?: string, image?: string}}}} page
  * @param {string} origin The page's origin (https://...)
@@ -87,8 +78,7 @@ export function pageMetaTags(site, page, origin, path, entry = {}) {
 }
 
 /**
- * JSON-LD for the site: Organization with the name, the description and the logo, and the legal name, the organisation number, the address, the phone, the email and the contact points by role of the contact details (the fields from the admin's Legal panel, contact-model.js).
- * Rich search results for the target audience (associations, small businesses) with no dependency.
+ * The site's JSON-LD Organization: its name and, among other fields where set, the description, the logo and the contact details (contact-model.js).
  * @param {object} site the site.json content (migrated)
  * @param {string} origin
  * @returns {object}
@@ -108,11 +98,7 @@ export function siteJsonLd(site, origin) {
 }
 
 /**
- * Visitor measurement (site.analytics): Cloudflare Web Analytics, a beacon
- * script that sets no cookies and takes no fingerprint. Appended once per
- * page load on the published page when a token is set; the preview never
- * calls this (editing sessions are not visits). The hosts are open in Urd's
- * own _headers.
+ * Visitor measurement (`site.analytics`): appends Cloudflare Web Analytics' beacon script once, when a token is set; the preview never calls this.
  * @param {object} site site.json (lifted)
  */
 export function mountAnalytics(site) {
@@ -126,9 +112,7 @@ export function mountAnalytics(site) {
 }
 
 /**
- * Writes the meta tags and the JSON-LD into <head>. Called per page render for
- * visitors; its own earlier tags are replaced (client-side navigation can call
- * it again), marked with data-urd-seo.
+ * Writes the meta tags and the JSON-LD into <head>, marked with data-urd-seo, in place of those an earlier call wrote.
  */
 export function applyHeadMeta(site, page, origin, path, entry) {
   for (const el of document.head.querySelectorAll('[data-urd-seo]')) el.remove();

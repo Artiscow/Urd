@@ -1,7 +1,6 @@
 /**
- * The check digits of organisation and VAT numbers, one function per algorithm, keyed by the names the country profiles use (contact-profiles.js).
- * Every function takes the normalised number (digits and letters only, no prefix unless the algorithm needs it) and answers true or false; the profile says whether a false refuses the number or only warns.
- * The algorithms were verified against real published numbers on 20 October 2026 (tests/contact-checks.test.mjs holds them); where a register publishes no algorithm the profile marks the check as a warning.
+ * The check digits of organisation and VAT numbers, one function per algorithm, keyed by the names the country profiles use, each answering true or false.
+ * Notes: docs/engine-notes/contact-checks.md (Urd repository).
  */
 
 const digits = (s) => [...String(s)].map(Number);
@@ -45,8 +44,7 @@ export function mod97x10(str) {
 }
 
 /**
- * The common mod 11 family: the weighted sum of the digits before the check, r = sum mod 11, check = 11 - r, with the remainders 0 and 1 handled as the register says.
- * zero: the check for r = 0 ('0' or '1'); one: the check for r = 1 ('0', or null when such a number is never issued.
+ * The mod 11 family: r is the weighted digit sum mod 11 and the check 11 - r, or `zero` for r = 0 and `one` for r = 1 (null when such a number is never issued).
  */
 function mod11(num, weights, { zero = 0, one = null } = {}) {
   const d = digits(num);
@@ -101,7 +99,7 @@ export const CHECKS = {
     if (r === 10) r = pass(2);
     return r % 10 === d[len - 1];
   },
-  // The United Kingdom: the first seven digits weighted 8 to 2 plus the two check digits, a multiple of 97, or for numbers from 100 upwards a remainder of 42 (the 9755 series) or 55 (accepted by python-stdnum, unexplained, so a valid number is never refused).
+  // The United Kingdom: seven digits weighted 8 to 2 plus the two check digits are 0 mod 97, or 42 or 55 if the first three digits reach 100; other forms pass.
   'gb-vat': (n) => {
     if (!/^[0-9]{9}/.test(n)) return true;
     const d = digits(n).slice(0, 9);

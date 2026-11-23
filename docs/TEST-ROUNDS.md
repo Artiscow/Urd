@@ -2,6 +2,12 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.12): the shop, the footer, the contact details and SEO with short comments
+
+- [ ] The basket keeps its products across pages and the checkout sends the order as before; «Back to top» appears and works as before
+- [ ] The footer shows its designs, contact details, legal lines, links and call to action as before; the contact block and the collection views draw as before
+- [ ] A page's title, description and share picture in the page source are as before
+
 ### Test batch (0.7.37.3.11): the push, the migrations, the theme, the animations and the pinning with short comments
 
 - [ ] Blocks whose content grows push the blocks below as before, on the desktop and on a phone; a page from an older Urd opens as before

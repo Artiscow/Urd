@@ -1,9 +1,6 @@
 /**
- * Pure logic for the footer CTA's newsletter submission: email validation,
- * honeypot check, endpoint payload and mailto fallback. No DOM, no fetch (the
- * DOM and the fetch itself live in footer.js). The helpers mirror, but do not
- * import, the form block's form-model.js, so the footer's tests stand on their
- * own. Covered by tests/footer-cta.test.mjs.
+ * Pure logic for the footer's newsletter: the email and honeypot checks, the endpoint payload and the mailto fallback among them; no DOM, no fetch.
+ * Notes: docs/engine-notes/footer-cta.md (Urd repository).
  */
 import { t } from './i18n.js';
 
@@ -33,9 +30,7 @@ export function buildNewsletterPayload(email, extra = {}) {
 }
 
 /**
- * Mailto fallback when there is no endpoint. Null when the recipient is missing.
- * Spaces are encoded as %20 (URLSearchParams gives +), so email clients read the
- * subject and body correctly - the same trick as the form block's buildMailto.
+ * The mailto fallback when there is no endpoint, null without a recipient; spaces are encoded as %20, not +, as the form block's buildMailto does.
  * @param {string} recipient
  * @param {string} email
  * @returns {string|null}

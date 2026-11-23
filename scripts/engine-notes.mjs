@@ -309,7 +309,7 @@ export function applyShorts(module, src, shorts) {
 
 /** An AST without places, for comparing two texts' code. */
 function bare(src) {
-  return JSON.stringify(acorn.parse(src, PARSE), (key, value) => (key === 'start' || key === 'end' || key === 'loc' || key === 'range' ? undefined : value));
+  return JSON.stringify(acorn.parse(src, PARSE), (key, value) => (key === 'start' || key === 'end' || key === 'loc' || key === 'range' ? undefined : typeof value === 'bigint' ? `${value}n` : value));
 }
 
 function tokensOf(src) {

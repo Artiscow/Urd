@@ -1,14 +1,6 @@
 /**
- * The icon library: drawn SVG icons (social media, communication, symbols,
- * arrows) that the icon block can show instead of a glyph.
- * The icons are hand-drawn paths on a 24x24 grid, colored with currentColor
- * and scale crisply at every size (unlike emoji, which have fixed colors and
- * vary between platforms).
- *
- * The ids are data contract (stored in props.icon) and are therefore English;
- * the labels are looked up via labelKey (icon.*) with an English fallback
- * (ADR-0021). An unknown id must never topple anything: iconSvg returns null,
- * and the icon block falls back to the glyph.
+ * The icon library: SVG icons on a 24x24 grid in currentColor; the ids are English data contract (props.icon), and iconSvg returns null for an unknown one.
+ * Notes: docs/engine-notes/icons.md (Urd repository).
  */
 
 /** Icons are stroked by default; a few brand marks are filled shapes. */
@@ -80,10 +72,7 @@ export const ICON_LIBRARY = {
 };
 
 /** @type {Array<[string, string[]]>} Category names plus icon ids, in display order. */
-/* The category names are KEYS (looked up with ta() by the consumer; the module
-   sits in the visitor closure and can never call ta() at module level). The
-   ICON_LIBRARY labels are brand names used in visitor aria-labels and are never
-   translated. */
+/* The category names are dictionary keys, which the consumer looks up with ta(); this module never calls ta(). */
 export const ICON_CATEGORIES = [
   ['iconCat.social', ['facebook', 'instagram', 'x', 'linkedin', 'youtube', 'tiktok', 'whatsapp', 'snapchat', 'pinterest', 'spotify', 'discord', 'github']],
   ['iconCat.communication', ['mail', 'phone', 'smartphone', 'chat', 'send', 'globe', 'rss']],
@@ -93,9 +82,7 @@ export const ICON_CATEGORIES = [
 ];
 
 /**
- * Builds the complete SVG string for an icon, or null for an unknown id.
- * The size is set by the parent (width/height 100 %); the color is inherited
- * via currentColor.
+ * The SVG markup of an icon, or null for an unknown id: width and height 100 %, so the parent sets the size, and the colour from currentColor.
  * @param {string} id
  * @returns {string|null}
  */

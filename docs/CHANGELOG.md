@@ -8,6 +8,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.37.3.12 - The shop, the footer, the contact details and SEO load 4 KB lighter, and seven of the template's eight pages are under the 262 KB of the speed target, by the files - 23 November 2026
+
+- shop.js's 11 long comments, footer-model.js's 10, contact-model.js's 8, totop.js's 7, seo.js's 6, footer.js's 6, and those of links-model.js, collections.js, contact-checks.js, icons.js, footer-cta.js and contact-profiles.js, 67 in all, have short versions written by hand, their full text in docs/engine-notes/; every module the boot loads now keeps its comments short.
+- The template's pages load, by the files, 232 to 258 KB of JavaScript and CSS compressed, from 312 to 338 before 0.7.37.3.6, under the 262 KB the Done when names; hjem, which holds the calendars, 398, from 469.
+- The notes script stopped on a module holding a BigInt (contact-checks.js); it compares BigInts as their text.
+- BACKLOG's 0.7.37.7 holds the sections' backgrounds showing last (found while testing).
+
+The independent review before the commit found these:
+
+1. Eight short versions read wrong or left out a condition: totop.js's outline and clip, which change for a picture that fills the button, contact-model.js's normaliseId and organizationContact, contact-checks.js's gb-vat, shop.js's header and order payload, and footer-model.js's header. Each says what the code does.
+2. The title called the pages under the speed target, which measures layout shift and blocking time too; it names the 262 KB by the files. BACKLOG's forecast of 43 KB more off every page from 0.7.37.3.8 on is the 35 KB measured, and the list of comments that disagree with their code holds this batch's.
+
 ### 0.7.37.3.11 - The push, the migrations, the theme, the animations and the pinning load 9 KB lighter on every page - 23 November 2026
 
 - push-model.js's 35 long comments, migrate.js's 27, theme.js's 16, animations/core.js's 14, sticky.js's 11, and those of sticky-model.js, phone-order.js, shape-model.js, divider-model.js and doc-look.js, 134 in all, have short versions written by hand, their full text in docs/engine-notes/; the code is proven unchanged and the editor's bundle with it.

@@ -1,7 +1,6 @@
 /**
- * The site's «Back to top» button (0.7.13.14): an element of the site, set in the Site panel's «Back to top» button fold and stored in `site.layout.toTop`, with nothing stored for the standard, so a site that sets nothing shows the round button it always had.
- * The settings are read by toTopOf, a shaped design's outline is the owner's shape (shape-model.js) or the design's own drawn by toTopShape (toTopOutline, pure, node-tested), and renderToTop draws or updates the one button the page has (urd.js, at the start and as the editor sends the site).
- * The button scrolls to the page's top, smoothly only where motion is welcome; it shows after the scrolling the owner chose, and its look is set by classes and custom properties that base.css reads (.urd-totop).
+ * The site's «Back to top» button (`site.layout.toTop`): toTopOf reads its settings, and renderToTop draws or updates the one button the page has.
+ * Notes: docs/engine-notes/totop.md (Urd repository).
  */
 import { t } from './i18n.js';
 import { resolveColor } from './theme.js';
@@ -21,7 +20,7 @@ export const TOTOP_WORDED = ['pill', 'words'];
 /** The sizes, the first the standard, as the button's height in px; the phone takes its own or the desktop's. */
 export const TOTOP_SIZES = { m: 44, l: 56, xl: 68, xxl: 84 };
 
-/** How the words alone answer the mouse, as the menu's links do (nav.style.hover), the first the standard: the colour, an underline, a pill, a lift, or a lift with a glow. */
+/** How the words alone answer the mouse, as the menu's links do, the standard first: the colour, an underline, a pill, a lift, or a lift with a glow. */
 export const TOTOP_HOVERS = ['standard', 'underline', 'pill', 'liftPlain', 'lift'];
 
 /** How the words alone answer a touch on a phone, as the menu's links do (nav.style.mobile.press); none is the standard. */
@@ -104,7 +103,7 @@ export function toTopOf(site) {
 }
 
 /**
- * The shape a shaped design shows, as a shape's values: the owner's own, or without one the nearest to what the design draws by itself (the circle, the rounded square, and the waves of `waves` and `count`), which the shape window starts from.
+ * The shape a shaped design shows, as a shape's values: the owner's own, or else the nearest to the design's own outline with its waves.
  * @param {ReturnType<typeof toTopOf>} set
  * @returns {ReturnType<typeof shapeOf>}
  */
@@ -119,8 +118,7 @@ export function toTopShapeOf(set) {
 const RING_MARGIN = 4;
 
 /**
- * A shaped design's outline as an SVG path in the 100 by 100 box, and where its mark stands in it: the owner's shape where there is one, the mark at the shape's own middle or where the owner put it; else the design's own outline, the mark in the box's middle.
- * `whole` is the outline a picture filling the whole button is cut to, the ring's reaching the box's edge as the circle's does.
+ * A shaped design's outline as an SVG path in the 100 by 100 box, and where its mark stands: the owner's shape, else the design's; `whole` widens the ring's.
  * @param {ReturnType<typeof toTopOf>} set
  * @param {boolean} [whole]
  * @returns {{d: string, mark: [number, number]}}
@@ -142,8 +140,7 @@ export function toTopFillsWhole(set) {
 }
 
 /**
- * The outline the mark of a shaped design is cut to, as a CSS image of the shape in a 100 by 100 box (base.css draws it a little smaller, so the button keeps its edge); none for the pill and the words alone.
- * A picture that fills the whole button is cut to the whole box's outline, the ring's included, so it covers the ring's line.
+ * The outline a shaped design's mark is cut to, as a CSS image in a 100 by 100 box, the whole button's under a picture filling it; null for the pill and words.
  * @param {ReturnType<typeof toTopOf>} set
  * @returns {string|null}
  */
@@ -154,8 +151,7 @@ export function toTopClip(set) {
 }
 
 /**
- * The button's mark: its own picture, drawn icon or character, or the arrow.
- * A picture that fails to load gives way to what would stand without it, on the button's own shape where the picture filled it.
+ * The button's mark: its own picture, drawn icon or character, or the arrow; a picture that fails to load gives way to what would stand without it.
  * @param {ReturnType<typeof toTopOf>} set
  * @returns {HTMLElement}
  */
@@ -188,9 +184,7 @@ function markOf(set) {
 }
 
 /**
- * The outline of a shaped design in a 100 by 100 box, as an SVG path: a circle or a rounded square, its edge turned into waves by `waves` (0 to 100).
- * The waves grow deeper as the slider is dragged, and their crests narrow from round swells to points, so the far end of the slider draws a star; `count` waves stand round the edge, one crest pointing up.
- * The circle and the square fill the box, as the round button always has; the ring stands a little inside it, so its line is drawn whole. A smooth edge is drawn exactly (arcs for the circle, a rounded rectangle for the square).
+ * A shaped design's outline as an SVG path in a 100 by 100 box: a circle or rounded square, its edge turned into `count` waves by `waves` (0 to 100).
  * @param {string} design 'circle', 'square' or 'ring'
  * @param {number} [waves]
  * @param {number} [count]

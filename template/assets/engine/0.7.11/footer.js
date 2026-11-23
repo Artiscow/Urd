@@ -1,10 +1,6 @@
 /**
- * Shared footer: edited in ONE place (site.footer) and shown at the bottom of
- * every page. Additive field since v0.5. Two shapes: the simple one (text
- * lines only) and the rich one (brand, columns, social links, call to action,
- * baseline with links, background layers). Pure logic lives in footer-model.js
- * and footer-cta.js.
- * Both shapes show the site's contact details and the legal line (contact-model.js) once they are filled.
+ * The shared footer from site.footer, in a simple shape (text lines) or a rich one; both add the contact details and legal line when filled and not turned off.
+ * Notes: docs/engine-notes/footer.md (Urd repository).
  */
 
 import { resolveColor } from './theme.js';
@@ -37,11 +33,7 @@ import {
 const FOOTER_REL = ['noopener', 'noreferrer'];
 
 /**
- * Full layered background (additive since v0.6, shared with sections and nav):
- * a backdrop behind the footer content with the same layer stack as sections.
- * Prepended into .urd-footer-inner so it sits behind the wrap/baseline.
- * Returns true when layers were drawn, in which case the rich shape skips the
- * plain footer.bg color.
+ * Prepends a backdrop with the footer's background layers to the inner element; true when it drew layers, and the rich shape then skips footer.bg.
  */
 function mountFooterBg(footer, inner) {
   const bg = footer.background;
@@ -87,11 +79,7 @@ function buildLinks(links, className) {
 }
 
 /**
- * The newsletter form: email field + hidden honeypot + button, submitted with
- * fetch to a configured endpoint (inline confirmation, no page load). Without
- * an endpoint it falls back to mailto. Mirrors the form block's submission
- * on the pure footer-cta.js. In preview nothing is sent, only the
- * confirmation is shown.
+ * The newsletter form (email, hidden honeypot, button), sent with fetch to the endpoint or by mailto without one; the editor preview sends nothing.
  */
 function buildNewsletterForm(cta) {
   const form = document.createElement('form');
@@ -233,7 +221,7 @@ function buildBrandIdentity(brand) {
   return el;
 }
 
-/** The legal line as text: «Apeiron Linjeforening · Org.nr. 974 760 673 MVA · Foretaksregisteret», the representative with the visitor language's title; the contact block writes the same. */
+/** The legal line as one text, its parts joined by « · » and the representative titled in the visitor's language; the contact block writes the same. */
 export function legalText(parts) {
   return parts.map((p) => {
     if (p.kind === 'representative') return `${t('contact.representative')}: ${p.text}`;
@@ -242,8 +230,7 @@ export function legalText(parts) {
 }
 
 /**
- * The contact details as an <address>: the address, then the phone and the email, each a link when it is usable.
- * In a column the address keeps its lines together in one item; inline (the plain and the big call-to-action builds) it is one line, «Street 1, 7030 Town».
+ * The contact details as an <address>: the address lines in one span, comma-joined when inline, then the phone and email, each a link when it has an href.
  */
 function buildContactAddress(parts, className, inline) {
   const address = document.createElement('address');
@@ -287,9 +274,7 @@ export function renderFooter(site, host, pageId) {
   const legal = footerLegal(site);
   const privacy = footerPrivacyLink(site);
 
-  // On, but with no content: a visible yet COMPLETELY empty footer. No text,
-  // no placeholder, no page title; it fills up once something is entered in
-  // the Footer panel. (show off gives no footer at all, handled above.)
+  // On but with no content: a visible footer without any text, placeholder or page title until something is entered in the Footer panel.
   if (!rich && !baseline.length && !contact && !legal && !privacy) {
     host.style.display = '';
     const inner = document.createElement('div');

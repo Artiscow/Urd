@@ -1,18 +1,12 @@
 /**
- * The site's links (site.links, from 0.7.0.52): the owner's own addresses
- * with an icon, registered once in the admin's Site panel and drawn by the
- * footer, the menu's tools and the links block. Pure and node-tested; the
- * DOM is built where each is drawn.
+ * The site's links (site.links): the owner's own addresses, drawn by the footer, the menu's tools and the links block; pure, no DOM.
+ * Notes: docs/engine-notes/links-model.md (Urd repository).
  */
 import { isSafeHref, isSafeImage } from './nav-model.js';
 import { ICON_LIBRARY, iconSvg } from './icons.js';
 
 /**
- * One link, validated: an icon from the library or an own image, a label
- * and a safe address (http(s), mailto, tel, or a path or anchor of the site,
- * the block href's rule). Null when it cannot be drawn. The label falls back to
- * the icon's brand name, then to the address, so every link has an
- * accessible name.
+ * One validated link, or null when it cannot be drawn: a library icon or own image, a safe address (isSafeHref) and a label (else the icon's, else the address).
  * @param {object} raw
  * @returns {{id: string, icon: string, image: string, label: string, url: string}|null}
  */
@@ -34,10 +28,7 @@ export function siteLinks(file) {
 }
 
 /**
- * The links a links block draws: the site's (unless the block leaves them
- * all out with `useSite: false`, or some of them by id in `hidden`) followed
- * by the block's own, so an extra link that belongs to one block alone never
- * shuts the site's out.
+ * The links a links block draws: the site's (none with `useSite: false`, else all but those `hidden` lists by id), then the block's own.
  */
 export function blockLinks(props, file) {
   const own = (Array.isArray(props?.links) ? props.links : []).map(linkEntry).filter(Boolean);
@@ -47,9 +38,7 @@ export function blockLinks(props, file) {
 }
 
 /**
- * The link's picture as markup: the library's drawn SVG, or the own image
- * (a safe source, quoted for the attribute) with an empty alt, since the
- * link carries the name.
+ * The link's picture as markup: the library's SVG, or the own image, its source quoted, with an empty alt since the link carries the name.
  */
 export function linkIconHtml(link) {
   if (link.icon) return iconSvg(link.icon) ?? '';
@@ -62,9 +51,7 @@ export function leavesSite(url) {
 }
 
 /**
- * The site migration 4 -> 5: the footer's social links (footer.social, the
- * icon and the address) become the site's links with the icon's brand name
- * as the label, and the footer field is dropped. Pure: the file is cloned.
+ * Site migration 4 -> 5 on a clone: footer.social's entries with an icon join the site's links, labelled by the icon's label or id; footer.social is dropped.
  */
 export function liftFooterSocial(file) {
   const social = Array.isArray(file?.footer?.social) ? file.footer.social : null;

@@ -38,14 +38,12 @@ const PENDING = new Set([
   'blocks/faq.js', 'blocks/form.js', 'blocks/gallery.js', 'blocks/icon.js', 'blocks/image.js', 'blocks/map.js',
   'blocks/privacy.js', 'blocks/product.js', 'blocks/quote.js', 'blocks/ribbon.js', 'blocks/shape.js',
   'blocks/share.js', 'blocks/spacer.js', 'blocks/stats.js', 'blocks/table.js', 'blocks/text.js', 'blocks/timeline.js',
-  'blocks/video.js', 'box-style.js', 'calendar-designs.js', 'calendar-format.js', 'collections.js',
-  'contact-checks.js', 'contact-model.js', 'contact-profiles.js',
-  'embed-cover.js', 'footer-cta.js', 'footer-model.js', 'footer.js', 'form-model.js', 'gallery-layout.js',
-  'gallery-model.js', 'icons.js', 'ics.js', 'links-model.js',
+  'blocks/video.js', 'box-style.js', 'calendar-designs.js', 'calendar-format.js',
+  'embed-cover.js', 'form-model.js', 'gallery-layout.js',
+  'gallery-model.js', 'ics.js',
   'map-links.js', 'meeting-links.js', 'osm.js',
   'photo-source.js', 'picture.js', 'privacy-model.js',
-  'ribbon-model.js', 'sanitize.js', 'seo.js', 'shop.js',
-  'totop.js',
+  'ribbon-model.js', 'sanitize.js',
 ]);
 
 const source = (module) => readFileSync(new URL(module, ENGINE_DIR), 'utf8');
