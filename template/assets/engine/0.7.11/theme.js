@@ -1,13 +1,6 @@
 /**
- * Maps theme.tokens from site.json to CSS variables on :root.
- * tokens.color.bg → --urd-color-bg, tokens.font.heading → --urd-font-heading, etc.
- *
- * The light/dark toggle: if the theme has an `alt` field, the site exists
- * in two modes. `theme.scheme` says what the MAIN theme is (light/dark,
- * default light); alt tokens override the main tokens in the opposite mode.
- * A first visit follows prefers-color-scheme; an active choice made with
- * the toggle (in the nav) is remembered in localStorage and wins on the
- * next visit.
+ * Maps the theme's tokens to `--urd-<group>-<name>` on :root; a theme with `alt` has a light and a dark mode, a stored toggle choice winning over the OS's.
+ * Notes: docs/engine-notes/theme.md (Urd repository).
  */
 
 /** localStorage key for the visitor's active choice ('light'/'dark'). */
@@ -31,10 +24,7 @@ export function resolveThemeMode(scheme, stored, prefersDark) {
 }
 
 /**
- * Pure token selection for a mode: the main tokens, overridden group by
- * group with the alt tokens when the mode is the opposite of the main
- * theme's scheme. Without an alt theme the main tokens are returned
- * regardless of mode.
+ * A mode's tokens: the main ones, overridden group by group by the alt tokens when the mode is opposite the main scheme; without alt, the main ones.
  * @param {{tokens: object, scheme?: string, alt?: {tokens: object}}} theme
  * @param {'light'|'dark'} mode
  * @returns {Record<string, Record<string, string>>}
@@ -56,8 +46,7 @@ function readStoredMode() {
 }
 
 /**
- * The theme's «Long words» (`theme.words`, ADR-0034) as the CSS variables a text block's words read (base.css): kept whole, the standard, or hyphenated at the page's language and broken where a word still does not fit.
- * Both ways are written outright, so the draft's choice in the editor's theme style wins over a theme.css published with the other.
+ * The theme's «Long words» (`theme.words`, ADR-0034) as CSS variables: kept whole, the standard, or hyphenated and broken where a word still does not fit.
  * @param {{words?: string}|null|undefined} theme
  * @returns {Record<string, string>}
  */
@@ -71,20 +60,13 @@ function applyTokens(tokens, root) {
   for (const [group, values] of Object.entries(tokens)) {
     for (const [name, value] of Object.entries(values)) {
       root.style.setProperty(`--urd-${group}-${name}`, value);
-      // Base copy of the color tokens: the sections' role sets reference
-      // these (--urd-base-*) instead of the live --urd-color-*, so a role
-      // that swaps bg<->text does not create a var() cycle (see SECTION_THEMES).
+      // A base copy of each colour token (--urd-base-*) for the section role sets to read, so a role that swaps bg and text makes no var() cycle.
       if (group === 'color') root.style.setProperty(`--urd-base-${name}`, value);
     }
   }
 }
 
-/* Anchored allowlist for a CSS token value (a CodeQL-friendly barrier): only
-   characters that occur in colors/lengths/font stacks. The char class excludes
-   ; { } < > : @, and url()/comments/expression are rejected explicitly.
-   Invalid tokens are dropped, so a logged-in publisher cannot inject arbitrary
-   CSS through the theme (buildThemeCss writes raw text, not via
-   style.setProperty which rejects silently). */
+/* Anchored allowlist (a CodeQL barrier) of colour, length and font stack characters, never ; { } < > : @; safeCssValue refuses url(), comments and expression too. */
 const SAFE_CSS_VALUE = /^[a-zA-Z0-9#%.,()'"\s+\-*/]+$/;
 /** A theme group's or token's name as it may stand in a custom property's name. */
 const SAFE_CSS_NAME = /^[a-z0-9-]+$/i;
@@ -95,13 +77,7 @@ export function safeCssValue(value) {
 }
 
 /**
- * Builds a static CSS string that sets the theme's color tokens as
- * light-dark(light, dark) behind @supports, with a single-value fallback
- * (the main theme) for older browsers. Materialized into content/theme.css
- * at publish time and loaded render-blocking, so the first paint has the
- * site's actual colors without FOUC. color-scheme follows the OS; a manual
- * choice overrides via [data-urd-theme] (light-dark() picks its side from
- * the computed color-scheme). Pure function, reuses activeTokens.
+ * The theme as static CSS (content/theme.css at publish), including the main tokens as single values and the colours that differ by mode as light-dark().
  * @param {{tokens: object, scheme?: string, alt?: {tokens: object}}} theme
  * @returns {string}
  */
@@ -117,7 +93,7 @@ export function buildThemeCss(theme) {
 
   const groups = new Set([...Object.keys(main), ...Object.keys(light), ...Object.keys(dark)]);
   for (const group of groups) {
-    // A group's and a token's name become part of a property's name in the CSS text, so only letters, digits and dashes pass: anything else could end the rule and write others.
+    // A group's and a token's name become part of a property name in the CSS text, so only letters, digits and dashes pass.
     if (!SAFE_CSS_NAME.test(group)) continue;
     const isColor = group === 'color';
     const names = new Set([
@@ -143,15 +119,9 @@ export function buildThemeCss(theme) {
     }
   }
 
-  // Without a dark variant (alt) the site is one theme: lock color-scheme
-  // to it, no light-dark() and no toggle. With a variant, color-scheme
-  // follows the OS and light-dark() carries both sets; a manual choice
-  // overrides via [data-urd-theme].
+  // Tokens that differ by mode give color-scheme 'light dark', which a manual choice overrides via [data-urd-theme]; else it is locked to the main scheme.
   const hasDual = dualColor.length > 0 || altNonColor.length > 0;
-  // Text on accent surfaces without an accent-text token: today's effective
-  // value (the background colour) is written out so the section roles never
-  // read an undefined base, and modern browsers let contrast-color() choose
-  // black or white against the accent instead. An owner-set token is kept.
+  // With an accent and no accent-text token, the bg colour stands as accent-text for the role sets, and contrast-color() replaces it where supported.
   const hasAccentText = [main, light, dark].some((t) => safeCssValue(t.color?.['accent-text']));
   const wantsContrast = !hasAccentText && safeCssValue(main.color?.accent);
   if (wantsContrast && safeCssValue(main.color?.bg)) {
@@ -206,10 +176,7 @@ export function applyTheme(theme, root = document.documentElement) {
     window.matchMedia('(prefers-color-scheme: dark)').matches,
   );
   if (supportsLightDark()) {
-    // Modern path: the CSS carries light-dark(). Inject the draft's/site's
-    // tokens as a <style> (so preview and live changes work), and let a
-    // stored choice override the OS via data-urd-theme. No inline
-    // --urd-color-* (it would clobber light-dark()).
+    // With light-dark(), the theme's CSS goes into <style id="urd-theme">, and a stored choice overrides the OS via data-urd-theme; no inline --urd-color-*.
     const doc = root.ownerDocument || document;
     let style = doc.getElementById('urd-theme');
     if (!style) {
@@ -269,9 +236,7 @@ function sameBeside(a, b, skip) {
 }
 
 /**
- * Whether a site differs from the one before it in the theme's colours alone: its colour tokens, its dark variant's, its colour sets and its scheme, which the theme's CSS carries to the page by itself (urd.js draws nothing again for such a change, the theme alone).
- * The dark variant appearing or going is no such change: the nav's light and dark toggle and the privacy page follow it; nor is a site sent unchanged, which is sent to be drawn again.
- * Compared by a walk that stops at the first difference, so a site holding unpublished pictures is never written out as text.
+ * Whether a site differs from the one before only in theme colours (colour tokens, alt's too, colour sets, scheme); false if unchanged or `alt` comes or goes.
  * @param {object|null} before
  * @param {object|null} after
  */
@@ -287,9 +252,7 @@ export function onlyColoursChanged(before, after) {
 }
 
 /**
- * Resolves a color value from content to CSS. Simple names ('accent', 'bg')
- * are interpreted as theme tokens and become var(--urd-color-<name>);
- * anything else ('#7c5cff', 'rgb(...)') is used raw.
+ * A colour from content as CSS: a simple name ('accent', 'bg') becomes var(--urd-color-<name>), anything else ('#7c5cff', 'rgb(...)') stays raw.
  * @param {string} value
  * @returns {string}
  */
@@ -298,11 +261,7 @@ export function resolveColor(value) {
 }
 
 /**
- * Ready-made section themes (role sets): a role overrides the section's
- * color tokens. The values reference the BASE copies (--urd-base-*, set by
- * applyTokens), not the live --urd-color-*, so a role that swaps bg<->text
- * (inverse) does not create a var() cycle, and light/dark follows along by
- * itself. The blocks inherit the overrides via resolveColor -> var(--urd-color-*).
+ * The section role sets, overriding a section's colour tokens with values that read --urd-base-*, so a role that swaps bg and text makes no var() cycle.
  */
 export const SECTION_THEMES = {
   surface: {
@@ -346,9 +305,9 @@ export const SECTION_THEMES = {
   },
 };
 
-/** Display-name KEYS for the section-theme picker (Standard is "no role"):
- *  the ta lookup happens at the consumer; this module lives in the visitor
- *  closure and can never call ta() at module level. */
+/**
+ * Translation keys for the section-theme picker's names (Standard is no role), looked up with ta() where they are shown, never at module level.
+ */
 export const SECTION_THEME_LABELS = {
   surface: 'sectionTheme.surface',
   accent: 'sectionTheme.accent',
@@ -373,9 +332,7 @@ export function sectionThemeVars(role) {
 }
 
 /**
- * Applies (or resets) a section's role set on an element. Resets ALL
- * possible role keys first, so switching role (or back to Standard) on an
- * incremental rerender never leaves the previous role's overrides behind.
+ * Applies a section's role set on an element, removing every role key the role does not set, so a switch of role never leaves the last one's overrides.
  * @param {HTMLElement} host
  * @param {string|undefined} role
  */
@@ -412,8 +369,7 @@ const INK_ON_TOKEN = { accent: 'var(--urd-color-accent-text)', text: 'var(--urd-
 const INK_DARK = '#14161c';
 
 /**
- * A text colour that reads on a colour the owner picked: dark or light by the colour's brightness, or the theme's own pair for a theme colour.
- * Null when the colour cannot be measured (a colour-mix, a name), and the caller keeps its own.
+ * A text colour that reads on a picked colour: the theme's pair for accent, text, bg or surface, else the dark ink or white; null where it is not a hex colour.
  * @param {string} value A hex colour or a theme colour name
  * @returns {string|null}
  */

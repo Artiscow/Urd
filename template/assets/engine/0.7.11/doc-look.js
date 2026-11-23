@@ -1,15 +1,13 @@
 /**
- * Documents: the designs a long text is drawn in (the privacy page, blocks/privacy.js, and the terms of sale, the terms block in blocks/text.js) and the look the owner sets on them.
- * A design is the layout (a long read, contents at the side, the main points at a glance, questions that fold out, the privacy page's ledger as a table or as cards, numbered clauses); the look is the accent, the headings' colour, the cards' colour, the lines between the parts, the corners and the fonts, written as CSS custom properties base.css draws with.
- * The stored text is never restructured: a design's parts, contents and numbers are drawn from the text's own headings, so a text keeps its words whatever design it is shown in.
- * Pure helpers beside the DOM ones; tests/doc-look.test.mjs holds the pure ones.
+ * Documents: the designs a long text is drawn in (the privacy page, the terms of sale) and the look the owner sets on them; the stored text is never restructured.
+ * Notes: docs/engine-notes/doc-look.md (Urd repository).
  */
 import { t } from './i18n.js';
 
 /** The privacy page's designs, in the picker's order; the first is the one a block without a choice is drawn in. */
 export const PRIVACY_DESIGNS = ['long', 'contents', 'glance', 'questions', 'ledger', 'ledger-cards'];
 
-/** The designs a text is drawn in: plain text, the way every text block is drawn, and the document designs the terms of sale take. A text block from before page v8 that stood in a document design is a terms block (migrate.js liftTermsBlocks). */
+/** The designs a text is drawn in: plain text, the way every text block is drawn, and the document designs the terms of sale take. */
 export const TEXT_DESIGNS = ['plain', 'long', 'contents', 'glance', 'questions', 'clauses'];
 
 /** The terms of sale's designs, in the picker's order; the first is the one a block without a choice is drawn in. */
@@ -76,10 +74,7 @@ export function docLookVars(props) {
 }
 
 /**
- * Which look settings a design draws, so the menu shows only those (the rest would change nothing).
- * Every document design has an accent, a heading colour and a heading font; the privacy page has its text font too, and its choices card in every design.
- * The lines are the accent rule over each part (the long read, the contents, the main points, the ledger) or the line between the questions; numbered clauses have none.
- * Cards are the main points, the phone's contents row, the ledger's rows on a phone and the privacy page's choices; a text's withdrawal form (`data-urd-form`) is a card in every document design.
+ * Which look settings a design draws, so the menu shows only those; every document design draws an accent, a heading colour and a heading font.
  * @param {'privacy'|'terms'|'text'} type
  * @param {string} design
  * @param {{html?: string}} [props]
@@ -104,7 +99,7 @@ export function docLookSettings(type, design, props = {}) {
 }
 
 /**
- * Writes a document's design and look onto its root: the design as `data-design`, the lines taken away as `data-rules="off"`, the contents on the right as `data-side="right"`, the document centred in its block as `data-align="center"`, which it is unless set to the left (with the contents, the text centred between them and the block's other edge, in a block wide enough), the look as custom properties.
+ * Writes onto a document's root its design, lines, contents side and placement (centred unless set to the left) as data attributes, its look as custom properties.
  * @param {HTMLElement} root
  * @param {string} design
  * @param {object} props
@@ -122,8 +117,7 @@ export function applyDocLook(root, design, props) {
 }
 
 /**
- * The contents of a document, from its headings: a list beside the text, and the same list folded into one row for a narrow block (base.css shows one or the other by the document's own width).
- * Each heading gets an id the list links to, so a link is a plain jump the page's own scrolling shapes; the part the reader is in is marked as they scroll.
+ * The contents of a document from its headings: a list beside the text and the same list folded into one row, each heading given an id its links jump to.
  * @param {HTMLElement[]} headings The parts' headings, in order
  * @param {string} prefix The ids' prefix, unique on the page (the block's id)
  * @returns {{nav: HTMLElement, fold: HTMLElement}}
@@ -164,8 +158,7 @@ export function buildContents(headings, prefix) {
 }
 
 /**
- * Marks the part the reader is in: the last heading that has passed the upper third of the window.
- * An IntersectionObserver for the logic (ADR-0011); without one the list stands without a mark.
+ * Marks the part the reader is in: the last heading that has reached the upper third of the window, by an IntersectionObserver; without one, no mark.
  * @param {HTMLElement} nav
  * @param {HTMLElement[]} headings
  */
@@ -201,8 +194,7 @@ function watchCurrent(nav, headings) {
 }
 
 /**
- * The parts of a text drawn as questions that fold out, for a visitor: each heading and what follows it, up to the next heading, in a <details> that opens one at a time, the first open.
- * Only on the published page: in the editor the text is typed into, so every part stands open there and the stored text keeps its own shape.
+ * A text's parts as questions that fold out: each `h2` and what follows it up to the next, in `<details>` sharing one name so one opens at a time, the first open.
  * @param {HTMLElement} content The text's element
  * @param {string} name The group's name, unique on the page
  */
@@ -230,8 +222,7 @@ export function foldParts(content, name) {
 }
 
 /**
- * A print button under each withdrawal form in a text (`data-urd-form`), which prints the form alone (base.css, html.urd-print-form).
- * Only on the published page, so the stored text never holds a button.
+ * Adds under each withdrawal form in a text (`data-urd-form`) a button that prints the form alone (base.css, html.urd-print-form).
  * @param {HTMLElement} content
  */
 export function addFormPrint(content) {

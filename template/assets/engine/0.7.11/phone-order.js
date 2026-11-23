@@ -1,10 +1,6 @@
 /**
- * The order of a section's blocks on the phone, in the row grid (ADR-0019): pure, node-tested (tests/phone-order.test.mjs).
- * The section's rule (`phoneOrder`) reads its blocks top first, by their top on the desktop (or the key `mobileOrder` a preset gives them), or column by column where blocks stand beside each other on the desktop, the left or the right column first.
- * A block's exception (`phonePlace`) puts it directly before or after another block, wherever the rule puts that one.
- * A stack (`phoneStacks`) holds blocks that read as one, standing where the first of them in the rule's order stands, its first block's exception moving it whole; a custom order (`phoneList`) holds the order as listed, a block missing from it joining where the rule and the exceptions put it.
- * A block the owner took out of the rule's columns (`phoneLoose`) reads where the rule puts it, on its own: the column it stands in on the desktop no longer holds it.
- * The editor's moves (the list, the arrows) are reckoned in phone-moves.js.
+ * The order of a section's blocks on the phone in the row grid (ADR-0019): the section's rule, its stacks, each block's exception and a custom order; pure.
+ * Notes: docs/engine-notes/phone-order.md (Urd repository).
  */
 
 /** The section's rules, the first the standard. */
@@ -43,8 +39,7 @@ const setupFrom = (setup) => (setup && typeof setup === 'object'
   : { rule: PHONE_ORDERS.includes(setup) ? setup : 'top', list: null, stacks: [], loose: [] });
 
 /**
- * The blocks read column by column: a band holds the blocks whose heights overlap on the desktop, one after another; a column inside a band the blocks whose widths overlap there.
- * Bands close below each other (PHONE_JOIN_GAP) with columns that line up, one to one, stand as one grid, so a card of an icon over a text is one column even where the two do not overlap in height, while two rows of cards, or a zig-zag of text and picture, stay rows.
+ * The blocks read column by column: bands by overlapping heights, columns in a band by overlapping widths, close bands whose columns line up joined as one grid.
  * @param {object[]} blocks
  * @param {'left'|'right'} side Which column is read first
  * @returns {{order: object[], columns: string[][]}} The order, and the columns of two blocks or more in grids of two columns or more, by their ids
@@ -124,8 +119,7 @@ function placeOf(block, ids) {
 }
 
 /**
- * The rule's order with each exception moved before or after its block.
- * Blocks placed against the same block keep the rule's order among themselves; a block placed against one that is placed itself follows it there; a ring of exceptions keeps the rule's places.
+ * The rule's order with each exception moved before or after its block; a ring of exceptions keeps the rule's places.
  * @param {object[]} base The rule's order
  * @returns {{list: object[], placed: Set<string>}} The order, and the blocks whose exception holds in it
  */
@@ -172,8 +166,7 @@ function withExceptions(base) {
 }
 
 /**
- * The blocks the phone shows in the rule's order, before the exceptions, and the rule's columns.
- * A block shown on phones only stands nowhere on the desktop, so it shapes no column: it joins the columns' order before the first block whose key is its own or greater.
+ * The blocks the phone shows in the rule's order, before the exceptions, and the rule's columns; a block shown on phones only shapes no column.
  */
 function ruleOrder(blocks, rule) {
   const shown = (blocks ?? []).filter((block) => !block.hideMobile && block.frames?.desktop);
@@ -204,8 +197,7 @@ function listed(units, ids) {
 }
 
 /**
- * The phone order and what it is made of: the rule's order, the stacks as units, the exceptions, and the custom order.
- * Blocks placed by hand (frames.mobile with a row) are included, in the same order: auto-placement skips them, but the DOM order carries the read-aloud order.
+ * The phone order and what it is made of: the rule's order, the stacks as units, the exceptions and the custom order; blocks placed by hand are included.
  * @param {object[]} blocks The section's blocks
  * @param {string|{rule: string, list?: string[]|null, stacks?: string[][], loose?: string[]}} [setup] The section's rule, or its setup (phoneSetupOf)
  * @returns {{order: object[], placed: Set<string>, stacks: string[][], columns: string[][]}} The order; the blocks whose exception holds in it (a stack's first block for the stack); the stacks as they hold, each of two blocks or more; and the rule's columns, without the blocks taken out of them
@@ -246,7 +238,7 @@ export function phoneParts(blocks, setup = 'top') {
 }
 
 /**
- * The reading order in the row grid: the blocks the phone shows (not hidden there), by the section's rule, its stacks, each block's exception and its custom order.
+ * The reading order in the row grid: the blocks the phone shows, by the section's rule, its stacks, each block's exception and its custom order.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} [setup] The section's rule, or its setup (phoneSetupOf)
  * @returns {object[]}

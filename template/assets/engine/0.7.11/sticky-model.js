@@ -1,13 +1,6 @@
 /**
- * Pure state logic for sticky blocks ("pin on scroll"): given the scroll
- * position and document measurements, decides whether the block stays in
- * its normal absolute position (static), pins at the window top (fixed)
- * or parks at the release limit (parked). The DOM work lives in
- * sticky.js; this module is DOM-free and contract-tested in
- * tests/sticky.test.mjs.
- *
- * Pinning is positioning, not animation (no transitions), so
- * prefers-reduced-motion needs no special handling here.
+ * Pure, DOM-free logic for sticky blocks: whether a block stays, pins or parks at its release limit, and the geometry of groups and screen docks.
+ * Notes: docs/engine-notes/sticky-model.md (Urd repository).
  */
 
 /**
@@ -26,9 +19,7 @@
  *   until points at a later section; sections never clip).
  */
 /**
- * Bounding box for a group of pinned blocks. The group pins and releases
- * as ONE unit, and each member keeps its place inside the box, instead of
- * all of them piling up at the window top.
+ * The bounding box of a group of pinned blocks: the group pins and releases as one unit, each member keeping its place inside the box.
  * @param {Array<{x: number, y: number, w: number, h: number}>} items
  * @returns {{x: number, y: number, w: number, h: number}}
  */
@@ -41,10 +32,7 @@ export function groupBox(items) {
 }
 
 /**
- * Screen docking ("pin to screen"): the box is placed at one of nine anchor
- * points in the window and stays there regardless of scrolling. The margin
- * applies only to the edges the box docks to; center axes are centered and
- * ignore it.
+ * Screen docking: places the box at one of nine anchor points in the window; the margin applies only to the edges it docks to, and centered axes ignore it.
  * @param {string} dock 'top-left' … 'bottom-right' (vertical-horizontal)
  * @param {number} margin distance from the docked edges in px
  * @param {{w: number, h: number}} box the box measurements in px
@@ -78,10 +66,7 @@ function viewInset(view) {
 }
 
 /**
- * The nearest dock point for a box dropped in the window: the center point
- * decides in a three-way grid (left/center/right x top/middle/bottom).
- * The keys match the schema's dock enum (the middle row is 'middle').
- * Pure function, tested in tests/sticky.test.mjs.
+ * The dock key nearest a box dropped in the window: its center picks a cell in a three-by-three grid, keyed as the schema's dock enum (middle row 'middle').
  * @param {{left: number, top: number, w: number, h: number}} box the box in window px
  * @param {{w: number, h: number, inset?: {top?: number, left?: number, right?: number}}} view the window
  *   measurements in px, with the menu's band as in dockPosition: the thirds are of the free area
@@ -115,8 +100,7 @@ export function stickyState(scrollY, m) {
 }
 
 /**
- * Whether a block pins on the phone (`sticky.phone`, additive from 0.7.3.10): pinned while the page scrolls, and chosen for the phone too, where it stays in view below the menu while its own section scrolls past.
- * A block docked to the screen docks on every screen without it.
+ * Whether a block pins while scrolling on the phone: scroll mode, `sticky.phone` true and a numeric `offset`; docking to the screen needs no `phone`.
  * @param {object|null|undefined} sticky The block's `sticky`
  * @returns {boolean}
  */
@@ -125,7 +109,7 @@ export function pinsOnPhone(sticky) {
 }
 
 /**
- * The holder of a group pinned on the phone (render.js placeStuck): it spans the group's slots in the row grid, from the highest top to the lowest foot, and each block stands at its slot's distance below the holder's top, so the group keeps its placement as it does on the desktop (groupBox).
+ * The holder of a group pinned on the phone: it spans the group's slots from the highest top to the lowest foot, with each block's offset from the holder's top.
  * @param {Array<{top: number, h: number}>} slots The slots' tops in the row grid and the blocks' heights, in reading order
  * @returns {{top: number, height: number, tops: number[]}}
  */
@@ -137,7 +121,7 @@ export function stuckBox(slots) {
 }
 
 /**
- * The `sticky` that speaks for each pinning group on the phone: the group's first block in the section's own order, as on the desktop, among the blocks the phone shows; a block without a group speaks for itself.
+ * The `sticky` that speaks for each pinning group on the phone: its first block the phone shows, in section order; a block without a group speaks for itself.
  * @param {Array<{id: string, sticky?: object|null, hideMobile?: boolean}>} blocks The section's blocks, in the section's order
  * @returns {Map<string, object>} The lead's `sticky` by group key (`sticky.group`, or `solo-<id>`)
  */

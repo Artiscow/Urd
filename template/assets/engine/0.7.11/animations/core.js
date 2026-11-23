@@ -1,15 +1,6 @@
 /**
- * Core animations. Registry types with the same version+migrate contract as
- * blocks and background layers (docs/SCHEMA.md): an Urd update can change an
- * animation's props safely via migrations.
- *
- * The entrance animations (fade-in, slide-up, zoom-in) play when the element
- * scrolls into view for visitors (IntersectionObserver). In the editor preview
- * the END state is shown: editing must not trigger endless playback.
- * prefers-reduced-motion is respected (the CSS in base.css zeroes it out too).
- *
- * All the CSS lives in base.css (.urd-anim-*): the definitions here only set
- * classes and duration/delay as CSS variables.
+ * Core animations: version+migrate registry types, applied as `.urd-anim-*` classes (CSS in base.css); entrances play when scrolled into view.
+ * Notes: docs/engine-notes/animations/core.md (Urd repository).
  */
 
 const entranceDefaults = () => ({ duration: 600, delay: 0 });
@@ -23,12 +14,7 @@ export const coreAnimations = {
   'slide-up': { version: 1, label: 'Slide up', labelKey: 'anim.slideUp', entrance: true, defaults: entranceDefaults, migrations: {} },
   'zoom-in': { version: 1, label: 'Zoom in', labelKey: 'anim.zoomIn', entrance: true, defaults: entranceDefaults, migrations: {} },
   'hover-lift': { version: 1, label: 'Lift on pointer', labelKey: 'anim.hoverLift', entrance: false, defaults: () => ({}), migrations: {} },
-  // Stagger is a GROUP entrance animation (section level only): it does not
-  // animate the section itself, but releases the section's card blocks staggered
-  // from ONE shared trigger. pattern: 'sequence' (one step per card), 'columns'/
-  // 'rows' (cards on the same x/y arrive together, the wave moves sideways) or
-  // 'center' (outwards from the middle of the row). delay is a shared base delay
-  // (additive since v0.6; older data lacks the field and reads as 0).
+  // Stagger, a section-level group entrance: releases the section's card blocks staggered by `pattern` from one shared trigger, after a base `delay`.
   stagger: {
     version: 1, label: 'Stagger (card group)', labelKey: 'anim.stagger', entrance: true, group: true,
     defaults: () => ({ duration: 600, delay: 0, step: STAGGER_STEP, effect: 'slide-up', pattern: 'sequence' }),
@@ -39,13 +25,7 @@ export const coreAnimations = {
 const STAGGER_EFFECTS = ['fade-in', 'slide-up', 'zoom-in'];
 
 /**
- * The pointer effect a block plays: its own, else the one its section gives
- * every element in it (`blocksHover`, additive from 0.7.0.87), which a decor
- * block never takes (decor is ornament, as the stagger leaves it out). A
- * block with an effect of its own, in `hover` or in `animation` as older
- * pages store it, keeps its own. `hover: false` (additive from 0.7.0.88) is
- * a block's «None» where its section gives one: no effect at all, not even
- * the section's. Pure function (node-tested).
+ * A block's pointer effect: its own `hover`, else its section's `blocksHover`, unless the block is decor, has `hover: false` or keeps one in `animation`.
  * @param {object} block
  * @param {object|null|undefined} section
  * @param {(type: string) => boolean} isPointer Whether an animation type is a pointer effect rather than an entrance
@@ -60,8 +40,7 @@ export function pointerEffectOf(block, section, isPointer) {
 }
 
 /**
- * The animation a block plays on this screen from its `animation` field: its own, except an entrance switched off on the phone (`entranceMobile: false`, additive from 0.7.3.8), which leaves the block standing in its end state at phone width.
- * A pointer effect an older page keeps in `animation` is no entrance and stays. Pure function (node-tested).
+ * The block's `animation` on this screen: null for an entrance switched off on the phone (`entranceMobile: false`), while a pointer effect stays.
  * @param {object} block
  * @param {'desktop'|'mobile'|undefined} viewport
  * @param {(type: string) => boolean} isPointer Whether an animation type is a pointer effect rather than an entrance
@@ -75,9 +54,7 @@ export function entranceOf(block, viewport, isPointer) {
 }
 
 /**
- * Delays (ms) for column/row stagger: positions are clustered with a tolerance
- * (cards that are almost aligned count as the same column/row), and the wave moves
- * along by ascending position. Pure function (node-tested).
+ * Delays (ms) for the column and row stagger: positions are clustered with a tolerance, and the wave moves along by ascending position.
  * @param {number[]} positions x or y position in px per card (same order as the cards)
  * @param {number} step Step time in ms
  * @param {number} [tolerance] Max px distance counted as the same cluster
@@ -97,10 +74,7 @@ export function staggerColumnDelays(positions, step, tolerance = 24) {
 }
 
 /**
- * Delays (ms) for the "from the center" stagger: the middle card (or the middle
- * pair for an even count) is released first, then the row waves outwards
- * symmetrically. Index-based (the order of the cards in the section). Pure function
- * (node-tested).
+ * Delays (ms) for the center stagger, by card index: the middle card (or middle pair) goes first, then the wave moves outwards symmetrically.
  * @param {number} count Number of cards
  * @param {number} step Step time in ms
  * @returns {number[]}
@@ -116,9 +90,7 @@ let observer = null;
 const staggerGroups = new WeakMap();
 
 /**
- * Shared release for group entrances (stagger and per-card): in the preview and
- * with reduced motion the end state is shown at once; otherwise the targets are
- * released together the first time the host is visible.
+ * Releases a group entrance's targets: at once in the preview and with reduced motion, else together the first time the host is visible.
  * @returns {boolean} true when the targets actually wait for visibility
  */
 function releaseGroup(host, targets, ctx) {
@@ -133,20 +105,13 @@ function releaseGroup(host, targets, ctx) {
 }
 
 /**
- * The entrance animation plays when the element becomes visible - also when it is
- * already visible at load (it then fades/slides in just after the page appears, as
- * "Fade in" should). The IntersectionObserver callback runs only after the start
- * state (opacity 0 from CSS) has been painted, so the transition plays cleanly.
- * Elements scrolled to later play when they enter the viewport.
- * (In the editor preview the END state is shown immediately - see applyAnimation
- * - so the observer is only active for visitors and on the published page.)
+ * The shared observer: adds `urd-anim-in` once an element is visible, at load too, so its entrance plays; a group host's targets get it instead.
  */
 function entranceObserver() {
   observer ??= new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
-      // Elements much taller than the viewport (tall sections) never reach a 15 % visible ratio.
-      // They trigger instead once the visible part covers more than half the viewport, so the content is not left at opacity 0 forever.
+      // An element much taller than the viewport never reaches 15 % visible, so it triggers once its visible part covers half the viewport or more.
       const tall = entry.rootBounds && entry.intersectionRect.height >= entry.rootBounds.height * 0.5;
       if (entry.intersectionRatio < 0.15 && !tall) continue;
       const el = entry.target;
@@ -161,21 +126,14 @@ function entranceObserver() {
 }
 
 /**
- * Stagger (group): find the section's card blocks (those without their own
- * animation), give them an entrance effect + a staggered delay by pattern, and
- * release them together from the section's visibility. In preview/reduced-motion
- * the end state is shown at once.
+ * Stagger: gives the section's card blocks an entrance effect and a delay by `pattern`, and releases them as one group (`releaseGroup`).
  */
 function applyStagger(host, props, ctx) {
   const effect = STAGGER_EFFECTS.includes(props.effect) ? props.effect : 'slide-up';
   const step = Number.isFinite(props.step) ? Math.max(0, props.step) : STAGGER_STEP;
   const base = Number.isFinite(props.delay) ? Math.max(0, props.delay) : 0;
   host.classList.add('urd-anim-stagger');
-  // The card blocks: every .urd-block in the section without an entrance of its
-  // own (render.js marks those `data-urd-entrance`); a pointer effect is no
-  // entrance, so a block that lifts on pointer still comes in with the wave.
-  // Decor blocks are excluded (as in the mobile stacking): they are ornament
-  // and must not delay the content wave, nor must a space, which draws nothing.
+  // The card blocks: the section's `.urd-block`s except decor, spaces and those with their own entrance (`data-urd-entrance`); a pointer effect is no entrance.
   const targets = [...host.querySelectorAll('.urd-block')]
     .filter((el) => !el.dataset.urdEntrance && !el.dataset.decor && !el.classList.contains('urd-spacer'));
   if (!targets.length) return;
@@ -195,10 +153,7 @@ function applyStagger(host, props, ctx) {
 }
 
 /**
- * Hooks an (already version-lifted) animation onto an element.
- * Note: blocks with rotation have an inline transform that beats the transform of
- * the animation classes - only the opacity part then plays.
- *
+ * Hooks an already version-lifted animation onto an element; on a rotated block the inline transform wins, and only the opacity part plays.
  * @param {HTMLElement} el
  * @param {string} type Animation type (key in the registry)
  * @param {{duration?: number, delay?: number}} props Lifted props
@@ -225,11 +180,7 @@ export function applyAnimation(el, type, props, def, ctx = {}) {
 }
 
 /**
- * Per-card animation (blocks with the animPerCard flag): the block's entrance
- * animation plays per card with an index-staggered delay from ONE shared trigger
- * (the block's visibility), like stagger; pointer effects are applied to each card.
- * In preview/reduced-motion the end state is shown at once.
- *
+ * Per-card animation (`animPerCard`): the entrance plays per card, staggered by index from one shared trigger; a pointer effect goes on each card.
  * @param {HTMLElement} el The block element (the trigger)
  * @param {HTMLElement[]} cards The card elements in order
  * @param {string} type Animation type (key in the registry)
@@ -251,9 +202,7 @@ export function applyCardAnimation(el, cards, type, props, def, ctx = {}) {
     card.style.setProperty('--urd-anim-delay', `${base + i * STAGGER_STEP}ms`);
   });
   if (releaseGroup(el, cards, ctx)) {
-    // After the entrance the delay is cleared: the combination rule for entrance +
-    // pointer effect (base.css) reuses the variable in the transition, and the lift
-    // back must not inherit the card's staggered start.
+    // After the entrance each card's delay is cleared, so the pointer effect's transition in base.css does not inherit the card's staggered start.
     for (const card of cards) {
       const clearDelay = (event) => {
         if (event.target !== card || event.propertyName !== 'opacity') return;

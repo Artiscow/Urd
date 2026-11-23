@@ -2,6 +2,12 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.11): the push, the migrations, the theme, the animations and the pinning with short comments
+
+- [ ] Blocks whose content grows push the blocks below as before, on the desktop and on a phone; a page from an older Urd opens as before
+- [ ] The theme's colours, light and dark mode and a section's own colours show as before; the animations play as they did, entrances and pointer effects included
+- [ ] Blocks pinned on scroll and docked to the screen behave as before; shapes, section dividers, the privacy page and the terms of sale draw as before
+
 ### Test batch (0.7.37.3.10): the boot, the languages and the plugins with short comments
 
 - [ ] Every page opens as before, and moving between pages (a link held over, then pressed) is as quick as before

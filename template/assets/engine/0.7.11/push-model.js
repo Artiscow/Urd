@@ -1,18 +1,6 @@
 /**
- * Content push on the desktop canvas (ADR-0024). Blocks are placed
- * absolutely with pixel frames, so a block whose content grows taller than
- * its frame (wrapped text, a longer feed) would draw over the blocks
- * beneath. This model moves the blocks below instead, with the rules the
- * Wix Editor publishes for its free canvas: a gap of PUSH_GAP_MAX px or less
- * is preserved, a larger gap stays until it would fall under PUSH_GAP_MIN px,
- * a block whose top sits above the grown block's vertical middle is a
- * deliberate overlap and stays, and a move cascades to the blocks below the
- * moved block. Every block below that shares some of the grown block's width
- * moves, not only the nearest one; a block beside it, in another column,
- * keeps its place.
- *
- * Pure: render.js measures the growth and writes the shifts; nothing here
- * touches the DOM or the stored frames.
+ * Content push on the desktop canvas (ADR-0024): a block grown taller than its frame moves the blocks below. Pure: nothing here touches the DOM or stored frames.
+ * Notes: docs/engine-notes/push-model.md (Urd repository).
  */
 
 /** A gap this small or smaller is preserved: the lower block moves the whole growth. */
@@ -23,15 +11,11 @@ export const PUSH_GAP_MIN = 10;
 export const PUSH_SECTION_PAD = 24;
 
 /**
- * The block types whose height follows their content (ADR-0025): the box is
- * drawn at the content's height, also when that is less than the frame, and
- * the editor fits the frame to the content after an edit of the block. Every
- * other type keeps the height of its frame, and text is at least as tall as
- * its words.
+ * The block types whose height follows their content (ADR-0025): drawn at the content's height, even under the frame's; the editor fits the frame after an edit.
  */
 export const FOLLOWS_CONTENT = new Set(['audio', 'calendar', 'cart', 'checkout', 'collection', 'contact', 'countdown', 'faq', 'form', 'privacy', 'product', 'quote', 'share', 'stats', 'table', 'timeline']);
 
-/** The shapes a video can be given, width:height: widescreen first (YouTube's own), then classic, square, vertical (Shorts and reels), cinema and portrait. Without one the video fills its frame. */
+/** The shapes a video can be given, width:height: widescreen, classic, square, vertical, cinema and portrait. Without one the video fills its frame. */
 export const VIDEO_ASPECTS = ['16:9', '4:3', '1:1', '9:16', '21:9', '4:5'];
 
 /** The shapes an image block can be given in the image editor: its picture's own, and the common ratios. Without one the picture fills its frame. */
@@ -52,9 +36,7 @@ export function aspectRatio(aspect) {
 }
 
 /**
- * Whether a block keeps a shape (ADR-0025): a video given one, or an image
- * block with a picture given one, is drawn at that shape at its own width,
- * so its height follows its width.
+ * Whether a block keeps a shape (ADR-0025): a video given one, or an image block with a picture given one; its height follows its width.
  * @param {{type?: string, props?: {aspect?: unknown, src?: unknown}}} block
  * @returns {boolean}
  */
@@ -65,9 +47,7 @@ export function keepsShape(block) {
 }
 
 /**
- * The frame height of a block that keeps a shape, for a content surface of
- * the given width: its width there over the shape. The editor fits the frame
- * with it at the design width, which the preview's own surface need not have.
+ * The frame height of a block that keeps a shape, for a content surface of the given width: its width there over the shape.
  * @param {{type?: string, props?: {aspect?: unknown}, frames?: {desktop?: {w?: number}}}} block
  * @param {number} surfacePx The content surface's width in px
  * @returns {number} 0 for a block without a shape, with the picture's own shape (the preview measures it), or without a width to measure by
@@ -80,9 +60,7 @@ export function shapeHeight(block, surfacePx) {
 }
 
 /**
- * Whether a block's height follows its content (ADR-0025): one of the types
- * above, unless the block has been given its own height (`height.mode`), or
- * a block that keeps a shape.
+ * Whether a block's height follows its content (ADR-0025): one that keeps a shape or folds into questions, or a FOLLOWS_CONTENT type without `height.mode` 'own'.
  * @param {{type?: string, height?: {mode?: string}, props?: object}} block
  * @returns {boolean}
  */
@@ -91,7 +69,7 @@ export function followsContent(block) {
 }
 
 /**
- * The terms of sale drawn as questions (doc-look.js), or a text block from before page v8 still in that design: its rows fold out, so its height is the closed rows', and an open part is view state, as an FAQ's answer is.
+ * Whether a terms or text block is in the questions design (doc-look.js): its rows fold out, so its height is the closed rows', and an open part is view state.
  * @param {{type?: string, props?: object}} block
  * @returns {boolean}
  */
@@ -100,8 +78,7 @@ export function foldsIntoQuestions(block) {
 }
 
 /**
- * The blocks with a phone design: the design a block draws while it is narrow (`phoneDesign`, additive), by the prop its design is kept in, the way the calendar has its phone view.
- * Narrow is the block's own width, on a phone or in a narrow column of a wide page alike (ADR-0025): below NARROW_PX it draws its phone design, and it is drawn again when it crosses the line (render.js).
+ * The block types with a phone design (`phoneDesign`), drawn while the block is narrow by its own width (NARROW_PX), each by the prop its design is kept in.
  */
 export const PHONE_DESIGNS = { gallery: 'view', collection: 'view', contact: 'design', stats: 'variant', privacy: 'design', terms: 'design' };
 
@@ -145,7 +122,7 @@ export function propsForWidth(type, props, narrow) {
 }
 
 /**
- * A block as it is drawn at its width: with its phone design in its design's place while narrow, so the rules that read the design (the height following the content, the growth in the phone's flow) read the one drawn.
+ * A block as it is drawn at its width: its phone design in its design's place while narrow, so the rules that read the design read the one drawn.
  * @param {{type?: string, props?: object}} block
  * @param {boolean} narrow
  */
@@ -154,7 +131,7 @@ export function drawnBlock(block, narrow) {
 }
 
 /**
- * Whether a section forces readable text on a screen (ADR-0034, «Force readable text»): on the phone a block with words is never drawn narrower than its words read well (the floor in base.css), and on the desktop a text's lines wrap at a measure. On unless the section's `size.readablePhone` or `size.readableDesktop` is false.
+ * Whether a section forces readable text on a screen (ADR-0034): on unless its flag for that screen, `size.readablePhone` or `size.readableDesktop`, is false.
  * @param {object|null|undefined} section
  * @param {'desktop'|'mobile'} viewport
  * @returns {boolean}
@@ -163,20 +140,14 @@ export function forcesReadable(section, viewport) {
   return section?.size?.[viewport === 'mobile' ? 'readablePhone' : 'readableDesktop'] !== false;
 }
 
-/** The narrowest a block with words reads well at, in px (ADR-0034): the phone's floor for words in cells (base.css), the stop of a text's width handle on the desktop, and the line under which a section shows its phone layout (phoneHandoff). */
+/** The narrowest width in px a block with words reads well at (ADR-0034): the phone's floor (base.css), a text's width-handle stop and phoneHandoff's line. */
 export const READABLE_PX = 140;
 
 /** The screen a design is reckoned at, as the editor's standard screen and the design picker's preview reckon a block (block-designs.js designPreviewFrame). */
 const HANDOFF_DESIGN_PX = 1440;
 
 /**
- * The widest window at which a section shows its phone layout above the phone breakpoint, since a text in it would stand narrower than READABLE_PX on the desktop canvas (ADR-0034); 0 where none would.
- * The texts are those the desktop's «Force readable text» measures and stops at the floor (render.js: a text block in its plain design); a short word on a button, a basket or a statistic reads well narrower, and a block that redraws itself by its width has a narrow design of its own.
- * The canvas is the window less the side margin on each side, up to its bound (base.css): the section's own px width, else the site's content width, none where either is full width. A text stands at its share of it and so falls under the floor below a window width of its own; the section takes the widest of its texts'.
- * A text already narrower than the floor at the design width, the canvas on a 1440 px screen, is the owner's choice and does not count, nor does one hidden on the desktop.
- * A text that shrinks below the design width instead of wrapping (ADR-0024 decision 6) keeps its lines down to its smallest scale (`fitMin`), so it falls under the floor only where its box is narrower than the floor at that scale; without a design size (a full-width canvas) it wraps as any other.
- * The page's scrollbar, where it takes room (`scrollbar-gutter: stable` in base.css), narrows the canvas by its width while the media query reads the window with it, and a side menu's column (`side-left`, `side-right`) by its own, at every window width and at the design width alike.
- * None where the section's desktop «Force readable text» is off, where its own width is in another unit than px (no width to reckon with), or where the width lies at or under the phone breakpoint, where the whole page shows its phone layout already.
+ * The widest window above the phone breakpoint at which a section shows its phone layout, as a text in it would fall under READABLE_PX (ADR-0034); else 0.
  * @param {object} section
  * @param {object} site site.json: `layout.contentWidth`, `layout.gutter` (vw) and `breakpoints.mobile`
  * @param {(block: object) => boolean} hasWords Whether a block's words are measured (render.js: a text block in its plain design)
@@ -213,8 +184,7 @@ export function phoneHandoff(section, site, hasWords, scrollbar = 0, aside = 0) 
 }
 
 /**
- * The props that hold a block's words, by its type: the words the phone can have of its own (`phoneProps`, additive, ADR-0033), written in the phone view and drawn at phone width in the desktop's place: a text's words, a quote's with its name and role, a statistic's label, an audio player's title and a countdown's words for when the time is up.
- * A list of words (questions, events, rows) is not among them: its items would have to be matched one by one, and one added on the desktop would not reach the phone's copy. Nor is a statistic's number, which is the same fact on every screen.
+ * The props, by block type, that hold the words the phone can have of its own (`phoneProps`, additive, ADR-0033), drawn there in the desktop's place.
  */
 export const PHONE_WORDS = { text: ['html'], quote: ['text', 'attribution', 'role'], stats: ['label'], audio: ['title'], countdown: ['doneText'] };
 
@@ -246,7 +216,7 @@ export function propsForViewport(block, props, viewport) {
 }
 
 /**
- * The phone's own words after typing in the phone view: the typed words that differ from the desktop's, the rest left as they were; null where none differs, the block then reading the desktop's words again.
+ * The phone's own words after typing in the phone view: the typed words that differ from the desktop's, the rest left as they were; null where none differs.
  * @param {string} type
  * @param {object} props The block's own props, the desktop's words
  * @param {object|null|undefined} phoneProps The phone's words as they stand
@@ -264,18 +234,12 @@ export function phoneWordsChange(type, props, phoneProps, typed) {
 }
 
 /**
- * The block types that follow their content and fetch it (a feed, a
- * collection), so their height on the phone is unknown until the content is
- * drawn. The editor measures each at the phone width after an edit and
- * stores it as `mobileHeight` (0.7.21.7); the loading state stands at it on
- * the phone, so the first load of a session does not jump.
+ * The block types that follow their content and fetch it: their loading state on the phone stands at `mobileHeight`, the height the editor measured there.
  */
 export const FETCHES_CONTENT = new Set(['calendar', 'collection', 'privacy', 'product']);
 
 /**
- * The height in px the loading state of a block stands at on the phone: the
- * stored `mobileHeight` of a block that fetches its content, else 0 (its
- * loading state's own height).
+ * The height in px a block's loading state stands at on the phone: a fetching block's stored `mobileHeight`, else 0 (the loading state's own height).
  * @param {{type?: string, mobileHeight?: number}} block
  * @returns {number}
  */
@@ -286,17 +250,12 @@ export function mobileLoadingHeight(block) {
 }
 
 /**
- * The block types that can use the height of a box taller than their content
- * (ADR-0025 decision 3, «stretch»): the figure and the countdown's units fill
- * the box, and a quote's card does. The calendar stretches too, by design:
- * the plain list and card views spread their rows and cards (blocks/calendar.js).
+ * The block types that can fill a box taller than their content (ADR-0025 decision 3, `stretch`): a statistic's figure, the countdown's units and a quote's card.
  */
 export const STRETCHES = new Set(['countdown', 'quote', 'stats']);
 
 /**
- * How a block with its own height places its content in the box (ADR-0025
- * decision 3): `top` (the default, also for a block that follows its
- * content), `middle`, `bottom` or `stretch`.
+ * How a block with its own height places its content in the box (ADR-0025 decision 3): `top` (the default), `middle`, `bottom` or `stretch`.
  * @param {{height?: {mode?: string, align?: string}}} block
  * @returns {'top'|'middle'|'bottom'|'stretch'}
  */
@@ -306,11 +265,7 @@ export function heightAlign(block) {
 }
 
 /**
- * The block types that lay themselves out by their own width (ADR-0025
- * decision 7): the ones with columns, cards or a layout that changes when the
- * box is narrow. Their box is a size container (`urd-block` in base.css), so
- * a drag narrower shows the narrow layout while it is dragged, and a block in
- * a narrow column of a wide page uses its narrow layout as on a phone.
+ * The block types that lay themselves out by their own width (ADR-0025 decision 7): their box is a size container (`urd-block` in base.css).
  */
 export const FOLLOWS_WIDTH = new Set(['calendar', 'collection', 'gallery', 'product', 'stats', 'table', 'timeline']);
 
@@ -330,18 +285,12 @@ export function clampFitMin(value) {
 }
 
 /**
- * The block types whose content cannot wrap: their frame already follows
- * the canvas in percent, so their shrink is a floor on the frame's width
- * (fitFloorPx) instead of a zoom of the content. The editor keeps the same
- * list for its option labels.
+ * The block types whose content cannot wrap: their shrink is a floor on the frame's width (fitFloorPx) instead of a zoom of the content.
  */
 export const FIT_BY_WIDTH = new Set(['image', 'video', 'shape', 'icon']);
 
 /**
- * The block types whose size is their frame: a picture, a video, a shape, an
- * icon, a map and a space are as large as the box the owner dragged, so a
- * scale of their content would only crop or blur it, or have nothing to
- * scale. Every other type takes «Size».
+ * The block types whose size is their frame, as large as the box the owner dragged: a picture, a video, a shape, an icon, a map and a space.
  */
 export const SIZE_BY_FRAME = new Set(['image', 'video', 'shape', 'icon', 'map', 'spacer']);
 
@@ -358,16 +307,12 @@ export const SIZE = { min: 0.4, max: 2, step: 0.05 };
 export const SIZE_TEXT = { min: 6, max: 200, base: 16 };
 
 /**
- * The scale a type's content is drawn at when its size is 1 (ADR-0025
- * decision 6): the calendar's designs at a dense 14 px base for the page's
- * 16 px, the base of dense widgets. Every other type is drawn as it is.
+ * The scale a type's content is drawn at when its size is 1 (ADR-0025 decision 6): the calendar's at a dense 14 px base for the page's 16 px, others as they are.
  */
 export const TYPE_SCALE = new Map([['calendar', 0.875]]);
 
 /**
- * A block's size as a factor (ADR-0025 decision 6): the owner's `size`
- * inside the sizes the block may take (sizeRange), else 1. The frame-sized
- * types are always 1.
+ * A block's size as a factor (ADR-0025 decision 6): the owner's `size` held within sizeRange, else 1. The frame-sized types are always 1.
  * @param {{type?: string, size?: number}} block
  * @returns {number}
  */
@@ -380,9 +325,7 @@ export function blockSize(block) {
 }
 
 /**
- * A block as the phone draws it (ADR-0025 decision 6, ADR-0019 decision 1): with the phone's own size (`phoneSize`) in place of the desktop's, where it has one inside SIZE.
- * Without one, and for the frame-sized types, the block itself, so the phone follows the desktop's size.
- * The bounds of its base text (sizeMin, sizeMax) bound the phone's size as they bound the desktop's (blockSize).
+ * A block as the phone draws it (ADR-0019 decision 1): its `phoneSize` as `size` where that lies inside SIZE; else, and for frame-sized types, the block itself.
  * @param {{type?: string, size?: number, phoneSize?: number}} block
  * @returns {object}
  */
@@ -394,8 +337,7 @@ export function phoneSized(block) {
 }
 
 /**
- * The desktop frame as the phone takes its height from it (ADR-0019 decision 1): a block drawn at a size of the phone's own stands in a box whose height is scaled by that size against the desktop's, as the desktop's size scales the frame.
- * A block the phone draws at the desktop's size has the frame itself.
+ * The desktop frame as the phone takes its height from it (ADR-0019 decision 1): `h` scaled by the phone's own size over the desktop's, else the frame itself.
  * @param {{type?: string, size?: number, phoneSize?: number, frames?: {desktop?: {h: number}}}} block
  * @returns {object|undefined}
  */
@@ -429,11 +371,7 @@ export function baseTextPx(block) {
 }
 
 /**
- * The sizes a block may take (ADR-0025 decision 6): inside SIZE, and where
- * the owner bounds its base text (sizeBounds), only as far as the base text
- * stays inside, in whole steps. The size scales everything alike, so these
- * are where the slider stops. Size 1 is always inside, so a block whose text
- * is already past a bound keeps its size as drawn.
+ * The sizes a block may take (ADR-0025 decision 6): inside SIZE, in whole steps, as far as its base text stays within sizeBounds; size 1 is always inside.
  * @param {{type?: string, props?: {size?: number}, sizeMin?: number, sizeMax?: number}} block
  * @returns {{min: number, max: number}}
  */
@@ -447,10 +385,7 @@ export function sizeRange(block) {
 }
 
 /**
- * The smallest and largest size in px the owner lets the base text of a
- * sized block take (block.sizeMin, block.sizeMax), inside SIZE_TEXT and
- * never crossed: a largest size under the smallest is raised to it. A bound
- * not set is null, and the text follows the size.
+ * The owner's bounds in px on a sized block's base text (`sizeMin`, `sizeMax`): inside SIZE_TEXT, the largest never under the smallest, null where unset.
  * @param {{sizeMin?: number, sizeMax?: number}} block
  * @returns {{min: number|null, max: number|null}}
  */
@@ -465,8 +400,7 @@ export function sizeBounds(block) {
 }
 
 /**
- * The smallest width in px a block set to shrink may take, for the types in FIT_BY_WIDTH: its share of its section's design width times the floor.
- * 0 (no floor) for every other block, for a block without the field, and where the section has no design width (a full-width site or section), where nothing has a design size.
+ * The smallest width in px a FIT_BY_WIDTH block set to shrink may take: its share of the section's design width times its floor (fitMin); else 0.
  * @param {{type?: string, fit?: string, fitMin?: number, frames?: {desktop?: {w?: number}}}} block
  * @param {number} designWidth The width in px the section's canvas has at the design width (render.js `_urdDesignW`, the editor's designWidth)
  * @returns {number}
@@ -480,8 +414,7 @@ export function fitFloorPx(block, designWidth) {
 }
 
 /**
- * Whether a block shrinks on a phone (0.7.3.9): one set to «shrink», but not the types that shrink by their frame (FIT_BY_WIDTH) and not the calendar, which draws its phone view there (calPhoneView in calendar-designs.js).
- * «Both» wraps on the phone, since it fits a design height the row grid has not.
+ * Whether a block shrinks on a phone: one whose `fit` is 'shrink', but not a FIT_BY_WIDTH type nor the calendar, which draws its phone view there.
  * @param {{type?: string, fit?: string}} block
  * @returns {boolean}
  */
@@ -490,8 +423,7 @@ export function shrinksOnPhone(block) {
 }
 
 /**
- * The share a block that shrinks on a phone is drawn at there (shrinksOnPhone), which its drawn scale multiplies: its width in the row grid over its width at the design width, so its content keeps the lines it has there, never above 1 and never under its floor (fitMin).
- * 1 for every other block, and where nothing has a design width (a full-width site or section).
+ * The share a block that shrinks on a phone is drawn at there: its row-grid width over its width at the design width, between its floor (fitMin) and 1; else 1.
  * @param {{type?: string, fit?: string, fitMin?: number, frames?: {desktop?: {w?: number}}}} block
  * @param {number} width The block's width on the phone, in px
  * @param {number} designWidth The width in px the section's canvas has at the design width (render.js `_urdDesignW`)
@@ -506,13 +438,12 @@ export function phoneFitZoom(block, width, designWidth) {
 }
 
 /**
- * How much of the width two blocks must share, in percent of the section, for one to push the other: frames that only touch, or overlap by a rounding, stand side by side.
+ * One block pushes another only where they share more than this much of the width, in percent of the section; frames that only touch stand side by side.
  */
 export const PUSH_ACROSS_MIN = 0.1;
 
 /**
- * Whether block b stands under block a's width, so a's growth reaches it (ADR-0024 decision 1): a block beside the grown one, in another column, keeps its place.
- * An item without a width (`x` and `w` in percent) is taken to span the section.
+ * Whether block b shares block a's width, so a's growth reaches it (ADR-0024 decision 1); an item without a width (`w`) is taken to span the section.
  * @param {{x?: number, w?: number}} a
  * @param {{x?: number, w?: number}} b
  * @returns {boolean}
@@ -563,12 +494,7 @@ export function pushLayout(items, opts = {}) {
 }
 
 /**
- * A frame fitted to its content is an edit of the design (ADR-0025 decision
- * 5), so the data takes over what the push pass drew before the fit: a
- * taller frame moves the blocks below by the push rules, exactly as far as
- * the pass had shifted them. A shorter frame moves nothing, since the push
- * moves blocks down only. A section's own height is never written by a fit:
- * it is the owner's, and a block moved past it lies over the section below.
+ * The new y of each block that a frame fitted to its content moves (ADR-0025 decision 5): a taller frame pushes the blocks below, a shorter one moves nothing.
  * @param {Array<{id: string, frames?: {desktop?: {x?: number, y: number, h: number}}}>} blocks The section's blocks
  * @param {string} id The block whose frame is fitted
  * @param {number} h The fitted height in px
@@ -579,12 +505,7 @@ export function fitMoves(blocks, id, h) {
 }
 
 /**
- * The same for several frames at once (the blocks under one gesture, settled
- * to the boxes the push pass draws for them): each block's growth counts as
- * the pass counted it, so the moves are the ones the pass drew with all of
- * them grown. A block takes its width as drawn where one is given, as the
- * pass does for a picture a width floor draws wider than its frame on a
- * narrow canvas; without one, the frame's width stands.
+ * The same for several frames at once: the moves the push pass draws with all of them grown, each block at its drawn width (`widths`) or else its frame's.
  * @param {Array<{id: string, frames?: {desktop?: {x?: number, y: number, h: number}}}>} blocks The section's blocks
  * @param {Map<string, number>} fits Block id to its fitted height in px
  * @param {Map<string, number>} [widths] Block id to its width as drawn, in percent of the canvas (render.js drawnWidth)
@@ -621,8 +542,7 @@ export function fitMovesAll(blocks, fits, widths) {
 }
 
 /**
- * The frames typing gives a section (ADR-0024 decision 4): the text block takes the height its words need, rounded up to the grid step, never less than it had before the typing began, and the blocks below stand where the push rules move them from where they stood then.
- * Measured from the frames before the typing, not from the last keystroke's, so words deleted give back the room they took and the blocks below return with them.
+ * The frames typing gives a section, from the frames before the typing (ADR-0024 decision 4): the text block grows to its words' height, pushing the blocks below.
  * @param {Array<{id: string, frames?: {desktop?: {x?: number, y: number, h: number}}}>} before The section's blocks as they stood before the typing
  * @param {string} id The text block
  * @param {number} needed The height its words need now, in px

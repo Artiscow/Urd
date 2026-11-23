@@ -1,12 +1,6 @@
 /**
- * A shape: one closed outline in a 100 by 100 box, from a few values or from a list of points (ADR-0035).
- * The first user is the «Back to top» button (totop.js, `site.layout.toTop.shape`); the model knows nothing of it, so a picture, an icon's background or a button can take the same shape.
- *
- * A shape is stored one of two ways:
- * - its values (`SHAPE_BLANK`, each stored only where it differs): the outline (a round one by its squareness, or a polygon by its sides, corners, bulge and turn, either stretched), the edge (waves by their depth, amount, sharpness, style, alternation and swirl), a point drawn out of one side, and a wobble by its seed;
- * - its points (`points`, each `[x, y, size, style]`): the outline through them, each with a corner of its own, round, cut or scooped. A shape with points is drawn from them, its values kept beside them.
- * `icon` is where the mark on the shape stands (`[x, y]`); without it the mark stands at the shape's own middle.
- * Pure and node-tested (tests/shape-model.test.mjs).
+ * A shape (ADR-0035): one closed outline in a 100 by 100 box, from its values or from a list of points, and the place of the mark on it; pure.
+ * Notes: docs/engine-notes/shape-model.md (Urd repository).
  */
 
 const TAU = Math.PI * 2;
@@ -29,7 +23,7 @@ export const SHAPE_RANGES = { square: [0, 100], corners: [0, 100], bulge: [-100,
 export const SHAPE_POINTS = { min: 3, max: 40 };
 
 /**
- * How far the waves, the point and the turn go for a shape as it stands: waves end earlier on a polygon of few sides, the point on deep waves, and a turn at half a side.
+ * How far the waves, the point and the turn go: waves end earlier on a polygon of few sides, the point on deep waves, and a turn at half a side.
  * @param {{sides: number, waves: number}} values
  * @returns {{waves: number, point: number, turn: number}}
  */
@@ -70,8 +64,7 @@ export function shapeOf(raw) {
 }
 
 /**
- * A shape as it is stored: only what differs from the blank shape, the points as `[x, y, size, style]` and the mark's place rounded.
- * An empty object is the circle.
+ * A shape as stored: only what differs from the blank shape, the points as `[x, y, size, style]` and the mark's place rounded; an empty object is the circle.
  * @param {ReturnType<typeof shapeOf>} shape
  * @returns {object}
  */
@@ -208,8 +201,7 @@ function valuesOutline(p, margin) {
 }
 
 /**
- * A shape's outline as points in the 100 by 100 box: from its points where it has them, else from its values.
- * `margin` keeps the outline that far inside the box, for an outline drawn with a line of its own (the ring).
+ * A shape's outline as points in the 100 by 100 box, from its points where it has them, else from its values; `margin` keeps it that far inside the box.
  * @param {ReturnType<typeof shapeOf>} shape
  * @param {number} [margin]
  * @returns {Array<[number, number]>}
@@ -230,8 +222,7 @@ export function outlinePath(pts) {
 }
 
 /**
- * An outline's own middle, by its area: where a mark on the shape stands, lower than the box's middle on a shape with a point at the top.
- * A drawing whose edge crosses itself has little area of its own to weigh; its middle is the middle of the room it takes, and a middle always stands within that room.
+ * An outline's middle by its area, where a mark on the shape stands; one of little area takes its bounding box's middle, and the middle stays inside that box.
  * @param {Array<[number, number]>} pts
  * @returns {[number, number]}
  */
@@ -250,7 +241,7 @@ export function outlineMiddle(pts) {
 }
 
 /**
- * A shape's values handed over as points, for shaping by hand: a polygon's own corners, a point on each crest and in each dip of a waved edge, or eight round points; a point drawn out of a round shape is the sharp one.
+ * A shape's values as points to shape by hand: one on each crest and dip of a waved edge, a polygon's corners, or eight round ones, a drawn point the sharp one.
  * @param {ReturnType<typeof shapeOf>} shape
  * @returns {Array<{x: number, y: number, size: number, style: string}>}
  */

@@ -1,15 +1,6 @@
 /**
- * Stepwise version lifting - Urd's core invariant (see docs/adr/0005).
- *
- * All data (blocks, background layers, animations, sections) carries
- * `version`, and every type definition states `version` + `migrations`
- * where migrations[n] lifts exactly v(n) → v(n+1) as a pure function
- * (props in, props out).
- *
- * Lifting happens in memory at load time - the files on disk are written
- * only at the next publish. On an unknown type or a missing migration,
- * data is NEVER dropped: the entry is marked as a placeholder and the
- * original is kept.
+ * Stepwise version lifting (ADR-0005): entries, page files and site.json are lifted in memory, and an unknown type or a missing step never drops data.
+ * Notes: docs/engine-notes/migrate.md (Urd repository).
  */
 
 /**
@@ -27,9 +18,7 @@ export function lift(data, def) {
   if (!def) {
     return { ok: false, version: data.version, props: data.props, placeholder: 'unknown-type' };
   }
-  // A missing/invalid version (hand-edited or truncated data) is treated
-  // as v1, never as current: without this the while loop skips all the
-  // migrations (undefined < n is false) and the old format is read as new.
+  // A missing or non-integer version (hand-edited or truncated data) counts as v1, never as current, so the old format goes through every migration.
   const from = Number.isInteger(data.version) ? data.version : 1;
   if (from > def.version) {
     // The content was written by a newer engine - rendered as a
@@ -51,8 +40,7 @@ export function lift(data, def) {
 }
 
 /**
- * A block's own words on the phone (ADR-0033) lifted with the block: the desktop's props with the phone's words written in go through the block's migrations, and the word props that then differ from the lifted desktop props are the phone's.
- * So a migration that reshapes a word prop reaches `phoneProps` in the same step, and the stored phoneProps are written lifted at the next publish as the props are.
+ * Lifts a block's phone words (ADR-0033): its props with them written in are lifted, and the word props that then differ from its lifted props are the phone's.
  * @param {{type?: string, version: number, props: object, phoneProps?: object}} block
  * @param {object|undefined} def The block's type definition
  * @param {object} liftedProps The block's own props, lifted (lift)
@@ -78,13 +66,11 @@ import { TERMS_DESIGNS } from './doc-look.js';
 export const PAGE_SCHEMA_VERSION = 8;
 
 /**
- * The row height of the mobile row grid (ADR-0019), in px. A model
- * constant on par with the breakpoint: never tied to grid.size, which is a
- * snapping tool for desktop.
+ * The row height of the mobile row grid (ADR-0019), in px: a model constant like the breakpoint, never tied to grid.size, the desktop's snapping tool.
  */
 export const MOBILE_ROW = 8;
 
-/** The cell columns of the phone's row grid (ADR-0019): eight between the row's outer edges, which stand where a block across the full row stands (base.css .urd-flow). */
+/** The cell columns of the phone's row grid (ADR-0019): eight between the row's outer edges, where a block across the full row stands (base.css .urd-flow). */
 export const PHONE_COLUMNS = 8;
 
 /**
@@ -100,7 +86,7 @@ export function phoneCells(placement) {
 }
 
 /**
- * A flowing block's own height on the phone (`height`, ADR-0019), in px, in the desktop height's place; null where it has none, and for a block pinned to rows, whose height is its rows.
+ * A flowing block's own height on the phone (`height`, ADR-0019), in px; null where it has none above 0, and for a block pinned to rows.
  * @param {{height?: number, row?: number}|null} placement
  * @returns {number|null}
  */
@@ -117,8 +103,7 @@ export const MOBILE_GAP = 16;
 export const MOBILE_GAP_MAX = 96;
 
 /**
- * The space between the blocks that flow in a section's row grid on the phone, in px: the section's own (`size.mobileGap`), else the site's (`layout.mobileGap`), else MOBILE_GAP, within 0 to MOBILE_GAP_MAX.
- * Pure function, tested.
+ * The phone's space between a section's flowing blocks in px: `size.mobileGap`, else the site's `layout.mobileGap`, else MOBILE_GAP, within 0 to MOBILE_GAP_MAX.
  * @param {{size?: {mobileGap?: number}}|undefined} section
  * @param {{layout?: {mobileGap?: number}}|undefined} site
  * @returns {number}
@@ -130,15 +115,14 @@ export function mobileGapOf(section, site) {
   return Math.max(0, Math.min(MOBILE_GAP_MAX, Math.round(gap)));
 }
 
-/** The room above a section's first block and below its last on the phone, in px: the standard, which a section's `size.mobilePadTop` and `size.mobilePadBottom` replace. */
+/** The standard room on the phone above a section's first block and below its last, in px; `size.mobilePadTop` and `size.mobilePadBottom` replace it. */
 export const MOBILE_ROOM = 24;
 
 /** How far the room's slider in the section's phone settings reaches, in px; a seam drags the room past it, and the slider then reaches as far as the room. */
 export const MOBILE_ROOM_REACH = 240;
 
 /**
- * The room above a section's first block and below its last on the phone, in px: the section's own (`size.mobilePadTop`, `size.mobilePadBottom`, additive from 0.7.3.26), else MOBILE_ROOM, never under 0.
- * Pure function, tested.
+ * The phone's room above a section's first block and below its last, in px: `size.mobilePadTop` and `size.mobilePadBottom`, else MOBILE_ROOM, never under 0.
  * @param {{size?: {mobilePadTop?: number, mobilePadBottom?: number}}|undefined} section
  * @returns {{top: number, bottom: number}}
  */
@@ -155,9 +139,9 @@ export const SITE_SCHEMA_VERSION = 6;
  * receives the whole page file (cloned) + site.json as context.
  */
 
-/** The flow's top padding in the old mobile format: materialization
- *  measured y from the top of the surface, that is including the padding,
- *  so it is subtracted before the row index is computed. */
+/**
+ * The flow's top padding in the v1 mobile format, where y counted from the surface's top, padding included; it is subtracted before the row index is computed.
+ */
 const V1_FLOW_PAD = 24;
 
 /** attention.reason tokens were Norwegian in v1; data contracts use
@@ -173,13 +157,7 @@ const V1_REASONS = {
 };
 
 /**
- * Lifts a block's frames.mobile from the v1 shape (a full frame
- * {x, y, w, h}) to the row-grid placement (ADR-0019). A placement already
- * in the new shape (without y/h) is returned untouched, and a byte-equal
- * copy of the desktop frame yields null: that was materialization's
- * fallback for blocks outside the flow, never a hand-placed position.
- * Used by the page migration AND by template insertion
- * (templates-model.js), which inserts stored payloads outside the page lift.
+ * Lifts frames.mobile from the v1 frame {x, y, w, h} to a row-grid placement (ADR-0019); one without y and h is kept, one equal to the desktop frame gives null.
  */
 export function liftMobileFrame(m, desktop) {
   if (!m || !('y' in m || 'h' in m)) return m ?? null;
@@ -197,10 +175,7 @@ export function liftMobileFrame(m, desktop) {
 }
 
 /**
- * Core block types were Norwegian before v3; data contracts use English
- * identifiers (ADR-0021). Plugin-owned types (kalender, kart, skjema) are
- * deliberately absent: old plugin folders in user repos keep defining the
- * old ids forever, so those are resolved through registry aliases instead.
+ * Core block types renamed from Norwegian in page v3 (ADR-0021); the old plugin ids kalender, kart and skjema resolve through registry aliases instead.
  */
 export const V2_BLOCK_TYPES = {
   samling: 'collection',
@@ -233,9 +208,7 @@ export const V2_SECTION_THEMES = {
 };
 
 /**
- * Core section preset ids renamed in v4 (ADR-0021). Plugin preset ids
- * (hva-skjer, finn-oss, kontaktskjema) are deliberately absent; they resolve
- * through registry aliases like the plugin block types.
+ * Core section preset ids renamed in page v4 (ADR-0021); the old plugin presets hva-skjer, finn-oss and kontaktskjema resolve through registry aliases instead.
  */
 export const V3_PRESET_IDS = {
   tom: 'blank',
@@ -267,11 +240,7 @@ export const V3_PRESET_IDS = {
 };
 
 /**
- * Renames contract tokens (block types, background layer types and section
- * theme roles) in place. Accepts a section-like object ({blocks, background,
- * theme}) or a bare block array. Used by pageMigrations[2] and by template
- * insertion (templates-model), which inserts stored payloads outside the
- * page lift.
+ * Renames contract tokens in place, in a section or a bare block array: block types, and a section's background layer types, theme role and preset id.
  */
 export function liftContractTokens(target) {
   const blocks = Array.isArray(target) ? target : target.blocks ?? [];
@@ -289,9 +258,7 @@ export function liftContractTokens(target) {
 }
 
 /**
- * The text blocks drawn in a document design become the terms of sale (0.7.24.8): from page v8 the document designs are the terms block's, and a text block is plain text.
- * The words, the design and its look stay as they were. A phone design the block's type no longer has is dropped: a text block has no designs, and plain text is none of the terms block's, so the phone draws the block's own design.
- * Accepts a section-like object or a bare block array; used by pageMigrations[7] and by template insertion (templates-model), which inserts stored payloads outside the page lift.
+ * A text block in a document design becomes the terms block (page v8); a phone design stays only as a terms design on a terms block.
  * @param {{blocks?: object[]}|object[]} target
  */
 export function liftTermsBlocks(target) {
@@ -312,10 +279,7 @@ export function liftTermsBlocks(target) {
 const MAP_LINK_PX = 26;
 
 /**
- * A block's stored size as the steps up to page v7 read it: inside SIZE,
- * else 1, and always 1 for the frame-sized types. The steps keep their
- * own reading, apart from blockSize, so they lift data the same way
- * whatever the bounds a block's text gives its size today.
+ * The stored size the steps up to page v7 read, apart from blockSize: inside SIZE, 1 where not a number above 0, always 1 for the frame-sized types.
  * @param {{type?: string, size?: number}} block
  * @returns {number}
  */
@@ -327,11 +291,7 @@ function storedSize(block) {
 }
 
 /**
- * The calendar's own size (`props.scale`, 0.7.20.1 to 0.7.21.4) becomes the
- * block-level `size` every block type takes (ADR-0025 decision 6), inside
- * its bounds; a size of 1 leaves no field.
- * Used by the page migration AND by template insertion (templates-model.js),
- * which inserts stored payloads outside the page lift.
+ * The calendar's own size (`props.scale`) becomes the block-level `size` (ADR-0025 decision 6), inside its bounds; a size of 1 leaves no field.
  * @param {{blocks?: Array<object>}} section The section (mutated)
  */
 export function liftCalendarScale(section) {
@@ -344,15 +304,7 @@ export function liftCalendarScale(section) {
 }
 
 /**
- * Lifts the map blocks of one section from the height setting the map had
- * before page v5 (`props.height`, the iframe's own height) to the frame
- * (ADR-0025 decision 2: the map's box decides, and the iframe fills it). The
- * frame takes the height the map showed, the iframe with the line under it or
- * the frame when that was taller, and the blocks below follow as for a fit
- * (fitMoves), so nothing moves on screen. The legacy id `kart` resolves to
- * the map block and is lifted the same way.
- * Used by the page migration AND by template insertion (templates-model.js),
- * which inserts stored payloads outside the page lift.
+ * A section's map blocks (`kart` too) drop `props.height`, the desktop frame growing to that iframe height and the line under it; blocks below follow (fitMoves).
  * @param {{blocks?: Array<object>}} section The section (mutated)
  */
 export function liftMapHeights(section) {
@@ -373,18 +325,7 @@ export function liftMapHeights(section) {
 }
 
 /**
- * Lifts the gallery blocks of one section from the band height the ribbon
- * view had before page v7 (`props.bandHeight`, 80-400 px a row, 160 when
- * absent) to the frame (ADR-0025 decision 2: the gallery's box decides, and
- * the band fills it). The frame takes the height the band showed, its rows
- * and the gap between them at the block's size: a shorter frame grows to it
- * and the blocks below follow as for a fit (fitMoves), and a taller one
- * shrinks to it and moves nothing, so the band keeps its look. Every view
- * drops the field.
- * Used by the page migration AND by template insertion (templates-model.js),
- * which inserts stored payloads outside the page lift. A payload of unknown
- * age is lifted only where it carries the field; `old` lifts every ribbon
- * gallery, for data known to be from before page v7.
+ * A section's galleries drop `props.bandHeight`, and a ribbon gallery's frame takes the height its band showed; `old` lifts ribbons without the field too.
  * @param {{blocks?: Array<object>}} section The section (mutated)
  * @param {boolean} [old] The data is from before page v7
  */
@@ -409,11 +350,7 @@ export function liftGalleryBands(section, old = false) {
 }
 
 const pageMigrations = {
-  // 1 -> 2 (synced mobile model, ADR-0019): frames.mobile changes shape
-  // from a full frame {x,y,w,h} to a partial row-grid placement
-  // {x,w,row,rows}, the section mode 'manual' is retired, and decor blocks
-  // get the new hideMobile field that takes over mobile hiding. Pre-v1 the
-  // visual change (row quantization ±8 px) is accepted (ADR-0005).
+  // 1 -> 2 (ADR-0019): frames.mobile becomes a row-grid placement, 'manual' mode becomes 'auto', decor blocks get hideMobile, attention reasons get English ids.
   1: (page) => {
     for (const section of page.sections ?? []) {
       const mobile = section.responsive?.mobile;
@@ -435,9 +372,7 @@ const pageMigrations = {
     for (const section of page.sections ?? []) liftContractTokens(section);
     return page;
   },
-  // 3 -> 4 (ADR-0021): core section preset ids renamed. liftContractTokens
-  // covers presets too, so a v2 page gets them in the first step and this
-  // step is its no-op second pass; pages written at exactly v3 need it.
+  // 3 -> 4 (ADR-0021): core section preset ids renamed; a v2 page gets them in the step before, so this pass is for pages written at v3.
   3: (page) => {
     for (const section of page.sections ?? []) liftContractTokens(section);
     return page;
@@ -465,36 +400,22 @@ const pageMigrations = {
 };
 
 const siteMigrations = {
-  // 1 -> 2 (bound content width, ADR-0018): the content is bound by a
-  // design width instead of following the window width. The default is
-  // written in explicitly instead of being derived at read time, so the
-  // engine and the editor can never arrive at different values. Pre-v1 the
-  // visual change is accepted (ADR-0005).
+  // 1 -> 2 (bound content width, ADR-0018): a site without `layout` gets the default written in, so the engine and the editor never derive different values.
   1: (site) => ({ ...site, layout: site.layout ?? { contentWidth: 1440, gutter: 6 } }),
-  // 2 -> 3: the page gutter changed from pixels to a PERCENTAGE OF THE
-  // WINDOW WIDTH. The old value cannot be converted meaningfully (24 px is
-  // not a fixed share of anything), so all are set to the default. Pre-v1
-  // the small visual change is accepted (ADR-0005).
+  // 2 -> 3: the page gutter goes from px to a percentage of the window width; a px value does not convert, so every site gets the default.
   2: (site) => ({ ...site, layout: { ...(site.layout ?? { contentWidth: 1440 }), gutter: 6 } }),
-  // 3 -> 4: nav.style.inset (the bar's contents line up with the content
-  // edge) became the default. As with the bound content width the old
-  // default is written in explicitly, so a site built before the change
-  // keeps the menu it was built with. Sites that set the field keep it.
+  // 3 -> 4: `nav.style.inset` is the default from v4, so a nav without the field gets the old default written in and keeps the menu it was built with.
   3: (site) => (site.nav && site.nav.style?.inset === undefined
     ? { ...site, nav: { ...site.nav, style: { ...(site.nav.style ?? {}), inset: false } } }
     : site),
   // 4 -> 5: the footer's social links became the site's links (site.links),
   // drawn by the footer, the menu's tools and the share block.
   4: (site) => liftFooterSocial(site),
-  // 5 -> 6: the announcement strip got a page list of its own
-  // (nav.announcement.hideOn), and nav.hideOn keeps the menu alone off its
-  // pages. Where the menu was hidden outright the strip went with it, so
-  // the menu's list is copied into the strip's; a menu reached from the
-  // edge carried the strip inside it and still does.
+  // 5 -> 6: the announcement strip gets its own `hideOn`; where the menu is hidden outright, the menu's `hideOn` pages join the strip's (liftAnnouncementHideOn).
   5: (site) => liftAnnouncementHideOn(site),
 };
 
-/** The site migration 5 -> 6: where the menu is hidden outright (hideMode hidden, the default), its pages are pages the strip stays off too, as before the strip had a list of its own; a menu reached from the edge keeps carrying the strip. */
+/** The site migration 5 -> 6: unless the menu is reached from the edge (hideMode hover, ghost or tab), its `hideOn` pages join the announcement strip's own. */
 export function liftAnnouncementHideOn(site) {
   const hide = Array.isArray(site?.nav?.hideOn) ? site.nav.hideOn : [];
   const announcement = site?.nav?.announcement;
@@ -522,10 +443,7 @@ export function liftSiteFile(site) {
 }
 
 /**
- * Lifts a page file to the current schemaVersion. Stepwise and never
- * destructive: if a migration step is missing (or the file is NEWER than
- * the engine), it is returned untouched instead of being misread.
- *
+ * Lifts a page file to the current schemaVersion step by step; with a step missing, or a file newer than the engine, it comes back untouched.
  * @param {object} page Page file, already parsed
  * @param {object} site site.json (context for conversions)
  * @returns {object} Lifted copy (the original is never mutated)

@@ -30,7 +30,7 @@ const VISITOR_MODULES = [
 
 /** The modules whose longer comments are still to get their short versions, each with one left at least; the list shrinks as they do. */
 const PENDING = new Set([
-  'animations/core.js', 'backgrounds/glow.js', 'backgrounds/gradient.js', 'backgrounds/image.js',
+  'backgrounds/glow.js', 'backgrounds/gradient.js', 'backgrounds/image.js',
   'backgrounds/pattern.js', 'backgrounds/slideshow.js', 'backgrounds/video.js', 'blocks/audio.js', 'blocks/button.js',
   'blocks/calendar-cards.js', 'blocks/calendar-list.js', 'blocks/calendar-load.js', 'blocks/calendar-more.js',
   'blocks/calendar-next.js', 'blocks/calendar-retro.js', 'blocks/calendar-time.js', 'blocks/calendar.js',
@@ -39,12 +39,12 @@ const PENDING = new Set([
   'blocks/privacy.js', 'blocks/product.js', 'blocks/quote.js', 'blocks/ribbon.js', 'blocks/shape.js',
   'blocks/share.js', 'blocks/spacer.js', 'blocks/stats.js', 'blocks/table.js', 'blocks/text.js', 'blocks/timeline.js',
   'blocks/video.js', 'box-style.js', 'calendar-designs.js', 'calendar-format.js', 'collections.js',
-  'contact-checks.js', 'contact-model.js', 'contact-profiles.js', 'divider-model.js', 'doc-look.js',
+  'contact-checks.js', 'contact-model.js', 'contact-profiles.js',
   'embed-cover.js', 'footer-cta.js', 'footer-model.js', 'footer.js', 'form-model.js', 'gallery-layout.js',
   'gallery-model.js', 'icons.js', 'ics.js', 'links-model.js',
-  'map-links.js', 'meeting-links.js', 'migrate.js', 'osm.js', 'phone-order.js',
-  'photo-source.js', 'picture.js', 'privacy-model.js', 'push-model.js',
-  'ribbon-model.js', 'sanitize.js', 'seo.js', 'shape-model.js', 'shop.js', 'sticky-model.js', 'sticky.js', 'theme.js',
+  'map-links.js', 'meeting-links.js', 'osm.js',
+  'photo-source.js', 'picture.js', 'privacy-model.js',
+  'ribbon-model.js', 'sanitize.js', 'seo.js', 'shop.js',
   'totop.js',
 ]);
 
