@@ -1,14 +1,15 @@
 /**
- * The renewal of a GitHub sign-in that expires (functions/_lib/session.js): the sign-in's answer keeps its refresh token beside it (api/github/callback.js), the sign-in status renews it once it falls due (api/github/me.js), signing out ends both (api/github/logout.js), and the editor asks at the planned moment and before its other calls when it opens late (editor/src/state/shell.svelte.js).
+ * The renewal of a GitHub sign-in that expires (functions/_lib/session.js): the login asks for it (api/github/login.js), the sign-in's answer keeps its refresh token beside it (api/github/callback.js), the sign-in status renews it once it falls due (api/github/me.js), signing out ends both (api/github/logout.js), and the editor asks at the planned moment and before its other calls when it opens late (editor/src/state/shell.svelte.js).
  * GitHub is a stand-in fetch; nothing leaves the machine.
  */
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { onRequestGet as login } from '../template/functions/api/github/login.js';
 import { onRequestGet as callback } from '../template/functions/api/github/callback.js';
 import { onRequestGet as me } from '../template/functions/api/github/me.js';
 import { onRequestPost as logout } from '../template/functions/api/github/logout.js';
-import { readRenewal, renewDue, renewIn, sessionCookies, RENEW_BEFORE, RENEW_LEAST, RENEW_SOON } from '../template/functions/_lib/session.js';
+import { readRenewal, renewDue, renewIn, sessionCookies, loginScope, RENEW_BEFORE, RENEW_LEAST, RENEW_SOON } from '../template/functions/_lib/session.js';
 
 const ORIGIN = 'https://site.pages.dev';
 const ENV = { GITHUB_REPO: 'site/repo', GITHUB_CLIENT_ID: 'id', GITHUB_CLIENT_SECRET: 'secret', ALLOWED_LOGINS: 'owner' };
@@ -62,6 +63,21 @@ test('the renewal cookie: written from GitHub\'s answer for the sign-in endpoint
   assert.equal(renewDue(at, at - RENEW_BEFORE), true);
   assert.equal(renewIn(at, at - 28800), 28800 - RENEW_BEFORE + 5, 'asked again a few seconds after it falls due');
   assert.equal(renewIn(at, at), RENEW_LEAST, 'never sooner than a minute');
+});
+
+test('the login asks for offline_access beside the site\'s own scope, so an OAuth App gives a sign-in that renews itself too', async () => {
+  assert.equal(loginScope('public_repo'), 'public_repo offline_access');
+  assert.equal(loginScope('repo'), 'repo offline_access');
+  assert.equal(loginScope(' repo  offline_access '), 'repo offline_access', 'asked for once');
+  assert.equal(loginScope('repo,read:org, offline_access'), 'repo read:org offline_access', 'commas read as separators');
+  assert.equal(loginScope(''), 'offline_access');
+  const ask = async (env) => new URL((await login({ request: new Request(`${ORIGIN}/api/github/login`), env })).headers.get('location'));
+  let to = await ask(ENV);
+  assert.equal(to.origin + to.pathname, 'https://github.com/login/oauth/authorize');
+  assert.equal(to.searchParams.get('scope'), 'public_repo offline_access', 'the default scope');
+  assert.equal(to.searchParams.get('redirect_uri'), `${ORIGIN}/api/github/callback`, 'the address the editor was opened at');
+  to = await ask({ ...ENV, GITHUB_SCOPE: 'repo' });
+  assert.equal(to.searchParams.get('scope'), 'repo offline_access');
 });
 
 test('the sign-in keeps its refresh token beside it where GitHub gives one, and only where the state matches', async () => {

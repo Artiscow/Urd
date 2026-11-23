@@ -15,14 +15,14 @@ Bygger du selve Urd? Da er nettstedet ditt mappen `template` i Urd-repoet, så h
 
 1. Åpne [urd-template](https://github.com/Artiscow/urd-template) på GitHub.
 2. Trykk **Use this template** → **Create a new repository**.
-3. Gi repoet et navn, velg **Public** eller **Private**, og trykk **Create repository**.
+3. Gi repoet et navn, velg **Public** eller **Private**, og trykk **Create repository from template**.
 
 Repoet du får, er nettstedet ditt. Nye versjoner av Urd kommer senere inn gjennom **Oppdatering**-panelet i redigereren.
 
 ## 2. Legg nettstedet på Cloudflare Pages
 
-1. I Cloudflare-dashbordet går du til **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**.
-2. Velg **GitHub**, og logg inn hvis du blir spurt. Velg repoet fra steg 1, trykk **Install & Authorize**, og så **Begin setup**.
+1. I Cloudflare-dashbordet går du til **Workers & Pages** → **Create application** → **Pages** → **Import an existing Git repository**.
+2. Er ikke Cloudflare koblet til GitHub-kontoen din ennå, ber den om å installere GitHub-appen sin: velg kontoen din og trykk **Install & Authorize**. Velg repoet fra steg 1, og trykk **Begin setup**.
 3. **Project name:** velg det med omhu. Det blir adressen til nettstedet, `<navn>.pages.dev`, og det kan ikke endres senere (da må du slette prosjektet og begynne på nytt). Navnene deles av alle på Cloudflare, så er ditt tatt, legger Cloudflare til noen tilfeldige bokstaver. Bruk bare små bokstaver, tall og bindestrek.
 4. Fyll inn byggeinnstillingene:
    - **Production branch:** `main`
@@ -41,22 +41,22 @@ Appen lar deg logge inn i redigereren med GitHub-kontoen din, og lar redigereren
 1. På GitHub klikker du profilbildet ditt (øverst til høyre) → **Settings** → **Developer settings** (nederst i menyen til venstre) → **GitHub Apps** → **New GitHub App**. Hører repoet til en organisasjon, starter du fra organisasjonen i stedet: **Your organizations** → **Settings** ved siden av den → **Developer settings** → **GitHub Apps** → **New GitHub App**.
 2. Fyll inn:
    - **GitHub App name:** et navn ingen andre på GitHub har tatt, høyst 34 tegn, f.eks. «Urd publisering mitt-nettsted»
-   - **Homepage URL:** `https://<navn>.pages.dev`
-   - **Callback URL:** `https://<navn>.pages.dev/api/github/callback`
-   - La **Expire user authorization tokens** stå huket av. Innloggingen varer da åtte timer om gangen, og redigereren fornyer den selv.
+   - **Homepage URL:** nettstedets adresse, `https://<navn>.pages.dev` eller ditt eget domene
+   - **Redirect URI:** `https://<navn>.pages.dev/api/github/callback`. Der adressen har **Allow wildcard matching**, lar du den være av, så GitHub sender innloggingen tilbake til akkurat denne adressen og ingen annen. Har nettstedet også et eget domene, trykker du **Add redirect URI** og legger til det domenet på samme måte, f.eks. `https://www.example.org/api/github/callback`: du kan bare logge inn på en adresse som har en.
+   - La **Expire user authorization tokens** stå huket av, slik GitHub har den. Innloggingen varer da åtte timer om gangen, og redigereren fornyer den selv.
    - La **Request user authorization (OAuth) during installation** stå uten hake.
-   - Under **Webhook** fjerner du haken ved **Active**.
+   - Under **Webhook** fjerner du haken ved **Active** og lar **Webhook URL** stå tom.
    - Under **Permissions** → **Repository permissions** setter du **Contents** til **Read and write**. La de andre stå som de er.
    - **Where can this GitHub App be installed?** Velg **Only on this account**.
 3. Trykk **Create GitHub App**.
 4. På appens side kopierer du **Client ID** og tar vare på den til steg 4.
-5. Trykk **Generate a new client secret** og kopier hemmeligheten. GitHub viser den bare én gang; mister du den, lager du en ny. Appen trenger ingen privat nøkkel (private key), så la den delen av siden være.
+5. Lenger ned på samme side, under **Credentials** → **Client secrets**, trykker du **New secret** og kopierer hemmeligheten. GitHub viser den bare én gang; mister du den, lager du en ny. Meldingen øverst på siden om en privat nøkkel (private key) kan du la være: Urd bruker ingen privat nøkkel.
 6. Installer appen på nettstedets repo: i appens meny til venstre trykker du **Install App**, og så **Install** ved kontoen din. Velg **Only select repositories**, velg repoet fra steg 1, og trykk **Install**.
 
 ## 4. Gi Cloudflare nøklene
 
 1. I Cloudflare-dashbordet går du til **Workers & Pages** → prosjektet ditt → **Settings** → **Variables and Secrets**.
-2. For hver variabel under trykker du **Add**, fyller inn **Type**, **Variable name** og **Value**, og trykker **Save**. En **Secret** skjules når den er lagret; en **Text** forblir lesbar.
+2. For hver variabel under trykker du **Add**, fyller inn **Type**, **Variable name** og **Value**, og trykker **Save**. Har skjemaet en **Encrypt**-knapp i stedet for typen, trykker du den for en **Secret**. En **Secret** skjules når den er lagret; en **Text** forblir lesbar.
 
 Trengs alltid:
 
@@ -74,7 +74,7 @@ Bare i disse tilfellene:
 | Text | `GITHUB_BRANCH` | Navnet på grenen (aldri `urd-drafts`) | Nettstedet publiseres fra en annen gren enn `main` |
 | Text | `GITHUB_ROOT_DIR` | `template` | Nettstedet er selve Urd-repoet |
 
-3. Deploy på nytt, siden variablene gjelder fra neste deploy: i prosjektet åpner du **Deployments**, og så **⋯**-menyen på den siste deployen → **Retry deployment**.
+3. Deploy på nytt, siden variablene gjelder fra neste deploy: i prosjektet åpner du **Deployments**, og så de tre prikkene på den siste deployen → **Retry deployment**.
 
 ## 5. Sjekk at det virker
 
@@ -90,7 +90,7 @@ Sett disse på samme måte som i steg 4, og deploy på nytt etter hver endring.
 
 | Type | Variable name | Value | Når |
 |---|---|---|---|
-| **Secret** | `DEPLOY_HOOK_URL` | En deploy hook-adresse: i prosjektet, **Settings** → **Deploy Hooks** → pluss-tegnet → grenen `main` | En publisering når av og til aldri nettstedet, selv om endringen ligger i repoet. Med denne satt starter publiseringen deployen selv. |
+| **Secret** | `DEPLOY_HOOK_URL` | En deploy hook-adresse: i prosjektet, **Settings** → **Builds** → **Add deploy hook** → grenen `main` | En publisering når av og til aldri nettstedet, selv om endringen ligger i repoet. Med denne satt starter publiseringen deployen selv. |
 | **Secret** | `DRIVE_API_KEY` | En API-nøkkel fra Google Cloud med Drive API slått på | En bakgrunn henter bildene sine fra en delt Google Drive-mappe. Se [Bilder fra en delt mappe](../setup-photos/PHOTOS-nb.md). Google Foto-album trenger ingen nøkkel. |
 | Text | `PHOTO_HOSTS` | Vertene bildene kan komme fra, adskilt med komma, f.eks. `sky.example.org` | Bildene kommer fra en Nextcloud- eller ownCloud-deling, eller fra en bildeliste på en annen adresse. Googles egne verter er innebygd. |
 | Text | `ICS_HOSTS` | Vertene kalendere kan komme fra, adskilt med komma, f.eks. `calendar.proton.me` | En kalender kommer fra en annen tjeneste enn Google Kalender. Se [Kalenderen](../calendar-guide/CALENDAR-nb.md). |
@@ -103,14 +103,14 @@ Et nettsted som ble satt opp med en OAuth-app, før denne guiden brukte en GitHu
 1. Lag en GitHub-app som i steg 3, med nettstedets adresse.
 2. I Cloudflare, under **Variables and Secrets**, gir du `GITHUB_CLIENT_ID` og `GITHUB_CLIENT_SECRET` appens verdier, og fjerner `GITHUB_SCOPE` hvis den finnes. Deploy på nytt (steg 4).
 3. I redigereren trykker du **Logg ut** ved brukernavnet ditt i topplinjen, og logger inn igjen.
-4. Slett den gamle OAuth-appen: **Settings** → **Developer settings** → **OAuth Apps** → appen → **Delete application**.
+4. Slett den gamle OAuth-appen, om ikke et annet nettsted fortsatt bruker den: **Settings** → **Developer settings** → **OAuth Apps** → appen → **Advanced** (menyen til venstre) → **Delete application** → **Delete this OAuth Application**.
 
 Så lenge et nettsted bruker en OAuth-app, trenger et privat repo variabelen `GITHUB_SCOPE` med verdien `repo`.
 
 ## Eget domene
 
-1. I prosjektet åpner du **Custom domains** → **Set up a custom domain**, og følger Cloudflares steg.
-2. På GitHub åpner du appen fra steg 3 (**Settings** → **Developer settings** → **GitHub Apps** → **Edit** ved appen), endrer **Homepage URL** og **Callback URL** til det nye domenet, og trykker **Save changes**.
+1. I prosjektet åpner du **Custom domains** → **Set up a domain**, skriver domenet, trykker **Continue**, og følger Cloudflares steg.
+2. På GitHub åpner du appen fra steg 3 (**Settings** → **Developer settings** → **GitHub Apps** → **Edit** ved appen). Legg til en **Redirect URI** til med det nye domenet, f.eks. `https://www.example.org/api/github/callback`, og behold den med `pages.dev`, så du kan logge inn på begge adressene. Sett **Homepage URL** til det nye domenet, og trykk **Save changes**.
 
 På Cloudflares gratisplan slår Cloudflare på sin egen besøkstelling (Web Analytics) for et domene du legger til, og legger skriptet sitt på sidene dine. Personvernsiden forteller da de besøkende det, og Juridisk-panelet nevner det. Slik slår du det av: i Cloudflare-dashbordet åpner du domenet → **Web Analytics** → **Manage RUM Settings** → **Disable**; Cloudflare slår det ikke på igjen. Sjekk innstillingen i Cloudflare framfor å stole på Juridisk-panelet: panelet ser bare forsiden slik Cloudflare leverer den til deg, og Cloudflare utelater skriptet for besøkende som betjenes fra datasentrene i EU og Storbritannia.
 
@@ -186,7 +186,7 @@ PayPals side tar kjøperens PayPal-konto, eller kort uten konto der PayPal tilby
 Utkast-vinduet i redigereren lagrer utkast på GitHub, så du kan hente dem fram på en annen enhet. De havner i en egen gren, `urd-drafts`, som den første lagringen lager. Ingenting må settes opp for det, men tre ting er greie å vite:
 
 - **Lagringer når aldri nettstedet.** Hver lagring er merket slik at Cloudflare ikke bygger noe fra den: den når aldri det publiserte nettstedet, bruker aldri et av prosjektets bygg og vises aldri i Historikk.
-- **Hold grenen utenfor forhåndsvisningsbyggene.** Cloudflare bygger en forhåndsvisning av hver gren som standard. For sikkerhets skyld holder du `urd-drafts` utenfor: i prosjektet, **Settings** → **Builds & deployments** → **Preview branch control** (i nyere dashbord **Build** → **Branch control**), og velg **None**, eller **Custom branches** med `*` under Include og `urd-drafts` under Exclude.
+- **Hold grenen utenfor forhåndsvisningsbyggene.** Cloudflare bygger en forhåndsvisning av hver gren som standard. For sikkerhets skyld holder du `urd-drafts` utenfor: i prosjektet, **Settings** → **Builds** → **Branch control**, og under **Preview branch** velger du **None**, eller **Custom branches** med `*` blant grenene som tas med og `urd-drafts` blant dem som holdes utenfor.
 - **Regler på alle grener stopper lagringene.** Et GitHub-regelsett (ruleset) eller en grenbeskyttelse som dekker alle grener (en som begrenser å lage grener eller krever en pull request, for eksempel) stopper også lagringene, og Utkast sier «GitHub nektet grenen de lagrede utkastene ligger på (urd-drafts); se oppsettsguiden». Hold grenen utenfor: i repoet, **Settings** → **Rules** → **Rulesets** → regelsettet → **Target branches** → **Add target** → **Exclude by pattern** → `urd-drafts`. For en klassisk beskyttelsesregel under **Settings** → **Branches** med mønsteret `*` endrer du mønsteret til `main`.
 
 I et offentlig repo kan alle lese de lagrede utkastene og notatene på dem, slik de kan lese resten av repoet.
@@ -210,14 +210,15 @@ cd template
 npx wrangler pages dev . --port 8788
 ```
 
-Da kjører nettstedet, redigereren og funksjonene på `http://localhost:8788`. En full innlogging krever en ekte GitHub-app med callback mot localhost, men feilsvarene og stisjekkene kan testes uten.
+Da kjører nettstedet, redigereren og funksjonene på `http://localhost:8788`. En full innlogging krever en ekte GitHub-app med en **Redirect URI** mot localhost, `http://localhost:8788/api/github/callback`, men feilsvarene og stisjekkene kan testes uten.
 
 ## Feilsøking
 
 | Det du ser | Sannsynlig årsak |
 |---|---|
 | «Publisering er ikke konfigurert: miljøvariabelen X mangler» | Variabelen mangler i Cloudflare, eller nettstedet er ikke deployet siden den ble lagt til (steg 4) |
-| «Invalid OAuth state (try signing in again)» ved innlogging | **Callback URL** i GitHub-appen stemmer ikke med nettstedets adresse, eller nettleseren blokkerer informasjonskapsler |
+| GitHub sier «The redirect_uri is not associated with this application» når du logger inn | Ingen **Redirect URI** i GitHub-appen har adressen du åpnet redigereren på; et eget domene trenger sin egen (se «Eget domene») |
+| «Invalid OAuth state (try signing in again)» ved innlogging | Du trykket Cancel på GitHubs side, det gikk mer enn ti minutter der, eller nettleseren blokkerer informasjonskapsler; logg inn igjen |
 | GitHub viser en 404-side når du logger inn | Client ID i Cloudflare er ikke appens, eller nettstedet er ikke deployet siden den ble lagt til |
 | «GitHub avviste innloggingen (utløpt token?) - logg inn på nytt» ved publisering, eller «Ugyldig eller utløpt innlogging» i Utkast, Historikk eller Oppdatering | Innloggingen har gått ut, eller den ble avsluttet hos GitHub. Logg ut og inn igjen |
 | «GitHub-brukeren «X» har ikke publiseringstilgang» | Brukernavnet står ikke i `ALLOWED_LOGINS` (sjekk stavingen; store og små bokstaver spiller ingen rolle) |

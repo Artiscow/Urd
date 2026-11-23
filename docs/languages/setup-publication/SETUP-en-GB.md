@@ -17,14 +17,14 @@ Building Urd itself? Your website is the `template` folder in the Urd repo, so s
 
 1. Open [urd-template](https://github.com/Artiscow/urd-template) on GitHub.
 2. Press **Use this template** → **Create a new repository**.
-3. Give the repo a name, choose **Public** or **Private**, and press **Create repository**.
+3. Give the repo a name, choose **Public** or **Private**, and press **Create repository from template**.
 
 The repo you get is your website. New versions of Urd come in later through the **Updates** panel in the editor.
 
 ## 2. Put the site on Cloudflare Pages
 
-1. In the Cloudflare dashboard, go to **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**.
-2. Choose **GitHub** and sign in if asked. Choose the repo from step 1, press **Install & Authorize**, then **Begin setup**.
+1. In the Cloudflare dashboard, go to **Workers & Pages** → **Create application** → **Pages** → **Import an existing Git repository**.
+2. If Cloudflare is not connected to your GitHub account yet, it asks to install its GitHub app: choose your account and press **Install & Authorize**. Choose the repo from step 1, and press **Begin setup**.
 3. **Project name:** choose it with care. It becomes the site's address, `<name>.pages.dev`, and it cannot be changed later (you would have to delete the project and start again). Names are shared by everyone on Cloudflare, so if yours is taken, Cloudflare adds a few random letters to it. Use lowercase letters, digits and hyphens only.
 4. Fill in the build settings:
    - **Production branch:** `main`
@@ -43,22 +43,22 @@ The app lets you log in to the editor with your GitHub account, and lets the edi
 1. On GitHub, click your profile picture (top right) → **Settings** → **Developer settings** (at the bottom of the left menu) → **GitHub Apps** → **New GitHub App**. If the repo belongs to an organisation, start from the organisation instead: **Your organizations** → **Settings** next to it → **Developer settings** → **GitHub Apps** → **New GitHub App**.
 2. Fill in:
    - **GitHub App name:** a name nobody else on GitHub has taken, at most 34 characters, e.g. «Urd publishing my-site»
-   - **Homepage URL:** `https://<name>.pages.dev`
-   - **Callback URL:** `https://<name>.pages.dev/api/github/callback`
-   - Leave **Expire user authorization tokens** ticked. Your login then lasts eight hours at a time, and the editor renews it by itself.
+   - **Homepage URL:** the site's address, `https://<name>.pages.dev` or your own domain
+   - **Redirect URI:** `https://<name>.pages.dev/api/github/callback`. Where the address has **Allow wildcard matching**, leave it off, so GitHub sends the login back to this exact address alone. If the site has its own domain too, press **Add redirect URI** and add that domain the same way, e.g. `https://www.example.org/api/github/callback`: you can log in only at an address that has one.
+   - Leave **Expire user authorization tokens** ticked, as GitHub has it. Your login then lasts eight hours at a time, and the editor renews it by itself.
    - Leave **Request user authorization (OAuth) during installation** unticked.
-   - Under **Webhook**, untick **Active**.
+   - Under **Webhook**, untick **Active** and leave **Webhook URL** empty.
    - Under **Permissions** → **Repository permissions**, set **Contents** to **Read and write**. Leave the others as they are.
    - **Where can this GitHub App be installed?** Choose **Only on this account**.
 3. Press **Create GitHub App**.
 4. On the app's page, copy the **Client ID** and keep it for step 4.
-5. Press **Generate a new client secret** and copy the secret. GitHub shows it only once; if you lose it, generate a new one. The app needs no private key, so leave that part of the page alone.
+5. Further down the same page, under **Credentials** → **Client secrets**, press **New secret** and copy the secret. GitHub shows it only once; if you lose it, make a new one. The message at the top of the page about a private key can be left: Urd uses no private key.
 6. Install the app on the site's repo: in the app's menu on the left, press **Install App**, then **Install** next to your account. Choose **Only select repositories**, pick the repo from step 1, and press **Install**.
 
 ## 4. Give Cloudflare the keys
 
 1. In the Cloudflare dashboard, go to **Workers & Pages** → your project → **Settings** → **Variables and Secrets**.
-2. For each variable below, press **Add**, fill in **Type**, **Variable name** and **Value**, and press **Save**. A **Secret** is hidden once saved; a **Text** stays readable.
+2. For each variable below, press **Add**, fill in **Type**, **Variable name** and **Value**, and press **Save**. Where the form has an **Encrypt** button in place of the type, press it for a **Secret**. A **Secret** is hidden once saved; a **Text** stays readable.
 
 Always needed:
 
@@ -76,7 +76,7 @@ Only in these cases:
 | Text | `GITHUB_BRANCH` | The branch name (never `urd-drafts`) | The site is published from a branch other than `main` |
 | Text | `GITHUB_ROOT_DIR` | `template` | The site is the Urd repo itself |
 
-3. Deploy again, since the variables take effect from the next deploy: in the project, open **Deployments**, then the **⋯** menu on the latest deployment → **Retry deployment**.
+3. Deploy again, since the variables take effect from the next deploy: in the project, open **Deployments**, then the three dots on the latest deployment → **Retry deployment**.
 
 ## 5. Check that it works
 
@@ -92,7 +92,7 @@ Set these the same way as in step 4, and deploy again after each change.
 
 | Type | Variable name | Value | When |
 |---|---|---|---|
-| **Secret** | `DEPLOY_HOOK_URL` | A deploy hook address: in the project, **Settings** → **Deploy Hooks** → the plus sign → branch `main` | A publish now and then never reaches the site, though the change is in the repo. With this set, publishing starts the deploy itself. |
+| **Secret** | `DEPLOY_HOOK_URL` | A deploy hook address: in the project, **Settings** → **Builds** → **Add deploy hook** → branch `main` | A publish now and then never reaches the site, though the change is in the repo. With this set, publishing starts the deploy itself. |
 | **Secret** | `DRIVE_API_KEY` | An API key from Google Cloud with the Drive API turned on | A background takes its pictures from a shared Google Drive folder. See [Pictures from a shared folder](../setup-photos/PHOTOS-en-GB.md). Google Photos albums need no key. |
 | Text | `PHOTO_HOSTS` | The hosts pictures may come from, separated by commas, e.g. `sky.example.org` | Pictures come from a Nextcloud or ownCloud share, or from a picture list at another address. Google's own hosts are built in. |
 | Text | `ICS_HOSTS` | The hosts calendars may come from, separated by commas, e.g. `calendar.proton.me` | A calendar comes from a service other than Google Calendar. See [The calendar](../calendar-guide/CALENDAR-en-GB.md). |
@@ -105,14 +105,14 @@ A site set up with an OAuth App, before this guide used a GitHub App, keeps work
 1. Create a GitHub App as in step 3, with the site's address.
 2. In Cloudflare, under **Variables and Secrets**, give `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` the app's values, and remove `GITHUB_SCOPE` if it is there. Deploy again (step 4).
 3. In the editor, press **Log out** beside your username in the top bar, and log in again.
-4. Delete the old OAuth App: **Settings** → **Developer settings** → **OAuth Apps** → the app → **Delete application**.
+4. Delete the old OAuth App, unless another site still uses it: **Settings** → **Developer settings** → **OAuth Apps** → the app → **Advanced** (left menu) → **Delete application** → **Delete this OAuth Application**.
 
 While a site uses an OAuth App, a private repo needs the variable `GITHUB_SCOPE` with the value `repo`.
 
 ## Your own domain
 
-1. In the project, open **Custom domains** → **Set up a custom domain**, and follow Cloudflare's steps.
-2. On GitHub, open the app from step 3 (**Settings** → **Developer settings** → **GitHub Apps** → **Edit** next to the app), change the **Homepage URL** and the **Callback URL** to the new domain, and press **Save changes**.
+1. In the project, open **Custom domains** → **Set up a domain**, type the domain, press **Continue**, and follow Cloudflare's steps.
+2. On GitHub, open the app from step 3 (**Settings** → **Developer settings** → **GitHub Apps** → **Edit** next to the app). Add a second **Redirect URI** with the new domain, e.g. `https://www.example.org/api/github/callback`, and keep the one with `pages.dev`, so you can log in at either address. Set the **Homepage URL** to the new domain, and press **Save changes**.
 
 On Cloudflare's free plan, Cloudflare turns on its own visit counting (Web Analytics) for a domain you add, and puts its script on your pages. The privacy page then tells your visitors so, and the Legal panel names it. To turn it off: in the Cloudflare dashboard, open the domain → **Web Analytics** → **Manage RUM Settings** → **Disable**; Cloudflare does not turn it on again. Check the setting in Cloudflare rather than relying on the Legal panel: the panel only sees the front page as Cloudflare serves it to you, and Cloudflare leaves the script out for visitors served from its EU and UK data centres.
 
@@ -188,7 +188,7 @@ PayPal's page takes the buyer's PayPal account, or a card without an account whe
 The editor's Drafts window saves drafts to GitHub, so you can pick them up on another device. They go on a branch of their own, `urd-drafts`, which the first save creates. Nothing has to be set up for it, but three things are good to know:
 
 - **Saves never reach the site.** Every save is marked so that Cloudflare builds nothing from it: it never reaches the live site, never uses one of the project's builds, and never shows in History.
-- **Leave the branch out of preview builds.** Cloudflare builds a preview of every branch by default. To be safe, leave `urd-drafts` out: in the project, **Settings** → **Builds & deployments** → **Preview branch control** (in newer dashboards **Build** → **Branch control**), then choose **None**, or **Custom branches** with `*` under Include and `urd-drafts` under Exclude.
+- **Leave the branch out of preview builds.** Cloudflare builds a preview of every branch by default. To be safe, leave `urd-drafts` out: in the project, **Settings** → **Builds** → **Branch control**, and under **Preview branch** choose **None**, or **Custom branches** with `*` among the branches to include and `urd-drafts` among those to exclude.
 - **Rules on every branch block the saves.** A GitHub ruleset or branch protection rule that covers every branch (one that restricts creating branches or requires a pull request, say) also stops the saves, and Drafts says «GitHub refused the branch the saved drafts live on (urd-drafts); see the setup guide». Leave the branch out: in the repo, **Settings** → **Rules** → **Rulesets** → the ruleset → **Target branches** → **Add target** → **Exclude by pattern** → `urd-drafts`. For a classic protection rule under **Settings** → **Branches** with the pattern `*`, change the pattern to `main`.
 
 On a public repo, anyone can read the saved drafts and the notes on them, as they can read the rest of the repo.
@@ -212,14 +212,15 @@ cd template
 npx wrangler pages dev . --port 8788
 ```
 
-The site, the editor and the functions then all run on `http://localhost:8788`. A full login needs a real GitHub App with its callback on localhost, but the error answers and the path checks can be tested without one.
+The site, the editor and the functions then all run on `http://localhost:8788`. A full login needs a real GitHub App with a **Redirect URI** on localhost, `http://localhost:8788/api/github/callback`, but the error answers and the path checks can be tested without one.
 
 ## Troubleshooting
 
 | What you see | Likely cause |
 |---|---|
 | «Publishing is not configured: the environment variable X is missing» | The variable is missing in Cloudflare, or the site has not been deployed since it was added (step 4) |
-| «Invalid OAuth state (try signing in again)» when logging in | The **Callback URL** in the GitHub App does not match the site's address, or the browser blocks cookies |
+| GitHub says «The redirect_uri is not associated with this application» when you log in | No **Redirect URI** in the GitHub App has the address you opened the editor at; your own domain needs one of its own (see «Your own domain») |
+| «Invalid OAuth state (try signing in again)» when logging in | You pressed Cancel on GitHub's page, more than ten minutes passed there, or the browser blocks cookies; log in again |
 | GitHub shows a 404 page when you log in | The Client ID in Cloudflare is not the app's, or the site has not been deployed since it was added |
 | «GitHub rejected the login (expired token?) - sign in again» when publishing, or «Invalid or expired sign-in» in Drafts, History or Updates | The login has run out, or it was ended on GitHub's side. Log out and in again |
 | «The GitHub user "X" does not have publishing access» | The username is not in `ALLOWED_LOGINS` (check the spelling; capital letters do not matter) |

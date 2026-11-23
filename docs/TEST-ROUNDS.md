@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.5.3): renewed logins through either app, and the corrected guide
+
+- [ ] On urdweb, log out and log in: the login goes through, and the editor still publishes more than eight hours later without logging in again
+- [ ] After the next release, on urd-web (still on its OAuth App), log out and log in: publishing works, and still does more than eight hours later without logging in again
+- [ ] The setup guide (en-GB and nb) names every button and field as GitHub and Cloudflare show them
+- [ ] In urdweb's GitHub App (General), untick «Expire user authorization tokens» and save, log out and log in, then open `https://urdweb.pages.dev/api/github/me`: the answer holds `renewIn` where GitHub honours `offline_access` beside `public_repo` for a GitHub App, and lacks it where it does not (tick the box again afterwards)
+
 ### Test batch (0.7.37.5.2): the GitHub App and the renewed login
 
 - [ ] On urdweb, follow the setup guide's step 3 (en-GB): create the GitHub App, install it on the site's repo alone, put its Client ID and secret in Cloudflare (step 4), deploy again, log out and log in: your username stands in the top bar without a warning sign

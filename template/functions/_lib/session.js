@@ -1,10 +1,10 @@
 /**
  * The renewal of a GitHub sign-in that expires.
- * A GitHub App's sign-in, and an OAuth App's with «Expire user access tokens», lasts eight hours, and GitHub's answer then carries a refresh token that renews it for six months.
+ * The login asks for `offline_access` (loginScope), so an OAuth App's sign-in lasts eight hours whatever the app's setting for expiring tokens, as a GitHub App's does with «Expire user authorization tokens» (on by default), and GitHub's answer carries a refresh token that renews it for six months.
  * The refresh token and the time the sign-in ends are kept in the httpOnly cookie 'urd_ghr', sent to the site's functions under /api/github alone, never to its pages.
  * The sign-in status (me.js) renews the sign-in once it is within RENEW_BEFORE of its end, or RENEW_SOON earlier where the editor asks before a publish or a save, and tells the editor when to ask again (`renewIn`), so the editor asks at that moment and before its other calls when it opens late.
  * A renewal ends the old sign-in and the old refresh token at GitHub, so only the status call renews: other calls carrying the old sign-in would fail if several renewed at once.
- * A sign-in without a refresh token (an OAuth App whose tokens do not expire) has no 'urd_ghr' and is never renewed.
+ * A sign-in GitHub gives without a refresh token has no 'urd_ghr' and is never renewed.
  */
 import { serializeCookie, expireCookie, readCookie } from './cookies.js';
 
@@ -23,6 +23,16 @@ export const RENEW_LEAST = 60;
 
 const RENEW_VALUE = /^(\d{9,11})\.([A-Za-z0-9_]{20,255})$/;
 const REFRESH_TOKEN = /^[A-Za-z0-9_]{20,255}$/;
+
+/**
+ * The scope the login asks for: the site's own (GITHUB_SCOPE, which a GitHub App does not use) and `offline_access`, which makes GitHub answer an OAuth App's login with an expiring sign-in and a refresh token.
+ * The site's scope may be written with spaces or commas; each value is asked for once.
+ * @param {string} scope
+ * @returns {string}
+ */
+export function loginScope(scope) {
+  return [...new Set([...String(scope ?? '').split(/[\s,]+/).filter(Boolean), 'offline_access'])].join(' ');
+}
 
 /** Seconds since 1970, the unit the renewal cookie keeps the end in. */
 export const nowSeconds = () => Math.floor(Date.now() / 1000);
