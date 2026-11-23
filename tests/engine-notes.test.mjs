@@ -20,12 +20,12 @@ const VISITOR_MODULES = [
   'blocks/quote.js', 'blocks/ribbon.js', 'blocks/shape.js', 'blocks/share.js', 'blocks/spacer.js', 'blocks/stats.js',
   'blocks/table.js', 'blocks/text.js', 'blocks/timeline.js', 'blocks/video.js', 'boot.js', 'box-style.js',
   'calendar-designs.js', 'calendar-format.js', 'collections.js', 'contact-checks.js', 'contact-model.js',
-  'contact-profiles.js', 'core-types.js', 'divider-model.js', 'doc-look.js', 'embed-cover.js', 'footer-cta.js',
+  'contact-profiles.js', 'core-types.js', 'divider-model.js', 'doc-designs.js', 'doc-look.js', 'embed-cover.js', 'features.js', 'footer-cta.js',
   'footer-model.js', 'footer.js', 'form-model.js', 'gallery-layout.js', 'gallery-model.js', 'i18n.js', 'icons.js',
   'ics.js', 'keep-minutes.js', 'links-model.js', 'locales/site/nb.js', 'map-links.js', 'meeting-links.js',
   'migrate.js', 'nav-model.js', 'nav.js', 'osm.js', 'phone-order.js', 'photo-source.js', 'picture.js', 'plugins.js',
   'prefetch.js', 'privacy-model.js', 'push-model.js', 'registry.js', 'render.js', 'ribbon-model.js', 'sanitize.js',
-  'seo.js', 'shape-model.js', 'shop.js', 'sticky-model.js', 'sticky.js', 'theme.js', 'totop.js', 'urd.js',
+  'seo.js', 'shape-model.js', 'sheets.js', 'shop.js', 'sticky-model.js', 'sticky.js', 'theme.js', 'totop.js', 'urd.js',
 ];
 
 /** The modules whose longer comments are still to get their short versions, each with one left at least; the list shrinks as they do. */

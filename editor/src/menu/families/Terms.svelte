@@ -4,7 +4,7 @@
   import Fold from '../../lib/rows/Fold.svelte';
   import DocLook from '../DocLook.svelte';
   import WholeText from '../WholeText.svelte';
-  import { termsDesign } from '$engine/doc-look.js';
+  import { termsDesign } from '$engine/doc-designs.js';
   import { ta } from '$engine/i18n.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');

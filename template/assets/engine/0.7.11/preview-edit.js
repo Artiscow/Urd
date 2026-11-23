@@ -77,7 +77,7 @@ import { pathTo, nodeAt } from './caret-path.js';
 // ta() is called as the editing chrome is drawn, never at module level (ADR-0012).
 import { ta, adminLang } from './i18n.js';
 import { barTools, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, BAR_ICONS } from './bar-tools.js';
-import { textDesign } from './doc-look.js';
+import { textDesign } from './doc-designs.js';
 import { addedFloor, narrowestWidth, fittedFrame, pluginFits, DRAWS_LATE } from './add-fit.js';
 
 /**

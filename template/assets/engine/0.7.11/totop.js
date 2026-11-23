@@ -6,7 +6,6 @@ import { t } from './i18n.js';
 import { resolveColor } from './theme.js';
 import { iconSvg, ICON_LIBRARY } from './icons.js';
 import { isSafeImage } from './nav-model.js';
-import { shapeOf, shapeOutline, outlinePath, outlineMiddle } from './shape-model.js';
 
 /** The designs, the first the standard: a circle, a rounded square, a pill with words, a ring and the words alone. */
 export const TOTOP_DESIGNS = ['circle', 'square', 'pill', 'ring', 'words'];
@@ -60,12 +59,13 @@ const colourOf = (value) => (typeof value === 'string' && value.trim() ? value.t
 /**
  * The button's settings as they apply, each read from `site.layout.toTop` or its standard.
  * @param {object|null|undefined} site site.json
+ * @param {typeof import('./shape-model.js')|null} [shapes] The shape model, which reads the owner's own shape; without it the design's own outline stands
  * The button's own mark in place of the arrow, as the icon block draws its own: a picture uploaded and edited (`image`), else a drawn icon from Urd's set (`icon`), else a character (`glyph`); none of them, the arrow.
  * A shaped design's outline is the shape the owner chose or drew (`shape`, shape-model.js), or without one the design's own: the circle, the rounded square or the ring, with the waves of `waves` and `count`.
  * The mark's size (`iconSize`) is a percent of its size in the design, the arrow's alike; a picture on a shaped design stands inside the button's edge or fills the whole button (`fill`), where a mark can stand over it (`over`): the arrow, else a drawn icon or a character, at the mark's size.
- * @returns {{show: boolean, design: string, place: 'corner'|'content', side: 'left'|'right', size: string, phoneSize: string|null, colors: Record<string, string|null>, after: string, phone: boolean, text: string, waves: number, count: number, hover: string, press: string|null, line: string, lineWidth: number, glyph: string, icon: string|null, image: string|null, iconSize: number, fill: string, over: {icon: string|null, glyph: string}|null, shape: ReturnType<typeof shapeOf>|null}}
+ * @returns {{show: boolean, design: string, place: 'corner'|'content', side: 'left'|'right', size: string, phoneSize: string|null, colors: Record<string, string|null>, after: string, phone: boolean, text: string, waves: number, count: number, hover: string, press: string|null, line: string, lineWidth: number, glyph: string, icon: string|null, image: string|null, iconSize: number, fill: string, over: {icon: string|null, glyph: string}|null, shape: ReturnType<typeof import('./shape-model.js').shapeOf>|null}}
  */
-export function toTopOf(site) {
+export function toTopOf(site, shapes = null) {
   const raw = site?.layout?.toTop && typeof site.layout.toTop === 'object' ? site.layout.toTop : {};
   const waves = Number(raw.waves);
   // An emptied amount reads as the standard, not as the fewest waves.
@@ -98,20 +98,21 @@ export function toTopOf(site) {
       icon: typeof raw.over.icon === 'string' && Object.hasOwn(ICON_LIBRARY, raw.over.icon) ? raw.over.icon : null,
       glyph: typeof raw.over.glyph === 'string' ? [...raw.over.glyph.trim()].slice(0, TOTOP_GLYPH_MAX).join('') : '',
     } : null,
-    shape: raw.shape && typeof raw.shape === 'object' && !Array.isArray(raw.shape) ? shapeOf(raw.shape) : null,
+    shape: shapes && raw.shape && typeof raw.shape === 'object' && !Array.isArray(raw.shape) ? shapes.shapeOf(raw.shape) : null,
   };
 }
 
 /**
  * The shape a shaped design shows, as a shape's values: the owner's own, or else the nearest to the design's own outline with its waves.
  * @param {ReturnType<typeof toTopOf>} set
- * @returns {ReturnType<typeof shapeOf>}
+ * @param {typeof import('./shape-model.js')} shapes The shape model
+ * @returns {ReturnType<typeof import('./shape-model.js').shapeOf>}
  */
-export function toTopShapeOf(set) {
+export function toTopShapeOf(set, shapes) {
   if (set.shape) return set.shape;
   const share = set.waves / 100;
   const waves = share ? { waves: Math.round(68 * share ** 0.8), count: set.count, sharp: Math.round(100 * share * share) } : {};
-  return shapeOf(set.design === 'square' ? (share ? { square: 33, ...waves } : { sides: 4, corners: 55, turn: 45 }) : waves);
+  return shapes.shapeOf(set.design === 'square' ? (share ? { square: 33, ...waves } : { sides: 4, corners: 55, turn: 45 }) : waves);
 }
 
 /** How far inside the box the ring's outline stands, so its line is drawn whole. */
@@ -121,13 +122,14 @@ const RING_MARGIN = 4;
  * A shaped design's outline as an SVG path in the 100 by 100 box, and where its mark stands: the owner's shape, else the design's; `whole` widens the ring's.
  * @param {ReturnType<typeof toTopOf>} set
  * @param {boolean} [whole]
+ * @param {typeof import('./shape-model.js')|null} [shapes] The shape model, which draws the owner's own shape
  * @returns {{d: string, mark: [number, number]}}
  */
-export function toTopOutline(set, whole = false) {
+export function toTopOutline(set, whole = false, shapes = null) {
   const ring = set.design === 'ring' && !whole;
-  if (!set.shape) return { d: toTopShape(ring || set.design !== 'ring' ? set.design : 'circle', set.waves, set.count), mark: [50, 50] };
-  const pts = shapeOutline(set.shape, ring ? RING_MARGIN : 0);
-  return { d: outlinePath(pts), mark: set.shape.icon ?? outlineMiddle(pts) };
+  if (!set.shape || !shapes) return { d: toTopShape(ring || set.design !== 'ring' ? set.design : 'circle', set.waves, set.count), mark: [50, 50] };
+  const pts = shapes.shapeOutline(set.shape, ring ? RING_MARGIN : 0);
+  return { d: shapes.outlinePath(pts), mark: set.shape.icon ?? shapes.outlineMiddle(pts) };
 }
 
 /**
@@ -142,11 +144,12 @@ export function toTopFillsWhole(set) {
 /**
  * The outline a shaped design's mark is cut to, as a CSS image in a 100 by 100 box, the whole button's under a picture filling it; null for the pill and words.
  * @param {ReturnType<typeof toTopOf>} set
+ * @param {typeof import('./shape-model.js')|null} [shapes] The shape model, which draws the owner's own shape
  * @returns {string|null}
  */
-export function toTopClip(set) {
+export function toTopClip(set, shapes = null) {
   if (!TOTOP_SHAPED.includes(set.design)) return null;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${toTopOutline(set, toTopFillsWhole(set)).d}"/></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="${toTopOutline(set, toTopFillsWhole(set), shapes).d}"/></svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
@@ -229,8 +232,8 @@ let listening = null;
  * @param {object} site site.json
  * @param {HTMLElement} [host] Where the button stands (the page's body)
  */
-export function renderToTop(site, host = document.body) {
-  const set = toTopOf(site);
+export function renderToTop(site, host = document.body, shapes = null) {
+  const set = toTopOf(site, shapes);
   if (!set.show) {
     button?.remove();
     button = null;
@@ -267,11 +270,11 @@ export function renderToTop(site, host = document.body) {
   button.style.setProperty('--urd-totop-line-w', `${set.lineWidth}px`);
   if (set.iconSize !== TOTOP_ICON_SIZE.standard) button.style.setProperty('--urd-totop-mark-scale', String(set.iconSize / 100));
   else button.style.removeProperty('--urd-totop-mark-scale');
-  const clip = toTopClip(set);
+  const clip = toTopClip(set, shapes);
   if (clip) button.style.setProperty('--urd-totop-clip', clip);
   else button.style.removeProperty('--urd-totop-clip');
   // The mark stands at the shape's own middle, or where the owner put it, as a share of the button from its middle.
-  const outline = TOTOP_SHAPED.includes(set.design) ? toTopOutline(set) : null;
+  const outline = TOTOP_SHAPED.includes(set.design) ? toTopOutline(set, false, shapes) : null;
   for (const [name, at] of [['x', outline?.mark[0]], ['y', outline?.mark[1]]]) {
     if (outline && Math.abs(at - 50) > 0.05) button.style.setProperty(`--urd-totop-mark-${name}`, `${(at - 50).toFixed(1)}%`);
     else button.style.removeProperty(`--urd-totop-mark-${name}`);

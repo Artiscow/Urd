@@ -1,0 +1,45 @@
+/*
+ * The basket in the menu's own rules (nav.js, drawn with shop.js), loaded with it by features.js, after base.css in the order its rules stood there.
+ * Its reasoning stands in docs/STYLES.md, under nav-cart.css.
+ */
+/* The cart in the menu */
+.urd-nav-cart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.35rem;
+  opacity: 0.85;
+}
+
+/* The clearance towards the next tool sits on the neighbor */
+.urd-nav-cart + .urd-nav-theme,
+.urd-nav-cart + .urd-nav-launcher-wrap,
+.urd-nav-cart + .urd-nav-burger {
+  margin-inline-start: 0.5rem;
+}
+
+.urd-nav-cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  padding: 0 3px;
+  background: var(--urd-color-accent);
+  color: var(--urd-color-accent-text, var(--urd-color-bg));
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+/* An empty basket shows no count */
+.urd-nav-cart-badge[hidden] {
+  display: none;
+}

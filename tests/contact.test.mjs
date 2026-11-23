@@ -13,6 +13,8 @@ const { CHECKS } = await engineImport('contact-checks.js');
 const { footerContact, footerLegal } = await engineImport('footer-model.js');
 const { siteJsonLd } = await engineImport('seo.js');
 const { renderFooter } = await engineImport('footer.js');
+// The footer draws the contact details with the contact model loaded, as the boot loads it for a site that holds them (features.js).
+await (await engineImport('features.js')).loadFeatures({ animations: {} }, ['contact']);
 
 const NO = {
   country: 'NO', legalName: 'Apeiron Linjeforening', ids: { org: '974760673' }, registers: { org: 'Foretaksregisteret' }, vat: { registered: true },
@@ -177,10 +179,10 @@ test('organizationContact and siteJsonLd: the ISO 6523 code, the other numbers, 
   assert.equal(organizationContact(siteContact(siteWith({ country: 'NO', ids: { org: '12345' } }))).iso6523Code, undefined, 'a number in the wrong form');
   const bad = organizationContact(siteContact(siteWith({ country: 'NO', ids: { org: '974760674' }, vat: { registered: true } })));
   assert.deepEqual(bad, {}, 'a number failing its check, and the VAT number derived from it');
-  const ld = siteJsonLd(siteWith(NO), 'https://apeiron.no');
+  const ld = siteJsonLd(siteWith(NO), 'https://apeiron.no', CONTACT_MODEL);
   assert.equal(ld['@type'], 'Organization');
   assert.equal(ld.legalName, 'Apeiron Linjeforening');
-  assert.deepEqual(Object.keys(siteJsonLd(siteWith(undefined), 'https://apeiron.no')).sort(), ['@context', '@type', 'name', 'url']);
+  assert.deepEqual(Object.keys(siteJsonLd(siteWith(undefined), 'https://apeiron.no', CONTACT_MODEL)).sort(), ['@context', '@type', 'name', 'url']);
 });
 
 test('sellerParts: the name, the numbers and the address on one line, without the representative', () => {
@@ -212,11 +214,15 @@ test('Norway names Frivillighetsregisteret beside the number', () => {
 });
 
 test('footerContact and footerLegal: the two switches, each hiding its own part', () => {
-  assert.equal(footerContact(siteWith(NO, { contact: false })), null);
-  assert.equal(footerLegal(siteWith(NO, { contact: false })).length, 2);
-  assert.equal(footerLegal(siteWith(NO, { legal: false })), null);
-  assert.equal(footerContact(siteWith(NO, { legal: false })).address[0], 'Høgskoleringen 5');
-  assert.equal(footerLegal(siteWith({ phone: '1' })), null, 'nothing to show');
+  assert.equal(footerContact(siteWith(NO, { contact: false }), CONTACT_MODEL), null);
+  assert.equal(footerLegal(siteWith(NO, { contact: false }), CONTACT_MODEL).length, 2);
+  assert.equal(footerLegal(siteWith(NO, { legal: false }), CONTACT_MODEL), null);
+  assert.equal(footerContact(siteWith(NO, { legal: false }), CONTACT_MODEL).address[0], 'Høgskoleringen 5');
+  assert.equal(footerLegal(siteWith({ phone: '1' }), CONTACT_MODEL), null, 'nothing to show');
+  // Without the contact model, as on a site that holds no contact details, neither part is drawn and the organisation carries none.
+  assert.equal(footerContact(siteWith(NO), null), null);
+  assert.equal(footerLegal(siteWith(NO), null), null);
+  assert.ok(!('legalName' in siteJsonLd(siteWith(NO), 'https://apeiron.no')));
 });
 
 /** The smallest element stub the footer render needs. */

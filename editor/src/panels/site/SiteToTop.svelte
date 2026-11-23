@@ -18,12 +18,13 @@
   import GlyphPicker from '../../lib/GlyphPicker.svelte';
   import { glyphTakesColour } from '$engine/glyphs.js';
   import { shapeStored, shapeId } from '$engine/shape-model.js';
+  import * as shapeModel from '$engine/shape-model.js';
   import PictureRow from '../../lib/rows/PictureRow.svelte';
   import ShapeWindow from '../../lib/ShapeWindow.svelte';
   import { ICONS } from '../../lib/icons.js';
 
   const ed = getContext('urd-editor');
-  const set = $derived(toTopOf(ed.siteDraft));
+  const set = $derived(toTopOf(ed.siteDraft, shapeModel));
   const shaped = $derived(TOTOP_SHAPED.includes(set.design));
   const worded = $derived(TOTOP_WORDED.includes(set.design));
   const wordsAlone = $derived(set.design === 'words');
@@ -113,14 +114,14 @@
   ].filter(Boolean).map((item) => ({ ...item, value: set.colors[item.key] ?? '', onchange: (v) => writeColour(item.key, v) })));
 
   /** A shaped design's shape (shape-model.js): the owner's own, or the design's own as the shape window starts from it; its name is the shipped shape's, «Custom» for values of the owner's own, or the drawing's. */
-  const shapeNow = $derived(toTopShapeOf(set));
+  const shapeNow = $derived(toTopShapeOf(set, shapeModel));
   const shapeName = $derived.by(() => {
     if (shapeNow.points) return ta('shapeWin.drawnName');
     const id = shapeId(shapeNow);
     return id ? ta(`outlineShape.${id}`) : ta('shapeWin.custom');
   });
   /** The outline as the button draws it, as a small picture for the row. */
-  const shapePicture = $derived(`data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28 -6 156 112"><path d="${toTopOutline(set).d}" fill="#2ba58d"/></svg>`)}`);
+  const shapePicture = $derived(`data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28 -6 156 112"><path d="${toTopOutline(set, false, shapeModel).d}" fill="#2ba58d"/></svg>`)}`);
   let shapeOpen = $state(false);
   /** Writes the shape as the window hands it over: only what differs from the circle, with the waves and amount the shape replaces taken away. A circle is stored only where the design would draw something else without it. */
   function writeShape(next, name) {

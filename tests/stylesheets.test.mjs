@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ENGINE_DIR, calendarSheets, blockSheets, engineImport, engineClosure } from './_engine.mjs';
+import { ENGINE_DIR, calendarSheets, blockSheets, featureSheets, engineImport, engineClosure } from './_engine.mjs';
 import { visitorModules } from '../scripts/engine-notes.mjs';
 
 const engine = fileURLToPath(ENGINE_DIR);
@@ -148,7 +148,7 @@ test('each design family\'s sheet styles its own designs alone, loads with its r
   const load = read(join(engine, 'blocks/calendar-load.js'));
   assert.match(load, /export const loadDesign = \(name\) => \(DESIGN_MODULES\[name\] \? Promise\.all\(\[DESIGN_MODULES\[name\]\(\), SHEETS\[name\] \? loadSheet\(name\) : null\]\)/, 'a renderer comes with its sheet');
   assert.match(load, /const loadSheet = \(name\) => loadStylesheet\(new URL\(SHEETS\[name\], import\.meta\.url\)\.href, placeInOrder\('calendar', Object\.keys\(SHEETS\)\.indexOf\(name\)\)\);/, 'in its place among the others, whatever order they come in');
-  assert.match(read(join(engine, 'render.js')), /const later = placed\.find\(\(other\) => Number\(other\.dataset\.urdSheetRank\) > rank\);\s+const anchor = after\(\);\s+if \(later\) later\.before\(link\);\s+else if \(placed\.length\) placed\.at\(-1\)\.after\(link\);/);
+  assert.match(read(join(engine, 'sheets.js')), /const later = placed\.find\(\(other\) => Number\(other\.dataset\.urdSheetRank\) > rank\);\s+const anchor = after\(\);\s+if \(later\) later\.before\(link\);\s+else if \(placed\.length\) placed\.at\(-1\)\.after\(link\);/);
 });
 
 test('base.css holds no rule that belongs to the preview or to the calendar', () => {
@@ -268,6 +268,30 @@ test('each block module\'s sheet holds its own rules: every rule names a class i
   }
   const styles = readFileSync(new URL('../docs/STYLES.md', import.meta.url), 'utf8');
   for (const [, name] of styles.matchAll(/^# blocks\/([a-z]+)\.css, rule by rule$/gm)) assert.ok(owners.has(name), `STYLES.md's ${name}.css is a block sheet`);
+});
+
+test('each feature\'s sheet holds its own rules, loads with its feature before the block sheets, with one-line labels and its reasoning in docs/STYLES.md', async () => {
+  const OWN = { 'nav-cart.css': /^urd-nav-cart/, 'footer.css': /^urd-footer/, 'totop.css': /^urd-totop/ };
+  const { CORE_FEATURES } = await engineImport('features.js');
+  const sheets = featureSheets();
+  assert.deepEqual(sheets.map((sheet) => sheet.file), Object.keys(OWN), 'the sheets in the order their rules stood in base.css');
+  for (const sheet of sheets) {
+    for (const sel of selectorsOf(sheet.text).flat()) assert.ok(classes(sel).some((name) => OWN[sheet.file].test(name)), `${sheet.file}: «${sel}» names none of its feature's classes`);
+    assert.equal(Object.values(CORE_FEATURES).filter((load) => String(load).includes(`'${sheet.file}'`)).length, 1, `${sheet.file} loads with one feature`);
+    const comments = [...sheet.text.matchAll(/\/\*([\s\S]*?)\*\//g)].map((m) => m[1].trim());
+    const [header, ...labels] = comments;
+    assert.match(header, /docs\/STYLES\.md/, `${sheet.file} names where its reasoning stands`);
+    for (const label of labels) assert.ok(!label.includes('\n') && label.length <= 72, `${sheet.file}: a label is one short line: ${label.slice(0, 60)}`);
+  }
+  // The footer's and the back-to-top button's rules all left base.css; the basket's and the animations' that a later rule meets stay there for their order.
+  for (const list of selectorsOf(BASE)) {
+    const theirs = list.every((sel) => classes(sel).length && classes(sel).every((name) => /^urd-(footer|totop)/.test(name)));
+    assert.ok(!theirs, `base.css: «${list.join(', ')}» belongs to footer.css or totop.css`);
+  }
+  const styles = readFileSync(new URL('../docs/STYLES.md', import.meta.url), 'utf8');
+  for (const { file } of sheets) assert.match(styles, new RegExp(`^# ${file.replace('.', '\\.')}, rule by rule$`, 'm'));
+  const types = readFileSync(new URL('core-types.js', ENGINE_DIR), 'utf8');
+  assert.match(types, /placeInOrder\('blocks', BLOCK_SHEETS\.indexOf\(name\), afterFeatures\)/, 'the block sheets follow the feature sheets');
 });
 
 test('base.css, which every page loads, carries one-line labels, its reasoning in docs/STYLES.md', () => {

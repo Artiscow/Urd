@@ -4,7 +4,7 @@
  * Fetching ALWAYS goes through the site's own feed proxy (/api/ics): feed hosts send no CORS, and the site's CSP allows connect-src 'self' only.
  */
 import { ta, taApiError } from '../i18n.js';
-import { loadStylesheet, placeInOrder } from '../render.js';
+import { loadStylesheet, placeInOrder } from '../sheets.js';
 import { CALENDAR_FEED_MINUTES } from '../keep-minutes.js';
 
 /* ---------- Fetching (proxy + short-lived cache) ---------- */

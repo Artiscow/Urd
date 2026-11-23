@@ -7,7 +7,7 @@
   import Setting from '../../lib/rows/Setting.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import { ta } from '$engine/i18n.js';
-  import { privacyDesign } from '$engine/doc-look.js';
+  import { privacyDesign } from '$engine/doc-designs.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);

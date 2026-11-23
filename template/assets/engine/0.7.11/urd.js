@@ -5,24 +5,20 @@
 import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
 import { applyTheme, onlyColoursChanged, sameData } from './theme.js';
-import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrames, loadStylesheet } from './render.js';
+import { applySiteLayout, renderPage, renderSection, visitorHeights, updateFrames } from './render.js';
+import { loadStylesheet } from './sheets.js';
 import { renderNav, refreshNavScroll, clearAnnounceDismissal, holdNavForJump } from './nav.js';
 import { isSafeImage, hashTarget, samePageHash, jumpOnArrival } from './nav-model.js';
-import { renderFooter } from './footer.js';
-import { whenSettled, FOOTER_WAIT_MS } from './footer-model.js';
-import { renderToTop } from './totop.js';
-import { coreAnimations } from './animations/core.js';
 import { loadCoreTypes, reserveCoreTypes, prepareBlocks, pageBlocks, READY_WAIT_MS } from './core-types.js';
 import { loadPlugins, loadPluginList, applyPluginSiteLocales, pluginBlockDesigns, pageTypes, needsPlugins, engineVersionOf } from './plugins.js';
-import { setCollectionsDraft, draftHasKind } from './collections.js';
-import { initSticky, refreshSticky } from './sticky.js';
+import { feature, loadFeatures, reserveCoreAnimations, siteFeatures, pageFeatures } from './features.js';
 import { applyHeadMeta, mountAnalytics, pageTitle } from './seo.js';
 import { readPrefetched, revalidateFile, wirePrefetch, sessionStore } from './prefetch.js';
 import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
 
 /** Hands the preview module the shop gate of «+ New block» and «+ New section»: the site's own settings and whether the collection drafts hold a product catalogue. */
 function refreshShopGate(site) {
-  window.UrdPreviewEdit?.setShopOn?.(site?.site, draftHasKind('products'));
+  window.UrdPreviewEdit?.setShopOn?.(site?.site, Boolean(feature('collections')?.draftHasKind('products')));
 }
 
 /** The commands plugins registered (Urd.commands), named for the editor's palette: the label from its key when it has one. */
@@ -55,9 +51,9 @@ Urd.maler = Urd.templates;
 window.Urd = Urd;
 
 function registerCore() {
-  // The core block and background ids are reserved now, their types defined as a page asks for them (core-types.js, ADR-0036); the animations defined at once.
+  // The core block, background and animation ids are reserved now, each defined as a page asks for it (core-types.js, features.js, ADR-0036).
   reserveCoreTypes(Urd);
-  for (const [id, def] of Object.entries(coreAnimations)) Urd.animations.define(id, def);
+  reserveCoreAnimations(Urd);
   // Old plugin contract ids resolve to the renamed ones (ADR-0021), as pages may carry them; a plugin that defines an old id itself wins over the alias.
   Urd.blocks.alias('kalender', 'calendar');
   Urd.blocks.alias('kart', 'map');
@@ -397,7 +393,7 @@ function enablePreview(state, opts) {
       const paint = () => renderPage(state.page, state.site, root, vp());
       if (samePage) keepScroll(() => typing(paint)); else paint();
       // Page switch in the editor: the footer and the menu can have per-page visibility (hideOn).
-      if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
+      if (opts.footer) feature('footer')?.renderFooter(state.site, opts.footer, state.page?.meta?.id);
       if (!samePage && opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
     } else if (msg?.type === 'urd-spellcheck') {
       // The browser's spell check on the editable texts, which the body's attribute governs for every text under it.
@@ -411,7 +407,7 @@ function enablePreview(state, opts) {
       cleanTexts(!msg.visible);
       // The pinning and the menu's scroll state follow the switch at once,
       // not first at the next scroll.
-      refreshSticky();
+      feature('sticky')?.refreshSticky();
       refreshNavScroll();
       // The bar the editor draws for a selected block in the phone view goes and comes back with the handles.
       window.UrdPreviewEdit?.watchPhoneBar?.();
@@ -506,7 +502,7 @@ function enablePreview(state, opts) {
       jumpTo(hashTarget(msg.hash));
     } else if (msg?.type === 'urd-collections' && msg.collections) {
       // Collection drafts from the editor stand in for the server files; only the sections with collection blocks are drawn again, keeping the scroll position.
-      setCollectionsDraft(msg.collections);
+      feature('collections')?.setCollectionsDraft(msg.collections);
       refreshShopGate(state.site);
       const usesCollections = (b) => Boolean(Urd.blocks.get(b.type)?.usesCollections);
       typing(() => {
@@ -672,8 +668,8 @@ function enablePreview(state, opts) {
         applySiteLayout(state.site);
         applyFavicon(state.site.site?.icon);
         if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
-        if (opts.footer) renderFooter(state.site, opts.footer, state.page?.meta?.id);
-        renderToTop(state.site);
+        if (opts.footer) feature('footer')?.renderFooter(state.site, opts.footer, state.page?.meta?.id);
+        feature('totop')?.renderToTop(state.site, document.body, feature('shape'));
         renderPage(state.page, state.site, root, vp());
       }));
       // A changed site.lang reloads the visitor locale and the plugin texts (syncSiteLocale) and then redraws, so the preview shows the draft's language.
@@ -784,9 +780,13 @@ export async function boot(opts) {
     console.warn(`Urd: could not load page file '${entry.file}' - rendering an empty page`);
     return { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   });
-  // The preview loads every core type and the section presets; a visitor's page asks for its menu's, footer's and page's types as soon as each is known.
+  // The site's features (features.js) are asked for beside the page file; the footer's is awaited only as the footer joins the page.
+  const siteHeld = preview ? new Set() : siteFeatures(site, entry.id);
+  const siteLoaded = loadFeatures(Urd, [...siteHeld].filter((name) => name !== 'footer'));
+  const footerLoaded = loadFeatures(Urd, siteHeld.has('footer') ? ['footer'] : []);
+  // The preview loads every core type and feature and the section presets; a visitor's page asks for its menu's, footer's and page's types as soon as each is known.
   if (preview) {
-    await Promise.all([loadCoreTypes(Urd, null, { all: true }), import('./sections/presets.js').then(({ registerSectionPresets }) => registerSectionPresets(Urd))]);
+    await Promise.all([loadCoreTypes(Urd, null, { all: true }), loadFeatures(Urd, null, { all: true }), import('./sections/presets.js').then(({ registerSectionPresets }) => registerSectionPresets(Urd))]);
   } else {
     loadCoreTypes(Urd, pageTypes(site.footer));
   }
@@ -796,7 +796,8 @@ export async function boot(opts) {
     if (!Array.isArray(lifted.sections)) lifted.sections = [];
     const readied = prepareBlocks(pageBlocks(lifted, site.footer), { site, preview, viewport });
     const pictures = preview ? null : askLayerPictures(lifted.sections[0]?.background);
-    return Promise.all([preview ? null : loadCoreTypes(Urd, pageTypes(lifted, site.footer)), readied, pictures]).then(() => lifted);
+    const features = preview ? null : loadFeatures(Urd, [...pageFeatures(lifted, site), ...(drafts ? ['collections'] : [])]);
+    return Promise.all([preview ? null : loadCoreTypes(Urd, pageTypes(lifted, site.footer)), readied, pictures, siteLoaded, features]).then(() => lifted);
   });
   await navTypes;
   if (!preview && needsPlugins(pageTypes(site.nav), Urd)) await pluginsLoaded;
@@ -806,15 +807,19 @@ export async function boot(opts) {
 
   const page = await pageReady;
   if (!preview && needsPlugins(pageTypes(page, site.footer), Urd)) await pluginsLoaded;
-  if (drafts) setCollectionsDraft(drafts.collections);
+  if (drafts) feature('collections')?.setCollectionsDraft(drafts.collections);
   document.title = pageTitle(site, page, entry);
   // SEO metadata (description, canonical, og: fields, JSON-LD) is set only outside the preview, and the analytics mounted only where no drafts were read.
   if (!preview) {
-    applyHeadMeta(site, page, location.origin, location.pathname, entry);
+    applyHeadMeta(site, page, location.origin, location.pathname, entry, feature('contact'));
     if (!drafts) mountAnalytics(site);
   }
   // The footer is drawn with the page id (per-page hideOn): in the preview at once, for a visitor as it joins the document.
-  const drawFooter = () => renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
+  const drawFooter = () => {
+    const footer = feature('footer');
+    if (footer) footer.renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
+    else opts.footer.style.display = 'none';
+  };
   if (preview) drawFooter();
 
   if (preview) {
@@ -826,12 +831,15 @@ export async function boot(opts) {
 
   // The menu, given the page id for nav.hideOn, «Back to top» (totop.js) and the page are drawn in one task, so they stand in the same frame.
   if (opts.nav) renderNav(site, opts.nav, entry.id);
-  renderToTop(site);
+  feature('totop')?.renderToTop(site, document.body, feature('shape'));
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport, arriving: true });
   // A visitor's footer joins once no block on the page is busy fetching its content, or after FOOTER_WAIT_MS (whenSettled); the preview's joins at once.
   if (preview) opts.root.insertAdjacentElement('afterend', opts.footer);
   else {
-    whenSettled(opts.root, FOOTER_WAIT_MS).then(() => {
+    footerLoaded.then(() => {
+      const footer = feature('footer');
+      return footer?.whenSettled(opts.root, footer.FOOTER_WAIT_MS);
+    }).then(() => {
       opts.root.insertAdjacentElement('afterend', opts.footer);
       drawFooter();
     });
@@ -839,7 +847,7 @@ export async function boot(opts) {
   // The page stands: a held page transition ends here as a cut.
   endArrivalHold();
   // Sticky blocks ("pin on scroll"): one scroll listener for the whole page.
-  initSticky();
+  feature('sticky')?.initSticky();
   wireJumps();
   if (!preview) arriveAtSpot();
   if (!preview && drafts && (drafts.site || draftPage || Object.keys(drafts.collections).length)) markDraftView();
@@ -849,7 +857,7 @@ export async function boot(opts) {
       state.viewport = event.matches ? 'mobile' : 'desktop';
       document.body.classList.toggle('urd-mobile', state.viewport === 'mobile');
       renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
-      refreshSticky();
+      feature('sticky')?.refreshSticky();
     });
     // Intent prefetch of the next page (hover, press, focus on internal links).
     wirePrefetch(site);
@@ -861,17 +869,18 @@ export async function boot(opts) {
       if (!Array.isArray(freshPage.sections)) freshPage.sections = [];
       // A newer page waits for its types' modules, and for the plugins where it needs them, as the first drawing does; until then a redraw draws the page shown.
       const freshReadied = prepareBlocks(pageBlocks(freshPage, site.footer), { site, preview, viewport: state.viewport });
-      await loadCoreTypes(Urd, pageTypes(freshPage, site.footer));
+      await Promise.all([loadCoreTypes(Urd, pageTypes(freshPage, site.footer)), loadFeatures(Urd, pageFeatures(freshPage, site))]);
       if (needsPlugins(pageTypes(freshPage, site.footer), Urd)) await pluginsLoaded;
       await freshReadied;
       state.page = freshPage;
       document.title = pageTitle(site, state.page, entry);
-      applyHeadMeta(site, state.page, location.origin, location.pathname, entry);
+      applyHeadMeta(site, state.page, location.origin, location.pathname, entry, feature('contact'));
       const y = window.scrollY;
       renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport });
       requestAnimationFrame(() => requestAnimationFrame(() => {
         window.scrollTo(0, y);
-        refreshSticky();
+        feature('sticky')?.initSticky();
+        feature('sticky')?.refreshSticky();
       }));
     };
     // Rechecks a parked, prerendered or restored page against the server, one check at a time: a changed site.json reloads, a changed page file redraws.

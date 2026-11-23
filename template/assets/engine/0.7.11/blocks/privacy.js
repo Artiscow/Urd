@@ -14,7 +14,8 @@
 import { t, ta, adminLocaleReady, siteTextLang } from '../i18n.js';
 import { privacyModel, cloudflareBeacon, BROWSER_KEEPS, KEEP_TERMS } from '../privacy-model.js';
 import { allowedProviders, setProviderAllowed, providerName, providerPrivacyUrl } from '../embed-cover.js';
-import { privacyDesign, applyDocLook, buildContents } from '../doc-look.js';
+import { privacyDesign } from '../doc-designs.js';
+import { applyDocLook, buildContents } from '../doc-look.js';
 
 const el2 = (tag, className, textContent) => {
   const node = document.createElement(tag);

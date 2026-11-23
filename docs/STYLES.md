@@ -532,14 +532,6 @@ The title above the grid in the mobile menu; the button's own label is its acces
 
 The light/dark toggle (shown only when the theme has an alternate counterpart)
 
-### `.urd-nav-cart`
-
-The cart in the menu (nav.cart): the same expression as the theme toggle, with a count badge at the top right.
-
-### `.urd-nav-cart + .urd-nav-theme, .urd-nav-cart + .urd-nav-launcher-wrap, .urd-nav-cart + .urd-nav-burger`
-
-The clearance towards the next tool sits on the neighbor: the badge hangs outside the button, and a cart last in the cluster should sit flush.
-
 ### `.urd-nav-burger`
 
 The burger (the mobile menu opener): hidden on desktop, shown via body.urd-mobile
@@ -884,57 +876,9 @@ A menu tucked above the top edge (nav.hideMode on a page in nav.hideOn): fixed a
 
 The pull tab hangs below the host's bottom edge, so it stays in view while the bar is tucked and sits under the bar once it is in. The default is the burger lines in the submenu's surface; the owner's own colours come as variables from nav.js.
 
-### `#urd-footer .urd-footer`
-
-Shared footer (site.footer): shown on every page when show is on
-
-### `#urd-footer .urd-footer : position`
-
-Its own stacking context so a layered background (.urd-footer-bg, z-index -1) sits behind the content but in front of the footer's own surface.
-
-### `#urd-footer .urd-footer-empty`
-
-Turned on but empty footer: a visible, completely empty surface (surface background), no text. It fills as soon as something is entered in the Footer panel.
-
-### `#urd-footer .urd-footer-rich`
-
-Rich footer: brand, columns, social links and bottom line. The #urd-footer prefix is required to beat the base rule (#urd-footer .urd-footer, id+class) which otherwise keeps display: grid and makes the footer a single column.
-
-### `.urd-footer-top`
-
-Brand + link columns in ONE grid: equally wide columns (1fr), equal gap, always on one row. --n = the number of tracks (a wide column counts as two). Collapses responsively to 2 and 1 column. Centered/doormat/Large CTA use a flex column.
-
-### `.urd-footer-col-wide`
-
-Wide column: spans two tracks, the links split into two sub-columns.
-
-### `.urd-footer-design-chapters .urd-footer-top`
-
-The chapters design (footer.design): the brand on a row of its own, then the link columns as numbered chapters, each under a rule.
-
-### `.urd-footer-design-split .urd-footer-top`
-
-The split design: the brand takes half the width on a panel tinted with the accent, the link columns share the other half.
-
-### `.urd-footer-cols-center .urd-footer-col-wide h4`
-
-"Centered" column alignment: the wide column's heading is centered.
-
-### `.urd-footer-brand-id`
-
-The brand: text, a logo (image) or both (logo + text side by side).
-
 ### `.urd-nav-links`
 
 The site's links as a tool in the menu's cluster (nav.js): the same box as the theme button, one per link, the label spoken and shown in the sheet.
-
-### `.urd-footer-baseline-text`
-
-The bottom line: text on the left, optional links on the right.
-
-### `.urd-footer-privacy`
-
-The privacy page's link in the simple footer (footer.privacyPage): one small line under the legal line
 
 ### `#urd-footer address`
 
@@ -1012,26 +956,6 @@ Beside its contents the privacy page keeps its text at its measure, on either si
 
 Contents and text centred between them need room for both columns and the text: a document narrower than that stands beside its list, centred again once the block is wide enough.
 
-### `.urd-footer-linkrow`
-
-The doormat link row (Centered / Large CTA): one centered row of links.
-
-### `.urd-footer-cta`
-
-Call to action (CTA): heading + subtext + button or newsletter.
-
-### `.urd-footer-bigcta`
-
-Large centered CTA (the Large CTA template).
-
-### `.urd-footer-nl`
-
-Newsletter form.
-
-### `.urd-footer-hp`
-
-Honeypot: completely hidden from humans, visible to bots.
-
 ### `.urd-bg-pan-runner, .urd-bg-orbit-runner`
 
 Animated gradient background (pan/orbit): the gradient is painted on a 200 % runner (gradient.js) that is offset with transform on the compositor thread, never background-position (a repaint of the layer per frame). The host clips (urd-bg-loop-host). The translate % is of the runner itself, so -50 % is one whole surface width or height.
@@ -1099,6 +1023,92 @@ A jump to a spot on the page (a link's fragment, the arrival jump in urd.js, and
 ### `.urd-anchor`
 
 A named spot (render.js placeSpot): a zero-size marker at the top of its section or block, which a link's fragment lands on and which moves with the block.
+
+# nav-cart.css, rule by rule
+
+### `.urd-nav-cart`
+
+The cart in the menu (nav.cart): the same expression as the theme toggle, with a count badge at the top right.
+
+### `.urd-nav-cart + .urd-nav-theme, .urd-nav-cart + .urd-nav-launcher-wrap, .urd-nav-cart + .urd-nav-burger`
+
+The clearance towards the next tool sits on the neighbor: the badge hangs outside the button, and a cart last in the cluster should sit flush.
+
+### `.urd-nav-cart-badge[hidden]`
+
+nav.js hides the count while the basket is empty (`hidden`), which the badge's own `display: grid` would otherwise outrank, since an author rule wins over the browser's hiding.
+
+# footer.css, rule by rule
+
+### `#urd-footer .urd-footer`
+
+Shared footer (site.footer): shown on every page when show is on
+
+### `#urd-footer .urd-footer : position`
+
+Its own stacking context so a layered background (.urd-footer-bg, z-index -1) sits behind the content but in front of the footer's own surface.
+
+### `#urd-footer .urd-footer-empty`
+
+Turned on but empty footer: a visible, completely empty surface (surface background), no text. It fills as soon as something is entered in the Footer panel.
+
+### `#urd-footer .urd-footer-rich`
+
+Rich footer: brand, columns, social links and bottom line. The #urd-footer prefix is required to beat the base rule (#urd-footer .urd-footer, id+class) which otherwise keeps display: grid and makes the footer a single column.
+
+### `.urd-footer-top`
+
+Brand + link columns in ONE grid: equally wide columns (1fr), equal gap, always on one row. --n = the number of tracks (a wide column counts as two). Collapses responsively to 2 and 1 column. Centered/doormat/Large CTA use a flex column.
+
+### `.urd-footer-col-wide`
+
+Wide column: spans two tracks, the links split into two sub-columns.
+
+### `.urd-footer-design-chapters .urd-footer-top`
+
+The chapters design (footer.design): the brand on a row of its own, then the link columns as numbered chapters, each under a rule.
+
+### `.urd-footer-design-split .urd-footer-top`
+
+The split design: the brand takes half the width on a panel tinted with the accent, the link columns share the other half.
+
+### `.urd-footer-cols-center .urd-footer-col-wide h4`
+
+"Centered" column alignment: the wide column's heading is centered.
+
+### `.urd-footer-brand-id`
+
+The brand: text, a logo (image) or both (logo + text side by side).
+
+### `.urd-footer-baseline-text`
+
+The bottom line: text on the left, optional links on the right.
+
+### `.urd-footer-privacy`
+
+The privacy page's link in the simple footer (footer.privacyPage): one small line under the legal line
+
+### `.urd-footer-linkrow`
+
+The doormat link row (Centered / Large CTA): one centered row of links.
+
+### `.urd-footer-cta`
+
+Call to action (CTA): heading + subtext + button or newsletter.
+
+### `.urd-footer-bigcta`
+
+Large centered CTA (the Large CTA template).
+
+### `.urd-footer-nl`
+
+Newsletter form.
+
+### `.urd-footer-hp`
+
+Honeypot: completely hidden from humans, visible to bots.
+
+# totop.css, rule by rule
 
 ### `.urd-totop`
 

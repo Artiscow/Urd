@@ -4,32 +4,8 @@
  */
 import { t } from './i18n.js';
 
-/** The privacy page's designs, in the picker's order; the first is the one a block without a choice is drawn in. */
-export const PRIVACY_DESIGNS = ['long', 'contents', 'glance', 'questions', 'ledger', 'ledger-cards'];
-
-/** The designs a text is drawn in: plain text, the way every text block is drawn, and the document designs the terms of sale take. */
-export const TEXT_DESIGNS = ['plain', 'long', 'contents', 'glance', 'questions', 'clauses'];
-
-/** The terms of sale's designs, in the picker's order; the first is the one a block without a choice is drawn in. */
-export const TERMS_DESIGNS = ['long', 'contents', 'glance', 'questions', 'clauses'];
-
 /** The corners a document's boxes take: none, the theme's small and medium radius, and round. */
 export const DOC_CORNERS = ['none', 'sm', 'md', 'round'];
-
-/** The privacy page's design a stored value reads as. */
-export function privacyDesign(value) {
-  return PRIVACY_DESIGNS.includes(value) ? value : 'long';
-}
-
-/** A text's design a stored value reads as. */
-export function textDesign(value) {
-  return TEXT_DESIGNS.includes(value) ? value : 'plain';
-}
-
-/** The terms of sale's design a stored value reads as. */
-export function termsDesign(value) {
-  return TERMS_DESIGNS.includes(value) ? value : 'long';
-}
 
 const SAFE_HEX = /^#[0-9a-fA-F]{3,8}$/;
 const SAFE_TOKEN = /^[a-z][a-z0-9-]*$/;

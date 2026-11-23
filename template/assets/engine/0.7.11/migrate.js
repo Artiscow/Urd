@@ -60,7 +60,7 @@ export function liftPhoneWords(block, def, liftedProps) {
 
 import { liftFooterSocial } from './links-model.js';
 import { fitMoves, SIZE, SIZE_BY_FRAME, PHONE_WORDS, phoneWordsOf } from './push-model.js';
-import { TERMS_DESIGNS } from './doc-look.js';
+import { TERMS_DESIGNS } from './doc-designs.js';
 
 /** Current version of the page file format (content/pages/*.json). */
 export const PAGE_SCHEMA_VERSION = 8;

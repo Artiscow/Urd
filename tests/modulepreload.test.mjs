@@ -225,7 +225,7 @@ test('the boot reads the engine version from its own folder, and draws a page wi
   assert.ok(navWait > 0 && navWait < urd.indexOf('renderNav(site, opts.nav'), 'the nav waits for a plugin type before it is drawn');
   assert.match(urd, /needsPlugins\(pageTypes\(page, site\.footer\), Urd\)\) await pluginsLoaded;/);
   assert.match(urd, /needsPlugins\(pageTypes\(freshPage, site\.footer\), Urd\)\) await pluginsLoaded;/, 'a newer page file waits as the first drawing does');
-  assert.match(urd, /whenSettled\(opts\.root, FOOTER_WAIT_MS\)\.then\(\(\) => \{\s+opts\.root\.insertAdjacentElement\('afterend', opts\.footer\);\s+drawFooter\(\);/, 'a visitor\'s footer is drawn as it joins the page');
+  assert.match(urd, /footerLoaded\.then\(\(\) => \{\s+const footer = feature\('footer'\);\s+return footer\?\.whenSettled\(opts\.root, footer\.FOOTER_WAIT_MS\);\s+\}\)\.then\(\(\) => \{\s+opts\.root\.insertAdjacentElement\('afterend', opts\.footer\);\s+drawFooter\(\);/, 'a visitor\'s footer is drawn as it joins the page, once its module is in');
   const privacy = readFileSync(new URL('blocks/privacy.js', ENGINE_DIR), 'utf8');
   assert.match(privacy, /host\.setAttribute\('aria-busy', 'true'\);[\s\S]{0,80}host\.removeAttribute\('aria-busy'\);/);
 });

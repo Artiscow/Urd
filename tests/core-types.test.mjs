@@ -78,7 +78,7 @@ test('the slideshow layer brings the gallery\'s sheet, since it draws a gallery,
 });
 
 test('placeInOrder keeps a group\'s sheets in their order whatever order they come in, the first after its anchor, and other groups apart', async () => {
-  const { placeInOrder } = await engineImport('render.js');
+  const { placeInOrder } = await engineImport('sheets.js');
   const head = [];
   const node = (name) => ({ name, dataset: {}, before(link) { head.splice(head.indexOf(this), 0, link); }, after(link) { head.splice(head.indexOf(this) + 1, 0, link); } });
   const base = node('base');
@@ -203,14 +203,14 @@ test('a core id is the engine\'s before its module is in: a plugin is refused it
   assert.equal(needsPlugins(types(['text', 'nordlys']), Urd), true);
 });
 
-test('the boot loads a page\'s types before it asks whether the page waits for the plugins, draws the menu with the page, and the preview loads them all', () => {
+test('the boot loads a page\'s types and features before it asks whether the page waits for the plugins, draws the menu with the page, and the preview loads them all', () => {
   const urd = read('urd.js');
   assert.match(urd, /^\s+reserveCoreTypes\(Urd\);/m, 'the ids are reserved in registerCore, before the plugins load');
   assert.ok(urd.indexOf('reserveCoreTypes(Urd);') < urd.indexOf('loadPlugins(Urd, engine)'));
   for (const [load, wait] of [
     ['await navTypes;', 'needsPlugins(pageTypes(site.nav), Urd)'],
     ['const page = await pageReady;', 'needsPlugins(pageTypes(page, site.footer), Urd)'],
-    ['await loadCoreTypes(Urd, pageTypes(freshPage, site.footer));', 'needsPlugins(pageTypes(freshPage, site.footer), Urd)'],
+    ['await Promise.all([loadCoreTypes(Urd, pageTypes(freshPage, site.footer)), loadFeatures(Urd, pageFeatures(freshPage, site))]);', 'needsPlugins(pageTypes(freshPage, site.footer), Urd)'],
   ]) {
     assert.ok(urd.includes(load) && urd.includes(wait), load);
     assert.ok(urd.indexOf(load) < urd.indexOf(wait), `${load} comes before ${wait}`);
@@ -221,15 +221,16 @@ test('the boot loads a page\'s types before it asks whether the page waits for t
   assert.ok(urd.indexOf('const navTypes = preview ? null : loadCoreTypes(Urd, pageTypes(site.nav));') < urd.indexOf('await navTypes;'));
   assert.ok(urd.indexOf('const pageReady = pageLifted.then(') < urd.indexOf('await navTypes;'));
   assert.ok(urd.indexOf('state.page = freshPage;') > urd.indexOf('needsPlugins(pageTypes(freshPage, site.footer), Urd)'), 'a newer page file is shown only once its types are in');
-  // What the page's own blocks draw with is readied beside their types, and waited for before the page is drawn, the preview's too.
-  assert.match(urd, /const readied = prepareBlocks\(pageBlocks\(lifted, site\.footer\), \{ site, preview, viewport \}\);\s*const pictures = preview \? null : askLayerPictures\(lifted\.sections\[0\]\?\.background\);\s*return Promise\.all\(\[preview \? null : loadCoreTypes\(Urd, pageTypes\(lifted, site\.footer\)\), readied, pictures\]\)\.then\(\(\) => lifted\);/);
+  // What the page's own blocks draw with is readied beside their types and the site's and page's features, and waited for before the page is drawn, the preview's too.
+  assert.match(urd, /const readied = prepareBlocks\(pageBlocks\(lifted, site\.footer\), \{ site, preview, viewport \}\);\s*const pictures = preview \? null : askLayerPictures\(lifted\.sections\[0\]\?\.background\);\s*const features = preview \? null : loadFeatures\(Urd, \[\.\.\.pageFeatures\(lifted, site\), \.\.\.\(drafts \? \['collections'\] : \[\]\)\]\);\s*return Promise\.all\(\[preview \? null : loadCoreTypes\(Urd, pageTypes\(lifted, site\.footer\)\), readied, pictures, siteLoaded, features\]\)\.then\(\(\) => lifted\);/);
+  assert.ok(urd.indexOf('const siteLoaded = loadFeatures(Urd, [...siteHeld].filter((name) => name !== \'footer\'));') < urd.indexOf('const pageReady = pageLifted.then('), 'the site\'s features are asked for beside the page file');
   assert.ok(urd.indexOf('const page = await pageReady;') > urd.indexOf('{ all: true }') && urd.indexOf('const page = await pageReady;') < urd.indexOf('renderPage(state.page, state.site, opts.root'), 'the first drawing');
   // The menu, «Back to top» and the page are drawn in one task, so they stand in one frame.
   assert.equal(urd.split('renderNav(site, opts.nav, entry.id)').length, 2, 'the boot draws the menu once, with the page');
   assert.ok(urd.includes('return Promise.race([Promise.all(asked), new Promise((resolve) => setTimeout(resolve, READY_WAIT_MS))])'), 'the first section\'s pictures hold the page READY_WAIT_MS at most');
-  assert.match(urd, /if \(opts\.nav\) renderNav\(site, opts\.nav, entry\.id\);\s*renderToTop\(site\);\s*renderPage\(state\.page, state\.site, opts\.root, \{ preview, viewport: state\.viewport, arriving: true \}\);/);
-  assert.match(urd, /const freshReadied = prepareBlocks\(pageBlocks\(freshPage, site\.footer\), \{ site, preview, viewport: state\.viewport \}\);\s*await loadCoreTypes\(Urd, pageTypes\(freshPage, site\.footer\)\);\s*if \(needsPlugins\(pageTypes\(freshPage, site\.footer\), Urd\)\) await pluginsLoaded;\s*await freshReadied;\s*state\.page = freshPage;/, 'a newer page file');
-  assert.match(urd, /loadCoreTypes\(Urd, null, \{ all: true \}\), import\('\.\/sections\/presets\.js'\)/);
+  assert.match(urd, /if \(opts\.nav\) renderNav\(site, opts\.nav, entry\.id\);\s*feature\('totop'\)\?\.renderToTop\(site, document\.body, feature\('shape'\)\);\s*renderPage\(state\.page, state\.site, opts\.root, \{ preview, viewport: state\.viewport, arriving: true \}\);/);
+  assert.match(urd, /const freshReadied = prepareBlocks\(pageBlocks\(freshPage, site\.footer\), \{ site, preview, viewport: state\.viewport \}\);\s*await Promise\.all\(\[loadCoreTypes\(Urd, pageTypes\(freshPage, site\.footer\)\), loadFeatures\(Urd, pageFeatures\(freshPage, site\)\)\]\);\s*if \(needsPlugins\(pageTypes\(freshPage, site\.footer\), Urd\)\) await pluginsLoaded;\s*await freshReadied;\s*state\.page = freshPage;/, 'a newer page file');
+  assert.match(urd, /loadCoreTypes\(Urd, null, \{ all: true \}\), loadFeatures\(Urd, null, \{ all: true \}\), import\('\.\/sections\/presets\.js'\)/);
   assert.ok(urd.indexOf('{ all: true }') < urd.indexOf('if (preview) enablePreview(state, opts);'), 'every type is in before the preview tells the editor it is ready');
 });
 

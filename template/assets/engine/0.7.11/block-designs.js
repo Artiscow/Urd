@@ -7,7 +7,7 @@
  */
 import { CONTACT_DESIGNS, contactDesign } from './contact-model.js';
 import { GALLERY_VIEWS, galleryView } from './gallery-model.js';
-import { PRIVACY_DESIGNS, TERMS_DESIGNS, privacyDesign, termsDesign } from './doc-look.js';
+import { PRIVACY_DESIGNS, TERMS_DESIGNS, privacyDesign, termsDesign } from './doc-designs.js';
 import { PHONE_DESIGNS } from './push-model.js';
 
 /** A drawn sample picture: a landscape in one hue, at a ratio of its own, as an inline SVG the preview may load from itself. */

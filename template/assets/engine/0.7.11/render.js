@@ -4,15 +4,12 @@
  */
 import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, phoneRoomOf, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
 import { forcesReadable, phoneHandoff, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, phoneSized, phoneFrame, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
-import { applyAnimation, applyCardAnimation, pointerEffectOf, entranceOf } from './animations/core.js';
 import { applySectionTheme, resolveColor } from './theme.js';
-import { sectionDivider, dividerSvg } from './divider-model.js';
-import { refreshSticky } from './sticky.js';
-import { pinsOnPhone, stuckBox, stickyLeads } from './sticky-model.js';
 import { stackOrder, phoneSetupOf, phoneParts } from './phone-order.js';
 import { t } from './i18n.js';
 import { isAnchorName } from './nav-model.js';
-import { textDesign } from './doc-look.js';
+import { textDesign } from './doc-designs.js';
+import { feature } from './features.js';
 
 /**
  * Draws the background layers into host as div.urd-bg-layer, bottom-up; shared by sections, nav and footer, and an unknown or failing layer is skipped.
@@ -54,50 +51,6 @@ export function renderBackgroundLayers(host, background, { later = false, first 
       host.appendChild(el);
     }
   }
-}
-
-/** The stylesheets added on demand, by address. */
-const sheets = new Map();
-
-/**
- * Adds a stylesheet to the document once, where `place` puts it (else at the end of the head); resolves when it has loaded or failed, to whether it loaded.
- * @param {string} href
- * @param {(link: HTMLLinkElement) => void} [place]
- * @returns {Promise<boolean>}
- */
-export function loadStylesheet(href, place = (link) => document.head.appendChild(link)) {
-  if (!sheets.has(href)) {
-    sheets.set(href, new Promise((resolve) => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      link.addEventListener('load', () => resolve(true), { once: true });
-      link.addEventListener('error', () => resolve(false), { once: true });
-      place(link);
-    }));
-  }
-  return sheets.get(href);
-}
-
-/**
- * A `place` for loadStylesheet keeping a group's sheets in one order, whatever order they come in: by `rank`, the first after `after()`, else at the head's end.
- * @param {string} group
- * @param {number} rank
- * @param {() => Element|null} [after]
- * @returns {(link: HTMLLinkElement) => void}
- */
-export function placeInOrder(group, rank, after = () => null) {
-  return (link) => {
-    link.dataset.urdSheetGroup = group;
-    link.dataset.urdSheetRank = String(rank);
-    const placed = [...document.head.querySelectorAll('link[data-urd-sheet-group]')].filter((other) => other.dataset.urdSheetGroup === group);
-    const later = placed.find((other) => Number(other.dataset.urdSheetRank) > rank);
-    const anchor = after();
-    if (later) later.before(link);
-    else if (placed.length) placed.at(-1).after(link);
-    else if (anchor) anchor.after(link);
-    else document.head.appendChild(link);
-  };
 }
 
 /** The picture layers waiting for their section to come near, each with what draws it. */
@@ -409,7 +362,8 @@ const SLOT_PLACE = ['gridRow', 'gridColumn', 'width', 'marginLeft', 'marginRight
 export function placeStuck(holder) {
   const box = holder?.closest?.('.urd-stick');
   const els = box?._urdStuck?.filter((el) => el.parentElement === box && el._urdStickSlot?.isConnected);
-  if (!els?.length) return;
+  const pins = feature('sticky');
+  if (!els?.length || !pins) return;
   for (const el of els) {
     // A block of fixed rows grows past them where its content needs it, as its rows grow in the grid.
     if (el._urdStickBase) {
@@ -418,7 +372,7 @@ export function placeStuck(holder) {
     }
     el._urdStickSlot.style.height = `${el.offsetHeight}px`;
   }
-  const placed = stuckBox(els.map((el) => ({ top: el._urdStickSlot.offsetTop, h: el.offsetHeight })));
+  const placed = pins.stuckBox(els.map((el) => ({ top: el._urdStickSlot.offsetTop, h: el.offsetHeight })));
   box.style.marginTop = `${placed.top}px`;
   box.style.height = `${placed.height}px`;
   els.forEach((el, i) => {
@@ -941,7 +895,7 @@ export function renderPage(page, site, root, opts = {}) {
   // The "+ New section" bars between sections (preview only).
   if (opts.preview) window.UrdPreviewEdit?.enhancePage(root, page, site);
   // Sticky blocks are remeasured (a re-render may have changed heights/fields).
-  refreshSticky();
+  feature('sticky')?.refreshSticky();
 }
 
 /**
@@ -1030,8 +984,9 @@ export function renderSection(section, site, host, opts = {}) {
   renderBackgroundLayers(host, section.background, { later: Boolean(opts.arriving) && !opts.first && !ctx.preview, first: Boolean(opts.first) && !ctx.preview });
 
   // The shape dividers: over the background, under the content.
+  const dividers = feature('divider');
   for (const edge of ['top', 'bottom']) {
-    const divider = sectionDivider(section.divider?.[edge]);
+    const divider = dividers?.sectionDivider(section.divider?.[edge]);
     if (!divider) continue;
     const el = document.createElement('div');
     el.className = `urd-divider urd-divider-${edge}${divider.flip ? ' urd-divider-flip' : ''}`;
@@ -1040,7 +995,7 @@ export function renderSection(section, site, host, opts = {}) {
     el.style.color = section.theme && /^[a-z][a-z0-9-]*$/.test(divider.color)
       ? `var(--urd-base-${divider.color}, var(--urd-color-${divider.color}))`
       : resolveColor(divider.color);
-    el.innerHTML = dividerSvg(divider);
+    el.innerHTML = dividers.dividerSvg(divider);
     host.appendChild(el);
   }
 
@@ -1071,7 +1026,8 @@ export function renderSection(section, site, host, opts = {}) {
     // On the page before its blocks are drawn, so a spot's id is checked against the section's own blocks too.
     canvas.appendChild(flow);
     // The blocks pinned on the phone while the page scrolls, by their pinning group, the group's first block speaking for it.
-    const leads = stickyLeads(section.blocks);
+    const pins = feature('sticky');
+    const leads = pins?.stickyLeads(section.blocks);
     const stuck = new Map();
     /** The cell the flowing blocks one after another in the same cells stand in, under each other, as one grid item (phoneCellCss). */
     let cell = null;
@@ -1088,7 +1044,7 @@ export function renderSection(section, site, host, opts = {}) {
       // and must not delay the content wave).
       if (block.decor) el.dataset.decor = '1';
       const key = block.sticky?.group || `solo-${block.id}`;
-      const sticks = Boolean(block.sticky) && pinsOnPhone(leads.get(key));
+      const sticks = Boolean(block.sticky) && Boolean(pins?.pinsOnPhone(leads.get(key)));
       // A flowing block in cells joins a cell with the blocks before it in the same cells, or opens one.
       const own = phoneCells(block.frames.mobile);
       const head = stackHead.get(block.id);
@@ -1257,7 +1213,7 @@ export function renderSection(section, site, host, opts = {}) {
   // after every render. Set by urd.js; never present for visitors.
   if (ctx.preview && !ctx.measure) window.UrdPreviewEdit?.enhanceSection(host, section, grid);
   // Sticky blocks are remeasured (incremental rerender of a single section).
-  refreshSticky();
+  feature('sticky')?.refreshSticky();
 }
 
 /** Shared block rendering with migration and placeholder fallback. */
@@ -1276,17 +1232,20 @@ function renderBlock(Urd, el, block, ctx, measured = null) {
       def.render(el, propsForWidth(block.type, props, narrow), blockCtx);
       if (phone) watchPhoneDesign(el, { def, type: block.type, props, block, ctx: blockCtx, narrow });
       // Entrance animation and pointer effect are independent; cardwise blocks spread them onto their cards themselves (renderCardAnimations).
-      const isPointer = (type) => Urd.animations.get(type)?.entrance === false;
-      const hover = pointerEffectOf(block, ctx.section, isPointer);
-      // The entrance on this screen: none on a phone where the block switches it off there (entranceOf).
-      const entrance = entranceOf(block, ctx.viewport, isPointer);
-      // A block with an entrance of its own comes in by it, never with the section's stagger, and stands at once where its entrance is off.
-      if (block.animation?.type && Urd.animations.get(block.animation.type)?.entrance) el.dataset.urdEntrance = '1';
-      if (!def.animPerCard) {
-        renderAnimation(Urd, el, entrance, ctx);
-        renderAnimation(Urd, el, hover, ctx);
-      } else if (entrance?.type || hover?.type) {
-        el.classList.add('urd-anim-cardwise');
+      const anim = feature('animations');
+      if (anim) {
+        const isPointer = (type) => Urd.animations.get(type)?.entrance === false;
+        const hover = anim.pointerEffectOf(block, ctx.section, isPointer);
+        // The entrance on this screen: none on a phone where the block switches it off there (entranceOf).
+        const entrance = anim.entranceOf(block, ctx.viewport, isPointer);
+        // A block with an entrance of its own comes in by it, never with the section's stagger, and stands at once where its entrance is off.
+        if (block.animation?.type && Urd.animations.get(block.animation.type)?.entrance) el.dataset.urdEntrance = '1';
+        if (!def.animPerCard) {
+          renderAnimation(Urd, el, entrance, ctx);
+          renderAnimation(Urd, el, hover, ctx);
+        } else if (entrance?.type || hover?.type) {
+          el.classList.add('urd-anim-cardwise');
+        }
       }
     } catch (err) {
       console.warn(`Urd: block '${block.type}' failed to render`, err);
@@ -1412,20 +1371,21 @@ function redrawForWidth(el) {
  * Cardwise animation: the block's animation and hover fields spread onto its cards, called by the block once the cards are built.
  */
 export function renderCardAnimations(el, cards, block, ctx) {
-  if (!window.Urd) return;
+  const anim = feature('animations');
+  if (!window.Urd || !anim) return;
   const isPointer = (type) => window.Urd.animations.get(type)?.entrance === false;
-  const hover = pointerEffectOf(block, ctx?.section, isPointer);
-  for (const animation of [entranceOf(block, ctx?.viewport, isPointer), hover]) {
+  const hover = anim.pointerEffectOf(block, ctx?.section, isPointer);
+  for (const animation of [anim.entranceOf(block, ctx?.viewport, isPointer), hover]) {
     renderAnimation(window.Urd, el, animation, ctx,
-      (target, type, props, def, c) => applyCardAnimation(target, cards, type, props, def, c));
+      (target, type, props, def, c) => anim.applyCardAnimation(target, cards, type, props, def, c));
   }
 }
 
 /**
- * Optional animation on a block or a section; an unknown or failing one shows the content unanimated.
+ * Optional animation on a block or a section; an unknown or failing one, or one whose module is not in, shows the content unanimated.
  */
-function renderAnimation(Urd, el, animation, ctx, apply = applyAnimation) {
-  if (!animation?.type || ctx?.measure) return;
+function renderAnimation(Urd, el, animation, ctx, apply = feature('animations')?.applyAnimation) {
+  if (!animation?.type || ctx?.measure || !apply) return;
   const def = Urd.animations.get(animation.type);
   const lifted = lift(animation, def);
   if (!lifted.ok) return;

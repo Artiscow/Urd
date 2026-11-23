@@ -12,7 +12,7 @@
   <script src="/assets/engine/0.7.11/theme-init.js"></script>
   <!-- The site file every page starts from, fetched at once rather than after the engine's modules (urd.js boot reads it). -->
   <link rel="preload" href="/content/site.json" as="fetch" crossorigin>
-  <link rel="stylesheet" href="/assets/styles/base.css?v=52779bbb">
+  <link rel="stylesheet" href="/assets/styles/base.css?v=fcc7731f">
   <!-- The site's materialized theme (light-dark()): render-blocking and loaded
        AFTER base.css so it wins. Written at publish time (buildThemeCss).
        When missing (fresh clone before the first publish) base.css's
@@ -22,7 +22,7 @@
     The engine is served as raw ES modules.
     Without preloading the browser discovers the imports layer by layer (a serial waterfall).
     These modulepreload links are the full STATIC import closure of boot.js, so the whole graph is fetched in one parallel wave.
-    The editor layer (preview-edit.js and friends) and the block and background modules a page asks for (core-types.js) load dynamically and must NOT be listed here.
+    The editor layer (preview-edit.js and friends) and the block, background and feature modules a page asks for (core-types.js, features.js) load dynamically and must NOT be listed here.
     tests/modulepreload.test.mjs keeps the list in sync with the source (the build fails on drift).
   -->
   <link rel="modulepreload" href="/assets/engine/0.7.11/boot.js">
@@ -32,33 +32,21 @@
   <link rel="modulepreload" href="/assets/engine/0.7.11/registry.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/migrate.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/theme.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/totop.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/shape-model.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/render.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/push-model.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/nav.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/nav-model.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/footer.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/footer-model.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/contact-model.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/contact-profiles.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/contact-checks.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/links-model.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/footer-cta.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/doc-look.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/icons.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/collections.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/sticky.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/seo.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/prefetch.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/keep-minutes.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/sticky-model.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/phone-order.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/core-types.js">
   <link rel="modulepreload" href="/assets/engine/0.7.11/plugins.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/shop.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/divider-model.js">
-  <link rel="modulepreload" href="/assets/engine/0.7.11/animations/core.js">
+  <link rel="modulepreload" href="/assets/engine/0.7.11/doc-designs.js">
+  <link rel="modulepreload" href="/assets/engine/0.7.11/features.js">
+  <link rel="modulepreload" href="/assets/engine/0.7.11/sheets.js">
   <!-- The engine, render-blocking: its page transition listener is then in
        place before the arriving document's first rendering opportunity, so a
        page switch can hold the old page until the new one is rendered (the

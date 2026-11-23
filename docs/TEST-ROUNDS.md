@@ -2,6 +2,17 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.38.1): the boot's features by what a page holds
+
+- [ ] Every page of the site looks and works as before on the desktop and on a phone: the menu with its basket count, the footer, the back-to-top button, the pinned blocks on om-oss and shop, and the animations and the wave divider on kaker
+- [ ] With an empty basket the menu's basket shows no count, and adding a product shows it
+- [ ] A site with contact details shows its contact column and legal line in the footer as before
+- [ ] In the Site panel, giving the back-to-top button a shape of its own shows that shape on the published page and in the editor
+- [ ] The footer's newsletter form, where a site has one, shows its confirmation and refuses an address that is not one
+- [ ] In the editor, adding an animation, a divider, a pinned block or a footer form shows it on the canvas at once
+- [ ] The draft view (?draft=1) shows the drafted collections' entries
+- [ ] On the front page, DevTools' network list shows footer.css, totop.css and nav-cart.css, and no sticky.js, divider-model.js, animations/core.js, shape-model.js, contact-model.js or collections.js
+
 ### Test batch (0.7.37.6): unused code, words and CSS removed
 
 - [ ] Every panel of the editor shows its words as before in nb, English and Turkish, the Nav panel's rows and the phone's menu settings included, with no raw key showing

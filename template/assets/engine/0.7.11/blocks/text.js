@@ -11,7 +11,8 @@ import { boxStyleCss } from '../box-style.js';
 import { ta } from '../i18n.js';
 import { typedFrames, PHONE_WORDS, forcesReadable } from '../push-model.js';
 import { drawnWidth } from '../render.js';
-import { textDesign, termsDesign, applyDocLook, buildContents, foldParts, addFormPrint, storedDocHtml } from '../doc-look.js';
+import { textDesign, termsDesign } from '../doc-designs.js';
+import { applyDocLook, buildContents, foldParts, addFormPrint, storedDocHtml } from '../doc-look.js';
 
 /** Per text block, the section's frames before the typing in it began, and the last few frames the typing wrote. */
 const typingFrom = new Map();

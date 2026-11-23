@@ -3,7 +3,6 @@
  * Notes: docs/engine-notes/seo.md (Urd repository).
  */
 
-import { siteContact, organizationContact } from './contact-model.js';
 
 /** Absolute address from a page-relative path (media images, pages). */
 function absolute(origin, path) {
@@ -83,7 +82,7 @@ export function pageMetaTags(site, page, origin, path, entry = {}) {
  * @param {string} origin
  * @returns {object}
  */
-export function siteJsonLd(site, origin) {
+export function siteJsonLd(site, origin, contact = null) {
   const base = String(origin ?? '').replace(/\/+$/, '');
   const data = {
     '@context': 'https://schema.org',
@@ -94,7 +93,7 @@ export function siteJsonLd(site, origin) {
   if (site?.site?.description) data.description = site.site.description;
   const logo = site?.site?.icon ? absolute(base, site.site.icon) : null;
   if (logo) data.logo = logo;
-  return { ...data, ...organizationContact(siteContact(site)) };
+  return contact ? { ...data, ...contact.organizationContact(contact.siteContact(site)) } : data;
 }
 
 /**
@@ -114,7 +113,7 @@ export function mountAnalytics(site) {
 /**
  * Writes the meta tags and the JSON-LD into <head>, marked with data-urd-seo, in place of those an earlier call wrote.
  */
-export function applyHeadMeta(site, page, origin, path, entry) {
+export function applyHeadMeta(site, page, origin, path, entry, contact = null) {
   for (const el of document.head.querySelectorAll('[data-urd-seo]')) el.remove();
   for (const { tag, attrs } of pageMetaTags(site, page, origin, path, entry)) {
     const el = document.createElement(tag);
@@ -125,6 +124,6 @@ export function applyHeadMeta(site, page, origin, path, entry) {
   const jsonLd = document.createElement('script');
   jsonLd.type = 'application/ld+json';
   jsonLd.setAttribute('data-urd-seo', '1');
-  jsonLd.textContent = JSON.stringify(siteJsonLd(site, origin));
+  jsonLd.textContent = JSON.stringify(siteJsonLd(site, origin, contact));
   document.head.appendChild(jsonLd);
 }

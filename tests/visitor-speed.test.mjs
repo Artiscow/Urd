@@ -141,7 +141,7 @@ test('a calendar stands in its own design while its feeds are on the way, a feed
   assert.match(calendar, /if \(!ctx\.measure && !\('calCopy' in host\.dataset\)\) \{\s+requestAnimationFrame\(\(\) => \{\s+if \(settled \|\| !sheetIn \|\| !host\.isConnected\) return;/, 'a frame later, so a feed already in is drawn without it, and never without the rules that hide the words');
   assert.match(calendar, /const held = host\.offsetHeight;\s+waiting = true;\s+host\.classList\.add\('urd-cal-wait'\);\s+if \(held\) \{\s+host\.style\.height = `\$\{held\}px`;\s+host\.style\.overflow = 'hidden';\s+\}\s+draw\(demoOccurrences\(\)\);\s+rememberDrawing\(key, host, props, true\);/, 'at the height the loading state kept, so nothing around it moves');
   assert.match(calendar, /const draw = \(\[ics, cd, cf, maps, links, sheet\], \[mod, weekMod, phoneMod, cardMod, plainMod\]\) => \{\s+sheetIn = sheet;/);
-  assert.match(source('render.js'), /link\.addEventListener\('load', \(\) => resolve\(true\), \{ once: true \}\);\s+link\.addEventListener\('error', \(\) => resolve\(false\), \{ once: true \}\);/);
+  assert.match(source('sheets.js'), /link\.addEventListener\('load', \(\) => resolve\(true\), \{ once: true \}\);\s+link\.addEventListener\('error', \(\) => resolve\(false\), \{ once: true \}\);/);
   assert.match(calendar, /if \(!measure\) LAST_DRAWN\.set\(id, \{ \.\.\.last, host \}\);\s+return true;/, 'a copy is remembered in its turn, so another calendar settling first never drops it, and a copy drawn only to be measured never takes its place');
   assert.match(calendar, /if \(!copyLastDrawing\(host, el, props, ctx\.measure\) && host\.hasAttribute\('aria-busy'\)\) host\.appendChild\(loadingNode\(el, ctx\)\);/, 'a calendar drawn again starts from its last drawing, never blank');
   assert.match(calendar, /if \(!last \|\| last\.props !== JSON\.stringify\(props\)\) return false;/, 'only with the settings it was drawn with');
@@ -164,12 +164,13 @@ test('a calendar stands in its own design while its feeds are on the way, a feed
   assert.match(base, /animation: urd-cal-appear 0\.2s 0\.5s backwards, urd-cal-loading /, 'the pulse keeps the wait');
 });
 
-test('each core type\'s loader asks for every module its own module imports that the boot does not load, in the same wave as its own', async () => {
+test('each core type\'s and feature\'s loader asks for every module its own module imports that the boot does not load, in the same wave as its own', async () => {
   const closureOf = engineClosure;
   const boot = closureOf('boot.js');
   const { CORE_BLOCKS, CORE_BACKGROUNDS } = await engineImport('core-types.js');
+  const { CORE_FEATURES } = await engineImport('features.js');
   let waiting = 0;
-  for (const table of [CORE_BLOCKS, CORE_BACKGROUNDS]) {
+  for (const table of [CORE_BLOCKS, CORE_BACKGROUNDS, CORE_FEATURES]) {
     for (const [type, loader] of Object.entries(table)) {
       const named = [...String(loader).matchAll(/import\('\.\/([^']+)'\)/g)].map((m) => m[1]);
       const [main] = named;

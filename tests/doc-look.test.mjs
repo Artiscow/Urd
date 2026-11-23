@@ -1,11 +1,12 @@
 /**
- * Documents (engine/doc-look.js): the designs a stored value reads as, the look written as custom properties only where the owner set it and only when it is safe, and the settings each design draws.
+ * Documents (engine/doc-designs.js, engine/doc-look.js): the designs a stored value reads as, the look written as custom properties only where the owner set it and only when it is safe, and the settings each design draws.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { PRIVACY_DESIGNS, TEXT_DESIGNS, TERMS_DESIGNS, DOC_CORNERS, privacyDesign, textDesign, termsDesign, docColor, docRadius, docLookVars, docLookSettings } = await engineImport('doc-look.js');
+const { PRIVACY_DESIGNS, TEXT_DESIGNS, TERMS_DESIGNS, privacyDesign, textDesign, termsDesign } = await engineImport('doc-designs.js');
+const { DOC_CORNERS, docColor, docRadius, docLookVars, docLookSettings } = await engineImport('doc-look.js');
 
 test('a stored design reads as one of the block\'s, a missing or unknown one as its first', () => {
   assert.deepEqual(PRIVACY_DESIGNS, ['long', 'contents', 'glance', 'questions', 'ledger', 'ledger-cards']);

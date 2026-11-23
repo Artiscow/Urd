@@ -150,30 +150,34 @@ test('a mark can stand over a picture that fills the whole button: the arrow, or
 });
 
 test('a shaped design draws the owner\'s shape where there is one, and its own outline exactly as before without it', async () => {
-  const { shapeOf, shapeOutline, outlinePath, outlineMiddle, shapeId } = await engineImport('shape-model.js');
-  const set = (raw) => toTopOf({ layout: { toTop: raw } });
+  const SHAPES = await engineImport('shape-model.js');
+  const { shapeOf, shapeOutline, outlinePath, outlineMiddle, shapeId } = SHAPES;
+  const set = (raw) => toTopOf({ layout: { toTop: raw } }, SHAPES);
   // Without a shape: the design's own outline, the waves of waves and count, the mark in the box's middle.
-  assert.deepEqual(toTopOutline(set({ design: 'square' })), { d: toTopShape('square', 0), mark: [50, 50] });
-  assert.equal(toTopOutline(set({ waves: 40, count: 8 })).d, toTopShape('circle', 40, 8));
-  assert.equal(toTopOutline(set({ design: 'ring' })).d, toTopShape('ring', 0));
+  assert.deepEqual(toTopOutline(set({ design: 'square' }), false, SHAPES), { d: toTopShape('square', 0), mark: [50, 50] });
+  assert.equal(toTopOutline(set({ waves: 40, count: 8 }), false, SHAPES).d, toTopShape('circle', 40, 8));
+  assert.equal(toTopOutline(set({ design: 'ring' }), false, SHAPES).d, toTopShape('ring', 0));
   assert.equal(toTopOutline(set({ design: 'ring' }), true).d, toTopShape('circle', 0), 'a whole picture on the ring is cut to the whole box');
   // With one: the shape's outline, the ring's a little inside the box, the mark at the shape's middle or where the owner put it.
   const drop = set({ shape: { point: 70 } });
-  assert.equal(toTopOutline(drop).d, outlinePath(shapeOutline(shapeOf({ point: 70 }))));
-  assert.ok(toTopOutline(drop).mark[1] > 52, 'the mark below the box\'s middle on a shape with a point at the top');
-  assert.deepEqual(toTopOutline(set({ shape: { point: 70, icon: [40, 60] } })).mark, [40, 60]);
+  assert.equal(toTopOutline(drop, false, SHAPES).d, outlinePath(shapeOutline(shapeOf({ point: 70 }))));
+  assert.ok(toTopOutline(drop, false, SHAPES).mark[1] > 52, 'the mark below the box\'s middle on a shape with a point at the top');
+  assert.deepEqual(toTopOutline(set({ shape: { point: 70, icon: [40, 60] } }), false, SHAPES).mark, [40, 60]);
   const ring = shapeOutline(shapeOf({ sides: 6 }), 4);
-  assert.equal(toTopOutline(set({ design: 'ring', shape: { sides: 6 } })).d, outlinePath(ring));
+  assert.equal(toTopOutline(set({ design: 'ring', shape: { sides: 6 } }), false, SHAPES).d, outlinePath(ring));
   assert.ok(ring.every(([x, y]) => x >= 3.99 && x <= 96.01 && y >= 3.99 && y <= 96.01), 'the ring\'s line stays in the box');
   assert.deepEqual(outlineMiddle(shapeOutline(shapeOf({}))).map((n) => Math.round(n)), [50, 50]);
   for (const odd of ['star', [], 7]) assert.equal(set({ shape: odd }).shape, null, 'a shape that is not an object is none');
-  assert.ok(decodeURIComponent(toTopClip(set({ shape: { sides: 6 } }))).includes(outlinePath(shapeOutline(shapeOf({ sides: 6 })))), 'the mark is cut to the same outline');
+  assert.ok(decodeURIComponent(toTopClip(set({ shape: { sides: 6 } }), SHAPES)).includes(outlinePath(shapeOutline(shapeOf({ sides: 6 })))), 'the mark is cut to the same outline');
   // What the shape window starts from on a button without a shape.
-  assert.equal(shapeId(toTopShapeOf(set({}))), 'circle');
-  assert.equal(shapeId(toTopShapeOf(set({ design: 'square' }))), 'roundedSquare');
-  const waved = toTopShapeOf(set({ waves: 50, count: 9 }));
+  assert.equal(shapeId(toTopShapeOf(set({}), SHAPES)), 'circle');
+  assert.equal(shapeId(toTopShapeOf(set({ design: 'square' }), SHAPES)), 'roundedSquare');
+  const waved = toTopShapeOf(set({ waves: 50, count: 9 }), SHAPES);
   assert.ok(waved.waves > 0 && waved.count === 9 && waved.sharp > 0, 'the waves carried over');
-  assert.equal(toTopShapeOf(drop), drop.shape);
+  assert.equal(toTopShapeOf(drop, SHAPES), drop.shape);
+  // Without the shape model, as on a page that loads no shape, a stored shape reads as none and the design's own outline stands.
+  assert.equal(toTopOf({ layout: { toTop: { shape: { sides: 6 } } } }).shape, null);
+  assert.equal(toTopOutline(set({ shape: { sides: 6 } })).d, toTopShape('circle', 0));
 });
 
 test('the settings of «Words only» stand directly under the design\'s words, before the mark and the shape', () => {

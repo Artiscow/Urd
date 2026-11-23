@@ -39,12 +39,22 @@ export function blockSheets() {
 }
 
 /**
- * The visitor's and the editor's stylesheets as one text: base.css, the block modules' sheets, the preview's rules and the calendar's sheets (which a page in the preview may load in either order), for the tests that look a rule up wherever it stands.
+ * The boot's features' own sheets in the order features.js keeps them (FEATURE_SHEETS), each loaded with its feature after base.css and before the block sheets.
+ * @returns {Array<{file: string, text: string}>}
+ */
+export function featureSheets() {
+  const features = readFileSync(new URL('features.js', ENGINE_DIR), 'utf8');
+  const list = features.match(/^const FEATURE_SHEETS = \[([^\n]*)\];$/m)[1];
+  return [...list.matchAll(/'([\w/.-]+\.css)'/g)].map(([, file]) => ({ file, text: readFileSync(new URL(file, ENGINE_DIR), 'utf8') }));
+}
+
+/**
+ * The visitor's and the editor's stylesheets as one text: base.css, the features' and the block modules' sheets, the preview's rules and the calendar's sheets (which a page in the preview may load in either order), for the tests that look a rule up wherever it stands.
  * @returns {string}
  */
 export function readStyles() {
   const read = (url) => readFileSync(url, 'utf8');
-  return [read(new URL('../template/assets/styles/base.css', import.meta.url)), ...blockSheets().map((sheet) => sheet.text), read(new URL('preview.css', ENGINE_DIR)), ...calendarSheets().map((sheet) => sheet.text)].join('\n');
+  return [read(new URL('../template/assets/styles/base.css', import.meta.url)), ...featureSheets().map((sheet) => sheet.text), ...blockSheets().map((sheet) => sheet.text), read(new URL('preview.css', ENGINE_DIR)), ...calendarSheets().map((sheet) => sheet.text)].join('\n');
 }
 
 /** A module's text without its block and line comments, so a commented-out import never counts. */

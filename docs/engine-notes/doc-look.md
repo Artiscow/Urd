@@ -9,10 +9,6 @@ A design is the layout (a long read, contents at the side, the main points at a 
 The stored text is never restructured: a design's parts, contents and numbers are drawn from the text's own headings, so a text keeps its words whatever design it is shown in.
 Pure helpers beside the DOM ones; tests/doc-look.test.mjs holds the pure ones.
 
-## `const TEXT_DESIGNS`
-
-The designs a text is drawn in: plain text, the way every text block is drawn, and the document designs the terms of sale take. A text block from before page v8 that stood in a document design is a terms block (migrate.js liftTermsBlocks).
-
 ## `docLookSettings`
 
 Which look settings a design draws, so the menu shows only those (the rest would change nothing).

@@ -6,7 +6,7 @@
 import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, logoParts, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, phoneMenuModel, sheetMotion, announcementModel, launcherModel, launcherVars, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped, keepsSheet, subsAfterRender } from './nav-model.js';
 import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
-import { readCart, cartCount, onCartChange } from './shop.js';
+import { feature } from './features.js';
 import { iconSvg } from './icons.js';
 import { loadBlockSheet } from './core-types.js';
 import { siteLinks, linkIconHtml, leavesSite } from './links-model.js';
@@ -463,14 +463,15 @@ export function renderNav(site, host, pageId) {
       nav.insertBefore(drawer.dialog, keptSheet?.parentNode === nav ? keptSheet : null);
       return drawer;
     }, () => null);
+    const shop = feature('shop');
     const paintCart = () => {
-      const count = cartCount(readCart());
+      const count = shop ? shop.cartCount(shop.readCart()) : 0;
       cartBadge.textContent = String(count);
       cartBadge.hidden = count === 0;
     };
     paintCart();
     // Tied to the button, which leaves the page with its render, and the listener with it; the bar itself can stay through a render.
-    onCartChange(cartBtn, () => {
+    shop?.onCartChange(cartBtn, () => {
       paintCart();
       drawer?.refresh();
     });

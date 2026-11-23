@@ -22,12 +22,7 @@ import {
   footerPrivacyLink,
   hasRichFooter,
 } from './footer-model.js';
-import {
-  isEmail,
-  isSpam,
-  buildNewsletterPayload,
-  buildNewsletterMailto,
-} from './footer-cta.js';
+import { feature } from './features.js';
 
 /** The rel words on a footer link that leaves the site. */
 const FOOTER_REL = ['noopener', 'noreferrer'];
@@ -116,6 +111,10 @@ function buildNewsletterForm(cta) {
   row.append(email, submit);
   form.append(honeypot, row, status);
 
+  // The address checks and the message, asked for as the form is drawn and awaited as it is sent.
+  const checks = import('./footer-cta.js');
+  checks.catch(() => {});
+
   const done = () => {
     status.className = 'urd-footer-nl-status ok';
     status.textContent = cta.success || t('footer.newsletter.success');
@@ -130,6 +129,9 @@ function buildNewsletterForm(cta) {
     event.preventDefault();
     status.className = 'urd-footer-nl-status';
     status.textContent = '';
+    const tools = await checks.catch(() => null);
+    if (!tools) { fail(t('footer.newsletter.sendFailed')); return; }
+    const { isEmail, isSpam, buildNewsletterPayload, buildNewsletterMailto } = tools;
     // Honeypot filled in: act as if it succeeded and send nothing (never tip
     // off the bot).
     if (isSpam(honeypot.value)) { done(); return; }
@@ -270,8 +272,8 @@ export function renderFooter(site, host, pageId) {
 
   const rich = hasRichFooter(site);
   const baseline = footerBaseline(site);
-  const contact = footerContact(site);
-  const legal = footerLegal(site);
+  const contact = footerContact(site, feature('contact'));
+  const legal = footerLegal(site, feature('contact'));
   const privacy = footerPrivacyLink(site);
 
   // On but empty: no text, placeholder or page title until it has rich content (hasRichFooter), text, contact details, a legal line or a privacy link.
