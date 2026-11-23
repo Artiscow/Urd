@@ -3,6 +3,7 @@
  * Notes: docs/engine-notes/features.md (Urd repository).
  */
 import { pageTypes } from './plugins.js';
+import { navHidden, hideMode } from './nav-model.js';
 import { pageBlocks, beside } from './core-types.js';
 import { loadEngineSheet } from './sheets.js';
 
@@ -97,8 +98,10 @@ function holdsValue(value, depth = 0) {
  */
 export function siteFeatures(site, pageId) {
   const held = new Set();
-  if (site?.nav?.cart?.show) held.add('shop');
-  if (site?.nav?.launcher?.show === true) held.add('launcher');
+  // The menu's basket and launcher stand only where the menu is drawn: a page it is kept off in the hidden mode draws neither (nav.js).
+  const menuDrawn = !(navHidden(site?.nav, pageId) && hideMode(site?.nav) === 'hidden');
+  if (menuDrawn && site?.nav?.cart?.show) held.add('shop');
+  if (menuDrawn && site?.nav?.launcher?.show === true) held.add('launcher');
   if (holdsValue(site?.site?.contact)) held.add('contact');
   const toTop = site?.layout?.toTop;
   if (!(toTop && typeof toTop === 'object' && toTop.show === false)) {

@@ -2,6 +2,10 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.38.3): a hidden menu loads no basket
+
+- [ ] With a page unticked under the Nav panel's «Show nav on pages» and «On the pages without it» set to «Hidden», that page shows no menu, and DevTools' network list shows no shop.js, nav-cart.css or nav-launcher.js; set to «Pull tab», the tab opens the menu with its basket as before
+
 ### Test batch (0.7.38.2.4): the menu's launcher with the site that shows it
 
 - [ ] A site with the launcher on shows its button and its shortcuts as before, in each of its views, on the bar, a floating bar and a side menu: the grid opens and closes, a shortcut followed closes it, and Escape closes it

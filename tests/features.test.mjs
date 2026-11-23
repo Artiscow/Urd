@@ -106,6 +106,11 @@ test('the footer is held where it shows on the page, the basket where the menu s
   assert.ok(siteFeatures(s({}, { show: true }), 'a').has('shop'));
   assert.ok(!siteFeatures(s({}, { show: false }), 'a').has('shop'));
   assert.ok(!siteFeatures(s({}, undefined), 'a').has('shop'));
+  // On a page the menu is kept off in the hidden mode, nav.js draws neither the basket nor the launcher; tucked away, it draws both.
+  const kept = (mode) => siteFeatures({ ...site, nav: { ...site.nav, hideOn: ['a'], hideMode: mode, launcher: { show: true } } }, 'a');
+  assert.ok(!kept('hidden').has('shop') && !kept('hidden').has('launcher'), 'a hidden menu loads no basket or launcher');
+  assert.ok(kept('tab').has('shop') && kept('tab').has('launcher'), 'a menu tucked into a tab keeps them');
+  assert.ok(kept(undefined).has('shop') === false, 'hidden is the mode a menu kept off takes by default');
   const launcher = (value) => siteFeatures({ ...site, nav: { ...site.nav, launcher: { show: value } } }, 'a').has('launcher');
   assert.ok(launcher(true), 'the launcher loads where the site shows it');
   for (const value of [false, undefined, 'true', 1]) assert.ok(!launcher(value), `launcher.show ${JSON.stringify(value)} draws no launcher (launcherModel)`);

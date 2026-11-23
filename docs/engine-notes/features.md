@@ -29,7 +29,7 @@ Whether a value holds anything: a string with characters, a number, true, or a l
 
 ## `siteFeatures`
 
-The features a site holds on a page, known once site.json is read: the basket in the menu (`nav.cart.show`), the link launcher (`nav.launcher.show: true`, as launcherModel in nav-model.js reads it), the contact details, the back-to-top button unless it is switched off (`layout.toTop.show: false`, toTopOf in totop.js) and the shape model for a button with a shape of its own (`layout.toTop.shape`), and the footer where it is shown and not hidden on this page (`footer.show`, `footer.hideOn`, as renderFooter reads them).
+The features a site holds on a page, known once site.json is read: the basket in the menu (`nav.cart.show`) and the link launcher (`nav.launcher.show: true`, as launcherModel in nav-model.js reads it) where the menu is drawn on the page (not on a page it is kept off in the hidden mode, `nav.hideOn` and `nav.hideMode`, as nav.js skips it), the contact details, the back-to-top button unless it is switched off (`layout.toTop.show: false`, toTopOf in totop.js) and the shape model for a button with a shape of its own (`layout.toTop.shape`), and the footer where it is shown and not hidden on this page (`footer.show`, `footer.hideOn`, as renderFooter reads them).
 
 ## `pageFeatures`
 
