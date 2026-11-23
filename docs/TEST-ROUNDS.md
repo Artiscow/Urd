@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.38.2.2): the contact block's map with its design
+
+- [ ] A contact block in each design looks as before on the desktop and on a phone, its legal line included; in «With a map» the map stands behind its cover and loads on a press
+- [ ] A contact block whose «Phone design» is «With a map» shows the map on a phone
+- [ ] In the editor, switching a contact block to «With a map» shows the map's cover at once, and a site without a point says where to set one
+- [ ] The checkout's seller line shows the legal name and organisation number as before
+- [ ] On a page with a contact block in another design than «With a map», DevTools' network list shows no contact-map.js, osm.js or map.css
+
 ### Test batch (0.7.38.2.1): the document designs with their design
 
 - [ ] The privacy page and the terms of sale in each of its designs (Long read, Contents at the side, At a glance, Questions, Numbered clauses) look and work as before on the desktop and on a phone: the contents, the folding questions, the numbered clauses and a withdrawal form's print button

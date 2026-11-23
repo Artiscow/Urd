@@ -408,6 +408,24 @@ test('the roles design lists the contact points and the site\'s own phone and em
   assert.equal(contactBlockModel(siteWith({ points }), { design: 'lines' }), null, 'only the roles design reads them');
 });
 
+test('the map design\'s module is readied where a block draws the map on either screen and the site has a point', async () => {
+  const { prepareContact, loadContactMap } = await engineImport('blocks/contact.js');
+  const ctx = (geo) => ({ site: siteWith(geo ? { ...NO, geo } : NO) });
+  const point = { lat: 63.4155, lon: 10.4042 };
+  assert.equal(prepareContact({ design: 'lines' }, ctx(point)), null, 'another design loads no map');
+  assert.equal(prepareContact({ design: 'map' }, ctx(null)), null, 'no point: no map to draw');
+  // The map's sheet is placed in the head, as a page places it.
+  Object.defineProperty(globalThis, 'document', { value: { createElement: () => ({ dataset: {}, listeners: {}, addEventListener(type, fn) { this.listeners[type] = fn; } }), head: { querySelector: () => null, querySelectorAll: () => [], appendChild: (link) => link.listeners.load?.() } }, configurable: true, writable: true });
+  try {
+    const part = await prepareContact({ design: 'map' }, ctx(point));
+    assert.equal(typeof part.drawMapFigure, 'function');
+    assert.equal(await prepareContact({ design: 'lines', phoneDesign: 'map' }, ctx(point)), part, 'the phone\'s own design counts');
+    assert.equal(await loadContactMap(), part, 'loaded once');
+  } finally {
+    delete globalThis.document;
+  }
+});
+
 test('the map design shows the cover only with a point, and says where to find one in the editor', () => {
   const box = (contact, preview) => drawBlock(contact, { design: 'map' }, { preview }).host.all().filter((n) => n.className === 'urd-contact-mapbox');
   assert.equal(box(NO, false).length, 0, 'no point: the details alone');

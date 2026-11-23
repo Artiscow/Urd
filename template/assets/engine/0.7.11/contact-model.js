@@ -5,6 +5,7 @@
 
 import { profileOf, countryForLanguage } from './contact-profiles.js';
 import { runCheck } from './contact-checks.js';
+import { t } from './i18n.js';
 
 const str = (v) => (typeof v === 'string' ? v.trim() : '');
 
@@ -295,4 +296,12 @@ export function organizationContact(contact) {
   });
   if (points.length) out.contactPoint = points;
   return out;
+}
+
+/** The legal line as one text, its parts joined by « · », the representative titled in the visitor's language (the footer, the contact block, the checkout). */
+export function legalText(parts) {
+  return parts.map((p) => {
+    if (p.kind === 'representative') return `${t('contact.representative')}: ${p.text}`;
+    return p.labelKey ? `${t(p.labelKey)} ${p.text}` : p.text;
+  }).join(' · ');
 }

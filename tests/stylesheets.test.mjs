@@ -236,8 +236,10 @@ function blockOwners() {
   const read = (module) => { try { return readFileSync(join(engine, module), 'utf8'); } catch { return ''; } };
   const table = (name) => read('core-types.js').split(`export const ${name} = {`)[1].split('\n};')[0];
   const sheetOf = (module) => (module === 'backgrounds/slideshow.js' ? 'gallery' : /^blocks\/[a-z]+\.js$/.test(module) ? module.slice(7, -3) : null);
+  // A block module's design parts, which it loads from its own folder as it draws (the contact block's map, the calendar's renderers), are its own.
+  const partsOf = (module) => (/^blocks\//.test(module) ? [...read(module).matchAll(/import\('\.\/([a-z-]+\.js)'\)/g)].flatMap(([, file]) => [`blocks/${file}`, ...engineClosure(`blocks/${file}`)]) : []);
   const loaders = [...table('CORE_BLOCKS').split('\n'), ...table('CORE_BACKGROUNDS').split('\n')].map((line) => [...line.matchAll(/import\('\.\/([^']+)'\)/g)].map(([, path]) => path)).filter((imports) => imports.length)
-    .map((imports) => ({ sheet: sheetOf(imports[0]), reach: new Set(imports.flatMap((m) => [m, ...engineClosure(m)])) }));
+    .map((imports) => ({ sheet: sheetOf(imports[0]), reach: new Set(imports.flatMap((m) => [m, ...engineClosure(m), ...partsOf(m)])) }));
   const boot = new Set(engineClosure('boot.js'));
   const writes = (module) => {
     const exact = new Set();

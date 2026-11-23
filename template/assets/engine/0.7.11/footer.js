@@ -223,14 +223,6 @@ function buildBrandIdentity(brand) {
   return el;
 }
 
-/** The legal line as one text, its parts joined by « · » and the representative titled in the visitor's language; the contact block writes the same. */
-export function legalText(parts) {
-  return parts.map((p) => {
-    if (p.kind === 'representative') return `${t('contact.representative')}: ${p.text}`;
-    return p.labelKey ? `${t(p.labelKey)} ${p.text}` : p.text;
-  }).join(' · ');
-}
-
 /**
  * The contact details as an <address>: the address lines in one span, comma-joined when inline, then the phone and email, each a link when it has an href.
  */
@@ -301,7 +293,7 @@ export function renderFooter(site, host, pageId) {
     if (legal) {
       const p = document.createElement('p');
       p.className = 'urd-footer-legal';
-      p.textContent = legalText(legal);
+      p.textContent = feature('contact').legalText(legal);
       inner.appendChild(p);
     }
     if (privacy) inner.appendChild(buildLinks([privacy], 'urd-footer-privacy'));
@@ -431,7 +423,7 @@ export function renderFooter(site, host, pageId) {
     if (legal) {
       const span = document.createElement('span');
       span.className = 'urd-footer-legal';
-      span.textContent = legalText(legal);
+      span.textContent = feature('contact').legalText(legal);
       left.appendChild(span);
     }
     base.appendChild(left);

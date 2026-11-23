@@ -42,13 +42,13 @@ export const CORE_BLOCKS = {
   stats: () => withSheets(import('./blocks/stats.js'), 'stats').then((m) => m.statsBlock),
   table: () => withSheets(import('./blocks/table.js'), 'table').then((m) => m.tableBlock),
   share: () => withSheets(import('./blocks/share.js'), 'share').then((m) => m.shareBlock),
-  contact: () => withSheets(beside(import('./blocks/contact.js'), import('./blocks/map.js'), import('./contact-checks.js'), import('./contact-model.js'), import('./contact-profiles.js'), import('./embed-cover.js'), import('./footer.js'), import('./footer-model.js'), import('./osm.js'), import('./picture.js')), 'contact', 'map').then((m) => m.contactBlock),
+  contact: () => withSheets(beside(import('./blocks/contact.js'), import('./contact-checks.js'), import('./contact-model.js'), import('./contact-profiles.js')), 'contact').then((m) => m.contactBlock),
   privacy: () => withSheets(beside(import('./blocks/privacy.js'), import('./contact-checks.js'), import('./contact-model.js'), import('./contact-profiles.js'), import('./doc-look.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js'), import('./privacy-model.js')), 'privacy', 'doc-look.css').then((m) => m.privacyBlock),
   countdown: () => withSheets(import('./blocks/countdown.js'), 'countdown').then((m) => m.countdownBlock),
   audio: () => withSheets(import('./blocks/audio.js'), 'audio').then((m) => m.audioBlock),
   product: () => withSheets(beside(import('./blocks/product.js'), import('./blocks/collection.js'), import('./collections.js'), import('./picture.js'), import('./sanitize.js'), import('./shop.js')), 'product', 'collection').then((m) => m.productBlock),
   cart: () => withSheets(beside(import('./blocks/cart.js'), import('./shop.js')), 'cart').then((m) => m.cartBlock),
-  checkout: () => withSheets(beside(import('./blocks/checkout.js'), import('./contact-checks.js'), import('./contact-model.js'), import('./contact-profiles.js'), import('./footer.js'), import('./footer-model.js'), import('./shop.js')), 'checkout').then((m) => m.checkoutBlock),
+  checkout: () => withSheets(beside(import('./blocks/checkout.js'), import('./contact-checks.js'), import('./contact-model.js'), import('./contact-profiles.js'), import('./footer-model.js'), import('./shop.js')), 'checkout').then((m) => m.checkoutBlock),
   map: () => withSheets(beside(import('./blocks/map.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js')), 'map').then((m) => m.mapBlock),
   form: () => withSheets(beside(import('./blocks/form.js'), import('./form-model.js')), 'form').then((m) => m.formBlock),
   calendar: () => beside(import('./blocks/calendar.js'), import('./blocks/calendar-load.js'), import('./sanitize.js')).then((m) => m.calendarBlock),
@@ -77,10 +77,11 @@ export const CORE_BLOCK_READY = {
   },
   text: () => import('./blocks/text.js').then((m) => m.prepareText),
   terms: () => import('./blocks/text.js').then((m) => m.prepareTerms),
+  contact: () => import('./blocks/contact.js').then((m) => m.prepareContact),
 };
 
 /** The parts of core blocks' designs the preview loads with every type (`loadCoreTypes` with `all`), so a design added on the canvas draws at once. */
-export const CORE_BLOCK_PARTS = [() => import('./blocks/text.js').then((m) => m.loadDocs())];
+export const CORE_BLOCK_PARTS = [() => import('./blocks/text.js').then((m) => m.loadDocs()), () => import('./blocks/contact.js').then((m) => m.loadContactMap())];
 /** The old plugin contract ids of the core blocks calendar, map and form (ADR-0021): a page holding one loads the type it stands for. */
 export const BLOCK_ALIASES = { kalender: 'calendar', kart: 'map', skjema: 'form' };
 

@@ -17,8 +17,7 @@ import {
 } from '../shop.js';
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady, t, siteLang } from '../i18n.js';
-import { sellerParts } from '../contact-model.js';
-import { legalText } from '../footer.js';
+import { sellerParts, legalText } from '../contact-model.js';
 import { sitePageLink } from '../footer-model.js';
 
 /**

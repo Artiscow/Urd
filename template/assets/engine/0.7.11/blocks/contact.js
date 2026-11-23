@@ -7,12 +7,9 @@
  */
 // ta() is only called in preview (after the admin dictionary has loaded), t() only at render: never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
-import { CONTACT_PARTS, contactDesign, siteContact, contactParts, legalParts, pointParts } from '../contact-model.js';
-import { legalText } from '../footer.js';
+import { CONTACT_PARTS, contactDesign, siteContact, contactParts, legalParts, pointParts, legalText } from '../contact-model.js';
 import { iconSvg } from '../icons.js';
-import { buildEmbedUrl, buildLargerMapUrl } from '../osm.js';
-import { watchCspBlock } from './map.js';
-import { coverFrame } from '../embed-cover.js';
+import { loadBlockSheet } from '../core-types.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -219,17 +216,9 @@ function drawMap(box, model, extras, site, ctx, props = {}) {
 
   const figure = node('div', 'urd-contact-mapbox');
   if (model.geo) {
-    // The map behind the site's one cover (embed-cover.js): nothing reaches OpenStreetMap before the visitor presses.
-    const src = buildEmbedUrl({ ...model.geo, zoom: 16 });
-    const makeFrame = () => {
-      const frame = node('iframe', 'urd-contact-mapframe');
-      frame.src = src;
-      frame.title = t('map.mapTitle');
-      frame.setAttribute('referrerpolicy', 'no-referrer');
-      watchCspBlock(figure, frame, ctx, buildLargerMapUrl({ ...model.geo, zoom: 16 }));
-      return frame;
-    };
-    coverFrame(figure, { src, makeFrame, kind: 'map', preview: Boolean(ctx.preview), ask: props.askFirst !== false, extraClass: 'urd-contact-cover' });
+    // The map behind its cover, drawn by the design's own module: at once where it was readied before the page was drawn (prepareContact), else as it comes.
+    if (mapPart) mapPart.drawMapFigure(figure, model.geo, ctx, props);
+    else loadContactMap().then((part) => { if (figure.isConnected) part.drawMapFigure(figure, model.geo, ctx, props); }, () => {});
     box.append(figure);
   } else if (ctx.preview) {
     // Without a point the published page shows the details alone; the editor says where the point is found.
@@ -318,6 +307,26 @@ function drawQr(box, model, extras, site) {
     svg.append(ground, dots);
     code.append(svg);
   }).catch(() => {});
+}
+
+/** The map design's own module (blocks/contact-map.js) once it is in. */
+let mapPart = null;
+/** Its loading, asked for once. */
+let mapLoading = null;
+
+/**
+ * Loads what the map design draws with: its module, the map block's sheet for the note a blocked map shows, and the modules they import, in one wave.
+ * @returns {Promise<object>} blocks/contact-map.js
+ */
+export function loadContactMap() {
+  mapLoading ??= Promise.all([import('./contact-map.js'), import('./map.js'), import('../osm.js'), import('../embed-cover.js'), import('../picture.js'), loadBlockSheet('map')]).then(([module]) => (mapPart = module));
+  return mapLoading;
+}
+
+/** Readies a contact block before the page is drawn (CORE_BLOCK_READY): the map design's module where it draws the map on either screen and the site has a point. */
+export function prepareContact(props, ctx) {
+  const drawsMap = [props.design, props.phoneDesign].some((design) => contactDesign(design).id === 'map');
+  return drawsMap && contactBlockModel(ctx?.site, props)?.geo ? loadContactMap() : null;
 }
 
 const DRAW = {

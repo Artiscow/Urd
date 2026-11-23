@@ -27,10 +27,6 @@ an endpoint it falls back to mailto. Mirrors the form block's submission
 on the pure footer-cta.js. In preview nothing is sent, only the
 confirmation is shown.
 
-## `legalText`
-
-The legal line as text: «Apeiron Linjeforening · Org.nr. 974 760 673 MVA · Foretaksregisteret», the representative with the visitor language's title; the contact block writes the same.
-
 ## `buildContactAddress`
 
 The contact details as an \<address>: the address, then the phone and the email, each a link when it is usable.

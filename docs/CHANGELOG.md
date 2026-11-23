@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.38.2.2 - A contact block loads no map code unless it draws the map - 23 November 2026
+
+- Every contact block loaded the map's code and sheet (osm.js, map.js, embed-cover.js, picture.js, map.css, 14.6 KB compressed), which only the map design draws with. The map stands in `blocks/contact-map.js`, readied before the page is drawn where a block draws the map design on either screen and the site has a point (`prepareContact` and `loadContactMap` in blocks/contact.js), drawn into its box as it comes where it comes later, and loaded by the preview with every type.
+- The contact and checkout blocks loaded footer.js, and the contact block footer-model.js, for the legal line's words; `legalText` stands in contact-model.js, which the footer, the contact block and the checkout hold.
+- The notes test and the sheet test count a block's design parts, which it loads from its own folder as it draws, as the block's own.
+
+The independent review before the commit found these:
+
+1. The notes walker named the contact block's parts by a hand-kept list, so a later block's design part would have escaped the comment limit unnoticed; it reads the parts of every block module a page loads.
+2. core-types' notes left the contact map out of the readying and the preview's parts, ARCHITECTURE.md named base.css for the contact designs' narrow layouts in contact.css, and the test round named the designs by other words than the editor's («With a map», «Phone design»); each says what holds.
+
 ### 0.7.38.2.1 - A page with plain text loads no document code: the document designs come with the design - 23 November 2026
 
 - Every text block loaded doc-look.js and text.css, which only its document designs draw with, and base.css held the documents' rules on every page. A text or terms block in a document design readies doc-look.js, its sheet and text.css before the page is drawn (`prepareText`, `prepareTerms` and `loadDocs` in blocks/text.js, `CORE_BLOCK_READY`), and plain text loads none of them.

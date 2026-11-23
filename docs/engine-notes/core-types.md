@@ -18,12 +18,12 @@ tests/visitor-speed.test.mjs holds every type's loader to name them all.
 
 ## `const CORE_BLOCK_READY`
 
-The core block types readied before a page is drawn, each with what readies a block of it (prepareBlocks): the calendar's, asked for in one wave with the parser, the design model, the formats and the links it draws with (calendarParts in blocks/calendar-load.js), beside the calendar's own module; and a text or terms block's document design, which draws with doc-look.js, its sheet and the text block's (`prepareText`, `prepareTerms` and `loadDocs` in blocks/text.js), while plain text readies nothing.
+The core block types readied before a page is drawn, each with what readies a block of it (prepareBlocks): the calendar's, asked for in one wave with the parser, the design model, the formats and the links it draws with (calendarParts in blocks/calendar-load.js), beside the calendar's own module; a text or terms block's document design, which draws with doc-look.js, its sheet and the text block's (`prepareText`, `prepareTerms` and `loadDocs` in blocks/text.js), while plain text readies nothing; and a contact block's map, where its design or its phone design is the map and the site has a point (`prepareContact` and `loadContactMap` in blocks/contact.js).
 Each gives what takes a block's props and the page's context once its own module is in; the parts asked for beside it come in on their own.
 
 ## `const CORE_BLOCK_PARTS`
 
-The parts of the core blocks' designs the preview loads with every type (`loadCoreTypes` with `all`, ADR-0036 decisions 4 and 9): the editor offers every design, so a document design added on the canvas draws its look at once rather than as its code comes. The calendar's design families are not among them: a calendar draws its loading state until its family's renderer is in, in the preview as on a visitor's page.
+The parts of the core blocks' designs the preview loads with every type (`loadCoreTypes` with `all`, ADR-0036 decisions 4 and 9): the editor offers every design, so a document design or a contact block's map added on the canvas draws at once rather than as its code comes. The calendar's design families are not among them: a calendar draws its loading state until its family's renderer is in, in the preview as on a visitor's page.
 
 ## `loadCoreTypes`
 

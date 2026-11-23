@@ -8,14 +8,14 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { ENGINE_DIR, engineClosure } from './_engine.mjs';
 import { LIMIT, NOTES_DIR, notesOf, notesPath, notesSections, proseLength, visitorModules } from '../scripts/engine-notes.mjs';
 
-/** The modules a visitor's page loads to draw: the boot's closure, the types' modules and the calendar's renderers. */
+/** The modules a visitor's page loads to draw: the boot's closure, the types' and features' modules, the footer's, and the blocks' design parts. */
 const VISITOR_MODULES = [
   'animations/core.js', 'backgrounds/color.js', 'backgrounds/glow.js', 'backgrounds/gradient.js',
   'backgrounds/grain.js', 'backgrounds/image.js', 'backgrounds/pattern.js', 'backgrounds/slideshow.js',
   'backgrounds/video.js', 'blocks/audio.js', 'blocks/button.js', 'blocks/calendar-card.js', 'blocks/calendar-cards.js',
   'blocks/calendar-list.js', 'blocks/calendar-load.js', 'blocks/calendar-more.js', 'blocks/calendar-next.js',
   'blocks/calendar-plain.js', 'blocks/calendar-retro.js', 'blocks/calendar-time.js', 'blocks/calendar.js', 'blocks/cart.js', 'blocks/checkout.js',
-  'blocks/collection.js', 'blocks/contact.js', 'blocks/countdown.js', 'blocks/faq.js', 'blocks/form.js',
+  'blocks/collection.js', 'blocks/contact-map.js', 'blocks/contact.js', 'blocks/countdown.js', 'blocks/faq.js', 'blocks/form.js',
   'blocks/gallery.js', 'blocks/icon.js', 'blocks/image.js', 'blocks/map.js', 'blocks/privacy.js', 'blocks/product.js',
   'blocks/quote.js', 'blocks/ribbon.js', 'blocks/shape.js', 'blocks/share.js', 'blocks/spacer.js', 'blocks/stats.js',
   'blocks/table.js', 'blocks/text.js', 'blocks/timeline.js', 'blocks/video.js', 'boot.js', 'box-style.js',

@@ -34,12 +34,16 @@ const HISTORY = /\b(no longer|previously|used to|would otherwise)\b/i;
 /** The path of a module's notes in the repository, as its header names it. */
 export const notesPath = (module) => `docs/engine-notes/${module.replace(/\.js$/, '.md')}`;
 
-/** The modules a visitor's page loads to draw: the boot's closure, the closures of the modules core-types.js and features.js load, and the calendar's and footer's own. */
+/** The modules a visitor's page loads to draw: the boot's closure, the closures of the modules core-types.js and features.js load, the footer's, and the blocks' design parts. */
 export function visitorModules() {
   const set = new Set(engineClosure('boot.js'));
   for (const loader of ['core-types.js', 'features.js', 'footer.js']) {
     const src = readFileSync(new URL(loader, ENGINE_DIR), 'utf8');
     for (const m of src.matchAll(/import\('\.\/([^']+)'\)/g)) for (const name of engineClosure(m[1])) set.add(name);
+  }
+  // A block's design parts, which it loads from its own folder as it draws (the contact block's map, the calendar's renderers).
+  for (const block of [...set].filter((name) => /^blocks\/[a-z]+\.js$/.test(name))) {
+    for (const m of readFileSync(new URL(block, ENGINE_DIR), 'utf8').matchAll(/import\('\.\/([a-z-]+\.js)'\)/g)) for (const name of engineClosure(`blocks/${m[1]}`)) set.add(name);
   }
   const load = readFileSync(new URL('blocks/calendar-load.js', ENGINE_DIR), 'utf8');
   const designs = load.match(/export const DESIGN_MODULES = \{([^\n]*)\};/)[1];

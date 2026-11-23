@@ -41,3 +41,7 @@ The seller's details as one line of text, as the terms of sale write them after 
 The legal and contact details as schema.org Organization properties, with every empty field left out.
 The contact points by role that have a phone or a usable email become ContactPoint entries.
 The first number with an ISO 6523 code goes into iso6523Code, the VAT number into vatID, the other numbers into identifier, a status with a schema.org type into nonprofitStatus; a number that is not of its form or fails a refusing check is left out, the VAT number with the number it comes from.
+
+## `legalText`
+
+The legal line as text: «Apeiron Linjeforening · Org.nr. 974 760 673 MVA · Foretaksregisteret», the representative with the visitor language's title. The footer, the contact block and the checkout write it alike, and it stands with the contact model, which all three hold, so the contact block and the checkout load no footer code for it.
