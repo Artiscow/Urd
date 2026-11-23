@@ -29,6 +29,7 @@ they never topple the page).
 ## `loadStylesheet`
 
 Adds a stylesheet to the document once, for the code that needs it alone (the preview's rules, a calendar's): resolves when it has loaded or failed, so the caller draws with it in place, to whether it loaded.
+A caller whose rules must keep their order among sheets of its own passes `place`, which puts the link there (the calendar's sheets, calendar-load.js); without it the link goes at the end of the head.
 
 ## `applySiteLayout`
 

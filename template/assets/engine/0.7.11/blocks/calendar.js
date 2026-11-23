@@ -16,10 +16,10 @@
  * The sources, the view and the count are edited in the Properties panel; the help chip (ADR-0008) explains the conventions.
  */
 // t() for visitor texts (the site language), ta() for the editor chrome (the admin language), dates() for month and weekday names, tp() for plurals; never called at module level.
-import { t, ta, tp, pluralForm, themeString, dates, adminLocaleReady } from '../i18n.js';
+import { t, ta, tp, pluralForm, themeString, dates } from '../i18n.js';
 import { iconSvg } from '../icons.js';
 import { resolveColor, inkOn } from '../theme.js';
-import { setRichHtml, safeHtmlFragment, plainLines } from '../sanitize.js';
+import { setRichHtml, plainLines } from '../sanitize.js';
 import { WIDTH_QUERIES } from '../render.js';
 import { NARROW_PX } from '../push-model.js';
 import { linkAttrs } from '../nav-model.js';
@@ -88,12 +88,6 @@ const DEMO_IMAGE = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://
 /** The sample calendars' colours, one per calendar, so the sample shows how coloured calendars look. */
 const DEMO_COLORS = { demoCat1: '#2f80ed', demoCat2: '#e0632c', demoCat3: '#2e9e5b' };
 
-/** The calendars in the editor whose bar chose the example events on or off, by block id, for the editing session; a calendar not listed shows them while it has no sources. */
-const EXAMPLES = new Map();
-
-/** What each calendar in the editor shows, by block id, as last drawn: its box, whether the example events stand in for its own, why it has none of its own where a feed failed (read in the admin's language when asked), and its way to be drawn again. */
-const SHOWN = new Map();
-
 /** The last drawing of each calendar, by block id: its box, the settings it was drawn with, and whether it was the drawing that waits for the feeds. */
 const LAST_DRAWN = new Map();
 
@@ -123,20 +117,6 @@ function copyLastDrawing(host, el, props, measure = false) {
   // The copy is the calendar's drawing now, so a redraw before its own is in copies it in turn; a copy drawn only to be measured leaves the drawing where it stands.
   if (!measure) LAST_DRAWN.set(id, { ...last, host });
   return true;
-}
-
-/** What a calendar in the editor shows, for its bar's button (preview-edit.js): whether the example events stand in for its own, and why its feed gave none where one failed; null until it is drawn. */
-export function calendarExamples(blockId) {
-  const state = SHOWN.get(blockId);
-  return state ? { examples: state.examples, reason: state.reason?.() ?? null } : null;
-}
-
-/** The example events on or off for a calendar in the editor, for the session, and the calendar drawn again with them. */
-export function toggleCalendarExamples(blockId) {
-  const state = SHOWN.get(blockId);
-  if (!state) return;
-  EXAMPLES.set(blockId, !state.examples);
-  state.redraw();
 }
 
 function demoOccurrences() {
@@ -177,13 +157,6 @@ function tintNode(node, occ, mark = node) {
   return node;
 }
 
-function badgeNode(occ, ui) {
-  const start = new Date(occ.start);
-  const badge = tintNode(el2('div', 'urd-collection-badge'), occ);
-  badge.append(ui.field('strong', 'number', String(start.getDate()), null, start), ui.field('span', 'date', dates().monthsShort[start.getMonth()], null, start));
-  return badge;
-}
-
 function chipNode(category, color, ui, colors = null) {
   if (!category) return null;
   return paintColor(ui.field('span', 'category', category, 'urd-cal-chip'), color, colors);
@@ -200,6 +173,17 @@ function imageUrl(occ, width = 800) {
 }
 
 /* ---------- The design's helpers (fields, static texts, buttons) ---------- */
+
+/** The preview's editing of a calendar (calendar-edit.js), attached as it loads with the preview's editing layer; null on a visitor's page. */
+let editing = null;
+
+/**
+ * Attaches the preview's editing: the words written in place, their hints, the help chip, the example events and the block menu's variants.
+ * @param {object} api
+ */
+export function attachEditing(api) {
+  editing = api;
+}
 
 /** The text each drawn word stands for: its key, the values it was drawn with and its plural form. */
 const TEXTS = new WeakMap();
@@ -222,14 +206,13 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   // The first day of the week asks the browser's locale data, which costs on its first use, so it is worked out only where a week is drawn.
   let weekStartDay = null;
   const weekStart = () => (weekStartDay ??= cf.calWeekStart(props, lang));
-  const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
+  const editable = Boolean(ctx.preview && editing) && ctx.viewport !== 'mobile';
   // The keys of a day grid belong to the visitor: with the editing handles on in the preview they are left alone.
   const keysOn = () => !ctx.preview || document.body.classList.contains('urd-chrome-off');
   const clean = () => document.body.classList.contains('urd-chrome-off');
   const rewritten = { ...(props.texts ?? {}) };
   // The coordinates a feed gives a place (GEO), by the place's text, so every link to that place leads to the same point.
   const places = new Map();
-  const post = (msg) => window.parent?.postMessage(msg, location.origin);
   const field = (tag, key, content, className, when) => {
     const node = el2(tag, className ? `${className} urd-cal-f-${key}` : `urd-cal-f-${key}`);
     // A description keeps its addresses as links, and a place leads to the map (or to itself, when it is an address).
@@ -284,28 +267,6 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
       if (parts.some((part) => typeof part !== 'string')) text.replaceWith(...parts.map((part) => (typeof part === 'string' ? part : valueNode(part.name, values))));
     }
   };
-  /** The words as stored: every value back to its placeholder, and nothing editable left in them. */
-  const serialize = (node, key) => {
-    const copy = node.cloneNode(true);
-    for (const value of copy.querySelectorAll('.urd-cal-n')) value.replaceWith(params(key).includes(value.dataset.p) ? `{${value.dataset.p}}` : value.textContent);
-    for (const part of copy.querySelectorAll('[contenteditable]')) part.removeAttribute('contenteditable');
-    return copy.innerHTML.replace(/\u200b/g, '');
-  };
-  /** An empty text's hint in the editor: a removed line's default words, or the prompt of a text that has no words of its own. */
-  const hintFor = (node, key, form, plain) => {
-    const hint = cd.CAL_HINT_TEXTS[key];
-    if (hint) adminLocaleReady.then(() => { node.dataset.placeholder = ta(hint); });
-    else node.dataset.placeholder = defaultWords(key, form, plain).replace(/\{([a-z]+)\}/gi, '').trim();
-  };
-  /** The line and the group a content text stands in follow its words: gone when it is empty. */
-  const markLine = (node, blank) => {
-    const box = node.closest('.urd-cal-line');
-    if (box) box.classList.toggle('urd-cal-gone', blank);
-    const around = node.closest('.urd-cal-group');
-    if (around) around.classList.toggle('urd-cal-gone', ![...around.querySelectorAll('.urd-cal-carry')].some((n) => !n.classList.contains('urd-cal-gone')));
-  };
-  // The words drawn in this render, so a text rewritten where it stands is drawn anew wherever else it stands (the announcement on the calendar and in its card).
-  const drawn = new Set();
   // The announcement's check of whether its text is cut, run again when words are rewritten.
   const measures = new Set();
   const paintText = (node, key, values) => {
@@ -318,7 +279,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     node.classList.toggle('urd-cal-blank', blank);
     if (blank) {
       node.replaceChildren();
-      if (editable) hintFor(node, key, form, plain);
+      if (editable) editing.hintFor(node, key, form, plain, env);
       return;
     }
     if (own) {
@@ -329,61 +290,12 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     }
     fillValues(node, key, values);
   };
+  // What the preview's editing (calendar-edit.js) works on, its words drawn in this render among it.
+  const env = editable ? { TEXTS, rewritten, measures, paintText, defaultWords, params, el, ctx, props, cd, clean, drawn: new Set() } : null;
   const tx = (key, className, values = null) => {
     const node = el2('span', className ? `urd-cal-tx ${className}` : 'urd-cal-tx');
     paintText(node, key, values);
-    if (editable) {
-      drawn.add(node);
-      // The text toolbar attaches to .urd-text fields; a click in the words edits them and never reaches the button or link around them.
-      // In the Clean view the words are plain text, as every text written in place is there, and the link around them works (cleanTexts in urd.js, which also gives them back).
-      node.classList.add('urd-text');
-      node.contentEditable = 'true';
-      // The words stop the press, so a link around them is never followed.
-      // A fold's summary follows the block's two-step model: the press that selects the block leaves the fold, the next press opens or closes it and goes into the words, and the presses after that edit the words until they lose focus.
-      let selectedBefore = false;
-      let editing = false;
-      node.addEventListener('pointerdown', () => { selectedBefore = el.classList.contains('urd-selected'); });
-      node.addEventListener('blur', () => { editing = false; });
-      node.addEventListener('click', (event) => {
-        if (clean()) return;
-        event.stopPropagation();
-        if (node.closest('a[href]')) event.preventDefault();
-        if (!node.closest('summary')) return;
-        if (!selectedBefore || editing) event.preventDefault();
-        else editing = true;
-      });
-      node.addEventListener('input', () => {
-        const { form } = TEXTS.get(node);
-        const slot = cd.calTextSlot(key, form);
-        const html = serialize(node, key);
-        const blank = cd.calBlankHtml(html);
-        // The texts rewritten since this render are kept together: the editor stores what it is sent and does not render again.
-        // An emptied content line is removed; any other emptied text goes back to the dictionary's words.
-        if (blank && cd.CAL_CONTENT_TEXTS.includes(key)) rewritten[slot] = false;
-        else if (blank) delete rewritten[slot];
-        else rewritten[slot] = html;
-        node.classList.toggle('urd-cal-blank', blank);
-        if (blank) hintFor(node, key, form, TEXTS.get(node)?.plain);
-        markLine(node, blank);
-        for (const other of drawn) {
-          if (!other.isConnected) {
-            drawn.delete(other);
-            continue;
-          }
-          const state = TEXTS.get(other);
-          if (other === node || state.key !== key || cd.calTextSlot(key, state.form) !== slot || other.contains(document.activeElement)) continue;
-          paintText(other, key, state.values);
-          markLine(other, other.classList.contains('urd-cal-blank'));
-        }
-        for (const measure of measures) measure();
-        post({
-          type: 'urd-edit',
-          sectionId: ctx.section.id,
-          blockId: el.dataset.blockId,
-          props: { ...props, texts: { ...rewritten } },
-        });
-      });
-    }
+    if (editable) editing.wireText(node, key, env);
     return node;
   };
   /** A text drawn again with new values: in place, or only its values while the owner is writing in it. */
@@ -486,7 +398,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
       if (!opens(event.target)) return;
       event.preventDefault();
       event.stopPropagation();
-      showNoticeDialog(box, ui, href);
+      withCard((card) => card.showNoticeDialog(box, ui, href), box);
     }, true);
     box.addEventListener('keydown', (event) => {
       if ((event.key !== 'Enter' && event.key !== ' ') || event.target !== box || !cut) return;
@@ -494,7 +406,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
       if (editing() && !selected) return;
       event.preventDefault();
       event.stopPropagation();
-      showNoticeDialog(box, ui, href);
+      withCard((card) => card.showNoticeDialog(box, ui, href), box);
     });
     return box;
   };
@@ -651,7 +563,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     }
   };
   /** The event in full, in a native dialog over the page (ADR-0011), in the common words. */
-  const openEvent = (occ, from) => plainWords(() => showEventDialog(occ, from, ics, ui, props));
+  const openEvent = (occ, from) => withCard((card) => plainWords(() => card.showEventDialog(occ, from, ics, ui, props)), from);
   /** The mark on an event that repeats, with words the owner can rewrite, shown only with `showRecurring`; null on a single event. */
   const recurring = (occ) => {
     if (!occ.recurring || props.showRecurring !== true) return null;
@@ -680,7 +592,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const subscribe = () => (props.showSubscribe !== false && sources.some((source) => source.subscribable) ? subscribeRow(ics, sources, ui) : null);
   /** The event's own page: the address the feed gives it, else its sign-up link; null without either. */
   const href = (occ) => (typeof occ.url === 'string' && /^https?:\/\//i.test(occ.url) ? occ.url : occ.signup || null);
-  const ui = { el: el2, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, noticeHref: noticeLink?.href ?? '', noticeOn, countdown, image: imageUrl, themedWords, withDesign, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), descriptionIn: cd.calDescription(props), time, timeText, timeString, startClock, metaString, hasTime, excerpt, sources,
+  const ui = { el: el2, linkedText, tint, field, meta, tx, retx, line, group, notice, link, editLink, signup, chip, recurring, program, openToAll, subscribe, href, noticeHref: noticeLink?.href ?? '', noticeOn, countdown, image: imageUrl, themedWords, withDesign, all: [], offset: 0, total: 0, rest: false, filter: null, opt: cd.calOptions(props), descriptionIn: cd.calDescription(props), time, timeText, timeString, startClock, metaString, hasTime, excerpt, sources,
     dayMonth, dateLine, weekdayDay, monthYear, monthRange, percent,
     /** The week as the site's language lays it out: the empty cells before the first of a month, the weekday names in order, and the first day of a week. */
     lead: (first) => cf.leadDays(first, weekStart()),
@@ -769,416 +681,41 @@ function linkedText(node, text) {
   });
 }
 
-/** The feed's description: markup from the feed with everything active stripped, or plain text with its links. */
-function descriptionNode(description, ui) {
-  const box = ui.field('div', 'description', '', 'urd-cal-dialog-text');
-  if (/<[a-z][^>]*>/i.test(description)) {
-    // A feed's HTML is somebody else's markup: only what the allowlist keeps is drawn.
-    box.appendChild(safeHtmlFragment(description));
-  } else {
-    linkedText(box, description);
+/** The event card's code (calendar-card.js), once it is in: loaded when the page is idle, or at the first press that opens a card. */
+let cardModule = null;
+let cardAsked = null;
+export const loadCard = () => (cardAsked ??= import('./calendar-card.js').then((mod) => (cardModule = mod), (error) => {
+  cardAsked = null;
+  throw error;
+}));
+
+/** Opens a card with the card's code: at once where it is in, else once it comes, while what opened the card is still on the page. */
+function withCard(open, from) {
+  if (cardModule) {
+    open(cardModule);
+    return;
   }
-  return box;
+  loadCard().then((card) => {
+    if (from?.isConnected) open(card);
+  }, (error) => console.warn('Urd: the card could not be opened', error));
 }
 
-/**
- * The card wears the card design the block names (calCardDress, written on the block as `data-card-set`, `data-card-classes` and `data-card-colours`): the set it is drawn in, the card classes (`urd-cal-dlg-<design>`, where a design overrides its set's variables for the card, and a lent card design's own), and the owner's colour slots copied from the block when the card is the calendar's own design's or the neutral one, so calendar.css draws it in the right colours although it lies in the page.
- */
-function dressDialog(dialog, from) {
-  const host = from?.closest?.('.urd-cal');
-  if (!host) return;
-  const set = host.dataset.cardSet ?? [...host.classList].find((name) => name.startsWith('urd-cal-set-'))?.slice('urd-cal-set-'.length);
-  if (set) dialog.classList.add(`urd-cal-set-${set}`);
-  for (const name of (host.dataset.cardClasses ?? '').split(' ').filter(Boolean)) dialog.classList.add(name);
-  if (host.dataset.cardColours === 'off') return;
-  for (const name of host.style) if (name.startsWith('--urd-cal-s-') || name === '--urd-cal-accent-text') dialog.style.setProperty(name, host.style.getPropertyValue(name));
+/** Loads the card's code once the page is idle (a timer where the browser has no idle callback), so a press finds it in. */
+let cardSoon = false;
+function cardWhenIdle() {
+  if (cardSoon) return;
+  cardSoon = true;
+  const go = () => loadCard().catch(() => {});
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(go, { timeout: 3000 });
+  else setTimeout(go, 1500);
 }
 
-/** The open cards, each with the event or announcement it was opened from. */
-const OPEN_CARDS = new Map();
-
-/** Closes a card whose event is no longer on the page: its calendar has been drawn again under it. */
+/** Closes a card whose event is no longer on the page; with the card's code not in, no card is open. */
 function closeOrphanCards() {
-  for (const [dialog, from] of OPEN_CARDS) {
-    if (!from?.isConnected) dialog.close();
-  }
-}
-
-/** A card's close button. */
-function closeButton(dialog) {
-  const close = el2('button', 'urd-cal-dialog-close');
-  close.type = 'button';
-  close.setAttribute('aria-label', t('calendar.close'));
-  close.innerHTML = iconSvg('cross') || '';
-  if (!close.firstChild) close.textContent = '×';
-  close.addEventListener('click', () => dialog.close('escape'));
-  return close;
-}
-
-function showEventDialog(occ, from, ics, ui, props) {
-  const dialog = el2('dialog', 'urd-cal-dialog');
-  dressDialog(dialog, from);
-  const close = closeButton(dialog);
-  const start = new Date(occ.start);
-  const when = ui.field('span', 'date', ui.dateLine(start, true), 'urd-cal-dialog-date', start);
-  const title = ui.field('h3', 'title', occ.title, 'urd-cal-dialog-title');
-  title.id = `urd-cal-dlg-${Math.random().toString(36).slice(2, 10)}`;
-  dialog.setAttribute('aria-labelledby', title.id);
-  if (occ.cancelled) title.classList.add('urd-cal-cancelled');
-  dialog.append(close, when, title);
-  const facts = el2('dl', 'urd-cal-dialog-facts');
-  const fact = (key, value) => {
-    const term = el2('dt');
-    term.appendChild(ui.tx(key));
-    const def = el2('dd');
-    def.appendChild(value);
-    facts.append(term, def);
-  };
-  fact('when', ui.field('span', 'time', ui.timeText(occ)));
-  if (!occ.location && occ.geo) {
-    // Coordinates without a place in words: the map itself is the place.
-    const onMap = ui.link('urd-cal-place-link', 'onMap', ui.mapUrl('', occ.geo), '');
-    onMap.target = '_blank';
-    onMap.rel = 'noopener';
-    fact('where', onMap);
-  }
-  if (occ.location) {
-    fact('where', ui.field('span', 'place', occ.location));
-  }
-  // The calendar's organizer from the site's registry.
-  if (occ.calendarOrganizer) fact('organizer', el2('span', 'urd-cal-dialog-organizer', occ.calendarOrganizer));
-  dialog.appendChild(facts);
-  const meta = el2('div', 'urd-cal-dialog-meta');
-  const chip = ui.chip(occ);
-  if (chip) meta.appendChild(chip);
-  const rec = ui.recurring(occ);
-  if (rec) meta.appendChild(rec);
-  if (meta.children.length) dialog.appendChild(meta);
-  const src = ui.image(occ, 1000);
-  if (src) {
-    const img = document.createElement('img');
-    img.className = 'urd-cal-dialog-img';
-    img.alt = '';
-    img.addEventListener('error', () => img.remove());
-    img.src = src;
-    dialog.appendChild(img);
-  }
-  // The feed's HTML description when it has one, else the plain one.
-  if (occ.descriptionHtml || occ.description) dialog.appendChild(descriptionNode(occ.descriptionHtml || occ.description, ui));
-  // The calendar's own words and page, from the site's registry.
-  if (occ.calendarDescription || occ.calendarLink) {
-    const about = el2('div', 'urd-cal-dialog-source');
-    if (occ.calendarDescription) about.appendChild(el2('p', 'urd-cal-dialog-source-text', occ.calendarDescription));
-    if (occ.calendarLink) {
-      const more = el2('a', 'urd-cal-dialog-link');
-      more.href = occ.calendarLink;
-      more.target = '_blank';
-      more.rel = 'noopener';
-      more.appendChild(ui.tx('moreAbout', null, { name: occ.calendar || occ.calendarOrganizer || '' }));
-      about.appendChild(ui.editLink(more));
-    }
-    dialog.appendChild(about);
-  }
-  const actions = el2('div', 'urd-cal-dialog-actions');
-  // The card shows the sign-up when the block does («Show sign-up button»).
-  if (occ.signup && !occ.cancelled && props.showSignup === true) {
-    const signup = ui.link('urd-cal-dialog-primary', 'signup', occ.signup, ui.hosted(t('calendar.signupTitle'), occ.signup));
-    signup.target = '_blank';
-    signup.rel = 'noopener';
-    actions.appendChild(signup);
-  }
-  const meeting = occ.cancelled ? null : ics.meetingLinkOf(occ, ui.meetingHosts);
-  if (meeting) {
-    const join = ui.link('urd-cal-dialog-primary', 'join', meeting, ui.hosted('', meeting));
-    join.target = '_blank';
-    join.rel = 'noopener';
-    actions.appendChild(join);
-  }
-  // «Add to calendar» is left out of a cancelled event's card, and of every card when the owner switched it off (showAdd).
-  if (!occ.cancelled && props.showAdd !== false) {
-    // The moment itself, when the times are shown on the site's own clock.
-    const shift = occ.real != null ? occ.start - occ.real : 0;
-    const real = { ...occ, start: occ.start - shift, end: Number.isFinite(occ.end) ? occ.end - shift : occ.end };
-    // «Add to calendar» opens the ways to do it: this one event (to Google, or as a file for the other calendar apps), or the whole calendar (a subscription, and its iCal address to copy).
-    const add = el2('details', 'urd-cal-dialog-add');
-    const summary = el2('summary', 'urd-cal-dialog-link');
-    summary.appendChild(ui.tx('addEvent'));
-    const choices = el2('div', 'urd-cal-dialog-choices');
-    const one = el2('span', 'urd-cal-dialog-choice-label');
-    one.appendChild(ui.tx('addOne'));
-    const google = ui.link('urd-cal-dialog-link', 'addGoogle', ics.googleEventUrl(real), '');
-    google.target = '_blank';
-    google.rel = 'noopener';
-    const file = ui.link('urd-cal-dialog-link', 'addFile', URL.createObjectURL(new Blob([ics.eventIcs(real)], { type: 'text/calendar' })), '');
-    file.download = `${String(occ.title || 'event').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').slice(0, 60) || 'event'}.ics`;
-    choices.append(one, google, file);
-    // The whole calendar is offered with the block's subscribe button on, as on the calendar itself.
-    const feeds = props.showSubscribe === false ? [] : ui.sources.filter((source) => source.subscribable).map((source) => ics.subscribeLinks(source.url)).filter(Boolean);
-    if (feeds.length) {
-      const whole = el2('span', 'urd-cal-dialog-choice-label');
-      whole.appendChild(ui.tx('addWhole'));
-      choices.appendChild(whole);
-      for (const links of feeds) {
-        choices.appendChild(ui.link('urd-cal-dialog-link', 'subscribe', links.webcal, t('calendar.subscribeTitle')));
-        // The calendar's own address, to paste into a calendar app by hand.
-        const row = el2('label', 'urd-cal-dialog-address');
-        row.appendChild(ui.tx('icalAddress'));
-        const field = el2('input');
-        field.type = 'text';
-        field.readOnly = true;
-        field.value = links.webcal.replace(/^webcal:/, 'https:');
-        field.addEventListener('focus', () => field.select());
-        row.appendChild(field);
-        choices.appendChild(row);
-      }
-    }
-    add.append(summary, choices);
-    actions.appendChild(add);
-    dialog.addEventListener('close', () => URL.revokeObjectURL(file.href));
-  }
-  dialog.appendChild(actions);
-  // The card design the block wears, when a module lends it (calCardDesign): its decorator adds its own parts to the card.
-  ui.dressCard?.(dialog, occ);
-  openCard(dialog, from);
-}
-
-/** The announcement in full: its label, title and whole text, and the link to its address, in a card like an event's. */
-function showNoticeDialog(from, ui, href) {
-  const dialog = el2('dialog', 'urd-cal-dialog urd-cal-dialog-notice');
-  dressDialog(dialog, from);
-  dialog.appendChild(closeButton(dialog));
-  const label = ui.line(el2('span', 'urd-cal-dialog-date'), 'noticeLabel');
-  const title = ui.line(el2('h3', 'urd-cal-dialog-title'), 'noticeTitle');
-  const text = ui.line(el2('div', 'urd-cal-dialog-text'), 'noticeText');
-  for (const part of [label, title, text]) if (part) dialog.appendChild(part);
-  if (title) {
-    title.id = `urd-cal-dlg-${Math.random().toString(36).slice(2, 10)}`;
-    dialog.setAttribute('aria-labelledby', title.id);
-  } else {
-    dialog.setAttribute('aria-label', t('calendar.noticeLabel'));
-  }
-  if (href) {
-    const actions = el2('div', 'urd-cal-dialog-actions');
-    actions.appendChild(ui.noticeOn(ui.link('urd-cal-dialog-primary', 'moreInfo', href, '')));
-    dialog.appendChild(actions);
-  }
-  openCard(dialog, from);
-}
-
-/**
- * Opens a card over the calendar it was opened from (`from`, the event or the announcement), and gives the focus back to it when the card closes.
- */
-function openCard(dialog, from) {
-  // The card lies over its calendar and leaves the page alone (a dialog that is not modal): the page scrolls under it, and Escape or a press anywhere outside it closes it.
-  // One card is open at a time.
-  for (const other of document.querySelectorAll('dialog.urd-cal-dialog[open]')) other.close();
-  const watch = new AbortController();
-  document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape') return;
-    event.preventDefault();
-    dialog.close('escape');
-  }, { signal: watch.signal });
-  // The canvas's colour picker and menus lie outside the card and work on its words; the editor's text bar stands outside the canvas, where this press never reaches.
-  document.addEventListener('pointerdown', (event) => {
-    if (dialog.contains(event.target) || event.target.closest?.('.urd-cp, .urd-dd-menu')) return;
-    dialog.close();
-  }, { capture: true, signal: watch.signal });
-  OPEN_CARDS.set(dialog, from);
-  dialog.addEventListener('close', () => {
-    OPEN_CARDS.delete(dialog);
-    watch.abort();
-    // The focus goes back to what opened the card when the card held it or Escape closed it; a press elsewhere keeps what it pressed.
-    const back = dialog.returnValue === 'escape' || dialog.contains(document.activeElement);
-    dialog.remove();
-    if (back && from?.isConnected) from.focus({ preventScroll: true });
-  });
-  // The card is given a place in the part of the page that is in view before it opens, below the room a menu that stays on screen keeps at the top (scroll-padding-top, base.css), so opening it (which moves the focus into it) never scrolls the page.
-  const clear = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
-  dialog.style.left = `${window.scrollX + 8}px`;
-  dialog.style.top = `${window.scrollY + clear + 8}px`;
-  document.body.appendChild(dialog);
-  dialog.show();
-  placeOverCalendar(dialog, from);
-}
-
-/**
- * Lays the card over the calendar it belongs to, centred on the part of the calendar that is in view: at its own width and as tall as its content, so it may reach past the calendar's edges (a card never scrolls inside itself), never wider than the window and never over the navigation bar; a card taller than the window starts under the bar and the page scrolls.
- * It is placed on the page, so it scrolls away with its calendar, and placed again when the window changes or its own content unfolds.
- * The card is drawn at the calendar's own zoom (the block's drawn scale, render.js applyZoom), so it follows the size the owner gave the block. Its place is measured where it lands and set right from there (placeAt), so it lands where it should however the browser applies the zoom to its offsets.
- * The calendar and the rest of the page are left as they are.
- */
-const CARD_MAX_W = 460;
-
-/** Moves a positioned element so its box lands at (left, top) in the window: written, measured, and set right by what it missed, a few times at most. */
-function placeAt(node, left, top, scale) {
-  for (let i = 0; i < 3; i++) {
-    const rect = node.getBoundingClientRect();
-    const dx = left - rect.left;
-    const dy = top - rect.top;
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
-    node.style.left = `${(parseFloat(node.style.left) || 0) + dx / scale}px`;
-    node.style.top = `${(parseFloat(node.style.top) || 0) + dy / scale}px`;
-  }
-}
-
-function placeOverCalendar(dialog, from) {
-  const host = from?.closest?.('.urd-cal');
-  if (!host) return;
-  const place = () => {
-    const box = host.getBoundingClientRect();
-    const zoom = parseFloat(host.style.zoom) || 1;
-    dialog.style.zoom = zoom === 1 ? '' : String(zoom);
-    // The navigation bar's height, when it stays at the top of the window.
-    const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-nav-h')) || 0;
-    const roof = nav + 8;
-    const floor = window.innerHeight - 8;
-    // The card's own width at the calendar's size, never wider than the window.
-    const cssWidth = Math.min(CARD_MAX_W, (window.innerWidth - 16) / zoom);
-    dialog.style.width = `${cssWidth}px`;
-    const rect = dialog.getBoundingClientRect();
-    // How far the card moves on the screen for one CSS pixel of its place.
-    const scale = rect.width / cssWidth || zoom;
-    // The centre of the part of the calendar in view, or of the whole calendar when none of it is.
-    const shownTop = Math.max(roof, box.top);
-    const shownBottom = Math.min(floor, box.bottom);
-    const centreY = shownBottom > shownTop ? (shownTop + shownBottom) / 2 : box.top + box.height / 2;
-    const left = Math.max(8, Math.min(window.innerWidth - rect.width - 8, box.left + (box.width - rect.width) / 2));
-    const top = rect.height > floor - roof ? roof : Math.max(roof, Math.min(floor - rect.height, centreY - rect.height / 2));
-    placeAt(dialog, left, top, scale);
-  };
-  const watch = new AbortController();
-  window.addEventListener('resize', place, { signal: watch.signal });
-  dialog.addEventListener('toggle', place, { capture: true, signal: watch.signal });
-  dialog.addEventListener('close', () => watch.abort());
-  place();
+  cardModule?.closeOrphanCards();
 }
 
 /* ---------- Views ---------- */
-
-function renderList(host, occs, props, ics, ui) {
-  const list = el2('div', 'urd-collection-list');
-  for (const occ of occs) {
-    const row = ui.tint(el2('article', 'urd-collection-row'), occ);
-    row.appendChild(badgeNode(occ, ui));
-    const body = el2('div', 'urd-collection-body');
-    const titleRow = el2('div', 'urd-cal-titlerow');
-    titleRow.appendChild(ui.field('strong', 'title', occ.title, 'urd-collection-title'));
-    const chip = chipNode(occ.category, occ.color, ui, occ.colors);
-    if (chip) titleRow.appendChild(chip);
-    body.appendChild(titleRow);
-    const meta = ui.meta(occ);
-    if (meta) body.appendChild(meta);
-    const signup = ui.signup(occ);
-    if (signup) body.appendChild(signup);
-    row.appendChild(body);
-    list.appendChild(row);
-  }
-  host.appendChild(list);
-}
-
-function renderCards(host, occs, props, ics, ui) {
-  const grid = el2('div', 'urd-collection-cards');
-  for (const occ of occs) {
-    const card = ui.tint(el2('article', 'urd-collection-card'), occ);
-    const top = el2('div', 'urd-cal-titlerow');
-    const when = ui.meta(occ);
-    if (when) {
-      when.className = 'urd-collection-date';
-      top.appendChild(when);
-    }
-    const chip = chipNode(occ.category, occ.color, ui, occ.colors);
-    if (chip) top.appendChild(chip);
-    card.appendChild(top);
-    card.appendChild(ui.field('strong', 'title', occ.title, 'urd-collection-title'));
-    const excerpt = ui.descriptionIn === 'card' ? '' : ui.excerpt(occ.description);
-    if (excerpt) card.appendChild(ui.field('div', 'description', excerpt, 'urd-collection-text'));
-    const signup = ui.signup(occ);
-    if (signup) card.appendChild(signup);
-    grid.appendChild(card);
-  }
-  host.appendChild(grid);
-}
-
-/** One featured event in the «next» card: badge, title, when and where, the countdown and the signup. */
-function nextRow(occ, ui) {
-  const row = ui.tint(el2('div', 'urd-cal-next-row'), occ);
-  row.appendChild(badgeNode(occ, ui));
-  const body = el2('div', null);
-  const titleRow = el2('div', 'urd-cal-titlerow');
-  titleRow.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-next-title'));
-  const chip = chipNode(occ.category, occ.color, ui, occ.colors);
-  if (chip) titleRow.appendChild(chip);
-  body.appendChild(titleRow);
-  const meta = ui.meta(occ);
-  if (meta) body.appendChild(meta);
-  body.appendChild(el2('div', 'urd-cal-next-count', ui.countdown(occ)));
-  const signup = ui.signup(occ);
-  if (signup) body.appendChild(signup);
-  row.appendChild(body);
-  return row;
-}
-
-/**
- * The «next» card: the next one to three events in full (props.nextCount), and as many more as props.laterCount says as one-line rows under «Later».
- */
-function renderNext(host, occs, props, ics, ui) {
-  if (!occs.length) return;
-  const count = ics.nextCount(props.nextCount);
-  const panel = el2('div', 'urd-cal-next');
-  // One event is «the next event»; several are what is on right now.
-  const label = el2('div', 'urd-cal-next-label');
-  label.appendChild(ui.tx(count > 1 ? 'now' : 'next'));
-  panel.appendChild(label);
-  for (const occ of occs.slice(0, count)) panel.appendChild(nextRow(occ, ui));
-  const later = occs.slice(count, count + ics.laterCount(props.laterCount));
-  if (later.length) {
-    const laterLabel = el2('div', 'urd-cal-next-label urd-cal-later-label');
-    laterLabel.appendChild(ui.tx('later'));
-    panel.appendChild(laterLabel);
-    const list = el2('ul', 'urd-cal-later');
-    for (const occ of later) {
-      const item = ui.tint(el2('li', null), occ);
-      const when = ui.meta(occ, { place: false });
-      if (when) {
-        when.className = 'urd-cal-later-when';
-        item.appendChild(when);
-      }
-      item.appendChild(ui.field('span', 'title', occ.title, 'urd-cal-later-title'));
-      list.appendChild(item);
-    }
-    panel.appendChild(list);
-  }
-  host.appendChild(panel);
-}
-
-/** The agenda: compact rows under their month, for a programme that is read rather than browsed. */
-function renderAgenda(host, occs, props, ics, ui) {
-  const wrap = el2('div', 'urd-cal-agenda');
-  for (const group of ics.groupByMonth(occs)) {
-    wrap.appendChild(el2('h4', 'urd-cal-agenda-month', ui.monthYear(group.year, group.month)));
-    const list = el2('ul', 'urd-cal-agenda-list');
-    for (const occ of group.items) {
-      const start = new Date(occ.start);
-      const item = ui.tint(el2('li', 'urd-cal-agenda-row'), occ);
-      const day = el2('span', 'urd-cal-agenda-day');
-      day.append(ui.field('strong', 'number', String(start.getDate()), null, start), ui.field('span', 'date', dates().weekdaysShort[(start.getDay() + 6) % 7], null, start));
-      const body = el2('span', 'urd-cal-agenda-body');
-      const titleRow = el2('span', 'urd-cal-titlerow');
-      titleRow.appendChild(ui.field('strong', 'title', occ.title));
-      const chip = chipNode(occ.category, occ.color, ui, occ.colors);
-      if (chip) titleRow.appendChild(chip);
-      body.appendChild(titleRow);
-      const where = ui.meta(occ, { date: false });
-      if (where) body.appendChild(where);
-      const signup = ui.signup(occ);
-      if (signup) body.appendChild(signup);
-      item.append(day, body);
-      list.appendChild(item);
-    }
-    wrap.appendChild(list);
-  }
-  host.appendChild(wrap);
-}
 
 /**
  * The empty state: an icon and a line of text, in every view.
@@ -1212,106 +749,6 @@ function emptyApNode(props, ui) {
   wrap.appendChild(emptyNode(props));
   return wrap;
 }
-
-function renderMonth(host, occs, props, ics, ui) {
-  const now = ui.today();
-  let shown = { y: now.getFullYear(), mo: now.getMonth() };
-
-  const wrap = el2('div', 'urd-cal-month');
-  const head = el2('div', 'urd-cal-month-head');
-  const prev = el2('button', 'urd-cal-nav', '‹');
-  prev.type = 'button';
-  prev.setAttribute('aria-label', t('calendar.prevMonth'));
-  const label = ui.live(el2('strong', null, ''));
-  const next = el2('button', 'urd-cal-nav', '›');
-  next.type = 'button';
-  next.setAttribute('aria-label', t('calendar.nextMonth'));
-  head.append(prev, label, next);
-  const grid = el2('div', 'urd-cal-grid');
-  wrap.append(head, grid);
-  // On the phone a day is a button with dots, and its events are listed under the grid.
-  const panel = ui.phone ? el2('div', 'urd-cal-daylist') : null;
-  if (panel) wrap.appendChild(panel);
-
-  const move = (dir) => {
-    shown = shown.mo + dir < 0 ? { y: shown.y - 1, mo: 11 } : shown.mo + dir > 11 ? { y: shown.y + 1, mo: 0 } : { ...shown, mo: shown.mo + dir };
-    paint();
-  };
-  const paint = () => {
-    label.textContent = ui.monthYear(shown.y, shown.mo);
-    grid.replaceChildren();
-    for (const day of ui.dows()) grid.appendChild(el2('div', 'urd-cal-dow', day));
-    const first = new Date(shown.y, shown.mo, 1);
-    const lead = ui.lead(first);
-    const dim = new Date(shown.y, shown.mo + 1, 0).getDate();
-    const today = ui.today();
-    for (let i = 0; i < lead; i++) grid.appendChild(el2('div', 'urd-cal-day urd-cal-day-empty'));
-    if (panel) {
-      ui.phoneDays(grid, panel, shown.y, shown.mo, occs, 'urd-cal-day');
-      ui.dayGrid(grid, '.urd-cal-pday', { page: move, current: '[aria-pressed="true"]' });
-      return;
-    }
-    for (let d = 1; d <= dim; d++) {
-      const cell = el2('div', 'urd-cal-day');
-      if (d === today.getDate() && shown.mo === today.getMonth() && shown.y === today.getFullYear()) {
-        cell.classList.add('urd-cal-today');
-      }
-      cell.appendChild(el2('span', 'urd-cal-daynum', String(d)));
-      const todays = occs.filter((occ) => {
-        const s = new Date(occ.start);
-        return s.getFullYear() === shown.y && s.getMonth() === shown.mo && s.getDate() === d;
-      });
-      for (const occ of todays.slice(0, 3)) {
-        const pill = ui.tint(ui.field('div', 'title', occ.title, 'urd-cal-pill'), occ);
-        pill.title = `${occ.title}\n${ui.metaString(occ)}`;
-        cell.appendChild(pill);
-      }
-      if (todays.length > 3) cell.appendChild(el2('div', 'urd-cal-more', ui.tx('moreN', null, { n: todays.length - 3 })));
-      ui.dayLabel(cell, new Date(shown.y, shown.mo, d), todays.length);
-      grid.appendChild(cell);
-    }
-    ui.dayGrid(grid, '.urd-cal-day:not(.urd-cal-day-empty)', { page: move, current: '.urd-cal-today' });
-  };
-  prev.addEventListener('click', () => move(-1));
-  next.addEventListener('click', () => move(1));
-  paint();
-  host.appendChild(wrap);
-}
-
-/**
- * The phone design (calPhoneDesign): one stacked agenda for a design that cannot be read on a phone, drawn in the design's set.
- * A design that shows a span (a year) lists what is coming, counted by the block's max count, since its whole span is loaded.
- */
-function renderPhoneAgenda(host, occs, props, ics, ui) {
-  const wrap = el2('div', 'urd-cal-pa');
-  let list = occs;
-  if (!ui.rest && ui.spanView) {
-    const soon = ui.today().getTime() - 6 * 3600 * 1000;
-    list = occs.filter((occ) => (occ.end ?? occ.start) >= soon).slice(0, Math.max(1, Number(props.limit) || 6));
-  }
-  if (!ui.rest) {
-    const head = el2('div', 'urd-cal-pa-head');
-    head.appendChild(ui.tx('swUpcoming', 'urd-cal-pa-title'));
-    if (list[0]) head.appendChild(el2('span', 'urd-cal-pa-next', ui.countdown(list[0])));
-    wrap.appendChild(head);
-  }
-  for (const occ of list) {
-    const row = ui.tint(el2('article', 'urd-cal-pa-row'), occ);
-    const when = ui.meta(occ, { place: false });
-    if (when) {
-      when.className = 'urd-cal-pa-when';
-      row.appendChild(when);
-    }
-    row.appendChild(ui.field('strong', 'title', occ.title, 'urd-cal-pa-name'));
-    if (occ.location) row.appendChild(ui.field('span', 'place', occ.location, 'urd-cal-pa-place'));
-    const signup = ui.signup(occ);
-    if (signup) row.appendChild(signup);
-    wrap.appendChild(row);
-  }
-  host.appendChild(wrap);
-}
-
-const VIEWS = { list: renderList, cards: renderCards, month: renderMonth, next: renderNext, agenda: renderAgenda };
 
 /* ---------- Subscribe and category filter ---------- */
 
@@ -1672,44 +1109,16 @@ function loadingNode(el, ctx) {
   return box;
 }
 
-/* ---------- The views' names (the variants in the block menus) ---------- */
-
-/** View id + label KEY (looked up with ta at use time; never at module level). */
-const VIEW_NAMES = [['list', 'calendar.viewList'], ['cards', 'calendar.viewCards'], ['month', 'calendar.viewMonth'], ['next', 'calendar.viewNext'], ['agenda', 'calendar.viewAgenda']];
-
-/* ---------- The designs in the block menu ---------- */
-
-/** A variant per design beside the plain views: filled when the design model is loaded. */
-let designVariants = [];
-
-function keepDesignVariants(cd) {
-  designVariants = cd.CAL_DESIGNS.filter((d) => d.id !== 'plain').map((d) => ({ label: d.id, labelKey: d.labelKey, props: { design: d.id, view: d.view } }));
-}
-
-/** Whether the calendar's own rules (calendar.css) are in: the drawing that waits hides its sample words with them. */
+/** Whether the rules every calendar draws with (calendar.css) are in: the drawing that waits hides its sample words with them. */
 let sheetIn = false;
-
-/**
- * Loads what a calendar draws with ahead of the first one, every design's renderer among it, so a calendar added in the editor draws at once; a part that cannot be loaded now is loaded when a calendar draws.
- * @returns {Promise<void>}
- */
-function warmCalendar() {
-  return calendarParts().then(() => Promise.all(Object.keys(DESIGN_MODULES).map(loadDesign))).then(() => {}, () => {});
-}
-
-// The editor's block menu lists the designs, so the preview loads the design model up front, and what a calendar draws with once the editor is idle (a timer where the browser has no idle callback); a visitor loads it with the first calendar on a page.
-if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('preview')) {
-  import('../calendar-designs.js').then(keepDesignVariants, () => {});
-  if (typeof requestIdleCallback === 'function') requestIdleCallback(() => warmCalendar(), { timeout: 3000 });
-  else setTimeout(warmCalendar, 1500);
-}
 
 /* ---------- The block ---------- */
 
 
 function renderCalendar(el, props, ctx) {
   closeOrphanCards();
-  SHOWN.delete(el.dataset.blockId ?? '');
+  cardWhenIdle();
+  editing?.shown(el.dataset.blockId ?? '', null);
   const host = el2('div', 'urd-cal');
   el.appendChild(host);
   // The ruler the calendar reads its own width from (drawCalendar).
@@ -1736,9 +1145,9 @@ function renderCalendar(el, props, ctx) {
       }
     }, () => {});
   }
-  const draw = ([ics, cd, cf, maps, links, sheet], [mod, weekMod, phoneMod, cardMod]) => {
+  const draw = ([ics, cd, cf, maps, links, sheet], [mod, weekMod, phoneMod, cardMod, plainMod]) => {
     sheetIn = sheet;
-    if (host.isConnected) drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx, early);
+    if (host.isConnected) drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, plainMod, el, host, props, ctx, early);
   };
   const undrawn = (error) => {
     // A module that did not load, or a design that threw: the loading state gives way to the empty state.
@@ -1768,7 +1177,7 @@ function renderCalendar(el, props, ctx) {
   }).catch(undrawn);
 }
 
-function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, el, host, props, ctx, early = null) {
+function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod, plainMod, el, host, props, ctx, early = null) {
   // The site's own time zone, when set: every visitor sees the times on that zone's clock.
   const siteZone = ctx.site?.site?.timeZone;
   const zone = cf.zoneValid(siteZone) ? siteZone.trim() : null;
@@ -1857,6 +1266,19 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     else if (typeof value === 'string') host.classList.add(`urd-cal-o-${key}-${value}`);
   }
 
+  // The plain views (calendar-plain.js) by name; a calendar that finds them not yet in asks for them and draws again once they are.
+  let plainAsked = false;
+  const plain = (name) => {
+    if (plainMod) return name === 'phoneAgenda' ? plainMod.phoneAgenda : plainMod.VIEWS[name];
+    if (!plainAsked) {
+      plainAsked = true;
+      loadDesign('plain').then((loaded) => {
+        plainMod = loaded;
+        if (shown && host.isConnected) draw(shown);
+      }, () => {});
+    }
+    return () => {};
+  };
   const draw = (occurrences) => {
     shown = occurrences;
     for (const occ of occurrences) if (occ.geo && occ.location) ui.places.set(occ.location, occ.geo);
@@ -1865,19 +1287,8 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     const focused = host.contains(document.activeElement) ? document.activeElement.dataset.calKey : null;
     host.replaceChildren();
     closeOrphanCards();
-    if (ctx.preview && ctx.viewport !== 'mobile') {
-      // Help chip (ADR-0008): the sources, the conventions and the subscribe buttons need explaining.
-      Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
-        if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
-        attachHint(el, {
-          title: ta('hintCalendar.title'),
-          lines: [
-            ta('hintCalendar.l1'), ta('hintCalendar.l2'), ta('hintCalendar.l3'), ta('hintCalendar.l4'),
-            ta('hintCalendar.l5'), ta('hintCalendar.l6'), ta('hintCalendar.l7'), ta('hintCalendar.l8'),
-          ],
-        });
-      });
-    }
+    // Help chip (ADR-0008) in the preview (calendar-edit.js).
+    if (ctx.preview && ctx.viewport !== 'mobile') editing?.helpChip(el);
     // With the switcher on, the window reaches back to the start of the week and the month; the block's own design still shows what is coming.
     const own = mode === 'own';
     const soon = ui.today().getTime() - 6 * 3600 * 1000;
@@ -1936,12 +1347,12 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
       ui.opt = cd.calOptions({ ...props, design: chosen });
       for (const [key, value] of Object.entries(ui.opt)) box.classList.add(`urd-cal-o-${key}-${typeof value === 'boolean' ? (value ? 'on' : 'off') : value}`);
       host.appendChild(box);
-      (chosen === 'month' ? renderMonth : weekMod[chosen])(box, limited, props, ics, ui);
+      (chosen === 'month' ? plain('month') : weekMod[chosen])(box, limited, props, ics, ui);
       ui.opt = opt;
     } else if (!limited.length && (query || activeCategory) && kept.length) {
       // Events there are, but none the visitor's search or filter leaves.
       // A design with a filter of its own is drawn even so, so the visitor can choose again.
-      if (design.ownFilter) (mod?.[design.id] ?? renderList)(host, limited, props, ics, ui);
+      if (design.ownFilter) (mod?.[design.id] ?? plain('list'))(host, limited, props, ics, ui);
       host.appendChild(el2('p', 'urd-cal-nomatch', ui.tx('noMatch')));
     } else if (!limited.length) {
       host.appendChild(design.empty === 'ap' ? emptyApNode(props, ui) : emptyNode(props));
@@ -1954,14 +1365,14 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
         if (look.id !== design.id) for (const name of host.style) if (name.startsWith('--urd-cal-s-') || name === '--urd-cal-accent-text') box.style.setProperty(name, 'initial');
         for (const [key, value] of Object.entries(cd.calOptions({ ...props, design: look.id }))) box.classList.add(`urd-cal-o-${key}-${typeof value === 'boolean' ? (value ? 'on' : 'off') : value}`);
         host.appendChild(box);
-        const render = phoneDef.desktop ? (phoneMod?.[look.id] ?? VIEWS[look.view ?? view] ?? renderList) : phoneMod?.[phoneDef.id] ?? renderPhoneAgenda;
+        const render = phoneDef.desktop ? (phoneMod?.[look.id] ?? plain(look.view ?? view) ?? plain('list')) : phoneMod?.[phoneDef.id] ?? plain('phoneAgenda');
         ui.withDesign(look.id, () => {
           render(box, limited, props, ics, ui);
           if (folds) box.appendChild(foldNode(render, filtered.slice(limit), filtered.length, props, ics, ui));
         });
       } else {
         // The design itself, or on a phone the neutral list the block draws in its own set.
-        const render = phoneDesign ? renderPhoneAgenda : (mod?.[design.id] ?? VIEWS[view] ?? renderList);
+        const render = phoneDesign ? plain('phoneAgenda') : (mod?.[design.id] ?? plain(view) ?? plain('list'));
         render(host, limited, props, ics, ui);
         if (folds) host.appendChild(foldNode(render, filtered.slice(limit), filtered.length, props, ics, ui));
       }
@@ -2004,13 +1415,11 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     delete host.dataset.calCopy;
     host.style.removeProperty('height');
     host.style.removeProperty('overflow');
-    const examples = ctx.preview && (EXAMPLES.get(key) ?? sample);
+    const examples = ctx.preview && (editing ? editing.examples(key, sample) : sample);
     draw(examples ? demoOccurrences() : occurrences);
     if (!ctx.measure) rememberDrawing(key, host, props, false);
     if (!ctx.preview) return;
-    // A calendar gone from the page (deleted, or drawn anew) leaves the list.
-    for (const [id, state] of SHOWN) if (!state.host.isConnected) SHOWN.delete(id);
-    SHOWN.set(key, { host, examples, reason, redraw: () => { if (host.isConnected) settle(occurrences, reason, sample); } });
+    editing?.shown(key, { host, examples, reason, redraw: () => { if (host.isConnected) settle(occurrences, reason, sample); } });
     // The bar's button reads what the calendar now shows (preview-edit.js exampleButton), and a new calendar's fit measures it now that it stands (urd-drawn, add-fit.js).
     el.dispatchEvent(new CustomEvent('urd-cal-shown'));
     el.dispatchEvent(new CustomEvent('urd-drawn'));
@@ -2079,7 +1488,7 @@ export const calendarBlock = {
   defaults: () => ({ sources: [], view: 'list', limit: 6, showCategories: false, showSubscribe: false, showSignup: false }),
   // One variant per view and one per design: the preview's block menu lists them as «Calendar: Month», «Calendar: Week strip» and the like.
   get variants() {
-    return [...VIEW_NAMES.map(([view, labelKey]) => ({ label: view, labelKey, props: { view } })), ...designVariants];
+    return editing ? editing.variants() : [];
   },
   migrations: {},
   render: renderCalendar,

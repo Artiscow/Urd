@@ -722,8 +722,26 @@ function phoneFitSoon(sectionId, block) {
   phoneFit.request(pageId, $state.snapshot(store.data), sectionId, block.id, seq);
 }
 
+/** The blocks whose missing phone height has been answered this session, by page, so a block that measures no height is not asked again at every switch. */
+const missingAsked = new Set();
+
+/**
+ * Asks once per session for the phone height of each block on the open page that fetches its content and has none stored (a block whose phone height was never measured).
+ * Called once the canvas stands (preview.svelte.js answerReady), so the hidden preview never competes with the editor's start; the height then goes out with the page's next publish.
+ */
+function fitMissingPhoneHeights() {
+  for (const section of store?.data.sections ?? []) {
+    for (const block of section.blocks ?? []) {
+      const key = `${pageId}/${block.id}`;
+      if (!FETCHES_CONTENT.has(block.type) || Number(block.mobileHeight) > 0 || missingAsked.has(key)) continue;
+      phoneFitSoon(section.id, block);
+    }
+  }
+}
+
 function applyPhoneHeight(forPage, blockId, h, seq) {
   if (forPage !== pageId || seq !== phoneSeq.get(blockId)) return;
+  missingAsked.add(`${forPage}/${blockId}`);
   const block = store.data.sections.flatMap((s) => s.blocks).find((b) => b.id === blockId);
   const next = Math.round(h);
   if (!block || !(next > 0) || block.mobileHeight === next) return;
@@ -739,6 +757,8 @@ function dropFits() {
   fitSeq.clear();
   phoneSeq.clear();
   phoneFit?.cancel();
+  // An undo can take a measured height away again: the next canvas asks for it anew.
+  missingAsked.clear();
 }
 
 /** A design with a view of its own writes that view too, so an engine without the design still draws the right data. */
@@ -1826,6 +1846,7 @@ export const pageState = {
   get phonePlugins() { return phonePlugins; },
   set phonePlugins(v) { phonePlugins = v; },
   phoneFitSoon,
+  fitMissingPhoneHeights,
   applyPhoneHeight,
   dropFits,
   setCalendarDesign,

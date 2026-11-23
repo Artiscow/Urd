@@ -4,7 +4,7 @@
  * The owner's choices are additive props on the block (`design`, `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`, `programHref`, `showOpen`, `options`); a block without them renders the plain design on the theme's colours.
  * The module is bundled by the editor and loaded by the block on its first render (with ics.js, outside the visitor closure), so it never touches the DOM and never calls ta().
  *
- * A design is five things, added together: an entry in CAL_DESIGNS below (its view, the colour slots by section with the plain colours first, the static texts, the stripe and the flags); a renderer exported under the design's id from its blocks/calendar-<module>.js; its rules in calendar.css, under its own class names, that read every slot as `--urd-cal-s-<slot>` with the design's own default; a drawing in calendar-thumb.js; a picture under template/admin/designs/<id>.webp made by scripts/design-pictures.mjs for the design picker; and the label, slot and section keys in the nb, en-GB and tr admin dictionaries. tests/calendar-designs.test.mjs holds the entries, the renderers, the drawings and the keys against each other; the style sheet is checked by eye.
+ * A design is five things, added together: an entry in CAL_DESIGNS below (its view, the colour slots by section with the plain colours first, the static texts, the stripe and the flags); a renderer exported under the design's id from its blocks/calendar-<module>.js; its rules in its family's sheet (blocks/calendar-<module>.css) or, where families share them, calendar.css, under its own class names, that read every slot as `--urd-cal-s-<slot>` with the design's own default; a drawing in calendar-thumb.js; a picture under template/admin/designs/<id>.webp made by scripts/design-pictures.mjs for the design picker; and the label, slot and section keys in the nb, en-GB and tr admin dictionaries. tests/calendar-designs.test.mjs holds the entries, the renderers, the drawings and the keys against each other; tests/stylesheets.test.mjs holds each family's sheet to its own designs, and the looks are checked by eye.
  */
 
 import { isSafeHref, resolveLink } from './nav-model.js';
@@ -199,7 +199,7 @@ export function calDesignFamilies() {
 }
 
 /**
- * How a design behaves on a phone (`phone` in the list): `fits` reads as it is, `flows` lays its columns under each other in calendar.css, and `switch` cannot be read there and draws a phone design instead (calPhoneView).
+ * How a design behaves on a phone (`phone` in the list): `fits` reads as it is, `flows` lays its columns under each other in the calendar's sheets, and `switch` cannot be read there and draws a phone design instead (calPhoneView).
  */
 export const CAL_PHONE_MODES = ['fits', 'flows', 'switch'];
 
@@ -355,7 +355,7 @@ const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key
  * `theme` lists the texts a design has words of its own for (calThemeKey), and `rewrites` marks a design that rewrites calendar data unless the owner switches it off (calRewrites).
  * `phoneDefault` names the phone design the block draws on a phone until the owner picks another (CAL_PHONE_DESIGNS, calPhoneView), and `cardDefault` the card design its card wears until the owner picks another (CAL_CARD_DESIGNS, calCardDesign; the module exports a decorator per card design it lends under `cards`).
  * `limit` is the number of events a new calendar in the design starts with, and the count it takes when it is chosen while the calendar keeps the count it started with (else six, eight in the agenda).
- * `ownCard` marks a design whose card has a look of its own from its design round (`urd-cal-dlg-<id>` in calendar.css, and a decorator under the module's `cards` where the look needs parts of its own); a design without shares its set's card (calCardCandidates).
+ * `ownCard` marks a design whose card has a look of its own from its design round (`urd-cal-dlg-<id>` in calendar.css or its family's sheet, and a decorator under the module's `cards` where the look needs parts of its own); a design without shares its set's card (calCardCandidates).
  * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, family: string, phone: string, stripe: boolean, theme?: string[], rewrites?: boolean, limit?: number, slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
 export const CAL_DESIGNS = [
@@ -953,7 +953,7 @@ export const CAL_SHARED_OPTIONS = {
 };
 
 /**
- * The colour sets: every design belongs to one, and the event card, the switcher's week and month, the finding tools and the phone view are drawn per set in calendar.css (`urd-cal-set-<id>` on the block, ADR-0011).
+ * The colour sets: every design belongs to one, and the event card, the switcher's week and month, the finding tools and the phone view are drawn per set in the calendar's sheets (`urd-cal-set-<id>` on the block, ADR-0011).
  * A design overrides its set by redefining a set variable under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
  */
 export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass', 'pad', 'index', 'departures', 'marquee', 'receipt', 'seventies', 'deco'];

@@ -420,6 +420,8 @@ async function answerReady() {
     // A section chosen while the canvas loaded (the Phone panel's, as another page opens) is marked once the canvas stands.
     bridge?.sendActiveSection(pageState.activeSectionId);
   }
+  // A fetching block without its phone height is measured once the canvas stands, so the published page's loading state stands at it.
+  pageState.fitMissingPhoneHeights();
 }
 
 /** Internal link clicked in the preview: switch page properly, and jump to the spot the link's fragment names. */

@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.14): the shop pages on a phone, and the calendar loaded by what it draws
+
+- [ ] On the deployed site on a phone, /shop/ and /shop-fp/ stand still while their products come in: the questions and the footer below do not jump
+- [ ] In the editor, a page whose product, collection, calendar or privacy block has no phone height stored (`mobileHeight` missing in its page file) waits to be published a moment after it opens; published, it stands still on a phone
+- [ ] Every calendar design looks and works as before on the front page and in the editor's design picker, on the desktop and on a phone: the views, the switcher's week and month, the phone designs and the event card
+- [ ] An event's card opens at the first press, also right after the page has opened
+- [ ] In the editor, a calendar's words are written in place, its help chip shows, the example-events button switches them, and «+ New block» lists the calendar's views and designs
+- [ ] On the front page, DevTools' network list shows calendar.css, calendar-next.css and calendar-time.css, and no other calendar sheet and no calendar-edit.js
+
 ### Test batch (0.7.37.3.13): the notes beside the code corrected
 
 - [ ] Every page of the site opens and draws as before, on the desktop and on a phone, the menu, the basket, the pinned blocks and the footer included

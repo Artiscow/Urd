@@ -1,19 +1,20 @@
 /**
- * The three stylesheets: base.css holds what a visitor's page draws, the engine's preview.css the rules that need the preview's body class (`.urd-preview`, which the boot sets in the preview alone), and blocks/calendar.css the calendar's views and designs.
+ * The stylesheets: base.css holds what a visitor's page draws, the engine's preview.css the rules that need the preview's body class (`.urd-preview`, which the boot sets in the preview alone), and the calendar's sheets its views and designs (blocks/calendar.css, and each design family's own).
  * These tests keep each rule in its sheet as rules are added, and keep a preview rule from silently outranking a base rule it used to lose to by order alone.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ENGINE_DIR } from './_engine.mjs';
+import { ENGINE_DIR, calendarSheets, engineImport } from './_engine.mjs';
 
 const engine = fileURLToPath(ENGINE_DIR);
 const read = (path) => readFileSync(path, 'utf8');
 const BASE = read(new URL('../template/assets/styles/base.css', import.meta.url));
 const PREVIEW = read(join(engine, 'preview.css'));
-const CALENDAR = read(join(engine, 'blocks/calendar.css'));
+const SHEETS = calendarSheets();
+const CALENDAR = SHEETS.map((sheet) => sheet.text).join('\n');
 
 /** Every style rule's selectors, with comments and at-rule preludes left out. */
 function selectorsOf(css) {
@@ -54,12 +55,30 @@ test('every rule in preview.css needs the preview\'s body class', () => {
   for (const sels of rules) for (const sel of sels) assert.ok(needsPreview(sel), `«${sel}» is drawn on a visitor's page too, so it belongs in base.css`);
 });
 
-test('every rule in blocks/calendar.css is the calendar\'s, and the loading state stands in base.css', () => {
+test('every rule in the calendar\'s sheets is the calendar\'s, and the loading state stands in base.css', () => {
   const rules = selectorsOf(CALENDAR);
   assert.ok(rules.length > 500, `${rules.length} rules`);
   for (const sels of rules) for (const sel of sels) assert.ok(isCalendar(sel), `«${sel}» is not the calendar's`);
   assert.doesNotMatch(CALENDAR.replace(/\/\*[\s\S]*?\*\//g, ''), /urd-cal-loading/, 'the loading state shows before calendar.css is in');
   assert.match(BASE, /\.urd-cal-loading \{/);
+});
+
+test('each design family\'s sheet styles its own designs alone, loads with its renderer, and every calendar sheet in blocks/ is in the order calendar-load.js keeps', async () => {
+  const { CAL_DESIGNS, CAL_PHONE_DESIGNS, CAL_CARD_DESIGNS } = await engineImport('calendar-designs.js');
+  const familyOf = new Map([...CAL_DESIGNS, ...CAL_PHONE_DESIGNS, ...CAL_CARD_DESIGNS].map((d) => [d.id, d.module ?? 'calendar']));
+  assert.equal(SHEETS[0].name, 'calendar', 'the shared sheet comes first');
+  const { DESIGN_MODULES } = await engineImport('blocks/calendar-load.js');
+  for (const sheet of SHEETS.slice(1)) {
+    assert.ok(sheet.name in DESIGN_MODULES, `${sheet.file} is a design family's`);
+    for (const [, id] of sheet.text.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/\.urd-cal-(?:d|dlg|pd)-([A-Za-z0-9]+)/g)) {
+      assert.equal(familyOf.get(id), sheet.name, `${sheet.file} styles ${id}, a design of ${familyOf.get(id)}: its rules stand in its own family's sheet or in calendar.css`);
+    }
+  }
+  const files = readdirSync(join(engine, 'blocks')).filter((name) => /^calendar(-\w+)?\.css$/.test(name)).map((name) => `blocks/${name}`).sort();
+  assert.deepEqual(SHEETS.map((sheet) => sheet.file).sort(), files, 'every calendar sheet is placed in its order');
+  const load = read(join(engine, 'blocks/calendar-load.js'));
+  assert.match(load, /export const loadDesign = \(name\) => \(DESIGN_MODULES\[name\] \? Promise\.all\(\[DESIGN_MODULES\[name\]\(\), SHEETS\[name\] \? loadSheet\(name\) : null\]\)/, 'a renderer comes with its sheet');
+  assert.match(load, /const later = placed\.find\(\(other\) => Number\(other\.dataset\.urdCalSheet\) > rank\);\s+if \(later\) later\.before\(link\);\s+else if \(placed\.length\) placed\.at\(-1\)\.after\(link\);/, 'in its place among the others, whatever order they come in');
 });
 
 test('base.css holds no rule that belongs to the preview or to the calendar', () => {
@@ -119,7 +138,7 @@ test('the preview loads its sheet with the editing layer, and a calendar loads i
   assert.match(boot, /if \(preview\) \{\s*\[window\.UrdPreviewEdit\] = await editing;/, 'and in place before the first render');
   assert.ok(boot.indexOf('= await editing;') < boot.indexOf('renderPage(state.page'));
   const calendar = read(join(engine, 'blocks/calendar-load.js'));
-  assert.match(calendar, /const calendarParts = \(\) => Promise\.all\(\[[^\n]*loadStylesheet\(new URL\('\.\/calendar\.css', import\.meta\.url\)\.href\)\]\)\.then\(\(parts\) => \(partsIn = parts\)\);/);
+  assert.match(calendar, /const calendarParts = \(\) => Promise\.all\(\[[^\n]*loadSheet\('calendar'\)\]\)\.then\(\(parts\) => \(partsIn = parts\)\);/);
   const html = read(new URL('../template/index.html', import.meta.url));
   assert.doesNotMatch(html, /preview\.css|calendar\.css/, 'a visitor\'s page never asks for them');
 });

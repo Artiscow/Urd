@@ -42,6 +42,8 @@ export function visitorModules() {
   const load = readFileSync(new URL('blocks/calendar-load.js', ENGINE_DIR), 'utf8');
   const designs = load.match(/export const DESIGN_MODULES = \{([^\n]*)\};/)[1];
   for (const m of designs.matchAll(/import\('\.\/([^']+)'\)/g)) for (const name of engineClosure(`blocks/${m[1]}`)) set.add(name);
+  const calendar = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
+  for (const m of calendar.matchAll(/import\('\.\/([^']+)'\)/g)) for (const name of engineClosure(`blocks/${m[1]}`)) set.add(name);
   return [...set].sort();
 }
 

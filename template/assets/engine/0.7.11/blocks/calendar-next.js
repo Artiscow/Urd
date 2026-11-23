@@ -279,7 +279,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="
  * The band's pause (WCAG 2.2.2: moving content that lasts more than five seconds needs a pause that stays). A real button with
  * aria-pressed, shown at the band's edge in the «button» form; in the «touch» form it is there for the keyboard only, shown when
  * it has focus, while a touch on the band pauses it and a tap on its empty space plays it again. A pointer over the band and focus
- * inside it pause it for as long as they stay (calendar.css).
+ * inside it pause it for as long as they stay (the calendar's sheets).
  */
 function bandPause(wrap, track, key, touch) {
   const button = document.createElement('button');
@@ -609,7 +609,7 @@ function tileFacts(dialog, ui, className) {
 }
 
 export const cards = {
-  /** N1 Billboard: the card as a lit billboard on its legs, a pulse before the date and the facts as tiles; the frame, the lamps and the legs are calendar.css's. */
+  /** N1 Billboard: the card as a lit billboard on its legs, a pulse before the date and the facts as tiles; the frame, the lamps and the legs are the calendar sheets'. */
   billboard(dialog, occ, ui) {
     const date = dialog.querySelector('.urd-cal-dialog-date');
     if (date) {

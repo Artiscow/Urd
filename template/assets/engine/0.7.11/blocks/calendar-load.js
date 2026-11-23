@@ -64,24 +64,52 @@ export function takeReadied(url) {
 
 /* ---------- The parts and the renderers ---------- */
 
+/** The calendar's sheets in the order their rules stand in: the shared one, then each design family's own, loaded with its renderer. */
+const SHEETS = { calendar: './calendar.css', list: './calendar-list.css', cards: './calendar-cards.css', time: './calendar-time.css', retro: './calendar-retro.css', next: './calendar-next.css', more: './calendar-more.css' };
+
+/** Loads one of the calendar's sheets in its place among the others, in the order SHEETS keeps, whatever order they come in. */
+const loadSheet = (name) => loadStylesheet(new URL(SHEETS[name], import.meta.url).href, (link) => {
+  const rank = Object.keys(SHEETS).indexOf(name);
+  link.dataset.urdCalSheet = String(rank);
+  const placed = [...document.head.querySelectorAll('link[data-urd-cal-sheet]')];
+  const later = placed.find((other) => Number(other.dataset.urdCalSheet) > rank);
+  if (later) later.before(link);
+  else if (placed.length) placed.at(-1).after(link);
+  else document.head.appendChild(link);
+});
+
 /** The renderer module of each design family, loaded when a calendar draws one (literal paths, so the modules stay out of the visitor closure and the preload list). */
-export const DESIGN_MODULES = { list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };
+export const DESIGN_MODULES = { plain: () => import('./calendar-plain.js'), list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };
 
 /** The parts once they are in (calendarParts), and the renderer modules loaded, by name: a calendar whose code is all in draws in the task that draws the page (renderCalendar in calendar.js). */
 export let partsIn = null;
 export const designsIn = new Map();
 
-/** The parser, the design model, the formats and the links every calendar draws with, and the calendar's own rules (calendar.css), loaded together, kept once they are in. */
-export const calendarParts = () => Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js'), loadStylesheet(new URL('./calendar.css', import.meta.url).href)]).then((parts) => (partsIn = parts));
+/** The parser, the design model, the formats and the links every calendar draws with, and the rules every calendar draws with (calendar.css), loaded together, kept once they are in. */
+export const calendarParts = () => Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js'), loadSheet('calendar')]).then((parts) => (partsIn = parts));
 
-/** A renderer module by its name in DESIGN_MODULES, kept once it is in. */
-export const loadDesign = (name) => DESIGN_MODULES[name]?.().then((mod) => {
+/** A renderer module by its name in DESIGN_MODULES, with its family's sheet, kept once both are in. */
+export const loadDesign = (name) => (DESIGN_MODULES[name] ? Promise.all([DESIGN_MODULES[name](), SHEETS[name] ? loadSheet(name) : null]).then(([mod]) => {
   designsIn.set(name, mod);
   return mod;
-});
+}) : undefined);
 
 /** The renderer modules a calendar draws with, by name in DESIGN_MODULES: its design's own, the week strip for the view switcher, and its phone's and its card's design where they are a module's own (calPhoneView, calCardDesign); null where there is none. */
-export const designModules = (cd, props) => [cd.calDesign(props.design).module, cd.calSwitcher(props) ? 'time' : null, cd.calPhoneDesignDef(cd.calPhoneView(props), props).module, cd.calCardDesignDef(cd.calCardDesign(props)).module];
+export const designModules = (cd, props) => [cd.calDesign(props.design).module, cd.calSwitcher(props) ? 'time' : null, cd.calPhoneDesignDef(cd.calPhoneView(props), props).module, cd.calCardDesignDef(cd.calCardDesign(props)).module, drawsPlain(cd, props) ? 'plain' : null];
+
+/**
+ * Whether a calendar draws with the plain views (calendar-plain.js): a design without a renderer of its own, the switcher's plain month, or on a phone the stacked agenda or a look without a renderer.
+ * @returns {boolean}
+ */
+function drawsPlain(cd, props) {
+  const design = cd.calDesign(props.design);
+  if (!design.module) return true;
+  if (cd.calSwitcher(props) && cd.calSwitcherViews(props).month === 'month') return true;
+  const phoneView = cd.calPhoneView(props);
+  if (phoneView === design.id) return false;
+  const phoneDef = cd.calPhoneDesignDef(phoneView, props);
+  return !phoneDef.look || !phoneDef.module;
+}
 
 /**
  * Readies what a calendar draws with before the page is drawn (prepareBlocks in core-types.js): its parts and its rules, the renderers its settings draw with, and its feeds asked for, which its drawing then takes (fetchSource).

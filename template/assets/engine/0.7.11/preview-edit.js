@@ -51,7 +51,7 @@ import { applicableLayouts, layoutFrames } from './section-layouts.js';
 import { phoneLayouts, phoneLayoutChange, phoneLayoutSketch, phoneSameWidths } from './phone-layouts.js';
 import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './embed-cover.js';
-import { calendarExamples, toggleCalendarExamples } from './blocks/calendar.js';
+import { calendarExamples, toggleCalendarExamples } from './blocks/calendar-edit.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
 import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneAfterLine, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup, phoneGroup, phoneUngroupAll, phoneAlignCells } from './phone-moves.js';
 import { closeColorPicker } from './color-picker.js';
@@ -5937,7 +5937,7 @@ function enhanceBlock(el, block, section, grid, host) {
     });
   }
 
-  /** A calendar's example events on and off (blocks/calendar.js): pressed while they stand in for its own; the tooltip tells why it has none of its own where its feed failed, read again each time the calendar is drawn, since the feed answers after the bar is. */
+  /** A calendar's example events on and off (blocks/calendar-edit.js): pressed while they stand in for its own; the tooltip tells why it has none of its own where its feed failed, read again each time the calendar is drawn, since the feed answers after the bar is. */
   const exampleButton = () => {
     const btn = barButton(EXAMPLES_SVG, '', () => {
       toggleCalendarExamples(block.id);

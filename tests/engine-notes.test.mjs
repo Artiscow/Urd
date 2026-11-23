@@ -12,9 +12,9 @@ import { LIMIT, NOTES_DIR, notesOf, notesPath, notesSections, proseLength, visit
 const VISITOR_MODULES = [
   'animations/core.js', 'backgrounds/color.js', 'backgrounds/glow.js', 'backgrounds/gradient.js',
   'backgrounds/grain.js', 'backgrounds/image.js', 'backgrounds/pattern.js', 'backgrounds/slideshow.js',
-  'backgrounds/video.js', 'blocks/audio.js', 'blocks/button.js', 'blocks/calendar-cards.js',
+  'backgrounds/video.js', 'blocks/audio.js', 'blocks/button.js', 'blocks/calendar-card.js', 'blocks/calendar-cards.js',
   'blocks/calendar-list.js', 'blocks/calendar-load.js', 'blocks/calendar-more.js', 'blocks/calendar-next.js',
-  'blocks/calendar-retro.js', 'blocks/calendar-time.js', 'blocks/calendar.js', 'blocks/cart.js', 'blocks/checkout.js',
+  'blocks/calendar-plain.js', 'blocks/calendar-retro.js', 'blocks/calendar-time.js', 'blocks/calendar.js', 'blocks/cart.js', 'blocks/checkout.js',
   'blocks/collection.js', 'blocks/contact.js', 'blocks/countdown.js', 'blocks/faq.js', 'blocks/form.js',
   'blocks/gallery.js', 'blocks/icon.js', 'blocks/image.js', 'blocks/map.js', 'blocks/privacy.js', 'blocks/product.js',
   'blocks/quote.js', 'blocks/ribbon.js', 'blocks/shape.js', 'blocks/share.js', 'blocks/spacer.js', 'blocks/stats.js',
@@ -32,8 +32,8 @@ const VISITOR_MODULES = [
 const PENDING = new Set([
   'backgrounds/glow.js', 'backgrounds/gradient.js', 'backgrounds/image.js',
   'backgrounds/pattern.js', 'backgrounds/slideshow.js', 'backgrounds/video.js', 'blocks/audio.js', 'blocks/button.js',
-  'blocks/calendar-cards.js', 'blocks/calendar-list.js', 'blocks/calendar-load.js', 'blocks/calendar-more.js',
-  'blocks/calendar-next.js', 'blocks/calendar-retro.js', 'blocks/calendar-time.js', 'blocks/calendar.js',
+  'blocks/calendar-card.js', 'blocks/calendar-cards.js', 'blocks/calendar-list.js', 'blocks/calendar-load.js', 'blocks/calendar-more.js',
+  'blocks/calendar-next.js', 'blocks/calendar-plain.js', 'blocks/calendar-retro.js', 'blocks/calendar-time.js', 'blocks/calendar.js',
   'blocks/cart.js', 'blocks/checkout.js', 'blocks/collection.js', 'blocks/contact.js', 'blocks/countdown.js',
   'blocks/faq.js', 'blocks/form.js', 'blocks/gallery.js', 'blocks/icon.js', 'blocks/image.js', 'blocks/map.js',
   'blocks/privacy.js', 'blocks/product.js', 'blocks/quote.js', 'blocks/ribbon.js', 'blocks/shape.js',

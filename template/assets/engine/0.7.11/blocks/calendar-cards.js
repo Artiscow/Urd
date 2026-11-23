@@ -1,5 +1,5 @@
 /**
- * The calendar block's card designs (milestone 0.7.19): six looks on the cards view, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in calendar.css under its own class names.
+ * The calendar block's card designs (milestone 0.7.19): six looks on the cards view, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in calendar-cards.css (or calendar.css, where families share them) under its own class names.
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
 import { t, dates } from '../i18n.js';
@@ -326,7 +326,7 @@ function cardDay(occ, ui, className, month = true) {
 }
 
 export const cards = {
-  /** 03 Tickets: an admission ticket, the stub across the top with the day large beside the date line; the tear-off line above the buttons is calendar.css's. */
+  /** 03 Tickets: an admission ticket, the stub across the top with the day large beside the date line; the tear-off line above the buttons is the calendar sheets'. */
   tickets(dialog, occ, ui) {
     const stub = ui.el('div', 'urd-cal-tk-cardstub');
     stub.appendChild(cardDay(occ, ui, 'urd-cal-tk-cardday'));

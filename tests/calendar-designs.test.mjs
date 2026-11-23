@@ -6,7 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { engineImport, ENGINE_DIR, readStyles } from './_engine.mjs';
+import { engineImport, ENGINE_DIR, readStyles, calendarSheets } from './_engine.mjs';
 
 const {
   CAL_DESIGNS, CAL_VIEWS, CAL_FIELDS, CAL_TEXTS, CAL_SIZE, CAL_MODULES,
@@ -385,8 +385,9 @@ test('every design belongs to a colour set, and calendar.css defines every set',
   for (const set of CAL_SETS) assert.ok(set === 'theme' || css.includes(`.urd-cal-set-${set} {`), `calendar.css defines the set ${set}`);
   // The card is drawn from the set variables alone: nothing measured at run time reaches it.
   assert.ok(!css.includes('--urd-cal-dlg-'), 'the card reads no measured variable');
-  const block = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
-  const dress = block.slice(block.indexOf('function dressDialog('), block.indexOf('function closeButton('));
+  const card = readFileSync(new URL('blocks/calendar-card.js', ENGINE_DIR), 'utf8');
+  assert.ok(card.includes('function dressDialog(') && card.includes('function closeButton('));
+  const dress = card.slice(card.indexOf('function dressDialog('), card.indexOf('function closeButton('));
   assert.ok(!dress.includes('getComputedStyle'), 'dressDialog measures nothing');
 });
 
@@ -554,11 +555,12 @@ test('the card designs: the neutral card first, one card per colour set its desi
   }
 });
 
-test('every design with a card of its own has the card\'s rules in calendar.css, and its module\'s decorator where it has one', async () => {
-  const css = readStyles();
+test('every design with a card of its own has the card\'s rules in the sheets it loads, and its module\'s decorator where it has one', async () => {
+  const sheets = calendarSheets();
+  const loaded = (design) => sheets.filter((sheet) => sheet.name === 'calendar' || sheet.name === design.module).map((sheet) => sheet.text).join('\n');
   const own = CAL_DESIGNS.filter((d) => d.ownCard);
   assert.ok(own.length >= 10);
-  for (const design of own) assert.ok(css.includes(`.urd-cal-dlg-${design.id}`), `${design.id}: .urd-cal-dlg-${design.id} in calendar.css`);
+  for (const design of own) assert.ok(loaded(design).includes(`.urd-cal-dlg-${design.id}`), `${design.id}: .urd-cal-dlg-${design.id} in calendar.css or its family's sheet`);
   for (const design of own) {
     const mod = await engineImport(`blocks/calendar-${design.module}.js`);
     if (mod.cards?.[design.id]) assert.equal(typeof mod.cards[design.id], 'function');
@@ -644,7 +646,8 @@ test('calProgramHref and calNoticeHref: the shared safe-URL gate, and the notice
 test('a calendar in the editor shows the example events by its bar\'s choice for the session, else while it has no sources or its feed cannot be fetched, with no note under it, and says when the route itself is missing', () => {
   const src = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
   assert.match(readFileSync(new URL('blocks/calendar-load.js', ENGINE_DIR), 'utf8'), /if \(!body && res\.status === 404\) throw new Error\(ta\('calendar\.noRoute'\)\);/, 'a 404 without the route\'s JSON is the route missing, as on a local server');
-  assert.match(src, /const examples = ctx\.preview && \(EXAMPLES\.get\(key\) \?\? sample\);/, 'the choice made on the bar, else the default, and never on the published page');
+  assert.match(src, /const examples = ctx\.preview && \(editing \? editing\.examples\(key, sample\) : sample\);/, 'the choice made on the bar, else the default, and never on the published page');
+  assert.match(readFileSync(new URL('blocks/calendar-edit.js', ENGINE_DIR), 'utf8'), /examples: \(key, sample\) => EXAMPLES\.get\(key\) \?\? sample,/, 'the bar\'s choice is kept by the preview\'s editing');
   assert.match(src, /const settle = \(occurrences, reason = null, sample = !sources\.length\) => \{/, 'a calendar without sources shows the examples until the bar says otherwise');
   assert.match(src, /const failed = \(error\) => settle\(\[\], \(\) => ta\('calendar\.feedFailed', \{ error \}\), true\);/, 'a feed that cannot be fetched shows the examples, its reason kept for the button');
   assert.doesNotMatch(src, /sampleOnFail/, 'the design picker\'s calendar needs no switch of its own for a failed feed');
@@ -667,16 +670,17 @@ test('the year wheel lists a month\'s first five events and the rest behind «Sh
   assert.match(src, /if \(open\) \{\s+list\.tabIndex = 0;\s+list\.setAttribute\('role', 'region'\);\s+list\.setAttribute\('aria-label', dates\(\)\.months\[picked\]\);/, 'and the keyboard reaches it');
   assert.match(src, /const watch = new ResizeObserver\(\(\) => \{[\s\S]{0,120}if \(whole\) fitOpen\(\);/, 'it follows the wheel as the size changes');
   assert.ok(CAL_DESIGNS.find((d) => d.id === 'yearWheel').texts.includes('showFewer'), 'the owner can word «Show fewer»');
-  const css = readFileSync(new URL('blocks/calendar.css', ENGINE_DIR), 'utf8');
+  const css = calendarSheets().map((sheet) => sheet.text).join('\n');
   assert.match(css, /\.urd-cal-wheel-seg:focus \{\s+outline: none;\s+\}/, 'no box round a month on focus');
   assert.match(css, /\.urd-cal-wheel-seg:focus-visible \{\s+stroke-width: 48px;\s+\}/, 'the keyboard\'s focus thickens the month');
   assert.match(css, /\.urd-cal-wheel-list-all \{\s+overflow-y: auto;/);
 });
 
 test('an event\'s card opens without moving the page and leaves its calendar unshaded', () => {
-  const src = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8');
+  const src = readFileSync(new URL('blocks/calendar.js', ENGINE_DIR), 'utf8') + readFileSync(new URL('blocks/calendar-card.js', ENGINE_DIR), 'utf8');
   const open = src.slice(src.indexOf('function openCard('), src.indexOf('function placeAt('));
+  assert.ok(open.length > 100, 'openCard is found');
   assert.match(open, /const clear = parseFloat\(getComputedStyle\(document\.documentElement\)\.scrollPaddingTop\) \|\| 0;\s+dialog\.style\.left = `\$\{window\.scrollX \+ 8\}px`;\s+dialog\.style\.top = `\$\{window\.scrollY \+ clear \+ 8\}px`;\s+document\.body\.appendChild\(dialog\);\s+dialog\.show\(\);/, 'placed in view below the menu\'s room before the focus moves into it, so the browser has nothing to scroll to');
-  const css = readFileSync(new URL('blocks/calendar.css', ENGINE_DIR), 'utf8');
+  const css = calendarSheets().map((sheet) => sheet.text).join('\n');
   assert.doesNotMatch(src + css, /urd-cal-shade/, 'no shade over the calendar');
 });

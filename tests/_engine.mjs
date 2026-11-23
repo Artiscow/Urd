@@ -19,12 +19,22 @@ export function engineImport(relativePath) {
 }
 
 /**
- * The visitor's and the editor's stylesheets as one text: base.css, the preview's rules and the calendar's (which a page in the preview may load in either order), for the tests that look a rule up wherever it stands.
+ * The calendar's sheets in the order calendar-load.js keeps them (SHEETS): the shared one first, then each design family's own.
+ * @returns {Array<{name: string, file: string, text: string}>}
+ */
+export function calendarSheets() {
+  const load = readFileSync(new URL('blocks/calendar-load.js', ENGINE_DIR), 'utf8');
+  const list = load.match(/^const SHEETS = \{([^\n]*)\};$/m)[1];
+  return [...list.matchAll(/(\w+): '\.\/([\w-]+\.css)'/g)].map(([, name, file]) => ({ name, file: `blocks/${file}`, text: readFileSync(new URL(`blocks/${file}`, ENGINE_DIR), 'utf8') }));
+}
+
+/**
+ * The visitor's and the editor's stylesheets as one text: base.css, the preview's rules and the calendar's sheets (which a page in the preview may load in either order), for the tests that look a rule up wherever it stands.
  * @returns {string}
  */
 export function readStyles() {
   const read = (url) => readFileSync(url, 'utf8');
-  return [read(new URL('../template/assets/styles/base.css', import.meta.url)), read(new URL('preview.css', ENGINE_DIR)), read(new URL('blocks/calendar.css', ENGINE_DIR))].join('\n');
+  return [read(new URL('../template/assets/styles/base.css', import.meta.url)), read(new URL('preview.css', ENGINE_DIR)), ...calendarSheets().map((sheet) => sheet.text)].join('\n');
 }
 
 /** A module's text without its block and line comments, so a commented-out import never counts. */

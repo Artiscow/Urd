@@ -1,5 +1,5 @@
 /**
- * The calendar block's list designs (milestone 0.7.19): six looks on the list view, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in calendar.css under its own class names.
+ * The calendar block's list designs (milestone 0.7.19): six looks on the list view, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in calendar-list.css (or calendar.css, where families share them) under its own class names.
  * The data is the limited, filtered list the block hands every view.
  * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
  */
@@ -205,7 +205,7 @@ export function glass(host, occs, props, ics, ui) {
 /* ---------- The cards of their own (`ownCard` in the design list), each run on the event's card by the block (ui.dressCard) ---------- */
 
 export const cards = {
-  /** 07 Programme booklet: a page out of the booklet, «Program» over a rule at its top; the binding and the staples are calendar.css's. */
+  /** 07 Programme booklet: a page out of the booklet, «Program» over a rule at its top; the binding and the staples are the calendar sheets'. */
   booklet(dialog, occ, ui) {
     const head = ui.el('div', 'urd-cal-bk-cardhead');
     head.appendChild(ui.tx('program'));

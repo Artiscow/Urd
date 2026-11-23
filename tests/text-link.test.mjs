@@ -55,7 +55,7 @@ test('in the Clean view every text written in place is plain text, as on the pub
   assert.match(clean, /node\.setAttribute\('contenteditable', node\.dataset\.urdEditable\);\s*delete node\.dataset\.urdEditable;/, 'and given back');
   assert.match(clean, /records\.some\(\(record\) => \[\.\.\.record\.addedNodes\]\.some\(\(node\) => node\.nodeType === Node\.ELEMENT_NODE\)\)/, 'read again only as an element comes');
   // A text the blocks draw as plain text in the Clean view would be left out of the giving back, so they draw it editable and leave the Clean view to cleanTexts.
-  const calendar = readFileSync(new URL(`../template/assets/engine/${ENGINE}/blocks/calendar.js`, import.meta.url), 'utf8');
+  const calendar = readFileSync(new URL(`../template/assets/engine/${ENGINE}/blocks/calendar-edit.js`, import.meta.url), 'utf8');
   assert.doesNotMatch(calendar, /contentEditable = clean\(\)/);
   assert.match(calendar, /node\.classList\.add\('urd-text'\);\s*node\.contentEditable = 'true';/);
   // In the Clean view the basket opens its drawer at a press, as on the published page.

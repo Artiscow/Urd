@@ -128,8 +128,14 @@ function openPreviewCard(win, block, watch, tries) {
     return;
   }
   event.click();
+  watchPreviewCard(win, watch, 0);
+}
+
+/** Watches the card's size once it stands: it opens as soon as the card's code is in (calendar-card.js). */
+function watchPreviewCard(win, watch, tries) {
   const dialog = win.document.querySelector('dialog.urd-cal-dialog[open]');
   if (dialog) watch(dialog);
+  else if (tries < 300) win.requestAnimationFrame(() => watchPreviewCard(win, watch, tries + 1));
 }
 
 /**
