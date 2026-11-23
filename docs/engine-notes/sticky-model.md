@@ -14,7 +14,7 @@ tests/sticky.test.mjs.
 Pinning is positioning, not animation (no transitions), so
 prefers-reduced-motion needs no special handling here.
 
-## `groupBox (2)`
+## `groupBox`
 
 Bounding box for a group of pinned blocks. The group pins and releases
 as ONE unit, and each member keeps its place inside the box, instead of
@@ -36,7 +36,7 @@ Pure function, tested in tests/sticky.test.mjs.
 
 ## `pinsOnPhone`
 
-Whether a block pins on the phone (`sticky.phone`, additive from 0.7.3.10): pinned while the page scrolls, and chosen for the phone too, where it stays in view below the menu while its own section scrolls past.
+Whether a block pins on the phone (`sticky.phone`, additive from 0.7.3.10): pinned while the page scrolls, with a numeric `offset`, and chosen for the phone too, where it stays in view below the menu until its own section, or the section `until` names, scrolls past.
 A block docked to the screen docks on every screen without it.
 
 ## `stuckBox`

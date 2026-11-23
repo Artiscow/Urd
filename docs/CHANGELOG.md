@@ -8,6 +8,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.37.3.13 - The notes beside the code every page loads say what the code does - 23 November 2026
+
+- The notes of the modules every page loads held statements their code does not do, gathered in BACKLOG's 0.7.37.3 while the batches were built; each note is read against its code and rewritten in 28 of them, two notes that wrote for an association say the site, and the short comments that disagreed with their code are fixed with them.
+- Comments stood above other code than what they describe, or described a neighbour too: frameToCss's in render.js, navClasses's in nav-model.js, the page migrations' in migrate.js, stickyState's in sticky-model.js and onCartChange's in shop.js stand on their own, and urd.js's draftPage comment, which described parked, and served's note, which described rawSite, are split.
+- The notes script's `same` mode proves a module's code unchanged while its comments move between places.
+- BACKLOG's 0.7.37.6 holds plugins.js's `inFlight`, which shares no fetch, since the list loads run one after another.
+
+The independent review before the commit found these:
+
+1. The comment added above urd.js's rawSite said the v1 page lift needs the site's original grid, which no page migration reads, and icons.js's said the X mark alone is filled, where the GitHub mark is too; each says what the code does.
+2. navClasses had two JSDoc blocks stacked on it once its orphaned comment stood there; they are one, and its notes stand under one heading.
+3. plugins.js's `inFlight` comment and note still said overlapping loads share one fetch; they say the map is empty whenever a list load starts, and loadPluginList's JSDoc names only a loaded id as one not fetched again.
+4. Five short comments said less than their code: subGrouped's, which named the second submenu level alone, buildLauncher's grid button, the empty footer's, which named the Footer panel alone (its note too), mountAnalytics's, which left out the draft view, and blocks/text.js's closed rows, which push-model.js's correction made stale. Each says what the code does.
+5. Two comments wrapped mid-sentence, plugins.js's listQueue and migrate.js's page migrations; each sentence stands on one line.
+6. The entry named urd.js's split comments wrongly; it names them as they stood.
+
 ### 0.7.0.95 - Bug Fixes: the menu, the page and its background appear together - 23 November 2026
 
 - The menu showed over a second before the rest of the page on hjem, since the boot drew it once its own types were in and the page only after the page's (found while testing). The page's types are asked for as soon as its file is read, beside the menu's, and the menu, «Back to top» and the page are drawn in one task.

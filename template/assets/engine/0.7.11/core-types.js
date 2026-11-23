@@ -66,7 +66,7 @@ export const CORE_BLOCK_READY = {
     return import('./blocks/calendar-load.js').then((m) => m.prepareCalendar);
   },
 };
-/** The old plugin contract ids of blocks that are core since 0.7.18 (ADR-0021): a page holding one loads the type it stands for. */
+/** The old plugin contract ids of the core blocks calendar, map and form (ADR-0021): a page holding one loads the type it stands for. */
 export const BLOCK_ALIASES = { kalender: 'calendar', kart: 'map', skjema: 'form' };
 
 const TABLES = { blocks: CORE_BLOCKS, backgrounds: CORE_BACKGROUNDS };

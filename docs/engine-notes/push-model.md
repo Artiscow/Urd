@@ -24,7 +24,8 @@ touches the DOM or the stored frames.
 The block types whose height follows their content (ADR-0025): the box is
 drawn at the content's height, also when that is less than the frame, and
 the editor fits the frame to the content after an edit of the block. Every
-other type keeps the height of its frame, and text is at least as tall as
+other type keeps the height of its frame, unless the block keeps a shape or
+folds into questions (followsContent), and text is at least as tall as
 its words.
 
 ## `const VIDEO_ASPECTS`
@@ -46,17 +47,17 @@ with it at the design width, which the preview's own surface need not have.
 ## `followsContent`
 
 Whether a block's height follows its content (ADR-0025): one of the types
-above, unless the block has been given its own height (`height.mode`), or
-a block that keeps a shape.
+above, unless the block has been given its own height (`height.mode` 'own'), or
+a block that keeps a shape or folds into questions (foldsIntoQuestions).
 
 ## `foldsIntoQuestions`
 
-The terms of sale drawn as questions (doc-look.js), or a text block from before page v8 still in that design: its rows fold out, so its height is the closed rows', and an open part is view state, as an FAQ's answer is.
+The terms of sale drawn as questions (doc-look.js), or a text block in that design (one from before page v8): its rows fold out for a visitor, the first open, so its height is the rows' as they first stand, and an open part is view state, as an FAQ's answer is.
 
 ## `const PHONE_DESIGNS`
 
 The blocks with a phone design: the design a block draws while it is narrow (`phoneDesign`, additive), by the prop its design is kept in, the way the calendar has its phone view.
-Narrow is the block's own width, on a phone or in a narrow column of a wide page alike (ADR-0025): below NARROW\_PX it draws its phone design, and it is drawn again when it crosses the line (render.js).
+Narrow is the width the block's content has (render.js isNarrowBlock: its own width over its drawn scale, or on the desktop, for a block set to shrink, its width at the design width), on a phone or in a narrow column of a wide page alike (ADR-0025): below NARROW\_PX it draws its phone design, and it is drawn again when it crosses the line (render.js), back to wide only 16 px past it.
 
 ## `drawnBlock`
 
@@ -108,7 +109,7 @@ loading state's own height).
 The block types that can use the height of a box taller than their content
 (ADR-0025 decision 3, «stretch»): the figure and the countdown's units fill
 the box, and a quote's card does. The calendar stretches too, by design:
-the plain list and card views spread their rows and cards (blocks/calendar.js).
+the list and card views spread their rows and cards (blocks/calendar.css).
 
 ## `heightAlign`
 
@@ -128,7 +129,7 @@ a narrow column of a wide page uses its narrow layout as on a phone.
 
 The block types whose content cannot wrap: their frame already follows
 the canvas in percent, so their shrink is a floor on the frame's width
-(fitFloorPx) instead of a zoom of the content. The editor keeps the same
+(fitFloorPx) instead of a zoom of the content. The editor reads this
 list for its option labels.
 
 ## `const SIZE_BY_FRAME`
@@ -147,7 +148,7 @@ decision 6): the calendar's designs at a dense 14 px base for the page's
 ## `blockSize`
 
 A block's size as a factor (ADR-0025 decision 6): the owner's `size`
-inside the sizes the block may take (sizeRange), else 1. The frame-sized
+held inside the sizes the block may take (sizeRange), 1 where it has none above 0. The frame-sized
 types are always 1.
 
 ## `phoneSized`
@@ -179,7 +180,7 @@ not set is null, and the text follows the size.
 ## `fitFloorPx`
 
 The smallest width in px a block set to shrink may take, for the types in FIT\_BY\_WIDTH: its share of its section's design width times the floor.
-0 (no floor) for every other block, for a block without the field, and where the section has no design width (a full-width site or section), where nothing has a design size.
+0 (no floor) for every other block, for a block without a desktop width (`frames.desktop.w`), and where the section has no design width (a full-width site or section), where nothing has a design size.
 
 ## `shrinksOnPhone`
 

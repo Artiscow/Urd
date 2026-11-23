@@ -148,7 +148,7 @@ export const textBlock = {
         // The start holds while the section's frames are ones the typing wrote, the last few included, so a redraw a keystroke behind keeps it; any other change starts afresh.
         // The words are measured with the box at its own height, since the text fills a box taller than them, and converted from the content's zoom (a text set to shrink) to the block's.
         const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
-        // A text drawn as questions follows its closed rows (push-model.js foldsIntoQuestions): the editor fits its frame after the typing, so the typing grows nothing here.
+        // A text drawn as questions follows its rows as drawn (push-model.js foldsIntoQuestions): the editor fits its frame after the typing, so the typing grows nothing here.
         // On the phone the words grow the row they stand in, and the desktop frame is not theirs to write.
         if (!phoneView && block?.frames?.desktop && design !== 'questions') {
           const now = framesKey(ctx.section);

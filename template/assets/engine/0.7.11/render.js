@@ -98,11 +98,6 @@ function drawWaiting(el) {
 if (typeof window !== 'undefined') window.addEventListener?.('beforeprint', () => { for (const el of [...waitingLayers.keys()]) drawWaiting(el); });
 
 /**
- * Translates a frame to CSS positioning (frameToCss).
- * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} frame
- * @returns {{left: string, top: string, width: string, height: string, zIndex: string, transform: string}}
- */
-/**
  * Writes the site's layout tokens on the root element (ADR-0018); the canvas in every section reads them.
  * @param {object} site site.json (lifted)
  * @param {HTMLElement} [root] The element the tokens are set on
@@ -748,6 +743,11 @@ export function applyFrameCss(el, frame, floorPx = 0) {
   el.style.setProperty('--urd-block-rot', `${frame.rot || 0}deg`);
 }
 
+/**
+ * Translates a frame to CSS positioning.
+ * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} frame
+ * @returns {{left: string, top: string, width: string, height: string, zIndex: string, transform: string}}
+ */
 export function frameToCss(frame, floorPx = 0) {
   // A width floor: the frame never gets narrower than the floor, capped at the canvas's right edge.
   const width = floorPx > 0

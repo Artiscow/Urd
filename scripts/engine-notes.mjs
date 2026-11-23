@@ -7,6 +7,7 @@
  *     node scripts/engine-notes.mjs apply <module> <json>    writes the short versions a JSON object gives, by heading, in place of the long notes
  *     node scripts/engine-notes.mjs check <module>...        proves the code unchanged against the committed version and the notes complete
  *     node scripts/engine-notes.mjs pairs <module>...        each long note beside its short version, for a review
+ *     node scripts/engine-notes.mjs same <module>...         proves the code unchanged against the committed version, its comments free to move
  *
  * `--base <rev>` names the committed version (HEAD), and `--all` stands for every module a visitor's page loads (visitorModules).
  * The parser is acorn, which the editor's dependencies hold (editor/node_modules).
@@ -464,6 +465,19 @@ function run(args) {
     }
     return failed ? 1 : 0;
   }
+  if (mode === 'same') {
+    let failed = 0;
+    for (const module of modules) {
+      const base = readBase(module, rev);
+      const now = readNow(module);
+      const same = bare(base) === bare(now) && tokensOf(base).join('\n') === tokensOf(now).join('\n');
+      const directives = (src) => (src.match(/\/\* @vite-ignore \*\//g) ?? []).length;
+      const kept = directives(base) === directives(now);
+      console.log(`${same && kept ? 'OK  ' : 'FAIL'}  ${module}: ${same ? 'the code is unchanged' : 'the code differs'}${kept ? '' : ', a @vite-ignore directive is gone'}`);
+      if (!same || !kept) failed++;
+    }
+    return failed ? 1 : 0;
+  }
   if (mode === 'pairs') {
     for (const module of modules) {
       const base = readBase(module, rev);
@@ -483,7 +497,7 @@ function run(args) {
     }
     return 0;
   }
-  console.error('usage: node scripts/engine-notes.mjs todo|extract|apply|check|pairs <module>... [--all] [--base <rev>] [--force]');
+  console.error('usage: node scripts/engine-notes.mjs todo|extract|apply|check|same|pairs <module>... [--all] [--base <rev>] [--force]');
   return 1;
 }
 

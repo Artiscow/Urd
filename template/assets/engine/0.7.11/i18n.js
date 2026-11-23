@@ -95,7 +95,7 @@ async function loadPack(code, kind) {
   }
 }
 
-// `own` holds the site language's strings alone, without the bokmål base, for look-ups that ask whether the language has a word of its own (themeString).
+// `own` holds the site language's strings alone, without the bokmål base, for look-ups that ask whether it has a word of its own (themeString, siteTextLang).
 const site = { lang: 'nb', dict: { ...nb.strings }, own: nb.strings, dates: null };
 const admin = { lang: 'nb', dict: {} };
 

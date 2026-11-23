@@ -74,11 +74,10 @@ export function docLookVars(props) {
 }
 
 /**
- * Which look settings a design draws, so the menu shows only those; every document design draws an accent, a heading colour and a heading font.
+ * Which look settings a design draws, for the menu: accent, heading colour and font in each; the side with contents, the placement with contents and on privacy.
  * @param {'privacy'|'terms'|'text'} type
  * @param {string} design
  * @param {{html?: string}} [props]
- * The side the contents stand on belongs to the contents design alone; the placement in the block to the privacy page in every design, and to a text with contents.
  * @returns {{side: boolean, align: boolean, accent: boolean, headingColor: boolean, cardColor: boolean, rules: boolean, corners: boolean, headingFont: boolean, font: boolean}}
  */
 export function docLookSettings(type, design, props = {}) {

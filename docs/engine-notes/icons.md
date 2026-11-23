@@ -4,8 +4,9 @@ The full text of the longer comments in the engine's `icons.js`, in the file's o
 
 ## The module
 
-The icon library: drawn SVG icons (social media, communication, symbols,
-arrows) that the icon block can show instead of a glyph.
+The icon library: drawn SVG icons (social media, communication, place and time, symbols,
+arrows) that the icon block can show instead of a glyph, and that the site's links, the menu,
+the «Back to top» button and several other blocks draw.
 The icons are hand-drawn paths on a 24x24 grid, colored with currentColor
 and scale crisply at every size (unlike emoji, which have fixed colors and
 vary between platforms).
@@ -19,8 +20,8 @@ and the icon block falls back to the glyph.
 
 The category names are KEYS (looked up with ta() by the consumer; the module
 sits in the visitor closure and can never call ta() at module level). The
-ICON\_LIBRARY labels are brand names used in visitor aria-labels and are never
-translated.
+ICON\_LIBRARY labels are English: the editor names an icon by its labelKey (icon.\*) through ta(),
+and a site link without a label of its own is named by its icon's label, untranslated (links-model.js).
 
 ## `iconSvg`
 

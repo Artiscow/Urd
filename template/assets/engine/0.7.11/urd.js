@@ -20,7 +20,7 @@ import { applyHeadMeta, mountAnalytics, pageTitle } from './seo.js';
 import { readPrefetched, revalidateFile, wirePrefetch, sessionStore } from './prefetch.js';
 import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
 
-/** Hands the preview module the «+ New block» shop gate: the site's own settings and whether the collection drafts hold a product catalogue. */
+/** Hands the preview module the shop gate of «+ New block» and «+ New section»: the site's own settings and whether the collection drafts hold a product catalogue. */
 function refreshShopGate(site) {
   window.UrdPreviewEdit?.setShopOn?.(site?.site, draftHasKind('products'));
 }
@@ -254,7 +254,7 @@ function applyFavicon(href) {
 }
 
 /**
- * Finds the current URL's page in the register: ?page=<id> first, then the path, else the register's first page; a hidden page is matched only in the preview.
+ * Finds the URL's page in the register: ?page=<id>, then the path, else the first page even if hidden; a hidden page is found by id or path only in the preview.
  * @param {object} site
  * @param {boolean} [preview]
  */
@@ -493,7 +493,7 @@ function enablePreview(state, opts) {
         ?.classList.toggle('urd-attention', needed);
       window.UrdPreviewEdit?.reportAttention?.();
     } else if (msg?.type === 'urd-scroll-section' && msg.sectionId) {
-      // The attention badge in the top bar: a jump to the section that needs review, followed while the phone view it switches to settles.
+      // A section the editor brings into view (its attention badge, phone check, Phone panel, palette, Drafts window or shop links): a jump, followed as it settles.
       jumpTo(msg.sectionId);
     } else if (msg?.type === 'urd-scroll-to' && typeof msg.sectionId === 'string') {
       // A reload of the editor: the canvas comes back to where it was scrolled, by the section at its top and the offset past it (the editor's lib/reload-place.js).
@@ -720,7 +720,7 @@ export async function boot(opts) {
   // The engine version, read from this module's own folder (engineVersion), is awaited right before the plugins load; site.json goes first.
   const enginePromise = engineVersion();
 
-  // The served texts and ETags, kept so a prerendered or restored page can recheck them against the server (recheck below).
+  // The served texts and ETags, kept so a parked, prerendered or restored page can recheck them against the server (recheck below).
   const served = { site: null, page: null };
   const params = new URLSearchParams(location.search);
   const preview = params.get('preview') === '1';
@@ -735,6 +735,7 @@ export async function boot(opts) {
   const siteText = await siteRes.text();
   served.site = { text: siteText, etag: siteRes.headers.get('etag') };
   const drafts = draftsRead ? await draftsRead : null;
+  // The site as stored, or its draft, before its own lift: liftPageFile receives it as the page lift's context.
   const rawSite = drafts?.site ?? JSON.parse(siteText);
   const site = liftSiteFile(rawSite);
   // The engine tolerates a truncated site.json: missing parts get empty defaults instead of a crash (the page never dies from bad data).
@@ -749,8 +750,9 @@ export async function boot(opts) {
   applyFavicon(site.site.icon);
   // An empty page register (hand-edited site.json) gives an empty page, not a crash.
   const entry = resolvePage(site, preview) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
-  // The preview and the draft view take the page's draft; a visitor a file parked by the previous page's prefetch (prefetch.js), rechecked after the first render.
+  // The preview and the draft view take the page's draft where one is kept; the preview then receives its pages by message.
   const draftPage = drafts?.page(entry.id) ?? null;
+  // A visitor takes a page file parked by the previous page's prefetch (prefetch.js) as it is, rechecked against the server after the first render.
   const parked = preview || drafts ? null : readPrefetched(entry.file, sessionStore());
   // Otherwise the page file's fetch starts here, as it depends only on the register, and runs alongside the plugin loading.
   const pagePromise = draftPage
@@ -822,7 +824,7 @@ export async function boot(opts) {
 
   const state = { page, site, engine, viewport };
 
-  // The menu, the site's «Back to top» button (totop.js) and the page are drawn in one task, so they stand in the same frame.
+  // The menu, given the page id for nav.hideOn, «Back to top» (totop.js) and the page are drawn in one task, so they stand in the same frame.
   if (opts.nav) renderNav(site, opts.nav, entry.id);
   renderToTop(site);
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport, arriving: true });

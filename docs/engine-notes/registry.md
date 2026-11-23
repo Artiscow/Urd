@@ -5,14 +5,15 @@ The full text of the longer comments in the engine's `registry.js`, in the file'
 ## The module
 
 Shared registry factory. Every extensible type in Urd (blocks, section
-presets, background layers, animations) uses the same registry pattern,
-and plugins use the identical define APIs as the core.
+presets, background layers, animations, templates, commands) uses the
+same registry pattern, and plugins use the identical define APIs as the
+core.
 
 ## `createRegistry › alias`
 
-Resolves an old contract id to its current one (ADR-0021). Aliases are
-consulted only on a direct miss, so a plugin that still defines the
-old id keeps winning for its own data.
+Maps an old contract id to its current one, which get() resolves
+(ADR-0021). Aliases are consulted only on a direct miss, so a plugin that
+still defines the old id keeps winning for its own data.
 
 ## `createRegistry › reserve`
 

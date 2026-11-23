@@ -6,9 +6,10 @@ The full text of the longer comments in the engine's `urd.js`, in the file's ord
 
 The Urd engine - entry point.
 
-Run by template/index.html. Creates the global Urd object with the
-registries, registers the core types and plugins, finds the right page in
-the page register, and renders. All data is version-lifted on load
+Run by boot.js, which the HTML shells (template/index.html and its slug
+copies) load. Creates the global Urd object with the registries,
+registers the core types and plugins, finds the right page in the page
+register, and renders. All data is version-lifted on load
 (migrate.js) - see docs/SCHEMA.md.
 
 In preview mode (?preview=1) the engine additionally listens for
@@ -16,7 +17,7 @@ postMessage drafts from the editor and rerenders incrementally.
 
 ## `refreshShopGate`
 
-The shop gate for the «+ New block» menu: the preview module reads it from the site's own choice and whether a product catalogue stands among the collection drafts (block-palette.js shopOn, kept out of the visitor closure).
+The shop gate for the «+ New block» and «+ New section» menus: the preview module reads it from the site's own choice and whether a product catalogue stands among the collection drafts (block-palette.js shopOn, kept out of the visitor closure).
 
 ## `Urd › commands`
 
@@ -32,20 +33,20 @@ The block and background types are defined as a page asks for them (core-types.j
 
 Old plugin contract ids resolve to the renamed ids (ADR-0021): pages
 built before the rename still carry the old ones. Map, form and calendar
-are core blocks since 0.7.18; a plugin that still defines an old id wins
-directly (registry alias semantics).
+are core blocks; a plugin that still defines an old id wins directly
+(registry alias semantics).
 
 ## `engineVersion`
 
 The engine version, the basis for the plugins' requiresEngine check: the name of the folder this module is served from, which is always urd.json's `engine` (ADR-0013), so it costs no request; urd.json is read only where the module stands elsewhere.
-An unreachable manifest yields '0.0.0', which rejects the version requirements instead of loading blindly.
+An unreachable manifest, or one without `engine`, yields '0.0.0', which rejects every version requirement that asks for more than it instead of loading blindly; a requirement of an upper bound alone (`<`, `<=`) still holds for it.
 
 ## `followJump`
 
 Follows a jump to the element with this id.
 A menu that hides on scroll is held in view while the page moves.
 A change of size (the menu shrinking on the way, data blocks still measuring above the spot) puts the spot back below the menu once the page has stood still for a moment; scrolling only postpones a correction that is waiting.
-After the first correction, any scroll the follow did not make is the visitor's own and ends it, as do a wheel, a key or a touch, or `ms` passing.
+After the first correction, any scroll the follow did not make is the visitor's own and ends it, as do a wheel, a key, a touch or a press, or `ms` passing.
 The element is looked up again on every correction, since a render replaces it.
 
 ## `jumpTo`
@@ -61,7 +62,7 @@ The top is the one the page lays out, without the transforms an entrance animati
 
 A link to a spot on this page: the browser's own jump does the work, shaped by the scroll-padding and the smooth scrolling in base.css, and the engine follows it.
 A link holds a spot's id, so the jump goes to its name when it has one, and the address shows the name; a link that names the page with a different trailing slash would load the page again.
-In both cases the fragment is handed to the address, which jumps in place.
+In both cases the fragment is handed to the address, which jumps in place; where the address holds that fragment already, the engine scrolls to the spot itself.
 A plain left click only: a link the page has already handled, one opened in a new tab and a download are left alone.
 
 ## `arriveAtSpot`
@@ -77,16 +78,17 @@ data and rendered anything. The hold keeps the old page's snapshot on
 screen and the empty shell out of sight (the html class, styled in
 base.css) until the first render, which ends the transition as a cut. A
 page already rendered at arrival (a prerendered document) takes the plain
-cross-fade. Without cross-document support the event never fires and the
-page navigates normally (end state).
+cross-fade. Without cross-document support the event never fires, or fires
+without a transition, and the page navigates normally (end state).
 
 ## `resolvePage`
 
 Finds the page for the current URL in the page register.
 ?page=\<id> overrides (useful locally, where simple file servers do not
 route the paths); otherwise location.pathname is matched; the fallback is
-the first page in the register. A hidden page is found only in the
-preview, where the owner works on it; for a visitor it is not there.
+the first page in the register, hidden or not. A hidden page is found by
+?page= or its path only in the preview, where the owner works on it; for a
+visitor only the fallback reaches it, when it stands first.
 
 ## `loadDrafts`
 
@@ -100,8 +102,8 @@ A text drawn while the Clean view stands (a section drawn anew, a calendar's car
 ## `enablePreview`
 
 Attaches postMessage listening and height reporting in preview mode.
-state = { page, site, viewport } is shared with boot, so breakpoint
-switches and editor messages always work on the same data.
+state = { page, site, engine, viewport } is shared with boot, so view
+switches and the other editor messages always work on the same data.
 
 ## `enablePreview › let langQueue`
 
@@ -161,8 +163,9 @@ alone: there the band never moves.
 
 The admin color theme: the editor menus in the preview (the block
 menu, the section gallery) follow admin, not the page being edited.
-The values are set as separate variables; base.css uses them ONLY on
-the editor chrome, never on the page's own content.
+The values are set as separate variables; ONLY the editor chrome reads
+them (preview.css, base.css, the help card in hint.js and the menus in
+dropdown.js), never the page's own content.
 
 ## `enablePreview › addEventListener('message') › const field`
 
@@ -174,8 +177,8 @@ The editor flagged a section for the phone's review, or cleared it: marked live,
 
 ## `enablePreview › addEventListener('message') › jumpTo`
 
-The attention badge in the top bar: scroll to the section that needs review, so the badge points at a place and not just a mode.
-The badge also switches the view to the phone, whose layout settles over the next frames (blocks measure their heights), so the jump settles.
+A section the editor brings into view: the attention badge in the top bar (the section that needs review, so the badge points at a place and not just a mode), «Look on the phone» in the phone check, a section picked in the Phone panel, «Go to section» in the command palette, a line of what changed in the Drafts window, and the shop's links to the page that holds a block.
+The badge and «Look on the phone» also switch the view to the phone, whose layout settles over the next frames (blocks measure their heights), so the jump settles.
 
 ## `enablePreview › addEventListener('message') › jumpTo (2)`
 
@@ -235,33 +238,33 @@ preview.
 
 Changed site.lang in the draft: reload the visitor locale BEFORE the
 re-render, so the preview is WYSIWYG for the language too (boot read
-the published site.json and may have a different language). The
-plugin texts are layered back on inside syncSiteLocale:
+the site as the preview opened, the published site.json or the kept
+draft, and may have a different language). The plugin texts are
+layered back on inside syncSiteLocale:
 initSiteLocale builds the dictionary from the engine's nb base,
 without the plugin keys.
 
 ## `askLayerPictures`
 
-An image layer stays hidden until its picture is in (backgrounds/image.js), so the boot asks for the first section's image layer pictures as soon as the page file is read, beside the page's types, and the layer finds them in the document's image cache. The wait is capped at READY_WAIT_MS, the cap a block's readying has, so a slow picture holds the page no longer than that.
+An image layer stays hidden until its picture is in (backgrounds/image.js), so a visitor's boot asks for the first section's image layer pictures as soon as the page file is read, beside the page's types, and the layer finds them in the document's image cache. The wait is capped at READY_WAIT_MS, the cap a block's readying has, so a slow picture holds the page no longer than that.
 
 ## `boot › wireArrivalHold`
 
-Before the first await: the shell loads this module render-blocking, so
-the listener is in place when the arriving document's pagereveal fires
-at its first rendering opportunity. Inert in preview (page switches
-happen via postMessage, never navigation).
+Before the first await: the shell loads boot.js, and this module with it,
+render-blocking, so the listener is in place when the arriving
+document's pagereveal fires at its first rendering opportunity. Inert in
+preview (page switches happen via postMessage, never navigation).
 
 ## `boot › const served`
 
-The raw file is kept as migration context: the v1 page lift needs the
-ORIGINAL grid (columns/rowHeight), which the lifted site has lost. The
-served text and ETag are kept too: a prerendered or restored page
-rechecks them against the server (see recheck below).
+The served text and ETag of site.json and of the page file are kept: a
+parked, prerendered or restored page rechecks them against the server
+(see recheck below).
 
 ## `boot › const editing`
 
 The canvas chrome follows the ADMIN language (two registers, ADR-0012), with the same detection as the editor's main.js (shared localStorage, same origin).
-The editing layer is loaded dynamically ONLY in preview - visitors never fetch this code - and must be in place before the first render.
+The editing layer is loaded dynamically ONLY in preview - visitors never fetch this code - and must be in place before the page's first render.
 The preview's own rules (preview.css) come with it, so the editing chrome is never drawn without them.
 All three are asked for as the boot starts, beside the site and the page, since none reads them and the editing layer calls no ta() as it loads.
 
@@ -280,8 +283,8 @@ hardcode "no" as the pre-JS default).
 
 ## `boot › const draftPage`
 
-A page file parked by the previous page's intent prefetch (prefetch.js) is used as it is and revalidated after the first render.
-Visitors only: the preview and the draft view read the page's draft, and the preview then receives its pages via postMessage.
+The page's draft, which the preview and the draft view read where this browser's editor keeps one; without it they fetch the page file as a visitor's page does (pagePromise).
+The preview then receives its pages via postMessage.
 
 ## `boot › const pagePromise`
 
@@ -294,12 +297,12 @@ costs.
 
 In preview the EDITOR owns the plugin list (the draft in plugins.json): boot loads nothing,
 and the urd-plugins message loads the draft's active plugins so they work before publishing.
-For a visitor the plugins load beside the page, and the page waits for them only when it uses a type no core module defines (pageTypes below).
+For a visitor the plugins load beside the page, and the menu and the page wait for them only when they use a type no core module defines (pageTypes below).
 
 ## `boot › const mq`
 
-Responsive: the viewport follows the screen width (also in the
-editor's preview, where the iframe is narrowed to mobile width). When
+Responsive: a visitor's viewport follows the screen width (the
+editor's preview starts on desktop, whatever the iframe's width). When
 the breakpoint is crossed, the page is rerendered in the right mode.
 In preview the editor owns the viewport (the urd-viewport message); for
 visitors it follows the screen width. Both body classes are set before
@@ -316,12 +319,11 @@ dies from bad data.
 
 ## `boot › if (preview`
 
-The page id is known from the register, so a page the menu stays off (nav.hideOn) starts without it.
 The preview loads every core type and the section presets, since the editor offers them all; a visitor's page asks for the core types its menu, its footer and the page draw with as soon as each is known.
 
 ## `boot › const pageReady`
 
-The page's types, what its blocks draw with beyond their module (prepareBlocks, so a calendar stands in its own design from the first drawing) and the first section's image layer pictures are asked for as soon as the page file is read, beside the menu's types; the menu, «Back to top» and the page are drawn in one task once all of them are in, so they stand in one frame.
+The page's types, what its blocks draw with beyond their module (prepareBlocks, so a calendar stands in its own design from the first drawing) and the first section's image layer pictures are asked for as soon as the page file is read, beside the menu's types (in the preview, which has every type in already and does not wait for pictures, the readying alone); the menu, «Back to top» and the page are drawn in one task once all of them are in, so they stand in one frame.
 
 ## `boot › opts.footer`
 
@@ -330,9 +332,11 @@ It joins the document once the page is drawn (below), so it is never shown at th
 
 ## `boot › if (!preview`
 
-SEO metadata (description, canonical, og: fields, JSON-LD) is set only
-for visitors: the preview address (?preview=1) is never a canonical page.
-The owner's own draft view is never counted.
+SEO metadata (description, canonical, og: fields, JSON-LD) is set
+outside the preview, the draft view included: the preview address
+(?preview=1) is never a canonical page.
+The owner's own draft view is not counted, except in a browser whose
+storage is closed, where no drafts are read (loadDrafts).
 
 ## `boot › const drawFooter`
 
@@ -340,13 +344,14 @@ The footer is rendered now that the page id is known (per-page hideOn visibility
 
 ## `boot › if (preview (2)`
 
-A visitor's footer joins once no block on the page is still fetching its content, so the page's own content never pushes it down; the editor's preview shows it at once.
+A visitor's footer joins once no block on the page is still fetching its content, or after FOOTER\_WAIT\_MS (whenSettled), so the page's own content never pushes it down within that time; the editor's preview shows it at once.
 
 ## `boot › const applyFreshPage`
 
 A newer page file rerenders in place. The scroll position survives
 the rerender (the document collapses transiently while the data
-blocks measure), and the sticky blocks are re-pinned right away.
+blocks measure), and the sticky blocks are re-pinned with it, two
+frames after the drawing.
 
 ## `boot › applyFreshPage › const freshReadied`
 
@@ -363,5 +368,5 @@ swallowed: the page never dies from a failed check.
 
 ## `boot › if (drafts`
 
-A prerendered document checks at activation, everything else now.
+A parked page checks now, a prerendered document at activation and one restored from the back-forward cache as it is shown; a page whose file was fetched as it loaded does not check.
 The draft view never trades its drafts for the server's files: it reads them anew on a return from the back-forward cache.

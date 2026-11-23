@@ -19,7 +19,7 @@ Two viewports (opts.viewport):
 
 ## `renderBackgroundLayers`
 
-Draws the background layers (color/gradient/glow/grain/image/slideshow)
+Draws the background layers (color/gradient/glow/grain/image/pattern/slideshow/video)
 into host as `div.urd-bg-layer` elements, bottom-up. Shared by sections
 (render.js), nav (nav.js) and footer (footer.js) - the same layer model
 everywhere. Each layer is lifted via lift() before render; unknown types
@@ -31,15 +31,6 @@ they never topple the page).
 Adds a stylesheet to the document once, for the code that needs it alone (the preview's rules, a calendar's): resolves when it has loaded or failed, so the caller draws with it in place, to whether it loaded.
 
 ## `applySiteLayout`
-
-Translates a frame to CSS positioning.
-Pure function (no DOM), tested in tests/render.test.mjs.
-
-Frames are in PHYSICAL units: x/w as a percentage of the
-section width (flows with the screen), y/h in px. The grid is only a
-snapping tool while editing and never affects placement.
-
-## `applySiteLayout (2)`
 
 Writes the site's layout tokens on the root element (ADR-0018). The canvas
 in every section reads them, so one write governs the whole page.
@@ -179,7 +170,7 @@ min-height off, since the content otherwise fills the box.
 
 How much narrower than its design width the block's canvas is: 1 at the
 design width and above, and where nothing has a design size (a
-full-width site or section, renderSection).
+full-width section or one whose width is not in px, or a full-width site whose section has no px width, renderSection).
 
 ## `applyZoom`
 
@@ -247,7 +238,7 @@ A text drawn as questions stands in the editor with every part open to be writte
 
 The editor's own parts inside a block: the image adders, the «+ Product» card, the placeholders of empty fields and the hints of a calendar's removed or empty lines.
 They are drawn in the preview but are never part of the page, so the push and the fit measure a block without them.
-base.css hides the same list under `.urd-fit-measure`, and a test holds the two equal.
+preview.css hides the same list under `.urd-fit-measure`, and a test holds the two equal.
 
 ## `visitorHeights`
 
@@ -325,9 +316,18 @@ The rotation as a custom property too, so the editing chrome can turn
 itself back upright. A custom property cannot go through the style map
 frameToCss returns, since Object.assign does not reach them.
 
+## `frameToCss`
+
+Translates a frame to CSS positioning.
+Pure function (no DOM), tested in tests/render.test.mjs.
+
+Frames are in PHYSICAL units: x/w as a percentage of the
+canvas width (flows with the screen below the design width), y/h in px. The grid is only a
+snapping tool while editing and never affects placement.
+
 ## `frameToCss › const width`
 
-A width floor (a block set to shrink, fitFloorPx in push-model.js): the
+A width floor (an image, video, shape or icon block set to shrink, fitFloorPx in push-model.js): the
 frame never gets narrower than the floor, and is capped at the canvas's
 right edge so it never overhangs into the gutter.
 
@@ -441,7 +441,7 @@ Per-section override: 'full' unbinds the content from the design width, inside t
 
 The width the canvas has at the design width, for the proportional
 shrink (fitContent): the site's content width, or the section's own px
-width when that is narrower; none on a full-width site or section, or a
+width when that is narrower or the site is full width; none on a full-width section, a full-width site whose section has no px width, or a
 section width that is not in px, where nothing has a design size. The
 editor's designWidth() computes the same.
 
@@ -461,8 +461,8 @@ A flowing block in cells stands in a cell with the blocks before it in the same 
 
 ## `renderSection › const placing`
 
-Auto-growing blocks (text, and def.autoGrow: faq/gallery/collection
-and plugin blocks with content of their own) get natural height: a
+Auto-growing blocks (text and the terms of sale, and every type whose def.autoGrow says so,
+plugin blocks with content of their own among them) get natural height: a
 fixed desktop height would clip taller mobile content.
 A block in cells keeps its desktop shape there where its size is its frame, and a cell holding words narrower than they read well stands across the row (the floor in base.css).
 
@@ -503,8 +503,8 @@ and a block with columns or cards lays itself out by its own width.
 
 Sticky ("pin on scroll", additive field): only marking here; the
 pinning itself is done by sticky.js on scroll. The mobile branch
-above marks screen docking only (scroll pinning belongs to
-absolute layout).
+above marks screen docking only (scroll pinning on the phone is the
+row grid's own, stickOnPhone).
 
 ## `renderSection › host.style.minHeight`
 
@@ -536,7 +536,7 @@ same task, before the cards and their classes exist.
 
 ## `isNarrowBlock`
 
-Whether a block is narrow (NARROW\_PX): its own width as its content has it (the block's drawn scale zooms the content, so a block drawn smaller has the room it had; a block set to shrink has its width at the design width), read once it stands in a laid-out page; a block not yet laid out counts as narrow on a phone's page.
+Whether a block is narrow (NARROW\_PX): its own width as its content has it (the block's drawn scale zooms the content, so a block drawn smaller has the room it had; a block set to shrink has, on the desktop, its width at the design width), read once it stands in a laid-out page; a block not yet laid out counts as narrow on a phone's page.
 A block narrow before counts as wide again only 16 px past the line.
 
 ## `const phoneWatch`

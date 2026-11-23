@@ -42,7 +42,7 @@ export function dateBadge(date) {
   return { day: String(Number(m[3])), month: dates().monthsShort[monthIndex], year: m[1] };
 }
 
-/** Draft override from the editor (the urd-collections message): id → collection data. */
+/** Draft override from the editor (the urd-collections message, or the drafts the draft view reads): id → collection data. */
 let draftCollections = null;
 
 export function setCollectionsDraft(collections) {
@@ -64,7 +64,7 @@ export function draftHasKind(kind) {
 const fetched = new Map();
 
 /**
- * Fetches a collection: the editor's draft wins (preview), otherwise the server file; a missing or invalid file gives null, and the block shows its empty state.
+ * Fetches a collection: an editor draft wins (preview, draft view), else the server file; a missing or invalid file gives null, the block's empty state.
  */
 export function getCollection(id) {
   if (draftCollections && Object.hasOwn(draftCollections, id)) {

@@ -128,7 +128,7 @@ function validGeo(geo) {
   return Number.isFinite(geo?.lat) && Number.isFinite(geo?.lon) && Math.abs(geo.lat) <= 90 && Math.abs(geo.lon) <= 180;
 }
 
-/** The VAT number as the data carries it (with its country prefix), or null when the association is not registered or the number is unknown. */
+/** The VAT number as the data carries it (with any prefix, suffix or mark of its profile), or null when the owner is not registered or the number is unknown. */
 export function vatNumber(contact) {
   const { vat } = contact.profile;
   if (!contact.vat.registered) return null;

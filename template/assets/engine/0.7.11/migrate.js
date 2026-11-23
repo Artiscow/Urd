@@ -135,11 +135,6 @@ export function phoneRoomOf(section) {
 export const SITE_SCHEMA_VERSION = 6;
 
 /**
- * File-level migrations. Each function lifts exactly one version and
- * receives the whole page file (cloned) + site.json as context.
- */
-
-/**
  * The flow's top padding in the v1 mobile format, where y counted from the surface's top, padding included; it is subtracted before the row index is computed.
  */
 const V1_FLOW_PAD = 24;
@@ -349,6 +344,9 @@ export function liftGalleryBands(section, old = false) {
   }
 }
 
+/**
+ * File-level migrations. Each function lifts exactly one version and receives the whole page file (cloned) + site.json as context.
+ */
 const pageMigrations = {
   // 1 -> 2 (ADR-0019): frames.mobile becomes a row-grid placement, 'manual' mode becomes 'auto', decor blocks get hideMobile, attention reasons get English ids.
   1: (page) => {

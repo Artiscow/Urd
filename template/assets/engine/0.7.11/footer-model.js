@@ -7,8 +7,7 @@ import { resolveItem, isSafeUrl } from './nav-model.js';
 import { siteLinks } from './links-model.js';
 import { siteContact, legalParts, contactParts } from './contact-model.js';
 
-// The safe-URL guard lives in nav-model (shared with resolveItem); re-exported
-// here for footer.js and the tests that import it from here.
+// The safe-URL guard lives in nav-model (shared with resolveItem); re-exported here for the tests that import it from here.
 export { isSafeUrl };
 
 // Text or an empty string, so a number or boolean hand-edited into site.json never makes .trim() or .split() throw.
@@ -191,8 +190,8 @@ export function footerDesign(site) {
 }
 
 /**
- * Does the footer have any rich content (brand/columns/social/copyright)?
- * No → footer.js keeps the byte-identical plain text rendering.
+ * Does the footer have rich content (brand, columns, social or baseline links, link row, call to action, copyright)?
+ * No → footer.js draws the simple shape.
  * @param {object} site
  * @returns {boolean}
  */

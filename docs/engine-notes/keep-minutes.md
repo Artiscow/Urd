@@ -4,5 +4,5 @@ The full text of the longer comments in the engine's `keep-minutes.js`, in the f
 
 ## The module
 
-How long the engine keeps what it fetches ahead in a visitor's browser, in minutes.
-The modules that keep it read these numbers, and the privacy page names them from here too (privacy-model.js), so its minutes are the code's; a module of its own, so the boot loads no more than it for them.
+How long the engine keeps a page it fetches ahead and a calendar feed's events in a visitor's browser, in minutes.
+The modules that keep them read these numbers, and the privacy page names them from here too (privacy-model.js), so its minutes are the code's; a module of its own, so the boot and the calendar's loader load no more than it for them.

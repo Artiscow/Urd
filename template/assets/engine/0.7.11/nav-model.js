@@ -29,7 +29,7 @@ export function isSafeHref(url) {
   return isSafeUrl(url) || (typeof url === 'string' && SAFE_INTERNAL_RE.test(url.trim()));
 }
 
-/** The words an owner may add to a link's rel; they count only for a link that leaves the site. */
+/** The words an owner may add to a link's rel; they count only for an http(s) link. */
 export const LINK_RELS = ['nofollow', 'sponsored'];
 
 // A link's `target`: the id of a section or block (or a name), the page schema's id shape.
@@ -193,7 +193,7 @@ export function tabModel(nav) {
 }
 
 /**
- * Whether a second submenu level stands as a headed group under its item: with columns (nav.style.subColumns above 1) or the flyout.
+ * Whether the submenu levels below the first stand as headed groups under their items: with columns (nav.style.subColumns above 1) or the flyout.
  * @param {{subStyle?: string, subColumns?: number}} [style] nav.style
  * @returns {boolean}
  */
@@ -395,7 +395,7 @@ export function jumpOnArrival({ hash, navigationType, scrollY }) {
 const MOBILE_STYLE_KEYS = ['size', 'inset', 'tools', 'border'];
 
 /**
- * The nav at the current breakpoint, nav.style.mobile's overrides in place of the desktop values, so everything downstream reads one resolved nav.
+ * The nav at the current breakpoint: nav.style.mobile's size, inset, tools, border, layout and overlay in place of the desktop values, as one resolved nav.
  * @param {object} nav site.nav
  * @param {{mobile?: boolean}} [state] Whether the mobile breakpoint matches
  * @returns {object} The nav to render from
@@ -413,11 +413,6 @@ export function effectiveNav(nav, { mobile = false } = {}) {
   return out;
 }
 
-/**
- * The nav element's CSS classes (navClasses): a variant and a hover style add classes only when they differ from the default.
- * @param {{nav: {layout?: string, variant?: string, style?: {hover?: string}}}} site
- * @returns {string}
- */
 /** The floating variants (pill, square, tab) share the base class urd-nav-var-floating. */
 function isFloating(variant) {
   return variant === 'floating' || variant === 'floating-square' || variant === 'floating-tab';
@@ -492,9 +487,9 @@ export function sheetMotion(style = {}) {
 }
 
 /**
- * The nav element's classes: `mobile` says the mobile breakpoint matches, and only then do the phone's own classes join (nav.style.mobile.logo, .press).
- * @param {{nav: object}} site
- * @param {{mobile?: boolean}} [state]
+ * The nav element's CSS classes: a variant and a hover style add them off the default, the phone's own (nav.style.mobile) only when `mobile` is true.
+ * @param {{nav: {layout?: string, variant?: string, style?: {hover?: string, mobile?: object}}}} site
+ * @param {{mobile?: boolean}} [state] `mobile`: the mobile breakpoint matches
  * @returns {string}
  */
 export function navClasses(site, { mobile = false } = {}) {

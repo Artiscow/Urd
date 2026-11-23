@@ -11,7 +11,7 @@ covered by tests/nav.test.mjs; the DOM building lives in nav.js.
 ## `const SAFE_IMAGE_RE`
 
 Safe image source: only known image shapes (a base64 data URL for
-unpublished uploads, a site-relative path to media/, or the site's own
+unpublished uploads, a site-relative path, or the site's own
 picture route for a shared folder, which is the one place a query string is
 allowed and which never serves anything but an image from a checked host)
 are let into img.src and CSS url(); everything else (external hosts,
@@ -22,10 +22,10 @@ and background, footer logo, icon block and the image layer.
 ## `const SAFE_URL_RE`
 
 Safe link URL for nav/footer links (item.href): only http(s), mailto and
-tel, like the footer social links. javascript:/data: and everything else
+tel, the addresses that leave the site. javascript:/data: and everything else
 is rejected, so an untouched href can never become an active URL.
 Anchored regex on purpose - CodeQL recognizes it as a barrier. Internal
-pages are linked via `page`, not href.
+pages are linked via `page`, or by a site path or a fragment in href, which SAFE\_INTERNAL\_RE below lets through (isSafeHref).
 
 ## `const SAFE_INTERNAL_RE`
 
@@ -39,7 +39,7 @@ purpose - CodeQL recognizes it as a barrier.
 
 ## `resolveLink`
 
-Resolves one link, in the shape every host stores beside its own fields (additive from 0.7.27.3): `page` (a page id in the register), `target` (the id of a section or block on that page, or on this page when there is no `page`), `href` (an address: http(s), mailto, tel, or a path or a fragment of the site, through the safe-URL gate), `newTab` (open in a new tab), `rel` (a list of 'nofollow' and 'sponsored', which count only for a link that leaves the site) and `download` (save the file rather than open it, additive from 0.7.27.9, which counts only for a path on the site).
+Resolves one link, in the shape every host stores beside its own fields (additive from 0.7.27.3): `page` (a page id in the register), `target` (the id of a section or block on that page, or on this page when there is neither `page` nor `href`), `href` (an address: http(s), mailto, tel, or a path or a fragment of the site, through the safe-URL gate), `newTab` (open in a new tab), `rel` (a list of 'nofollow' and 'sponsored', which count only for an http(s) address) and `download` (save the file rather than open it, additive from 0.7.27.9, which counts only for a path on the site).
 `page` wins over `href`, so the link follows a change of the page's address, and `target` holds the spot's id, so it follows a rename of the spot; the address shows the spot's name once the visitor has landed (urd.js).
 An unknown page or an address that fails the gate gives '#' and the missing flag (the hosts log the warning - this module has no side effects).
 `newTab`, `rel` and `download` appear only when set.
@@ -59,8 +59,8 @@ An unknown page or unsafe href yields '#' with the missing flag.
 Builds the menu model nav.js renders from. Each item gets a `kind`:
 'link' (plain link), 'split' (own target plus submenu: link plus arrow
 button) or 'toggle' (submenu only: the whole item is the opener). The
-submenu has two levels (additive from 0.7.13.21): a child may carry
-children of its own, and anything deeper is ignored defensively. Every
+submenus go three levels deep (the second additive from 0.7.13.21, the third from 0.7.30.6): a child may carry
+children of its own down to the third level, and anything deeper is ignored defensively. Every
 item carries its `description` (one line under the label, '' without
 one), and a top-level item its `look` ('button' for a call to action
 drawn as a button, '' for a plain item).
@@ -85,18 +85,18 @@ Touch has no hover, so nav.js draws the tab for `hover` and `ghost` there too.
 
 ## `tabModel`
 
-The pull tab as drawn (nav.tab, additive from 0.7.13.21): the owner's own mark (an uploaded image, else an icon id), word and colours, or the default tab (the burger lines in the menu's surface) when none is set.
+The pull tab as drawn (nav.tab, additive from 0.7.13.21): the owner's own mark (an uploaded image, else an icon id), word and colours, or the default tab (the burger lines on the submenus' default surface) when none is set.
 The word and the colours are '' when unset; `custom` says whether any field is set.
 
 ## `subGrouped`
 
-Whether the submenu is laid out in columns (nav.style.subColumns above 1) or as the flyout: there a second level stands as a headed group under its item rather than as a panel beside it.
+Whether the submenu is laid out in columns (nav.style.subColumns above 1) or as the flyout: there the levels below the first stand as headed groups under their items rather than as panels beside them.
 
 ## `const TOOL_IDS`
 
 The tools in the cluster, in the order they stand unless the owner says
 otherwise. The burger is not among them: it is the mobile menu's opener
-and always ends the cluster.
+and ends the cluster, or begins it where the cluster stands at the start of the bar (nav.style.tools.side).
 
 ## `toolOrder`
 
@@ -115,7 +115,7 @@ unknown page does in the menu. A row's mark is an uploaded image or an id from t
 icon library; nav.js draws it, and neither leaves the tile with its label
 alone. `view` is the design on the desktop and `mobileView` the one in
 the mobile menu (omitted = the same design as the desktop). `title` is
-empty when the heading is off, and the custom heading otherwise; the
+the custom heading, empty without one, and `titleShow` says whether the heading stands; the
 translated default word is nav.js's business, not this module's.
 
 ## `launcherModel › const links`
@@ -139,7 +139,7 @@ The CSS custom properties that size the launcher's panel and tiles: the size's s
 Scroll behavior for the menu (nav.scroll, additive since v0.6): pure
 state computation, the DOM part lives in nav.js. 'shrink' = compact
 after some scrolling; 'hide' = hidden on scroll down, shown on scroll up.
-Near the top (below TOP\_ZONE) the menu is always normal and visible.
+Near the top (below TOP\_ZONE, or for the shrink below its own distance, nav.style.shrinkAt) the menu is always normal and visible.
 The state flips on the distance travelled, not on the direction of a
 single frame: `anchor` is the turning point the travel is measured from,
 and the function returns the next one, so the caller only carries it.
@@ -185,22 +185,16 @@ A return through the history and a reload keep the place the browser restores, a
 ## `effectiveNav`
 
 The nav as it applies at the current breakpoint (additive since v0.7):
-the keys present in nav.style.mobile replace the desktop values they
-name, and nothing else changes. Everything downstream (navClasses,
-hostClasses, navSizeVars) then reads one resolved nav, so the pure
-functions never need to know about breakpoints.
+the keys present in nav.style.mobile among size, inset, tools and border replace the desktop values they
+name, its layout and overlay replace the nav's own, and nothing else changes. Everything downstream (navClasses,
+hostClasses, navSizeVars) then reads one resolved nav; navClasses and navSizeVars are also told the breakpoint,
+for the phone's own classes and the sizes nav.style.mobile and nav.logo set there.
 
 The choice is made here rather than with a CSS class for the reason
 ADR-0023 gives: urd-nav-mobile is also set by desktop content folding, so
 a class can never be the source of truth for what applies. `layout` and
 `overlay` sit in the same bag although they are not style fields, since
 nav.style.mobile is where the mobile overrides live.
-
-## `isFloating`
-
-The CSS classes on the nav element. Variant (floating pill) and hover
-style (additive since v0.6) yield extra classes only when they deviate
-from the default, so existing sites render unchanged.
 
 ## `subOpenMode`
 
@@ -237,6 +231,9 @@ the slide from the top.
 
 ## `navClasses`
 
+The CSS classes on the nav element. Variant (floating pill) and hover
+style (additive since v0.6) yield extra classes only when they deviate
+from the default, so existing sites render unchanged.
 `mobile` says the mobile breakpoint matches: only then do the phone's own classes join, the logo's place in the bar and how a link answers a touch (nav.style.mobile.logo and .press, additive from 0.7.3.25).
 
 ## `navClasses › const isBar`
@@ -306,8 +303,8 @@ urd-nav-scrolled, which nav.js toggles from the scroll state.
 ## `navSurface`
 
 Computes the appearance overrides from nav.style: `bg` is the finished
-background value for --urd-nav-bg (submenus and the mobile panel reuse
-the var), `blur: false` turns the blur off, `color` is the text color.
+background value for --urd-nav-bg (submenus and the mobile panel take
+theirs from navSubSurface), `blur: false` turns the blur off, `color` is the text color.
 With `image` (additive since v0.6) the background becomes the image
 with the color/opacity as a veil on top. An empty object = the CSS
 defaults apply.

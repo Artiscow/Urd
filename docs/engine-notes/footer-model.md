@@ -5,7 +5,7 @@ The full text of the longer comments in the engine's `footer-model.js`, in the f
 ## The module
 
 Pure footer logic: brand, columns, social links and baseline are built from
-site.footer and the page registry. No DOM - the module is importable in node
+site.footer, site.links and the page registry. No DOM building, and only whenSettled watches the page's elements - the module is importable in node
 and covered by tests/footer.test.mjs; the DOM building lives in footer.js.
 
 ## `const str`
@@ -35,7 +35,7 @@ The link to the site's privacy page (`footer.privacyPage`, a page id, additive f
 The call to action (CTA, additive since v0.6): normalized or null.
 `kind` is 'button' (button as a link) or 'newsletter' (email field). `big`
 gives the large centered variant. A button CTA requires button text; a
-newsletter requires at least a heading - otherwise the CTA is empty (null).
+newsletter requires a heading or button text - otherwise the CTA is empty (null).
 
 ## `footerSocial`
 
@@ -45,13 +45,13 @@ unless the footer leaves them out (`footer.links: false`).
 
 ## `footerLegal`
 
-The legal line's parts (the legal name, the organisation numbers, the VAT number and the representative), unless the footer leaves them out (`footer.legal: false`).
+The legal line's parts (the legal name, the organisation numbers, the VAT number or status and the representative), unless the footer leaves them out (`footer.legal: false`).
 On by default once filled, since most countries ask for them to be easy to find.
 
 ## `footerDesign`
 
 The design (footer.design, additive from v0.7): `chapters` numbers the
-link columns under a rule each, `split` gives the brand half the width on
+link columns and the contact column under a rule each, `split` gives the brand half the width on
 a tinted panel. '' for the standard footer and for anything unknown.
 
 ## `whenSettled`

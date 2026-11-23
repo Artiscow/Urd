@@ -1,5 +1,5 @@
 /**
- * Shared registry factory for every extensible type in Urd (blocks, section presets, backgrounds, animations); plugins use the same define APIs as the core.
+ * Shared registry factory for Urd's extensible types (blocks, section presets, backgrounds, animations, templates, commands); plugins use the core's define APIs.
  * Notes: docs/engine-notes/registry.md (Urd repository).
  */
 

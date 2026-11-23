@@ -5,7 +5,7 @@ The full text of the longer comments in the engine's `contact-checks.js`, in the
 ## The module
 
 The check digits of organisation and VAT numbers, one function per algorithm, keyed by the names the country profiles use (contact-profiles.js).
-Every function takes the normalised number (digits and letters only, no prefix unless the algorithm needs it) and answers true or false; the profile says whether a false refuses the number or only warns.
+Every function takes the normalised number (its separators removed, or the text in single spaces for an id kept raw, and no prefix unless the algorithm needs it) and answers true or false; the profile says whether a false refuses the number or only warns.
 The algorithms were verified against real published numbers on 20 October 2026 (tests/contact-checks.test.mjs holds them); where a register publishes no algorithm the profile marks the check as a warning.
 
 ## `mod11`
@@ -15,4 +15,4 @@ zero: the check for r = 0 ('0' or '1'); one: the check for r = 1 ('0', or null w
 
 ## `CHECKS › gb-vat`
 
-The United Kingdom: the first seven digits weighted 8 to 2 plus the two check digits, a multiple of 97, or for numbers from 100 upwards a remainder of 42 (the 9755 series) or 55 (accepted by python-stdnum, unexplained, so a valid number is never refused).
+The United Kingdom: the first seven digits weighted 8 to 2 plus the two check digits, a multiple of 97, or where the first three digits are 100 or more a remainder of 42 (the 9755 series) or 55 (accepted by python-stdnum, unexplained, so a valid number is never refused); a number that does not start with nine digits passes.

@@ -4,21 +4,6 @@
  */
 
 /**
- * @param {number} scrollY
- * @param {{
- *   sectionTop: number,   // the section's top in document px
- *   blockY: number,       // the block's desktop y (section-relative px)
- *   blockH: number,       // the block's height in px
- *   limitBottom: number,  // the release limit in document px: the bottom of
- *                         // the until section, or the own section's bottom
- *                         // without until
- *   offset: number        // desired distance from the window top
- * }} m
- * @returns {{ mode: 'static' } | { mode: 'fixed', top: number } | { mode: 'parked', y: number }}
- *   parked.y is section-relative px (may exceed the section height when
- *   until points at a later section; sections never clip).
- */
-/**
  * The bounding box of a group of pinned blocks: the group pins and releases as one unit, each member keeping its place inside the box.
  * @param {Array<{x: number, y: number, w: number, h: number}>} items
  * @returns {{x: number, y: number, w: number, h: number}}
@@ -83,6 +68,21 @@ export function nearestDock(box, view) {
   return `${vert}-${horz}`;
 }
 
+/**
+ * @param {number} scrollY
+ * @param {{
+ *   sectionTop: number,   // the section's top in document px
+ *   blockY: number,       // the block's desktop y (section-relative px)
+ *   blockH: number,       // the block's height in px
+ *   limitBottom: number,  // the release limit in document px: the bottom of
+ *                         // the until section, or the own section's bottom
+ *                         // without until
+ *   offset: number        // desired distance from the window top
+ * }} m
+ * @returns {{ mode: 'static' } | { mode: 'fixed', top: number } | { mode: 'parked', y: number }}
+ *   parked.y is section-relative px (may exceed the section height when
+ *   until points at a later section; sections never clip).
+ */
 export function stickyState(scrollY, m) {
   // Invalid or too-early limit (above the block's natural place): pinning
   // makes no sense, the block always stays where it is.

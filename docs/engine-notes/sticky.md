@@ -14,7 +14,7 @@ Two modes: 'scroll' (the default) pins the block at the window top when
 it is reached and releases at the limit, while 'screen' docks it at a
 fixed point in the window for the whole page. Blocks with the same
 sticky-group are pinned as one unit and keep their relative placement,
-instead of piling on top of each other.
+instead of piling on top of each other; on the phone, where this module docks to the screen alone, each block docks on its own.
 
 Pinning is active in the editor preview too, so the toggle does
 something visible where it is switched on. The conflict with drag
@@ -37,8 +37,8 @@ measurement.
 ## `dockInset`
 
 The menu's own band in the window, which the screen docks keep clear of:
-a sticky top bar's clearance (as nav.js measures it, with the page-wide
-announcement when the menu is a side column) at the top, and a side
+a sticky top bar's clearance (as nav.js measures it) at the top, else the page-wide
+announcement's height there (a side column, or no sticky menu), and a side
 column's width on its side. The menu stands above a docked block, so a
 block docked inside the band would be drawn behind it and could not be
 taken hold of. Read fresh at every call, since the bar changes height.
@@ -71,8 +71,8 @@ side menu is a column. If the menu has slid away (scroll behavior
 with the menu would flicker. The height is the menu's own clearance as
 nav.js measures it (--urd-nav-h): an announcement strip that scrolls
 away is not part of what stays on screen.
-A side column takes no top height itself, but an announcement fixed
-across the whole page above it does (--urd-announce-page-h).
+A side column, or a menu that is not sticky, takes no top height itself, but an announcement fixed
+across the whole page does (--urd-announce-page-h).
 
 ## `applySticky › const canvasRect`
 
@@ -99,7 +99,7 @@ and height are never touched.
 
 Parked overwrites top, so the stash must REMAIN: without it the
 next measurement would read the parking height as the block's
-natural place. parkY is section-relative; style.top is canvas-relative.
+natural place. state.y is section-relative; style.top is canvas-relative.
 
 ## `applySticky › if (state.y + box.h > sectionRect.height`
 

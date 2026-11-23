@@ -34,4 +34,4 @@ A drawing whose edge crosses itself has little area of its own to weigh; its mid
 
 ## `shapeToPoints`
 
-A shape's values handed over as points, for shaping by hand: a polygon's own corners, a point on each crest and in each dip of a waved edge, or eight round points; a point drawn out of a round shape is the sharp one.
+A shape's values handed over as points, for shaping by hand: a point on each crest and in each dip of a waved edge (a waved polygon's too), else a polygon's own corners, or eight round points; a point drawn out of a round shape is the first of them, sharper as the point is longer.

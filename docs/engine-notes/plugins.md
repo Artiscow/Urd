@@ -27,8 +27,10 @@ Unknown/unparseable requirements yield false: a plugin with an unintelligible re
 
 Staging layer around the Urd registries: register(Urd) defines against
 this, and commit() adopts the definitions only once all of register() has
-completed. pluginName marks the definitions (def.fromPlugin), so the
-menus can show plugin content in their own from-plugins sections.
+completed, all but an id the engine holds as its own or one already
+defined, each skipped with a warning. pluginName, when given, marks the
+definitions (def.fromPlugin), so the menus can show plugin content in
+their own from-plugins sections.
 
 ## `checkProvides`
 
@@ -38,14 +40,15 @@ A mismatch is never fatal (the plugin works), but it is logged so the plugin aut
 ## `pluginBlockDesigns`
 
 A plugin block's designs, for the editor's design picker (the design contract, additive): `designs: { prop, items: [{ id, label | labelKey, about | aboutKey, picture? }] }` on the block's def, `prop` naming the prop the block keeps its design in.
-The labels and descriptions are resolved with `translate` (the preview's ta, where the plugin's dictionary lives); an item keeps its id when it is a short word, unseen before, and its picture only when it is a picture file on the site itself.
-Fewer than two designs is no choice, and gives null.
+The labels and descriptions are resolved with `translate` (the preview's ta, where the plugin's dictionary lives); an item is kept only when its id is a short word, unseen before, and keeps its picture only when it is a picture file on the site itself.
+Fewer than two such designs is no choice, and gives null, as do a `prop` that is not a short name and `items` that is not a list.
 
 ## `const inFlight`
 
-Loads in flight per plugin id, so concurrent load requests (the preview
- sends urd-plugins on every draft change) share one fetch instead of
- importing the same module twice.
+The preparations in flight per plugin id. The list loads run one after
+another (listQueue), and an entry leaves the map as its preparation
+settles, so the map is empty whenever a list load starts and shares no
+fetch between two of them.
 
 ## `const io`
 
@@ -77,8 +80,9 @@ layered on top again.
 ## `preparePlugin`
 
 Fetches everything ONE plugin needs: manifest fetch → validation →
-requiresEngine check → dictionary and entry module in parallel. Nothing is
-registered here, so any number of plugins can be prepared concurrently.
+requiresEngine check → dictionary, pack languages and entry module in
+parallel. Nothing is defined in the registries here, so any number of
+plugins can be prepared concurrently.
 A failure at any step yields null with a clear log line; the site always
 lives on.
 A language pack's languages are registered for the editor and its preview alone (`packs`): a visitor's page reads its site language's words through initSiteLocale, so a site in one of the engine's own languages never loads the pack module.
@@ -94,16 +98,18 @@ arrives after initAdminLocale, so both registries are ready.
 
 ## `preparePlugin › all › packs && manifest.languages?.length`
 
-The language pack's languages are registered before anything
-renders, so the preview knows a draft-enabled pack language without
-re-reading the manifests. The pack module is fetched only here,
-never for a plugin without languages.
+The language pack's languages are registered as the plugin is
+prepared, before the drawing that follows the plugins' load, so the
+preview knows a draft-enabled pack language without re-reading the
+manifests. The pack module is fetched only here, never for a plugin
+without languages.
 
 ## `commitPlugin`
 
-Registers ONE prepared plugin: register(staging) → commit → provides
-check. Runs in list order, so id collisions between plugins resolve the
-same way regardless of which download finished first.
+Registers ONE prepared plugin: dictionary → register(staging) → commit →
+provides check; a plugin without an entry module (a pure language pack)
+stops after its dictionary. Runs in list order, so id collisions between
+plugins resolve the same way regardless of which download finished first.
 
 ## `loadPluginList`
 
@@ -115,7 +121,7 @@ from an earlier call, is never fetched again.
 ## `pageTypes`
 
 The block, background and animation types a page and the site's nav and footer use, read from anywhere they stand: a `blocks` list's types, a `layers` list's types, and the type of an `animation`, a `hover` and a section's `blocksHover`.
-The boot draws a page at once when every one of them is the engine's own, and waits for the plugins only when one is not.
+The boot loads the modules of those that are the engine's own as the page asks for them (loadCoreTypes), and waits for the plugins only when one is not the engine's own (needsPlugins).
 
 ## `needsPlugins`
 

@@ -33,11 +33,14 @@ Revalidates a served JSON file against the copy a page was rendered from
 (a parked copy, or the boot fetch of a prerendered or restored page).
 Resolves to the fresh page with its text and ETag when the server has a
 different version, or null when the copy was current (304, same ETag, or
-identical text). Without an ETag the request is unconditional and the
-text comparison decides.
+identical text) or the server answers with an error status. Without an
+ETag the request is unconditional and the text comparison decides, where
+the copy's text is given; without either, any answer that is not an
+error counts as fresh.
 
 ## `wirePrefetch`
 
-Attaches the intent listeners: hover (mouse), press (touch and pen, which
-fire before the click) and keyboard focus on any internal page link. Each
-page file is prefetched at most once per MAX\_AGE\_MS window.
+Attaches the intent listeners: hover (any pointer over the link), press
+(any pointer down, which fires before the click) and focus on any internal
+page link that opens in this tab. Each page file is prefetched at most
+once per MAX\_AGE\_MS window.

@@ -116,7 +116,7 @@ export async function prefetchPage(file, { fetchFn = fetch, storage, now } = {})
 }
 
 /**
- * Revalidates a served JSON file against the copy a page was rendered from; null when that copy is current (304, the same ETag or identical text).
+ * Revalidates a served JSON file against the copy a page was rendered from; null when that copy is current (304, same ETag, identical text) or on an error status.
  * @returns {Promise<{page: object, text: string, etag: string|null}|null>}
  */
 export async function revalidateFile(file, etag, { fetchFn = fetch, text = null } = {}) {

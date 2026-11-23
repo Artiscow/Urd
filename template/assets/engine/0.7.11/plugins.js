@@ -96,7 +96,7 @@ const KINDS = [
 ];
 
 /**
- * A staging layer over the Urd registries: `staged` collects register()'s definitions, marked def.fromPlugin = pluginName, and commit() adopts them.
+ * A staging layer over the registries: `staged` collects register()'s definitions, marked def.fromPlugin = pluginName; commit() adopts those with free ids.
  * @returns {{staged: object, commit: () => string[], defined: () => Record<string, string[]>}}
  */
 export function createStagedUrd(Urd, pluginName = null) {
@@ -199,7 +199,7 @@ export function pluginBlockDesigns(def, translate) {
 const loadedPlugins = new Set();
 
 /**
- * Each plugin's preparation in flight, by id, so overlapping load requests share one fetch and import.
+ * Each plugin's preparation in flight, by id; it is empty whenever a list load starts, since the list loads run one after another (listQueue).
  */
 const inFlight = new Map();
 
@@ -338,12 +338,11 @@ export async function loadPluginById(Urd, engineVersion, id) {
   await loadPluginList(Urd, engineVersion, [id]);
 }
 
-/** List loads run one after another: two overlapping lists (a draft toggled
- *  while a load is in flight) would otherwise commit in completion order. */
+/** List loads run one after another, so two overlapping lists (a draft toggled while a load is in flight) commit in the order they were asked for. */
 let listQueue = Promise.resolve();
 
 /**
- * Loads a list of plugin ids: all fetched in parallel, then registered one by one in list order; an id already loaded or in flight is not fetched again.
+ * Loads a list of plugin ids: all fetched in parallel, then registered one by one in list order; an id already loaded is not fetched again.
  * @param {{packs?: boolean}} [options] `packs: false` on a visitor's page (preparePlugin)
  */
 export function loadPluginList(Urd, engineVersion, ids, { packs = true } = {}) {

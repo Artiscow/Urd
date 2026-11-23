@@ -18,8 +18,7 @@ let activeMode = null;
  */
 export function resolveThemeMode(scheme, stored, prefersDark) {
   if (stored === 'light' || stored === 'dark') return stored;
-  // Without an alt theme only the main mode exists; scheme is then only
-  // used as the answer.
+  // Else the OS preference, with an alt theme or without; `scheme` is not read here.
   return prefersDark ? 'dark' : 'light';
 }
 

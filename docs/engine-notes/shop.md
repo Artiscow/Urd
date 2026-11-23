@@ -10,10 +10,10 @@ title, price, qty, variant?, image?, min?, max?}; key identifies product plus va
 choice, so the same product in two sizes is two lines, and min and max are the
 product's quantity limits, held per line. The pure helpers
 never mutate their input and are tested in tests/shop.test.mjs; the
-blocks (blocks/product.js and blocks/cart.js) do the rendering.
+blocks (blocks/product.js, blocks/cart.js and blocks/checkout.js) and the menu's cart button do the rendering.
 
 The core is gateway free: the basket lives with the visitor (localStorage),
-and the order is sent as a form at checkout. No network calls here.
+and the checkout sends the order as JSON to the block's endpoint or as a mail draft (the optional payment layer, ADR-0028, adds the providers). No network calls here.
 
 ## `quantityLimits`
 
@@ -60,12 +60,12 @@ language (i18n at the caller); empty fields are left out.
 ## `buildOrderPayload`
 
 Payload for an optional endpoint: the contact fields plus the order lines
-as data, and the way to pay the buyer chose among the block's instructions
+as data, their total, and the way to pay the buyer chose among the block's instructions
 (`payment`, additive from 0.7.28.4) when there is one.
 
-## `const listeners`
+## `onCartChange`
 
-Basket listener for the blocks: calls handler on urd-cart-change and on
-storage changes from other tabs. A re-render gives a new block element, and
+Basket listener for the blocks and the menu's cart button: calls handler on urd-cart-change and on
+a storage change from another tab that touches the basket (its key, or the whole storage cleared). A re-render gives a new block element, and
 the listeners of detached elements are swept at the next registration, so
 listeners never stack up per draft message (the same lesson as renderNav).

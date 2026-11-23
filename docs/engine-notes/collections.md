@@ -22,12 +22,12 @@ are sorted newest first.
 
 ## `dateBadge`
 
-Date badge parts from an ISO date: {day: '19', month: 'jul', year: '2026'}.
+Date badge parts from a YYYY-MM-DD date: {day: '19', month: 'jul', year: '2026'}, the day without a leading zero.
 The month name follows the visitor language (Intl via i18n.js, nb without init).
-An invalid or missing date gives null (the view drops the badge).
+A missing date, another shape or a month outside 1 to 12 gives null (the view drops the badge); the day itself is not checked.
 
 ## `getCollection`
 
-Fetches a collection: the draft from the editor wins (preview), otherwise the
+Fetches a collection: the draft from the editor wins (the preview and the draft view), otherwise the
 server file. null for a missing or invalid file - the block shows its empty
 state, never a crash.

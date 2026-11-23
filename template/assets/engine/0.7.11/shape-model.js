@@ -241,7 +241,7 @@ export function outlineMiddle(pts) {
 }
 
 /**
- * A shape's values as points to shape by hand: one on each crest and dip of a waved edge, a polygon's corners, or eight round ones, a drawn point the sharp one.
+ * A shape's values as points to shape by hand: one on each crest and dip of a waved edge, else a polygon's corners, or eight round ones, a drawn point's sharper.
  * @param {ReturnType<typeof shapeOf>} shape
  * @returns {Array<{x: number, y: number, size: number, style: string}>}
  */

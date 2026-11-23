@@ -98,7 +98,7 @@ export function siteJsonLd(site, origin) {
 }
 
 /**
- * Visitor measurement (`site.analytics`): appends Cloudflare Web Analytics' beacon script once, when a token is set; the preview never calls this.
+ * Visitor measurement (`site.analytics`): appends Cloudflare Web Analytics' beacon once, when a token is set; neither the preview nor the draft view calls this.
  * @param {object} site site.json (lifted)
  */
 export function mountAnalytics(site) {

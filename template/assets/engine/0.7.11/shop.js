@@ -309,10 +309,12 @@ export function shownMethods(payments) {
   return (payments?.manual ?? []).filter((method) => methodText(method));
 }
 
-/**
- * `onCartChange` calls handler on urd-cart-change and on a basket change in another tab; detached elements' listeners are swept at the next call.
- */
+/** The listeners onCartChange has set, each its element and the controller that removes it. */
 const listeners = new Set();
+
+/**
+ * Calls handler on urd-cart-change and on a basket change in another tab; detached elements' listeners are swept at the next call.
+ */
 export function onCartChange(el, handler) {
   for (const entry of listeners) {
     if (!entry.el.isConnected) {

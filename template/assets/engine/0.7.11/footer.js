@@ -65,7 +65,7 @@ function buildSocial(social) {
   return row;
 }
 
-/** A row of links (baseline links or the doormat row). */
+/** A row of links (the baseline's links, the doormat row, or the simple shape's privacy link). */
 function buildLinks(links, className) {
   const el = document.createElement('nav');
   el.className = className;
@@ -274,7 +274,7 @@ export function renderFooter(site, host, pageId) {
   const legal = footerLegal(site);
   const privacy = footerPrivacyLink(site);
 
-  // On but with no content: a visible footer without any text, placeholder or page title until something is entered in the Footer panel.
+  // On but empty: no text, placeholder or page title until it has rich content (hasRichFooter), text, contact details, a legal line or a privacy link.
   if (!rich && !baseline.length && !contact && !legal && !privacy) {
     host.style.display = '';
     const inner = document.createElement('div');

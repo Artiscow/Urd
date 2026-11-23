@@ -21,7 +21,7 @@ classes and duration/delay as CSS variables.
 Stagger is a GROUP entrance animation (section level only): it does not
 animate the section itself, but releases the section's card blocks staggered
 from ONE shared trigger. pattern: 'sequence' (one step per card), 'columns'/
-'rows' (cards on the same x/y arrive together, the wave moves sideways) or
+'rows' (cards on the same x/y arrive together, the wave moves sideways or down) or
 'center' (outwards from the middle of the row). delay is a shared base delay
 (additive since v0.6; older data lacks the field and reads as 0).
 
@@ -65,19 +65,19 @@ The entrance animation plays when the element becomes visible - also when it is
 already visible at load (it then fades/slides in just after the page appears, as
 "Fade in" should). The IntersectionObserver callback runs only after the start
 state (opacity 0 from CSS) has been painted, so the transition plays cleanly.
-Elements scrolled to later play when they enter the viewport.
+Elements scrolled to later play once 15 % of them is in the viewport, a tall one once its visible part covers half the viewport.
 (In the editor preview the END state is shown immediately - see applyAnimation
 - so the observer is only active for visitors and on the published page.)
 
 ## `entranceObserver › const tall`
 
 Elements much taller than the viewport (tall sections) never reach a 15 % visible ratio.
-They trigger instead once the visible part covers more than half the viewport, so the content is not left at opacity 0 forever.
+They trigger instead once the visible part covers half the viewport or more, so the content is not left at opacity 0 forever.
 
 ## `applyStagger`
 
-Stagger (group): find the section's card blocks (those without their own
-animation), give them an entrance effect + a staggered delay by pattern, and
+Stagger (group): find the section's card blocks (those without an entrance of their own,
+decor and spaces left out), give them an entrance effect + a staggered delay by pattern, and
 release them together from the section's visibility. In preview/reduced-motion
 the end state is shown at once.
 

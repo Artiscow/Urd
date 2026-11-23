@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.13): the notes beside the code corrected
+
+- [ ] Every page of the site opens and draws as before, on the desktop and on a phone, the menu, the basket, the pinned blocks and the footer included
+- [ ] The editor's preview and a page from an older Urd open as before
+
 ### Test batch (0.7.0.95): the menu, the page and its background together
 
 - [ ] On the deployed site, on a phone (or a desktop browser's slowed phone), the menu, the first section's content and its background appear in the same moment on the front page, kontakt and om-oss

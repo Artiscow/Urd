@@ -590,13 +590,13 @@ export function renderNav(site, host, pageId) {
     setMobileOpen(!isMobileOpen());
   }, { signal });
 
-  /** Every opener with its submenu, at both levels, in document order (a parent before its children). */
+  /** Every opener with its submenu, at every level, in document order (a parent before its children). */
   const subs = [];
   const setOpen = (entry, open) => {
     entry.li.classList.toggle('open', open);
     entry.button.setAttribute('aria-expanded', String(open));
     markLink(entry);
-    // A closing submenu takes its own open second level with it, so the panel never reopens with a stale inner level; a headed group stays as it is.
+    // A closing submenu takes its open inner levels with it, so the panel never reopens with a stale inner level; a headed group stays as it is.
     if (!open) {
       for (const inner of subs) {
         if (inner !== entry && entry.li.contains(inner.li) && inner.li.classList.contains('open') && !isFixed(inner)) setOpen(inner, false);
@@ -862,7 +862,7 @@ export function renderNav(site, host, pageId) {
     setScrollClear();
   }
 
-  // The room a jump to a spot leaves above it, scroll-padding-top in base.css; unlike --urd-nav-h it follows the scroll shrink.
+  // The room a jump to a spot leaves above it, scroll-padding-top in base.css; unlike --urd-nav-h-base it follows the scroll shrink.
   function setScrollClear() {
     if (sheet?.dialog.open || isTucked) return;
     // Written only when it changes: the observer reports every frame of the shrink.
@@ -1298,8 +1298,8 @@ function launcherTitle(model) {
 }
 
 /**
- * The link launcher's opener: a grid button with the link grid, opened as an anchored popover where the browser supports it, else as a disclosure (ADR-0011).
- * @param {Array<object>} links The model from launcherLinks
+ * The link launcher's opener: a button (the owner's mark, an icon or the grid) with the link grid, an anchored popover where supported, else a disclosure.
+ * @param {object} model The model from launcherModel
  * @param {AbortSignal} signal
  * @returns {{el: HTMLElement, btn: HTMLButtonElement, isOpen: () => boolean, close: () => void}}
  */

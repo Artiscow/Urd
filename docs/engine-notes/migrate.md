@@ -9,12 +9,15 @@ Stepwise version lifting - Urd's core invariant (see docs/adr/0005).
 All data (blocks, background layers, animations, sections) carries
 `version`, and every type definition states `version` + `migrations`
 where migrations[n] lifts exactly v(n) → v(n+1) as a pure function
-(props in, props out).
+(props in, props out). The page files and site.json carry `schemaVersion`,
+lifted the same way by the file-level migrations here (pageMigrations,
+siteMigrations), which reshape the sections too.
 
 Lifting happens in memory at load time - the files on disk are written
-only at the next publish. On an unknown type or a missing migration,
-data is NEVER dropped: the entry is marked as a placeholder and the
-original is kept.
+only at the next publish. On an unknown type, a missing migration or a
+version newer than the engine, data is NEVER dropped: the entry is marked
+as a placeholder and the original is kept, and a file with a step missing
+comes back untouched.
 
 ## `lift › const from`
 
@@ -55,7 +58,7 @@ The room above a section's first block and below its last on the phone, in px: t
 The room above a section's first block and below its last on the phone, in px: the section's own (`size.mobilePadTop`, `size.mobilePadBottom`, additive from 0.7.3.26), else MOBILE\_ROOM, never under 0.
 Pure function, tested.
 
-## `const V1_FLOW_PAD (2)`
+## `const V1_FLOW_PAD`
 
 The flow's top padding in the old mobile format: materialization
  measured y from the top of the surface, that is including the padding,
@@ -65,8 +68,8 @@ The flow's top padding in the old mobile format: materialization
 
 Lifts a block's frames.mobile from the v1 shape (a full frame
 {x, y, w, h}) to the row-grid placement (ADR-0019). A placement already
-in the new shape (without y/h) is returned untouched, and a byte-equal
-copy of the desktop frame yields null: that was materialization's
+in the new shape (without y/h) is returned untouched, and a copy of the
+desktop frame (the same x, y, w and h) yields null: that was materialization's
 fallback for blocks outside the flow, never a hand-placed position.
 Used by the page migration AND by template insertion
 (templates-model.js), which inserts stored payloads outside the page lift.
@@ -74,21 +77,21 @@ Used by the page migration AND by template insertion
 ## `const V2_BLOCK_TYPES`
 
 Core block types were Norwegian before v3; data contracts use English
-identifiers (ADR-0021). Plugin-owned types (kalender, kart, skjema) are
-deliberately absent: old plugin folders in user repos keep defining the
+identifiers (ADR-0021). The old plugin ids of three core types (kalender,
+kart, skjema: the calendar, the map and the form) are deliberately absent: old plugin folders in user repos keep defining the
 old ids forever, so those are resolved through registry aliases instead.
 
 ## `const V3_PRESET_IDS`
 
-Core section preset ids renamed in v4 (ADR-0021). Plugin preset ids
-(hva-skjer, finn-oss, kontaktskjema) are deliberately absent; they resolve
-through registry aliases like the plugin block types.
+Core section preset ids renamed in v4 (ADR-0021). The old plugin preset ids
+of three core presets (hva-skjer, finn-oss, kontaktskjema) are deliberately absent; they resolve
+through registry aliases like the old plugin block types.
 
 ## `liftContractTokens`
 
-Renames contract tokens (block types, background layer types and section
-theme roles) in place. Accepts a section-like object ({blocks, background,
-theme}) or a bare block array. Used by pageMigrations[2] and by template
+Renames contract tokens (block types, background layer types, section
+theme roles and section preset ids) in place. Accepts a section-like object ({blocks, background,
+theme, preset}) or a bare block array. Used by pageMigrations[2] and [3] and by template
 insertion (templates-model), which inserts stored payloads outside the
 page lift.
 
@@ -100,15 +103,15 @@ Accepts a section-like object or a bare block array; used by pageMigrations[7] a
 
 ## `storedSize`
 
-A block's stored size as the steps up to page v7 read it: inside SIZE,
-else 1, and always 1 for the frame-sized types. The steps keep their
+A block's stored size as the steps up to page v7 read it: held inside SIZE,
+1 where it is not a number above 0, and always 1 for the frame-sized types. The steps keep their
 own reading, apart from blockSize, so they lift data the same way
 whatever the bounds a block's text gives its size today.
 
 ## `liftCalendarScale`
 
 The calendar's own size (`props.scale`, 0.7.20.1 to 0.7.21.4) becomes the
-block-level `size` every block type takes (ADR-0025 decision 6), inside
+block-level `size` every block type but the frame-sized ones takes (ADR-0025 decision 6), inside
 its bounds; a size of 1 leaves no field.
 Used by the page migration AND by template insertion (templates-model.js),
 which inserts stored payloads outside the page lift.
@@ -144,8 +147,9 @@ gallery, for data known to be from before page v7.
 
 1 -> 2 (synced mobile model, ADR-0019): frames.mobile changes shape
 from a full frame {x,y,w,h} to a partial row-grid placement
-{x,w,row,rows}, the section mode 'manual' is retired, and decor blocks
-get the new hideMobile field that takes over mobile hiding. Pre-v1 the
+{x,w,row,rows}, the section mode 'manual' is retired, decor blocks
+get the new hideMobile field that takes over mobile hiding, and the
+attention reasons get English ids (V1\_REASONS). Pre-v1 the
 visual change (row quantization ±8 px) is accepted (ADR-0005).
 
 ## `pageMigrations › 3`

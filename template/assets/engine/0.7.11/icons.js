@@ -3,7 +3,7 @@
  * Notes: docs/engine-notes/icons.md (Urd repository).
  */
 
-/** Icons are stroked by default; a few brand marks are filled shapes. */
+/** Icons are stroked by default; those marked `fill` (the X and GitHub marks) are filled shapes. */
 const STROKE = 'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
 const FILL = 'fill="currentColor" stroke="none"';
 

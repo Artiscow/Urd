@@ -12,7 +12,7 @@ Submenus follow the WAI-ARIA "disclosure navigation" pattern (not
 menubar): real buttons with aria-expanded/aria-controls, natural Tab
 order and no role="menu". An item with both its own target and a submenu
 renders as a link plus its own arrow button, so the page stays reachable.
-The submenu has two levels: a child's own submenu opens beside the panel,
+The submenus go three levels deep: a child's own submenu opens beside the panel,
 or stands as a headed group under the child when the submenu is laid out
 in columns or as the flyout. The mobile menu (the burger) is a non-modal
 disclosure of the same list, styled by body.urd-mobile (the breakpoint is
@@ -41,8 +41,8 @@ Holds a menu that hides on scroll in view while a jump to a spot on the page run
 ## `const narrowMq`
 
 Side column on narrow windows: below 900px the menu renders as a REGULAR
-top bar (effective variant bar) with horizontal items; the burger only
-appears at the mobile breakpoint, as for the bar variant. A separate
+top bar (effective variant bar) with horizontal items; the burger
+appears as for the bar variant, at the mobile breakpoint or when the items do not fit the width (content folding). A separate
 break edge independent of the mobile breakpoint AND of the editor's
 viewport choice, so it also works in the preview's desktop mode.
 
@@ -67,7 +67,7 @@ The other modes tuck the menu above the top edge as a fixed bar (tuckNav below),
 Narrow windows: the side variant renders as a regular top bar
 (effective variant bar); the breakpoint listener above re-renders on
 crossing. At the mobile breakpoint the overrides in nav.style.mobile
-replace the desktop values they name (effectiveNav), so the appearance
+replace the desktop values they name (effectiveNav, and navSizeVars for the sizes), so the appearance
 is computed from one resolved nav.
 A tucked menu is always a plain top bar, out of the flow and without the scroll behaviours and the clear top: the modes below the bar's variant have no meaning above the edge.
 
@@ -153,7 +153,7 @@ a menu that scrolls away is only ever seen in the top zone.
 
 Appearance (nav.style, additive since v0.5): background color with
 opacity, blur behind, and its own text color. The background is set as
-a CSS var so submenus and the mobile panel inherit the same surface;
+a CSS var on the nav, while submenus and the mobile panel draw their own surface (subBg below);
 without style the CSS default applies.
 
 ## `renderNav › const navBg`
@@ -173,7 +173,8 @@ would stop at the li).
 
 The submenu and mobile panel get their own surface: by default only the
 color veil, never the background image (subImage turns the image on).
-With a layer background, submenu/mobile keep the veil default (the layer
+With a layer background, submenu/mobile take the stack's color layers as one veil
+(navLayerVeil), or the CSS default without any (the layer
 stack applies to the main bar).
 
 ## `renderNav › const size`
@@ -200,10 +201,10 @@ It goes in before a kept full-screen menu, where a new one would follow it; with
 
 ## `renderNav › const tools`
 
-The tool cluster at the far right: the launcher, the cart and the
-light/dark toggle in the owner's own order (nav.style.tools.order), then
-the burger, which is the mobile menu's opener and always ends the row.
-An empty cluster is hidden in CSS (:empty).
+The tool cluster at the far right, or at the start with nav.style.tools.side 'start': the launcher, the cart, the
+light/dark toggle and the site's links in the owner's own order (nav.style.tools.order), then
+the burger, which is the mobile menu's opener and ends the row, or begins it with the cluster at the start outside the side column.
+A cluster with nothing but the burger takes no room on desktop (urd-nav-tools-none in base.css).
 
 ## `renderNav › const launcher`
 
@@ -228,7 +229,7 @@ the button's name.
 
 ## `renderNav › const phoneMenu`
 
-The phone menu's own look: where its text stands, the submenu arrow, and whether the bar keeps its tools beside the full-screen menu (the classes from navClasses carry the first two to the CSS).
+The phone menu's own look: where its text stands, the submenu arrow, and whether the bar keeps its tools beside the full-screen menu (the classes from navClasses carry all three to the CSS).
 
 ## `renderNav › if (sheet`
 
@@ -255,9 +256,9 @@ hover states that take an extra tap to dismiss. nav.style.subOpen
 decides whether hover opens at all and whether leaving closes
 (subOpenMode); click always works.
 In the side column the submenus are accordions in the flow: there,
-hover opens but never closes per item - closing would shorten the
-column under the pointer and cause misclicks. The accordions close
-only when the pointer leaves the whole menu.
+hover opens but never closes per item - closing would move the
+items under the pointer and cause misclicks. The accordions close
+together when the pointer leaves the whole menu, where leaving closes (subOpenMode).
 
 ## `renderNav › buildItem › if (subMode === 'collapsed'`
 
@@ -304,7 +305,7 @@ clearance in base.css (menu out of the flow) and the chrome parking in
 preview read it. The distance is measured from the host's top to the
 nav's bottom edge (offsetTop includes the pill's top gap and a sticky
 announcement); an announcement that scrolls away is left out, since the
-menu alone is what stays. The column variant takes no top height.
+menu alone is what stays. The column variant takes no top height but a strip fixed across the whole page (pageH below).
 --urd-nav-h-base holds the unshrunk height: the editing chrome parks
 against that one, so the section handles stand still while the scroll
 shrink runs under them.
@@ -331,7 +332,7 @@ content stands over no section, so the root reads it as nothing.
 ## `renderNav › setScrollClear`
 
 The room a jump to a spot leaves above it, which base.css gives the page as scroll-padding-top.
-Unlike --urd-nav-h it follows the scroll shrink, so a spot reached mid-page lands right under the compact menu.
+Unlike --urd-nav-h-base it follows the scroll shrink, so a spot reached mid-page lands right under the compact menu.
 
 ## `renderNav › let foldNeeds`
 
@@ -376,7 +377,7 @@ it leaves TUCK\_LEAVE after the pointer has left the bar. `ghost`: the
 pointer at the edge shows the bar faint (urd-nav-peek), and it turns
 solid once the pointer has rested on it for GHOST\_SETTLE or clicked it.
 `tab`: a pull tab hangs below the edge at all times and toggles the bar;
-the pointer resting on the tab brings it in too. Touch has no hover, so
+the pointer entering the tab brings it in too. Touch has no hover, so
 the tab is drawn for every mode there (ADR-0011: the menu stays
 reachable). Focus inside the bar brings it in in every mode, and focus
 leaving it lets it go.
@@ -384,7 +385,7 @@ leaving it lets it go.
 ## `tuckNav › let tab`
 
 The pull tab: the owner's own mark, word and colours, or the burger
-lines in the menu's surface. Drawn for the tab mode, and on a device
+lines on the submenus' default surface. Drawn for the tab mode, and on a device
 without hover for the other modes as well.
 
 ## `tuckNav › host.addEventListener('keydown')`
@@ -451,8 +452,8 @@ A name too long for its tile is cut with an ellipsis, the whole name then in the
 
 ## `buildLauncher`
 
-The link launcher's opener (nav.launcher): a drawn grid button in the tool
-cluster with the link grid under it. With the Popover API and anchor
+The link launcher's opener (nav.launcher): a button in the tool
+cluster (the owner's mark, a chosen icon or the drawn grid) with the link grid under it. With the Popover API and anchor
 positioning the grid opens in the top layer, placed by CSS under the
 button with the browser flipping it away from the viewport edge;
 otherwise it is the submenu's disclosure pattern, a box positioned

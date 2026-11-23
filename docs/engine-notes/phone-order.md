@@ -7,7 +7,7 @@ The full text of the longer comments in the engine's `phone-order.js`, in the fi
 The order of a section's blocks on the phone, in the row grid (ADR-0019): pure, node-tested (tests/phone-order.test.mjs).
 The section's rule (`phoneOrder`) reads its blocks top first, by their top on the desktop (or the key `mobileOrder` a preset gives them), or column by column where blocks stand beside each other on the desktop, the left or the right column first.
 A block's exception (`phonePlace`) puts it directly before or after another block, wherever the rule puts that one.
-A stack (`phoneStacks`) holds blocks that read as one, standing where the first of them in the rule's order stands, its first block's exception moving it whole; a custom order (`phoneList`) holds the order as listed, a block missing from it joining where the rule and the exceptions put it.
+A stack (`phoneStacks`) holds blocks that read as one, standing where the first of them in the rule's order stands, its first block's exception moving it whole; a custom order (`phoneList`) holds the order as listed, over the exceptions, a block missing from it joining after the block before it in the order the rule and the exceptions give.
 A block the owner took out of the rule's columns (`phoneLoose`) reads where the rule puts it, on its own: the column it stands in on the desktop no longer holds it.
 The editor's moves (the list, the arrows) are reckoned in phone-moves.js.
 

@@ -69,7 +69,7 @@ export function followsContent(block) {
 }
 
 /**
- * Whether a terms or text block is in the questions design (doc-look.js): its rows fold out, so its height is the closed rows', and an open part is view state.
+ * Whether a terms or text block is in the questions design (doc-look.js): its rows fold out, the first open, so its height is the rows' as drawn.
  * @param {{type?: string, props?: object}} block
  * @returns {boolean}
  */

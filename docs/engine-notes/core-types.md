@@ -28,7 +28,7 @@ How long a page waits for its blocks' readying at most: as long as a calendar's 
 ## `prepareBlocks`
 
 Readies what the engine's own blocks on a page draw with beyond their module, before the page is drawn (CORE\_BLOCK\_READY: a calendar's parts, its designs, and its feeds asked for), so such a block stands in its own design from the page's first drawing.
-It runs beside the page's types (loadCoreTypes) and settles once they are readied or after `wait`, whichever comes first.
+It runs beside the page's types (loadCoreTypes) and settles once its blocks are readied or after `wait`, whichever comes first.
 Only a core id is readied, never an old one, which a plugin may still define and draw (ADR-0021); a block hidden on the visitor's screen is left until it shows, and a block whose readying fails is drawn as it is without it.
 
 ## `reserveCoreTypes`
