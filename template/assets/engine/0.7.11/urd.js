@@ -12,7 +12,7 @@ import { renderFooter } from './footer.js';
 import { whenSettled, FOOTER_WAIT_MS } from './footer-model.js';
 import { renderToTop } from './totop.js';
 import { coreAnimations } from './animations/core.js';
-import { loadCoreTypes, reserveCoreTypes, prepareBlocks, pageBlocks } from './core-types.js';
+import { loadCoreTypes, reserveCoreTypes, prepareBlocks, pageBlocks, READY_WAIT_MS } from './core-types.js';
 import { loadPlugins, loadPluginList, applyPluginSiteLocales, pluginBlockDesigns, pageTypes, needsPlugins, engineVersionOf } from './plugins.js';
 import { setCollectionsDraft, draftHasKind } from './collections.js';
 import { initSticky, refreshSticky } from './sticky.js';
@@ -691,6 +691,24 @@ function enablePreview(state, opts) {
 }
 
 /**
+ * Asks for a background's image layer pictures ahead of its drawing, as such a layer stays hidden until its picture is in; resolves decoded or at READY_WAIT_MS.
+ * @param {object|undefined} background
+ * @returns {Promise<void>}
+ */
+function askLayerPictures(background) {
+  const asked = [];
+  for (const layer of Array.isArray(background?.layers) ? background.layers : []) {
+    if (layer?.type !== 'image' || !isSafeImage(layer.props?.src)) continue;
+    const img = new Image();
+    img.setAttribute('fetchpriority', 'high');
+    img.src = layer.props.src;
+    asked.push(img.decode().catch(() => {}));
+  }
+  if (!asked.length) return Promise.resolve();
+  return Promise.race([Promise.all(asked), new Promise((resolve) => setTimeout(resolve, READY_WAIT_MS))]).then(() => {});
+}
+
+/**
  * Boots the engine.
  * @param {{root: HTMLElement, nav?: HTMLElement}} opts
  */
@@ -743,8 +761,7 @@ export async function boot(opts) {
         const text = await res.text();
         return { page: JSON.parse(text), text, etag: res.headers.get('etag') };
       });
-  // The rejection is consumed here; the failure is handled where the
-  // promise is awaited.
+  // The rejection is consumed here; the failure is handled where the page file is lifted (pageLifted).
   pagePromise.catch(() => {});
   const engine = await enginePromise;
   // The plugins: in the preview the urd-plugins message loads them; for a visitor they load beside the page, awaited only for a type no core module defines.
@@ -756,38 +773,37 @@ export async function boot(opts) {
   document.body.classList.toggle('urd-mobile', viewport === 'mobile');
   if (preview) document.body.classList.add('urd-preview');
 
-  // The nav is drawn with the page id, its core types loaded first; the preview loads every core type and the section presets, which the editor offers.
+  // The page file is lifted to the current format in memory as it arrives; a page file that cannot be loaded gives an empty page, never a crash.
+  const pageLifted = pagePromise.then((loaded) => {
+    const lifted = liftPageFile(loaded.page, rawSite);
+    served.page = { text: loaded.text, etag: loaded.etag };
+    return lifted;
+  }).catch(() => {
+    console.warn(`Urd: could not load page file '${entry.file}' - rendering an empty page`);
+    return { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
+  });
+  // The preview loads every core type and the section presets; a visitor's page asks for its menu's, footer's and page's types as soon as each is known.
   if (preview) {
     await Promise.all([loadCoreTypes(Urd, null, { all: true }), import('./sections/presets.js').then(({ registerSectionPresets }) => registerSectionPresets(Urd))]);
   } else {
-    // The footer's types are asked for at once, beside the page file, and the page's own load below waits for them with its own.
     loadCoreTypes(Urd, pageTypes(site.footer));
-    await loadCoreTypes(Urd, pageTypes(site.nav));
   }
+  const navTypes = preview ? null : loadCoreTypes(Urd, pageTypes(site.nav));
+  // With the page file read, its types, its blocks' readying and the first section's pictures are asked for together, so menu, page and background draw as one.
+  const pageReady = pageLifted.then((lifted) => {
+    if (!Array.isArray(lifted.sections)) lifted.sections = [];
+    const readied = prepareBlocks(pageBlocks(lifted, site.footer), { site, preview, viewport });
+    const pictures = preview ? null : askLayerPictures(lifted.sections[0]?.background);
+    return Promise.all([preview ? null : loadCoreTypes(Urd, pageTypes(lifted, site.footer)), readied, pictures]).then(() => lifted);
+  });
+  await navTypes;
   if (!preview && needsPlugins(pageTypes(site.nav), Urd)) await pluginsLoaded;
-  if (opts.nav) renderNav(site, opts.nav, entry.id);
   // The shared footer is created here as an element of its own, and joins the document after the main content once the page is drawn (below).
   opts.footer = document.createElement('footer');
   opts.footer.id = 'urd-footer';
-  // The site's «Back to top» button, as site.layout.toTop sets it (totop.js).
-  renderToTop(site);
 
-  // The page file is lifted to the current format in memory; a page file that cannot be loaded gives an empty page, never a crash.
-  let page;
-  try {
-    const loaded = await pagePromise;
-    page = liftPageFile(loaded.page, rawSite);
-    served.page = { text: loaded.text, etag: loaded.etag };
-  } catch {
-    console.warn(`Urd: could not load page file '${entry.file}' - rendering an empty page`);
-    page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
-  }
-  if (!Array.isArray(page.sections)) page.sections = [];
-  // A visitor's page loads the core types it and the footer use; prepareBlocks readies what the blocks draw with beyond their module for the first drawing.
-  const readied = prepareBlocks(pageBlocks(page, site.footer), { site, preview, viewport });
-  if (!preview) await loadCoreTypes(Urd, pageTypes(page, site.footer));
+  const page = await pageReady;
   if (!preview && needsPlugins(pageTypes(page, site.footer), Urd)) await pluginsLoaded;
-  await readied;
   if (drafts) setCollectionsDraft(drafts.collections);
   document.title = pageTitle(site, page, entry);
   // SEO metadata (description, canonical, og: fields, JSON-LD) is set only outside the preview, and the analytics mounted only where no drafts were read.
@@ -806,6 +822,9 @@ export async function boot(opts) {
 
   const state = { page, site, engine, viewport };
 
+  // The menu, the site's «Back to top» button (totop.js) and the page are drawn in one task, so they stand in the same frame.
+  if (opts.nav) renderNav(site, opts.nav, entry.id);
+  renderToTop(site);
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport, arriving: true });
   // A visitor's footer joins once no block on the page is busy fetching its content, or after FOOTER_WAIT_MS (whenSettled); the preview's joins at once.
   if (preview) opts.root.insertAdjacentElement('afterend', opts.footer);

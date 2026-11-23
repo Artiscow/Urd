@@ -461,8 +461,6 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
     Done when: the plugin README and the guides say what a plugin can do with the owner's rights, the release workflow runs in a protected environment, and a new {@html} of a variable fails a test; a site whose GitHub App is installed on its repository alone logs in, publishes, saves drafts, shows History and checks for updates, and its login still publishes more than eight hours later without logging in again.
   - [ ] 0.7.37.6 Unused code: the six unused exports (two checked against the plugin API first), the dictionary keys no code reads, and app.css's unused rules (U2 to U4).
     Done when: the report's sweeps find none of them, and the tests stand green.
-  - [ ] 0.7.37.7 The menu, the page's content and its backgrounds appear together: found while testing on 23 November 2026, the menu's words show first, the rest of the page after them, and the sections' backgrounds last. Taken up once the modules every page loads have their short comments; the cause is measured first (the order the boot draws the menu and the sections in, the block and background types' modules each page waits for since 0.7.37.3.6, and the stylesheets).
-    Done when: on the deployed site, on a phone slowed four times, the menu, the first section's content and its background stand in the same frame.
 
 ## Til v0.8 og senere faser HUSK: Se /comparison før vi starter
 
@@ -702,6 +700,8 @@ The phase was split into milestones on 9 August 2026: the architecture clarifica
 - [x] Opening an event in a calendar scrolled the page to the top and shaded the calendar black, in every design, DELIVERED 0.7.0.94 (21 November 2026)
 - [x] The year wheel drew a box round a month pressed, DELIVERED 0.7.0.94 (21 November 2026): a month shows the keyboard's focus in its own shape
 - [x] A year wheel month with many events grew its list without end, DELIVERED 0.7.0.94 (21 November 2026): five events, then «Show all» opening the month in a list that scrolls beside the wheel
+- [x] The menu showed before the rest of the page, over a second before it on the front page, DELIVERED 0.7.0.95 (23 November 2026): the page's types are asked for beside the menu's, and the menu, «Back to top» and the page are drawn together
+- [x] A section's picture background showed after the rest of the page, DELIVERED 0.7.0.95 (23 November 2026): the first section's pictures are asked for as the page file is read, and the page waits for them half a second at most
 - [ ] When switching to phone view/editing, the right-hand order menu should automatically show and always be available, even if the Phone tab is closed
 - [ ] The Grid panel could be better fitted inside Urd admin settings - this clears up one panel tab 
 

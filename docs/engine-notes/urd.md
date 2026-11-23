@@ -240,6 +240,10 @@ plugin texts are layered back on inside syncSiteLocale:
 initSiteLocale builds the dictionary from the engine's nb base,
 without the plugin keys.
 
+## `askLayerPictures`
+
+An image layer stays hidden until its picture is in (backgrounds/image.js), so the boot asks for the first section's image layer pictures as soon as the page file is read, beside the page's types, and the layer finds them in the document's image cache. The wait is capped at READY_WAIT_MS, the cap a block's readying has, so a slow picture holds the page no longer than that.
+
 ## `boot › wireArrivalHold`
 
 Before the first await: the shell loads this module render-blocking, so
@@ -302,17 +306,7 @@ visitors it follows the screen width. Both body classes are set before
 the menu renders, so it is built for the right mode and the right
 audience from the first paint.
 
-## `boot › if (preview`
-
-The page id is known from the register, so a page the menu stays off (nav.hideOn) starts without it.
-The core types the nav draws with are loaded before it is drawn; the preview loads every core type, and the section presets, since the editor offers them all.
-
-## `boot › opts.footer`
-
-The shared footer: its own element right after the main content, created here since index.html is Urd-owned and cannot be changed by publishing.
-It joins the document once the page is drawn (below), so it is never shown at the top while the page loads and then pushed down.
-
-## `boot › let page`
+## `boot › const pageLifted`
 
 Version lifting at file level: older page files are lifted to the
 current format in memory (disk is written first at the next publish).
@@ -320,9 +314,19 @@ If the page file is missing (half-finished deploy, hand-edited
 register), an empty page is shown instead of a crash - the page never
 dies from bad data.
 
-## `boot › const readied`
+## `boot › if (preview`
 
-A visitor's page loads the core types it and the footer use (core-types.js), and what its own blocks draw with beyond their module is readied beside them, so a calendar stands in its own design from the first drawing (prepareBlocks).
+The page id is known from the register, so a page the menu stays off (nav.hideOn) starts without it.
+The preview loads every core type and the section presets, since the editor offers them all; a visitor's page asks for the core types its menu, its footer and the page draw with as soon as each is known.
+
+## `boot › const pageReady`
+
+The page's types, what its blocks draw with beyond their module (prepareBlocks, so a calendar stands in its own design from the first drawing) and the first section's image layer pictures are asked for as soon as the page file is read, beside the menu's types; the menu, «Back to top» and the page are drawn in one task once all of them are in, so they stand in one frame.
+
+## `boot › opts.footer`
+
+The shared footer: its own element right after the main content, created here since index.html is Urd-owned and cannot be changed by publishing.
+It joins the document once the page is drawn (below), so it is never shown at the top while the page loads and then pushed down.
 
 ## `boot › if (!preview`
 
