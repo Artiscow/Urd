@@ -123,3 +123,18 @@ test('the preview loads its sheet with the editing layer, and a calendar loads i
   const html = read(new URL('../template/index.html', import.meta.url));
   assert.doesNotMatch(html, /preview\.css|calendar\.css/, 'a visitor\'s page never asks for them');
 });
+
+test('base.css, which every page loads, carries one-line labels, its reasoning in docs/STYLES.md', () => {
+  const comments = [...BASE.matchAll(/\/\*([\s\S]*?)\*\//g)].map((m) => m[1].trim());
+  assert.ok(comments.length > 100, 'the labels are found');
+  const [header, ...labels] = comments;
+  assert.match(header, /docs\/STYLES\.md/, 'the file names where its reasoning stands');
+  for (const label of labels) {
+    assert.ok(!label.includes('\n'), `a label is one line: ${label.slice(0, 60)}`);
+    assert.ok(label.length <= 72, `a label stays short; the reasoning goes in docs/STYLES.md: ${label.slice(0, 60)}`);
+  }
+  // Inside a rule a declaration carries no comment of its own; its note stands in docs/STYLES.md under the selector and the property.
+  const bodies = BASE.replace(/^\/\*[\s\S]*?\*\//, '').match(/\{[^{}]*\}/g) ?? [];
+  for (const body of bodies) assert.doesNotMatch(body, /\/\*/, `a comment inside a rule: ${body.slice(0, 80)}`);
+  assert.match(readFileSync(new URL('../docs/STYLES.md', import.meta.url), 'utf8'), /^# base\.css, rule by rule$/m);
+});

@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.7): base.css with labels
+
+- [ ] Every page of the site looks as before, on the desktop and on a phone, the menu, the footer and «Back to top» included
+- [ ] The editor looks and works as before, its canvas, panels and menus included
+
 ### Test batch (0.7.37.3.6): the privacy model off the boot, the gallery code off the pictures
 
 - [ ] The front page's calendars, map and pictures show as before, and the calendars still fill from their feeds

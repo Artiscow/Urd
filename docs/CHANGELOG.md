@@ -8,6 +8,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.37.3.7 - Every page loads 25 KB less CSS, base.css's reasoning moved to docs/STYLES.md - 23 November 2026
+
+- base.css, which every page loads, was 59 KB compressed, and its comments were 31.5 KB of it. Its comments between rules are one-line labels and the 45 inside rules are gone, all 430 standing in full in the new docs/STYLES.md under the selector each explains; the file is 33.6 KB, its rules unchanged, and the shells carry its new stamp.
+- `tests/stylesheets.test.mjs` holds base.css's comments to one-line labels and none inside a rule; ARCHITECTURE.md and the development guide in both languages say where the reasoning stands.
+
+The independent review before the commit found these:
+
+1. The file's header, on the default theme and the sheets that win over it, had no place in STYLES.md; it stands first there, under `:root`.
+2. Two headings over a rule of several selectors broke across two lines, so Markdown drew them wrong; each stands on one line.
+3. Three comments that stood apart from their rule became labels of the rule below them: the seller's, which stands over `.urd-checkout-seller`; the help chip's, which says its rules stand in engine/hint.js; and the editorial markers', which describes no rule in base.css and keeps its note alone under its own heading.
+4. Five labels cut where the meaning turns, among them the logo's margin trick that is the top bar's and not the column's, are written whole; the header names the Urd repository, since a site's copy has no docs folder.
+
 ### 0.7.37.3.6 - The template's pages load 9 to 27 KB less JavaScript, the privacy page's and the galleries' code left to the pages that use them - 23 November 2026
 
 - prefetch.js and the calendar's loader each read one number from the privacy model, so every page loaded it and the five modules it draws in (the embeds, the maps, the pictures, the galleries and the ribbon): 27 KB of the 244 KB of JavaScript every page loads, compressed. The two numbers stand in `keep-minutes.js`, which the two and the privacy model read, and the six left the shells' preload list.
