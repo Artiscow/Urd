@@ -24,10 +24,10 @@ function exported(folder, suffix) {
   return names.sort();
 }
 
-/** The definitions the tables load, read from their loaders' text. */
+/** The definitions the tables load, read from their loaders' text: the first module a loader names is its type's own, any after it asked for beside it. */
 function loaded(table) {
   return Object.values(table).map((load) => {
-    const m = String(load).match(/import\('\.\/([^']+)'\)\.then\(\(m\) => m\.(\w+)\)/);
+    const m = String(load).match(/^\(\) => (?:beside\()?import\('\.\/([^']+)'\)(?:, import\('\.\/[^']+'\))*\)?\.then\(\(m\) => m\.(\w+)\)$/);
     assert.ok(m, `a loader names its module and export literally: ${load}`);
     return `${m[1]}:${m[2]}`;
   }).sort();

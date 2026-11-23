@@ -9,14 +9,10 @@
 import { siteContact, contactDesign } from './contact-model.js';
 import { providerOf, embedUrl } from './embed-cover.js';
 import { parseLocation } from './osm.js';
+import { CALENDAR_FEED_MINUTES, PREFETCH_MINUTES } from './keep-minutes.js';
 
-/**
- * How long a calendar block keeps a feed's events in the browser before it fetches them again (blocks/calendar-load.js reads it from here, so the privacy page's minutes are the code's).
- */
-export const CALENDAR_FEED_MINUTES = 10;
-
-/** How long a page fetched ahead of a press on its link is kept in the browser (prefetch.js reads it from here, as the calendar does its minutes). */
-export const PREFETCH_MINUTES = 5;
+/** How long a calendar block keeps a feed's events and a page fetched ahead of a press on its link is kept in the browser, as the modules that keep them read it (keep-minutes.js). */
+export { CALENDAR_FEED_MINUTES, PREFETCH_MINUTES };
 
 /**
  * What the site keeps in the visitor's own browser (ADR-0029 decision 4), each with the engine modules that keep it and how long (`until`): the privacy page names every one that applies, in its words `privacy.browser.<id>`, with the period's words `privacy.browser.until.<until>` after them.

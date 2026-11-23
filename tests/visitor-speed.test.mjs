@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { engineImport, ENGINE_DIR } from './_engine.mjs';
+import { engineImport, ENGINE_DIR, engineClosure } from './_engine.mjs';
 
 const source = (file) => readFileSync(new URL(file, ENGINE_DIR), 'utf8');
 
@@ -162,4 +162,26 @@ test('a calendar stands in its own design while its feeds are on the way, a feed
   const base = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
   assert.match(base, /\.urd-cal-loading i \{[^}]*animation: urd-cal-appear 0\.2s 0\.5s backwards;/);
   assert.match(base, /animation: urd-cal-appear 0\.2s 0\.5s backwards, urd-cal-loading /, 'the pulse keeps the wait');
+});
+
+test('each core type\'s loader asks for every module its own module imports that the boot does not load, in the same wave as its own', async () => {
+  const closureOf = engineClosure;
+  const boot = closureOf('boot.js');
+  const { CORE_BLOCKS, CORE_BACKGROUNDS } = await engineImport('core-types.js');
+  let waiting = 0;
+  for (const table of [CORE_BLOCKS, CORE_BACKGROUNDS]) {
+    for (const [type, loader] of Object.entries(table)) {
+      const named = [...String(loader).matchAll(/import\('\.\/([^']+)'\)/g)].map((m) => m[1]);
+      const [main] = named;
+      const needed = [...closureOf(main)].filter((name) => name !== main && !boot.has(name));
+      for (const name of needed) assert.ok(named.includes(name), `${type}: ${name} is asked for beside ${main}`);
+      for (const name of named.slice(1)) assert.ok(needed.includes(name), `${type}: ${name} is not imported by ${main} beyond the boot, so it is not asked for`);
+      assert.equal(named.length, new Set(named).size, `${type}: each module named once`);
+      waiting += needed.length;
+    }
+  }
+  assert.ok(waiting > 10, 'the types with modules of their own are found');
+  // A page drawing pictures alone loads no gallery code for them.
+  assert.ok(!closureOf('blocks/image.js').has('gallery-layout.js'));
+  assert.ok(!closureOf('backgrounds/image.js').has('gallery-layout.js'));
 });

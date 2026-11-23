@@ -5,7 +5,7 @@
  */
 import { ta, taApiError } from '../i18n.js';
 import { loadStylesheet } from '../render.js';
-import { CALENDAR_FEED_MINUTES } from '../privacy-model.js';
+import { CALENDAR_FEED_MINUTES } from '../keep-minutes.js';
 
 /* ---------- Fetching (proxy + short-lived cache) ---------- */
 

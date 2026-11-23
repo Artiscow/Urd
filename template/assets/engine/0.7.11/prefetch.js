@@ -11,7 +11,7 @@
  * in the editor preview, where page switches happen via postMessage.
  */
 
-import { PREFETCH_MINUTES } from './privacy-model.js';
+import { PREFETCH_MINUTES } from './keep-minutes.js';
 
 const KEY = 'urd-prefetch';
 /** A parked page older than this is ignored: the click did not follow the hover. */

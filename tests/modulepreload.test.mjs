@@ -21,7 +21,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { ENGINE_VERSION, ENGINE_DIR } from './_engine.mjs';
+import { ENGINE_VERSION, ENGINE_DIR, stripComments, staticSpecs, engineClosure } from './_engine.mjs';
 import { releaseHeaders } from '../scripts/release-headers.mjs';
 
 const ENTRY = 'boot.js';
@@ -48,40 +48,8 @@ function slugCopies() {
 }
 const SLUG_COPIES = slugCopies();
 
-/** Strip block and line comments BEFORE matching, so a commented-out or
- *  dynamic import never counts. */
-function stripComments(src) {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
-}
-
-/** Static imports only: `import ... from './x.js'` and the side-effect form
- *  `import './x.js'`. Anchored on `import` followed by NOT `(`, so
- *  `import(` (dynamic) never matches. */
-const STATIC_RE = /\bimport\b(?!\s*\()(?:[\s\S]*?\bfrom\b)?\s*['"](\.[^'"]+)['"]/g;
-
-function staticSpecs(src) {
-  return [...stripComments(src).matchAll(STATIC_RE)].map((m) => m[1]);
-}
-
-/** The static import closure of boot.js, as engine-relative names. */
-function closure() {
-  const seen = new Set();
-  const names = new Set();
-  function walk(url) {
-    if (seen.has(url.href)) return;
-    seen.add(url.href);
-    names.add(url.href.slice(ENGINE_DIR.href.length));
-    // Collect the specifiers BEFORE recursing: a shared global regex's
-    // lastIndex is corrupted by reentrancy, so matchAll (its own iteration)
-    // is required.
-    const specs = staticSpecs(readFileSync(url, 'utf8'));
-    for (const spec of specs) walk(new URL(spec, url));
-  }
-  walk(new URL(ENTRY, ENGINE_DIR));
-  return names;
-}
+/** The static import closure of boot.js, as engine-relative names (engineClosure in _engine.mjs, which tests/visitor-speed.test.mjs walks the block types' modules with too). */
+const closure = () => engineClosure(ENTRY);
 
 /** The modulepreload hrefs in index.html, as engine-relative names.
  *  The prefix is the VERSIONED directory: a reference without a version (or
@@ -218,15 +186,24 @@ test('the block and background modules stay out of the visitor\'s static closure
   assert.deepEqual(typed, []);
 });
 
-test('the closure walker excludes commented and dynamic imports', () => {
+test('the closure walker excludes commented and dynamic imports, and finds a side-effect import, a re-export and an import over several lines', () => {
   const src = `
     import { a } from './a.js';
     // import { b } from './b.js';
     /* import { c } from './c.js'; */
     const mod = await import('./d.js');
     import('./e.js').then(() => {});
+    import './f.js';
+    import {
+      g,
+      h,
+    } from './g.js';
+    export { i } from './i.js';
+    export * from './j.js';
+    export { k };
+    export const from = 'x';
   `;
-  assert.deepEqual(staticSpecs(src), ['./a.js']);
+  assert.deepEqual(staticSpecs(src), ['./a.js', './f.js', './g.js', './i.js', './j.js']);
 });
 
 test('the shell runs theme-init.js before the stylesheets and preloads site.json as the boot fetches it', () => {

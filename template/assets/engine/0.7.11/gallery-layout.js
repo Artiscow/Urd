@@ -13,6 +13,9 @@
  * never a random number.
  */
 import { ribbonRows } from './ribbon-model.js';
+import { PICTURE_LOOKS, placeholderPhoto } from './picture.js';
+
+export { placeholderPhoto };
 
 /**
  * How the pictures are laid out: scattered frames floating over the section,
@@ -43,11 +46,8 @@ export const GALLERY_LOOKS = [
   'tape', 'pin', 'stamp', 'film', 'soft',
 ];
 
-/** The finish on the picture itself: filters, and a tint in the accent colour. */
-export const GALLERY_TONES = [
-  'natural', 'mono', 'sepia', 'vintage', 'faded', 'warm', 'cool', 'duotone',
-  'punchy', 'noir', 'dim', 'pop',
-];
+/** The finish on the picture itself: filters, and a tint in the accent colour; a picture's looks (picture.js), so a page drawing pictures alone loads no gallery code for them. */
+export const GALLERY_TONES = PICTURE_LOOKS;
 
 /** The shapes that are as tall as they are wide, and the one that is taller. */
 const SQUARE_SHAPES = ['square', 'circle', 'triangle', 'diamond', 'hexagon', 'octagon', 'star', 'heart'];
@@ -147,32 +147,6 @@ function roll(seed, key) {
   h = Math.imul(h, 0x297a2d39) >>> 0;
   h ^= h >>> 15;
   return (h >>> 0) / 4294967296;
-}
-
-/**
- * A drawn example picture as a data URL: what the layer looks like before the
- * owner has picked anything. Three variants, so a cross-fade and a drift are
- * actually visible while the settings are being tried out, and painted in
- * translucent grey so they read on a light and a dark background alike. A data
- * URL, which the site's `img-src 'self' data:` already covers.
- * @param {number} index
- * @returns {string}
- */
-export function placeholderPhoto(index) {
-  const n = Math.abs(Math.round(Number(index) || 0)) % 3;
-  const ink = (a) => `rgba(128,128,128,${a})`;
-  const sun = [64, 104, 150][n];
-  const hills = [
-    'M0 150 L60 96 L108 150 Z M84 150 L138 108 L180 150 Z',
-    'M0 150 L44 110 L92 150 Z M70 150 L128 88 L180 150 Z',
-    'M0 150 L72 84 L132 150 Z M110 150 L156 116 L180 150 Z',
-  ][n];
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 150">'
-    + `<rect width="180" height="150" fill="${ink(0.14 + n * 0.04)}"/>`
-    + `<circle cx="${sun}" cy="44" r="15" fill="${ink(0.4)}"/>`
-    + `<path d="${hills}" fill="${ink(0.45)}"/>`
-    + '</svg>';
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 /**

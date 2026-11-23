@@ -23,8 +23,7 @@
  */
 
 import { isSafeImage } from '../nav-model.js';
-import { pictureStyle, pictureFilter } from '../picture.js';
-import { placeholderPhoto } from '../gallery-layout.js';
+import { pictureStyle, pictureFilter, placeholderPhoto } from '../picture.js';
 
 /** Maximum vertical travel (fraction of the viewport height) a parallax layer gets at
  *  full strength. Generous, since the free-placement image (scale + position) does not

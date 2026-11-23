@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.6): the privacy model off the boot, the gallery code off the pictures
+
+- [ ] The front page's calendars, map and pictures show as before, and the calendars still fill from their feeds
+- [ ] The privacy page lists what the browser keeps with its minutes (pages fetched ahead 5 minutes, calendar feeds 10 minutes), as before
+- [ ] Hover a link to another page, then press it: the page opens at once, as before
+- [ ] In the editor, the Legal panel shows what the site keeps and how long, as before
+- [ ] Pictures, picture backgrounds, slideshows, galleries and ribbons look as before, a picture's tone (Mono, Sepia and the rest) included, and an empty image or slideshow background shows its example picture in the editor
+
 ### Test batch (0.7.37.5.3): renewed logins through either app, and the corrected guide
 
 - [ ] On urdweb, log out and log in: the login goes through, and the editor still publishes more than eight hours later without logging in again

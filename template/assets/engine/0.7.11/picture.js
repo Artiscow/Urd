@@ -13,11 +13,37 @@
  * an `overlay` in a site colour (`{ color, strength }`); and with the duotone
  * look, its two colours (`duotone: { dark, light }`).
  */
-import { GALLERY_TONES } from './gallery-layout.js';
 import { resolveColor } from './theme.js';
 
-/** The looks a picture can have: the slideshow layer's tones, `natural` the picture as it is. */
-export const PICTURE_LOOKS = GALLERY_TONES;
+/** The looks a picture can have, which the slideshow layer's tones are too (GALLERY_TONES in gallery-layout.js): `natural` the picture as it is. */
+export const PICTURE_LOOKS = [
+  'natural', 'mono', 'sepia', 'vintage', 'faded', 'warm', 'cool', 'duotone',
+  'punchy', 'noir', 'dim', 'pop',
+];
+
+/**
+ * A drawn example picture as a data URL: what an image or slideshow background looks like before the owner has picked anything.
+ * Three variants, so a cross-fade and a drift are actually visible while the settings are being tried out, and painted in translucent grey so they read on a light and a dark background alike.
+ * A data URL, which the site's `img-src 'self' data:` already covers.
+ * @param {number} index
+ * @returns {string}
+ */
+export function placeholderPhoto(index) {
+  const n = Math.abs(Math.round(Number(index) || 0)) % 3;
+  const ink = (a) => `rgba(128,128,128,${a})`;
+  const sun = [64, 104, 150][n];
+  const hills = [
+    'M0 150 L60 96 L108 150 Z M84 150 L138 108 L180 150 Z',
+    'M0 150 L44 110 L92 150 Z M70 150 L128 88 L180 150 Z',
+    'M0 150 L72 84 L132 150 Z M110 150 L156 116 L180 150 Z',
+  ][n];
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 150">'
+    + `<rect width="180" height="150" fill="${ink(0.14 + n * 0.04)}"/>`
+    + `<circle cx="${sun}" cy="44" r="15" fill="${ink(0.4)}"/>`
+    + `<path d="${hills}" fill="${ink(0.45)}"/>`
+    + '</svg>';
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
 
 /**
  * Each look as a CSS filter, the same values base.css gives the slideshow's

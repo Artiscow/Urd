@@ -3,35 +3,47 @@
  * The loaders name their modules literally, so the modules stay out of the boot's static closure and the shells' preload list, and are fetched from the versioned engine folder as they are asked for (ADR-0013).
  */
 
+/**
+ * A type's module asked for beside the modules it imports, directly or through others, that the boot does not load, in one wave: the browser shares a request already on its way, so no module waits for the module that imports it to arrive first.
+ * tests/visitor-speed.test.mjs holds every type's loader to name them all.
+ * @param {Promise<object>} main
+ * @param {...Promise<object>} parts
+ * @returns {Promise<object>}
+ */
+const beside = (main, ...parts) => {
+  for (const part of parts) part.catch(() => {});
+  return main;
+};
+
 /** The core block types and the modules that define them. */
 export const CORE_BLOCKS = {
-  text: () => import('./blocks/text.js').then((m) => m.textBlock),
-  terms: () => import('./blocks/text.js').then((m) => m.termsBlock),
-  image: () => import('./blocks/image.js').then((m) => m.imageBlock),
+  text: () => beside(import('./blocks/text.js'), import('./box-style.js'), import('./sanitize.js')).then((m) => m.textBlock),
+  terms: () => beside(import('./blocks/text.js'), import('./box-style.js'), import('./sanitize.js')).then((m) => m.termsBlock),
+  image: () => beside(import('./blocks/image.js'), import('./picture.js')).then((m) => m.imageBlock),
   button: () => import('./blocks/button.js').then((m) => m.buttonBlock),
   shape: () => import('./blocks/shape.js').then((m) => m.shapeBlock),
   spacer: () => import('./blocks/spacer.js').then((m) => m.spacerBlock),
-  video: () => import('./blocks/video.js').then((m) => m.videoBlock),
+  video: () => beside(import('./blocks/video.js'), import('./backgrounds/image.js'), import('./backgrounds/video.js'), import('./embed-cover.js'), import('./picture.js')).then((m) => m.videoBlock),
   icon: () => import('./blocks/icon.js').then((m) => m.iconBlock),
-  collection: () => import('./blocks/collection.js').then((m) => m.collectionBlock),
-  gallery: () => import('./blocks/gallery.js').then((m) => m.galleryBlock),
-  faq: () => import('./blocks/faq.js').then((m) => m.faqBlock),
+  collection: () => beside(import('./blocks/collection.js'), import('./picture.js'), import('./sanitize.js')).then((m) => m.collectionBlock),
+  gallery: () => beside(import('./blocks/gallery.js'), import('./blocks/image.js'), import('./blocks/ribbon.js'), import('./gallery-layout.js'), import('./gallery-model.js'), import('./picture.js'), import('./ribbon-model.js')).then((m) => m.galleryBlock),
+  faq: () => beside(import('./blocks/faq.js'), import('./box-style.js'), import('./sanitize.js')).then((m) => m.faqBlock),
   timeline: () => import('./blocks/timeline.js').then((m) => m.timelineBlock),
-  quote: () => import('./blocks/quote.js').then((m) => m.quoteBlock),
+  quote: () => beside(import('./blocks/quote.js'), import('./blocks/timeline.js'), import('./picture.js')).then((m) => m.quoteBlock),
   stats: () => import('./blocks/stats.js').then((m) => m.statsBlock),
   table: () => import('./blocks/table.js').then((m) => m.tableBlock),
   share: () => import('./blocks/share.js').then((m) => m.shareBlock),
-  contact: () => import('./blocks/contact.js').then((m) => m.contactBlock),
-  privacy: () => import('./blocks/privacy.js').then((m) => m.privacyBlock),
+  contact: () => beside(import('./blocks/contact.js'), import('./blocks/map.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js')).then((m) => m.contactBlock),
+  privacy: () => beside(import('./blocks/privacy.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js'), import('./privacy-model.js')).then((m) => m.privacyBlock),
   countdown: () => import('./blocks/countdown.js').then((m) => m.countdownBlock),
   audio: () => import('./blocks/audio.js').then((m) => m.audioBlock),
-  product: () => import('./blocks/product.js').then((m) => m.productBlock),
+  product: () => beside(import('./blocks/product.js'), import('./blocks/collection.js'), import('./picture.js'), import('./sanitize.js')).then((m) => m.productBlock),
   cart: () => import('./blocks/cart.js').then((m) => m.cartBlock),
   checkout: () => import('./blocks/checkout.js').then((m) => m.checkoutBlock),
-  map: () => import('./blocks/map.js').then((m) => m.mapBlock),
-  form: () => import('./blocks/form.js').then((m) => m.formBlock),
-  calendar: () => import('./blocks/calendar.js').then((m) => m.calendarBlock),
-  ribbon: () => import('./blocks/ribbon.js').then((m) => m.ribbonBlock),
+  map: () => beside(import('./blocks/map.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js')).then((m) => m.mapBlock),
+  form: () => beside(import('./blocks/form.js'), import('./form-model.js')).then((m) => m.formBlock),
+  calendar: () => beside(import('./blocks/calendar.js'), import('./blocks/calendar-load.js'), import('./sanitize.js')).then((m) => m.calendarBlock),
+  ribbon: () => beside(import('./blocks/ribbon.js'), import('./ribbon-model.js')).then((m) => m.ribbonBlock),
 };
 
 /** The core background layer types and the modules that define them. */
@@ -41,9 +53,9 @@ export const CORE_BACKGROUNDS = {
   glow: () => import('./backgrounds/glow.js').then((m) => m.glowLayer),
   grain: () => import('./backgrounds/grain.js').then((m) => m.grainLayer),
   pattern: () => import('./backgrounds/pattern.js').then((m) => m.patternLayer),
-  image: () => import('./backgrounds/image.js').then((m) => m.imageLayer),
-  slideshow: () => import('./backgrounds/slideshow.js').then((m) => m.slideshowLayer),
-  video: () => import('./backgrounds/video.js').then((m) => m.videoLayer),
+  image: () => beside(import('./backgrounds/image.js'), import('./picture.js')).then((m) => m.imageLayer),
+  slideshow: () => beside(import('./backgrounds/slideshow.js'), import('./backgrounds/image.js'), import('./gallery-layout.js'), import('./gallery-model.js'), import('./photo-source.js'), import('./picture.js'), import('./ribbon-model.js')).then((m) => m.slideshowLayer),
+  video: () => beside(import('./backgrounds/video.js'), import('./backgrounds/image.js'), import('./picture.js')).then((m) => m.videoLayer),
 };
 
 /**

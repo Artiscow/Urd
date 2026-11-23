@@ -75,6 +75,10 @@ test('every kind the browser keeps has its words and its period, with the period
   assert.equal(BROWSER_KEEPS.find((keep) => keep.id === 'pages').minutes, PREFETCH_MINUTES);
   assert.match(code('blocks/calendar-load.js'), /CALENDAR_FEED_MINUTES \* 60 \* 1000/, 'blocks/calendar-load.js keeps a feed for the minutes the page names');
   assert.match(code('prefetch.js'), /PREFETCH_MINUTES \* 60 \* 1000/, 'prefetch.js keeps a fetched page for the minutes the page names');
+  // Both read their minutes from the module the privacy page reads them from, never a number of their own.
+  assert.match(code('blocks/calendar-load.js'), /^import \{ CALENDAR_FEED_MINUTES \} from '\.\.\/keep-minutes\.js';$/m);
+  assert.match(code('prefetch.js'), /^import \{ PREFETCH_MINUTES \} from '\.\/keep-minutes\.js';$/m);
+  assert.match(code('privacy-model.js'), /^import \{ CALENDAR_FEED_MINUTES, PREFETCH_MINUTES \} from '\.\/keep-minutes\.js';$/m);
   for (const [lang, strings] of Object.entries(DICTS)) {
     for (const keep of BROWSER_KEEPS) assert.ok(strings[`privacy.browser.${keep.id}`], `${lang} privacy.browser.${keep.id}`);
     for (const until of BROWSER_UNTIL) assert.ok(strings[`privacy.browser.until.${until}`], `${lang} privacy.browser.until.${until}`);
