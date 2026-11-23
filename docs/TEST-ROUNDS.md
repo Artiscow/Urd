@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.16): each block's CSS with its code
+
+- [ ] Every page of the site looks as before on the desktop and on a phone, the blocks' designs, the gallery, the contact block and the shop included
+- [ ] On a page without a shop block, the menu's basket opens its drawer as before
+- [ ] A section with a slideshow background shows its pictures as before
+- [ ] A calendar with small or large finding tools (Style) shows them at that size in every design, and a cancelled past event stands dimmed under «Earlier»
+- [ ] In the editor, every block looks as before on the canvas, an empty gallery shows its note, a space block shows its height, and a side menu's edge can be dragged
+- [ ] On om-oss, DevTools' network list shows base.css, the sheets of its blocks (text.css, button.css, image.css) and the menu's basket's (cart.css), and no other block sheet
+
 ### Test batch (0.7.37.3.15): the editor's own rules out of base.css
 
 - [ ] In the editor, the canvas's colour picker (the text bar's colour) looks and works as before, its saved colours and the eyedropper included

@@ -60,7 +60,7 @@ export const timelineBlock = {
     const accent = accentCss(props.accent);
     if (accent) host.style.setProperty('--urd-timeline-accent', accent);
     // The list stands in a box of its own, the width the narrow rules ask
-    // (base.css), so the variant follows the width the content is laid out in.
+    // (timeline.css), so the variant follows the width the content is laid out in.
     const box = document.createElement('div');
     box.className = 'urd-timeline-box';
     box.appendChild(host);

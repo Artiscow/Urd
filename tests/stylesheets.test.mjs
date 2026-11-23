@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ENGINE_DIR, calendarSheets, engineImport, engineClosure } from './_engine.mjs';
+import { ENGINE_DIR, calendarSheets, blockSheets, engineImport, engineClosure } from './_engine.mjs';
 import { visitorModules } from '../scripts/engine-notes.mjs';
 
 const engine = fileURLToPath(ENGINE_DIR);
@@ -119,8 +119,26 @@ test('each design family\'s sheet styles its own designs alone, loads with its r
   const familyOf = new Map([...CAL_DESIGNS, ...CAL_PHONE_DESIGNS, ...CAL_CARD_DESIGNS].map((d) => [d.id, d.module ?? 'calendar']));
   assert.equal(SHEETS[0].name, 'calendar', 'the shared sheet comes first');
   const { DESIGN_MODULES } = await engineImport('blocks/calendar-load.js');
+  // A class only a family's renderer writes; a class built from a name at run time counts by its prefix.
+  const writes = (module) => {
+    const text = read(join(engine, module));
+    const exact = new Set([...text.matchAll(/(?<![.\w-])(urd-cal-[A-Za-z0-9-]*)(?![$\w-]|\$\{)/g)].map(([, name]) => name.replace(/-$/, '')));
+    const prefixes = [...text.matchAll(/(?<![.\w-])(urd-cal-[A-Za-z0-9-]*)\$\{/g)].map(([, name]) => name);
+    return (name) => exact.has(name) || prefixes.some((prefix) => prefix.length > 8 && name.startsWith(prefix));
+  };
+  const families = Object.fromEntries(SHEETS.slice(1).map((sheet) => [sheet.name, writes(`blocks/calendar-${sheet.name}.js`)]));
+  const shared = ['blocks/calendar.js', 'blocks/calendar-plain.js', 'blocks/calendar-card.js', 'blocks/calendar-edit.js', 'calendar-designs.js'].map(writes);
+  // The switcher's view box stands only beside the month and year family's renderer, which a calendar with a switcher always loads (designModules).
+  const familyClass = (name, family) => (name === 'urd-cal-swview' ? family === 'time' : families[family](name) && !shared.some((w) => w(name)) && Object.entries(families).every(([other, w]) => other === family || !w(name)));
+  // An :is() whose every argument names the family names it too.
+  const isNames = (sel, family) => [...sel.matchAll(/:is\(([^()]*)\)/g)].some(([, list]) => list.split(',').every((arg) => classes(arg).some((name) => familyClass(name, family))));
   for (const sheet of SHEETS.slice(1)) {
     assert.ok(sheet.name in DESIGN_MODULES, `${sheet.file} is a design family's`);
+    // Every selector names its family on its own, by a design of it or a class only its renderer writes, so no rule a calendar of another family needs stands here.
+    for (const sel of selectorsOf(sheet.text).flat()) {
+      const ids = [...sel.matchAll(/\.urd-cal-(?:d|dlg|pd)-([A-Za-z0-9]+)/g)].map(([, id]) => familyOf.get(id));
+      assert.ok(ids.includes(sheet.name) || classes(sel).some((name) => familyClass(name, sheet.name)) || isNames(sel, sheet.name), `${sheet.file}: «${sel}» names nothing of its family`);
+    }
     for (const [, id] of sheet.text.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/\.urd-cal-(?:d|dlg|pd)-([A-Za-z0-9]+)/g)) {
       assert.equal(familyOf.get(id), sheet.name, `${sheet.file} styles ${id}, a design of ${familyOf.get(id)}: its rules stand in its own family's sheet or in calendar.css`);
     }
@@ -129,7 +147,8 @@ test('each design family\'s sheet styles its own designs alone, loads with its r
   assert.deepEqual(SHEETS.map((sheet) => sheet.file).sort(), files, 'every calendar sheet is placed in its order');
   const load = read(join(engine, 'blocks/calendar-load.js'));
   assert.match(load, /export const loadDesign = \(name\) => \(DESIGN_MODULES\[name\] \? Promise\.all\(\[DESIGN_MODULES\[name\]\(\), SHEETS\[name\] \? loadSheet\(name\) : null\]\)/, 'a renderer comes with its sheet');
-  assert.match(load, /const later = placed\.find\(\(other\) => Number\(other\.dataset\.urdCalSheet\) > rank\);\s+if \(later\) later\.before\(link\);\s+else if \(placed\.length\) placed\.at\(-1\)\.after\(link\);/, 'in its place among the others, whatever order they come in');
+  assert.match(load, /const loadSheet = \(name\) => loadStylesheet\(new URL\(SHEETS\[name\], import\.meta\.url\)\.href, placeInOrder\('calendar', Object\.keys\(SHEETS\)\.indexOf\(name\)\)\);/, 'in its place among the others, whatever order they come in');
+  assert.match(read(join(engine, 'render.js')), /const later = placed\.find\(\(other\) => Number\(other\.dataset\.urdSheetRank\) > rank\);\s+const anchor = after\(\);\s+if \(later\) later\.before\(link\);\s+else if \(placed\.length\) placed\.at\(-1\)\.after\(link\);/);
 });
 
 test('base.css holds no rule that belongs to the preview or to the calendar', () => {
@@ -192,6 +211,63 @@ test('the preview loads its sheet with the editing layer, and a calendar loads i
   assert.match(calendar, /const calendarParts = \(\) => Promise\.all\(\[[^\n]*loadSheet\('calendar'\)\]\)\.then\(\(parts\) => \(partsIn = parts\)\);/);
   const html = read(new URL('../template/index.html', import.meta.url));
   assert.doesNotMatch(html, /preview\.css|calendar\.css/, 'a visitor\'s page never asks for them');
+});
+
+/**
+ * The classes each block sheet's modules own: written by blocks/<name>.js (and, for the gallery's, the slideshow layer, a gallery drawn as a background), or by a helper only the loaders of those modules reach, and by no module the boot loads.
+ * @returns {Map<string, (name: string) => boolean>} by the sheet's name, whether a class is that sheet's
+ */
+function blockOwners() {
+  const read = (module) => { try { return readFileSync(join(engine, module), 'utf8'); } catch { return ''; } };
+  const table = (name) => read('core-types.js').split(`export const ${name} = {`)[1].split('\n};')[0];
+  const sheetOf = (module) => (module === 'backgrounds/slideshow.js' ? 'gallery' : /^blocks\/[a-z]+\.js$/.test(module) ? module.slice(7, -3) : null);
+  const loaders = [...table('CORE_BLOCKS').split('\n'), ...table('CORE_BACKGROUNDS').split('\n')].map((line) => [...line.matchAll(/import\('\.\/([^']+)'\)/g)].map(([, path]) => path)).filter((imports) => imports.length)
+    .map((imports) => ({ sheet: sheetOf(imports[0]), reach: new Set(imports.flatMap((m) => [m, ...engineClosure(m)])) }));
+  const boot = new Set(engineClosure('boot.js'));
+  const writes = (module) => {
+    const exact = new Set();
+    const prefixes = [];
+    for (const [, name, open] of read(module).matchAll(/(?<![.\w-])(?<!contains\(\s*['"])(urd-[A-Za-z0-9-]*)(\$\{|['"]\s*\+)?/g)) {
+      if (open) prefixes.push(name);
+      else exact.add(name.replace(/-$/, ''));
+    }
+    return (name) => exact.has(name) || prefixes.some((prefix) => prefix.length > 6 && name.startsWith(prefix));
+  };
+  const owners = new Map();
+  const reached = [...new Set(loaders.flatMap((l) => [...l.reach]))];
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? walk(join(dir, entry.name)) : [join(dir, entry.name)]));
+  const everyModule = walk(engine.replace(/\/$/, '')).filter((f) => f.endsWith('.js')).map((f) => f.slice(engine.replace(/\/$/, '').length + 1));
+  for (const { name } of blockSheets()) {
+    const own = reached.filter((m) => sheetOf(m) === name);
+    const helpers = reached.filter((m) => !boot.has(m) && sheetOf(m) === null && !m.startsWith('backgrounds/') && loaders.every((l) => !l.reach.has(m) || l.sheet === name));
+    const mine = new Set([...own, ...helpers]);
+    const tests = [...mine].map(writes);
+    const elsewhere = everyModule.filter((m) => !mine.has(m)).map(writes);
+    // A class only the sheet's own modules write: a page without them never draws it, so its rule is theirs alone.
+    owners.set(name, Object.assign((cls) => tests.some((test) => test(cls)), { alone: (cls) => tests.some((test) => test(cls)) && !elsewhere.some((test) => test(cls)) }));
+  }
+  return owners;
+}
+
+test('each block module\'s sheet holds its own rules: every rule names a class its module writes and none another module\'s alone, with one-line labels and its reasoning in docs/STYLES.md', () => {
+  const owners = blockOwners();
+  for (const sheet of blockSheets()) {
+    const mine = owners.get(sheet.name);
+    const others = [...owners].filter(([name]) => name !== sheet.name).map(([, owns]) => owns);
+    // Every selector on its own: a list that mixes a selector of the module's with one of every page's would take the latter away from the pages without the module.
+    for (const sel of selectorsOf(sheet.text).flat()) {
+      const names = classes(sel);
+      assert.ok(names.some(mine.alone), `${sheet.file}: «${sel}» names no class that blocks/${sheet.name}.js and its own helpers alone write`);
+      for (const name of names) if (!mine(name)) assert.ok(!others.some((owns) => owns(name)), `${sheet.file}: «${sel}» names ${name}, another block module's alone`);
+    }
+    const comments = [...sheet.text.matchAll(/\/\*([\s\S]*?)\*\//g)].map((m) => m[1].trim());
+    const [header, ...labels] = comments;
+    assert.match(header, /docs\/STYLES\.md/, `${sheet.file} names where its reasoning stands`);
+    for (const label of labels) assert.ok(!label.includes('\n') && label.length <= 72, `${sheet.file}: a label is one short line: ${label.slice(0, 60)}`);
+    for (const body of sheet.text.replace(/^\/\*[\s\S]*?\*\//, '').match(/\{[^{}]*\}/g) ?? []) assert.doesNotMatch(body, /\/\*/, `${sheet.file}: a comment inside a rule`);
+  }
+  const styles = readFileSync(new URL('../docs/STYLES.md', import.meta.url), 'utf8');
+  for (const [, name] of styles.matchAll(/^# blocks\/([a-z]+)\.css, rule by rule$/gm)) assert.ok(owners.has(name), `STYLES.md's ${name}.css is a block sheet`);
 });
 
 test('base.css, which every page loads, carries one-line labels, its reasoning in docs/STYLES.md', () => {

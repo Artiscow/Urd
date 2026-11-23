@@ -4,7 +4,7 @@
  * Fetching ALWAYS goes through the site's own feed proxy (/api/ics): feed hosts send no CORS, and the site's CSP allows connect-src 'self' only.
  */
 import { ta, taApiError } from '../i18n.js';
-import { loadStylesheet } from '../render.js';
+import { loadStylesheet, placeInOrder } from '../render.js';
 import { CALENDAR_FEED_MINUTES } from '../keep-minutes.js';
 
 /* ---------- Fetching (proxy + short-lived cache) ---------- */
@@ -68,15 +68,7 @@ export function takeReadied(url) {
 const SHEETS = { calendar: './calendar.css', list: './calendar-list.css', cards: './calendar-cards.css', time: './calendar-time.css', retro: './calendar-retro.css', next: './calendar-next.css', more: './calendar-more.css' };
 
 /** Loads one of the calendar's sheets in its place among the others, in the order SHEETS keeps, whatever order they come in. */
-const loadSheet = (name) => loadStylesheet(new URL(SHEETS[name], import.meta.url).href, (link) => {
-  const rank = Object.keys(SHEETS).indexOf(name);
-  link.dataset.urdCalSheet = String(rank);
-  const placed = [...document.head.querySelectorAll('link[data-urd-cal-sheet]')];
-  const later = placed.find((other) => Number(other.dataset.urdCalSheet) > rank);
-  if (later) later.before(link);
-  else if (placed.length) placed.at(-1).after(link);
-  else document.head.appendChild(link);
-});
+const loadSheet = (name) => loadStylesheet(new URL(SHEETS[name], import.meta.url).href, placeInOrder('calendar', Object.keys(SHEETS).indexOf(name)));
 
 /** The renderer module of each design family, loaded when a calendar draws one (literal paths, so the modules stay out of the visitor closure and the preload list). */
 export const DESIGN_MODULES = { plain: () => import('./calendar-plain.js'), list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };

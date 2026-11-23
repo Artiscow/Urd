@@ -1,0 +1,15 @@
+/*
+ * The audio block's own rules (blocks/audio.js), loaded with the module by core-types.js, placed after base.css in the order BLOCK_SHEETS keeps.
+ * Its reasoning stands in docs/STYLES.md, under blocks/audio.css.
+ */
+/* The audio block */
+.urd-audio {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.urd-audio-title {
+  font-weight: 600;
+  font-size: 0.95em;
+}

@@ -46,7 +46,7 @@ export function placeholderPhoto(index) {
 }
 
 /**
- * Each look as a CSS filter, the same values base.css gives the slideshow's
+ * Each look as a CSS filter, the same values gallery.css gives the slideshow's
  * tones (`.urd-gallery-tone-*`, a test holds the two equal). Duotone and
  * vintage add a layer over the picture as well (`.urd-pic-look-*` in base.css).
  */

@@ -29,12 +29,22 @@ export function calendarSheets() {
 }
 
 /**
- * The visitor's and the editor's stylesheets as one text: base.css, the preview's rules and the calendar's sheets (which a page in the preview may load in either order), for the tests that look a rule up wherever it stands.
+ * The block modules' own sheets in the order core-types.js keeps them (BLOCK_SHEETS), each loaded with its module after base.css.
+ * @returns {Array<{name: string, file: string, text: string}>}
+ */
+export function blockSheets() {
+  const types = readFileSync(new URL('core-types.js', ENGINE_DIR), 'utf8');
+  const list = types.match(/^const BLOCK_SHEETS = \[([^\n]*)\];$/m)[1];
+  return [...list.matchAll(/'([\w-]+)'/g)].map(([, name]) => ({ name, file: `blocks/${name}.css`, text: readFileSync(new URL(`blocks/${name}.css`, ENGINE_DIR), 'utf8') }));
+}
+
+/**
+ * The visitor's and the editor's stylesheets as one text: base.css, the block modules' sheets, the preview's rules and the calendar's sheets (which a page in the preview may load in either order), for the tests that look a rule up wherever it stands.
  * @returns {string}
  */
 export function readStyles() {
   const read = (url) => readFileSync(url, 'utf8');
-  return [read(new URL('../template/assets/styles/base.css', import.meta.url)), read(new URL('preview.css', ENGINE_DIR)), ...calendarSheets().map((sheet) => sheet.text)].join('\n');
+  return [read(new URL('../template/assets/styles/base.css', import.meta.url)), ...blockSheets().map((sheet) => sheet.text), read(new URL('preview.css', ENGINE_DIR)), ...calendarSheets().map((sheet) => sheet.text)].join('\n');
 }
 
 /** A module's text without its block and line comments, so a commented-out import never counts. */

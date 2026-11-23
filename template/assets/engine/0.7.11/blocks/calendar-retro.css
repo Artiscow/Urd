@@ -800,10 +800,6 @@
   }
 }
 
-.urd-cal-mq-row.urd-cal-cancelled {
-  opacity: 0.45;
-}
-
 /* The marquee on a phone: the letter board in its frame as a list of rows. */
 .urd-cal-mqp {
   padding: 18px 18px 16px;
@@ -1158,11 +1154,6 @@
   text-decoration: underline;
 }
 
-/* A cancelled row is struck through, its status line left whole. */
-.urd-cal-rc-event.urd-cal-cancelled {
-  opacity: 1;
-}
-
 .urd-cal-rc-event.urd-cal-cancelled::before,
 .urd-cal-rc-event.urd-cal-cancelled > :is(.urd-cal-rc-date, .urd-cal-rc-time) {
   text-decoration: line-through;
@@ -1468,10 +1459,6 @@
   cursor: pointer;
   background: var(--urd-cal-sv-cream);
   border-radius: 2.05em;
-}
-
-.urd-cal-sv-row.urd-cal-cancelled {
-  opacity: 0.55;
 }
 
 .urd-cal-sv-badge {

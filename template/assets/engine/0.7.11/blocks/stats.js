@@ -85,7 +85,7 @@ export const statsBlock = {
     const host = document.createElement('div');
     host.className = `urd-stats urd-stats-${statVariant(props.variant)}`;
     // The figure stands in a box of its own, the width the narrow rules ask
-    // (base.css), so the figure follows the width the content is laid out in.
+    // (stats.css), so the figure follows the width the content is laid out in.
     const box = document.createElement('div');
     box.className = 'urd-stats-box';
     box.appendChild(host);

@@ -2,6 +2,19 @@
  * The engine's own block and background types, each with the module that defines it (ADR-0036): a page loads the modules of the types it uses.
  * Notes: docs/engine-notes/core-types.md (Urd repository).
  */
+import { loadStylesheet, placeInOrder } from './render.js';
+
+/** The block modules' own sheets (blocks/<name>.css), in the order they are placed in after base.css. */
+const BLOCK_SHEETS = ['stats', 'countdown', 'quote', 'faq', 'shape', 'timeline', 'table', 'share', 'audio', 'map', 'form', 'product', 'cart', 'checkout', 'collection', 'video', 'icon', 'image', 'gallery', 'ribbon', 'text', 'privacy', 'contact', 'button'];
+
+/** The base sheet's link, which the block sheets follow. */
+const baseSheet = () => document.head.querySelector('link[rel="stylesheet"][href*="/assets/styles/base.css"]');
+
+/** A block module's own sheet, placed after base.css in BLOCK_SHEETS' order; resolves to whether it loaded. */
+export const loadBlockSheet = (name) => loadStylesheet(new URL(`./blocks/${name}.css`, import.meta.url).href, placeInOrder('blocks', BLOCK_SHEETS.indexOf(name), baseSheet));
+
+/** A type's module, once the sheets of the block modules it draws with are in too; a sheet that fails leaves the type drawing without it. */
+const withSheets = (main, ...names) => Promise.all([main, ...names.map(loadBlockSheet)]).then(([module]) => module);
 
 /**
  * A type's module asked for in one wave with the modules it imports that the boot does not load, so no module waits for its importer to arrive.
@@ -16,33 +29,33 @@ const beside = (main, ...parts) => {
 
 /** The core block types and the modules that define them. */
 export const CORE_BLOCKS = {
-  text: () => beside(import('./blocks/text.js'), import('./box-style.js'), import('./sanitize.js')).then((m) => m.textBlock),
-  terms: () => beside(import('./blocks/text.js'), import('./box-style.js'), import('./sanitize.js')).then((m) => m.termsBlock),
-  image: () => beside(import('./blocks/image.js'), import('./picture.js')).then((m) => m.imageBlock),
-  button: () => import('./blocks/button.js').then((m) => m.buttonBlock),
-  shape: () => import('./blocks/shape.js').then((m) => m.shapeBlock),
+  text: () => withSheets(beside(import('./blocks/text.js'), import('./box-style.js'), import('./sanitize.js')), 'text').then((m) => m.textBlock),
+  terms: () => withSheets(beside(import('./blocks/text.js'), import('./box-style.js'), import('./sanitize.js')), 'text').then((m) => m.termsBlock),
+  image: () => withSheets(beside(import('./blocks/image.js'), import('./picture.js')), 'image').then((m) => m.imageBlock),
+  button: () => withSheets(import('./blocks/button.js'), 'button').then((m) => m.buttonBlock),
+  shape: () => withSheets(import('./blocks/shape.js'), 'shape').then((m) => m.shapeBlock),
   spacer: () => import('./blocks/spacer.js').then((m) => m.spacerBlock),
-  video: () => beside(import('./blocks/video.js'), import('./backgrounds/image.js'), import('./backgrounds/video.js'), import('./embed-cover.js'), import('./picture.js')).then((m) => m.videoBlock),
-  icon: () => import('./blocks/icon.js').then((m) => m.iconBlock),
-  collection: () => beside(import('./blocks/collection.js'), import('./picture.js'), import('./sanitize.js')).then((m) => m.collectionBlock),
-  gallery: () => beside(import('./blocks/gallery.js'), import('./blocks/image.js'), import('./blocks/ribbon.js'), import('./gallery-layout.js'), import('./gallery-model.js'), import('./picture.js'), import('./ribbon-model.js')).then((m) => m.galleryBlock),
-  faq: () => beside(import('./blocks/faq.js'), import('./box-style.js'), import('./sanitize.js')).then((m) => m.faqBlock),
-  timeline: () => import('./blocks/timeline.js').then((m) => m.timelineBlock),
-  quote: () => beside(import('./blocks/quote.js'), import('./blocks/timeline.js'), import('./picture.js')).then((m) => m.quoteBlock),
-  stats: () => import('./blocks/stats.js').then((m) => m.statsBlock),
-  table: () => import('./blocks/table.js').then((m) => m.tableBlock),
-  share: () => import('./blocks/share.js').then((m) => m.shareBlock),
-  contact: () => beside(import('./blocks/contact.js'), import('./blocks/map.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js')).then((m) => m.contactBlock),
-  privacy: () => beside(import('./blocks/privacy.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js'), import('./privacy-model.js')).then((m) => m.privacyBlock),
-  countdown: () => import('./blocks/countdown.js').then((m) => m.countdownBlock),
-  audio: () => import('./blocks/audio.js').then((m) => m.audioBlock),
-  product: () => beside(import('./blocks/product.js'), import('./blocks/collection.js'), import('./picture.js'), import('./sanitize.js')).then((m) => m.productBlock),
-  cart: () => import('./blocks/cart.js').then((m) => m.cartBlock),
-  checkout: () => import('./blocks/checkout.js').then((m) => m.checkoutBlock),
-  map: () => beside(import('./blocks/map.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js')).then((m) => m.mapBlock),
-  form: () => beside(import('./blocks/form.js'), import('./form-model.js')).then((m) => m.formBlock),
+  video: () => withSheets(beside(import('./blocks/video.js'), import('./backgrounds/image.js'), import('./backgrounds/video.js'), import('./embed-cover.js'), import('./picture.js')), 'video').then((m) => m.videoBlock),
+  icon: () => withSheets(import('./blocks/icon.js'), 'icon').then((m) => m.iconBlock),
+  collection: () => withSheets(beside(import('./blocks/collection.js'), import('./picture.js'), import('./sanitize.js')), 'collection').then((m) => m.collectionBlock),
+  gallery: () => withSheets(beside(import('./blocks/gallery.js'), import('./blocks/image.js'), import('./blocks/ribbon.js'), import('./gallery-layout.js'), import('./gallery-model.js'), import('./picture.js'), import('./ribbon-model.js')), 'gallery', 'image', 'ribbon').then((m) => m.galleryBlock),
+  faq: () => withSheets(beside(import('./blocks/faq.js'), import('./box-style.js'), import('./sanitize.js')), 'faq').then((m) => m.faqBlock),
+  timeline: () => withSheets(import('./blocks/timeline.js'), 'timeline').then((m) => m.timelineBlock),
+  quote: () => withSheets(beside(import('./blocks/quote.js'), import('./blocks/timeline.js'), import('./picture.js')), 'quote', 'timeline').then((m) => m.quoteBlock),
+  stats: () => withSheets(import('./blocks/stats.js'), 'stats').then((m) => m.statsBlock),
+  table: () => withSheets(import('./blocks/table.js'), 'table').then((m) => m.tableBlock),
+  share: () => withSheets(import('./blocks/share.js'), 'share').then((m) => m.shareBlock),
+  contact: () => withSheets(beside(import('./blocks/contact.js'), import('./blocks/map.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js')), 'contact', 'map').then((m) => m.contactBlock),
+  privacy: () => withSheets(beside(import('./blocks/privacy.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js'), import('./privacy-model.js')), 'privacy').then((m) => m.privacyBlock),
+  countdown: () => withSheets(import('./blocks/countdown.js'), 'countdown').then((m) => m.countdownBlock),
+  audio: () => withSheets(import('./blocks/audio.js'), 'audio').then((m) => m.audioBlock),
+  product: () => withSheets(beside(import('./blocks/product.js'), import('./blocks/collection.js'), import('./picture.js'), import('./sanitize.js')), 'product', 'collection').then((m) => m.productBlock),
+  cart: () => withSheets(import('./blocks/cart.js'), 'cart').then((m) => m.cartBlock),
+  checkout: () => withSheets(import('./blocks/checkout.js'), 'checkout').then((m) => m.checkoutBlock),
+  map: () => withSheets(beside(import('./blocks/map.js'), import('./embed-cover.js'), import('./osm.js'), import('./picture.js')), 'map').then((m) => m.mapBlock),
+  form: () => withSheets(beside(import('./blocks/form.js'), import('./form-model.js')), 'form').then((m) => m.formBlock),
   calendar: () => beside(import('./blocks/calendar.js'), import('./blocks/calendar-load.js'), import('./sanitize.js')).then((m) => m.calendarBlock),
-  ribbon: () => beside(import('./blocks/ribbon.js'), import('./ribbon-model.js')).then((m) => m.ribbonBlock),
+  ribbon: () => withSheets(beside(import('./blocks/ribbon.js'), import('./ribbon-model.js')), 'ribbon').then((m) => m.ribbonBlock),
 };
 
 /** The core background layer types and the modules that define them. */
@@ -53,7 +66,7 @@ export const CORE_BACKGROUNDS = {
   grain: () => import('./backgrounds/grain.js').then((m) => m.grainLayer),
   pattern: () => import('./backgrounds/pattern.js').then((m) => m.patternLayer),
   image: () => beside(import('./backgrounds/image.js'), import('./picture.js')).then((m) => m.imageLayer),
-  slideshow: () => beside(import('./backgrounds/slideshow.js'), import('./backgrounds/image.js'), import('./gallery-layout.js'), import('./gallery-model.js'), import('./photo-source.js'), import('./picture.js'), import('./ribbon-model.js')).then((m) => m.slideshowLayer),
+  slideshow: () => withSheets(beside(import('./backgrounds/slideshow.js'), import('./backgrounds/image.js'), import('./gallery-layout.js'), import('./gallery-model.js'), import('./photo-source.js'), import('./picture.js'), import('./ribbon-model.js')), 'gallery').then((m) => m.slideshowLayer),
   video: () => beside(import('./backgrounds/video.js'), import('./backgrounds/image.js'), import('./picture.js')).then((m) => m.videoLayer),
 };
 

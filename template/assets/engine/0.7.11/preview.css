@@ -393,6 +393,60 @@ html.urd-drag-up * {
   cursor: n-resize !important;
 }
 
+/* The side menu's drag handle for the column width (nav.js adds it in the preview alone). */
+.urd-preview .urd-nav-side-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -3px;
+  width: 8px;
+  cursor: ew-resize;
+  z-index: 2;
+}
+
+.urd-preview .urd-nav-side-host-right .urd-nav-side-resize {
+  right: auto;
+  left: -3px;
+}
+
+.urd-preview .urd-nav-side-resize:hover {
+  background: color-mix(in srgb, var(--urd-color-accent) 45%, transparent);
+}
+
+/* The drag handle is hidden when the column has fallen back to a top bar, and in Clean view. */
+body.urd-preview.urd-mobile .urd-nav-side-resize,
+body.urd-preview.urd-chrome-off .urd-nav-side-resize {
+  display: none;
+}
+
+/* An empty gallery's note in the preview (gallery.js), the same pattern as the image block's. */
+.urd-preview .urd-gallery-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.6;
+  border: 1px dashed color-mix(in srgb, var(--urd-color-text) 30%, transparent);
+  border-radius: var(--urd-radius-md);
+}
+
+/* The map's note to the owner where the site's policy blocks the map (map.js), with the line to add.
+   Visitors get a link to the map instead. */
+.urd-preview .urd-map-code {
+  padding: 4px 8px;
+  border-radius: 5px;
+  font: 12px/1.4 ui-monospace, monospace;
+  background: color-mix(in srgb, var(--urd-color-text) 10%, transparent);
+}
+
+.urd-preview .urd-map-note {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
 /* Empty cells keep a click target while editing. */
 .urd-preview .urd-table-table [contenteditable]:empty::after {
   content: '\00a0';
@@ -887,6 +941,18 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
 .urd-preview.urd-chrome-off .urd-spacer {
   background: none;
   outline: 0;
+}
+
+/* The space block's height in px, which spacer.js writes in the preview alone. */
+.urd-preview .urd-spacer-size {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 600 11px/1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 85%, currentColor);
+  pointer-events: none;
 }
 
 .urd-preview.urd-chrome-off .urd-spacer-size {

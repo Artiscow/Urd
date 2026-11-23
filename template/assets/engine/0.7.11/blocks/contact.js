@@ -3,7 +3,7 @@
  * It draws what the Legal panel holds under Who you are (site.contact, contact-model.js), so a changed phone number shows on every page at once.
  * The details are an <address> in one of the designs of CONTACT_DESIGNS: the plain lines, icon rows, a card, three tiles, a fact list, action buttons, beside a map that loads on a tap, a strip, a poster, the contact points by role, or beside a QR code that saves the contact.
  * Two options work with the designs: a button that saves the details as a contact card (vCard), and a bar docked to the bottom of a phone's screen with the call, email and map actions.
- * Each design has its narrow layout in base.css by the block's own width (a container query), so a phone and a narrow frame both get it.
+ * Each design has its narrow layout in contact.css by the block's own width (a container query), so a phone and a narrow frame both get it.
  */
 // ta() is only called in preview (after the admin dictionary has loaded), t() only at render: never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
@@ -362,7 +362,7 @@ function saveButton(site, name, model) {
 
 /**
  * The bar docked to the bottom of a phone's screen: call, email and the map, each when the site has it.
- * It is a manual popover, so the top layer places it over the page whatever the block's ancestors are transformed by; without the Popover API it stays fixed by its rules in base.css.
+ * It is a manual popover, so the top layer places it over the page whatever the block's ancestors are transformed by; without the Popover API it stays fixed by its rules in contact.css.
  * One bar per page: a block whose bar finds another one open leaves its own out.
  */
 function dockBar(model, site) {

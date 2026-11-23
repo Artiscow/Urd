@@ -556,7 +556,7 @@ export const productBlock = {
         return;
       }
       const grid = el2('div', 'urd-product-cardlist');
-      // The owner's column count, which a narrow block holds to two and then one (base.css).
+      // The owner's column count, which a narrow block holds to two and then one (product.css).
       const columns = Math.min(6, Math.max(0, Number(props.columns) || 0));
       if (columns) {
         grid.classList.add('urd-product-cols');

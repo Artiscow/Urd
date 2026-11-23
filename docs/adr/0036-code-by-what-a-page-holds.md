@@ -1,7 +1,7 @@
 # ADR-0036: Code by what a page holds
 
 Date: 21 November 2026
-Status: Accepted. Decided while building BACKLOG 0.7.37.3.4 on 21 November 2026, from finding V1 of the audit of 20 November 2026. It rewrites a consequence of [ADR-0013](0013-immutable-engine-versioning.md), whose deferral of per-page loading it takes up.
+Status: Accepted. Decided while building BACKLOG 0.7.37.3.4 on 21 November 2026, from finding V1 of the audit of 20 November 2026. It rewrites a consequence of [ADR-0013](0013-immutable-engine-versioning.md), whose deferral of per-page loading it takes up. Amended 23 November 2026 (0.7.37.3.16): a type's own CSS loads with its module (decision 7), earlier text in [amended/](amended/0036-code-by-what-a-page-holds-until-2026-11-23.md).
 
 ## Context
 
@@ -23,6 +23,8 @@ ADR-0013 deferred loading by page, since a shell that differs from page to page 
 
 6. **An old id loads the type it stands for.** A page holding `kalender`, `kart` or `skjema` loads the calendar, the map or the form ([ADR-0021](0021-english-code-text-and-contract-identifiers.md)), and a plugin that still defines such an old id keeps winning for its own data, since an old id is no core id.
 
+7. **A type's own CSS loads with its module.** A block module's own rules stand in a sheet beside it (`blocks/<name>.css`), and a type's loader asks for the sheets of the block modules it draws with in the same wave as the modules, so the page is drawn with them in place. The sheets stand after base.css in the order their rules stood there, whatever order they come in, and a rule stays in base.css where its move would change which of two rules that could set the same property on the same element wins. base.css keeps what every page draws, the rules several types share, and the block rules kept there for their order.
+
 ## Consequences
 
 - A page's block modules are asked for once its page file is read, a round trip after the boot's own modules, where they came in the first wave before. The bytes saved outweigh that round trip: measured on the template's pages as a phone slowed four times, 21 November 2026, they fetch 23 to 39 % less JavaScript and show their first content 0.1 to 0.2 s sooner, and sooner still on a slow network.
@@ -30,6 +32,8 @@ ADR-0013 deferred loading by page, since a shell that differs from page to page 
 - A core block that draws with more than its own module (the calendar's parser, design model, stylesheet and renderers) is readied beside the page's types, and the page waits for it at most half a second (`CORE_BLOCK_READY` in `core-types.js`), so the block stands in its own design in the page's first frame without holding the page on a slow connection.
 - Anything that draws blocks outside a page, its nav and its footer must load their types first (`loadCoreTypes`).
 - A plugin cannot count on reading a core type's definition (`get`) when it registers or draws: on a visitor's page the engine defines only the types the page holds, while the editor's preview defines them all.
+- A page loads the CSS of the types it holds alone: base.css went from 32.3 to 22.3 KB compressed, each type's sheet coming with its module. The block sheets are cached as the engine is and need no stamp; base.css keeps its stamp.
+- A plugin block that drew with a core type's classes finds their rules only on a page that holds that type, or in the editor's preview, which loads every type; it carries the rules it needs in its own sheet.
 - An open tab whose engine folder an update has deleted (ADR-0013 decision 5) can no longer load a type it did not hold, nor the basket's drawer: such a type is drawn as unknown, and the basket opens the checkout page.
-- The nav's basket loads its drawer from the cart block's module as a nav with a basket is drawn.
+- The nav's basket loads its drawer from the cart block's module, with its sheet, as a nav with a basket is drawn.
 - Per-page module lists in the shells, which would let a page's modules come in the first wave, stay with the v0.8 baking, which must keep the copy-refresh duty when it writes them.

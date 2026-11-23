@@ -7,6 +7,10 @@ The full text of the longer comments in the engine's `core-types.js`, in the fil
 The engine's own block and background types, each with the module that defines it (ADR-0036): a visitor's page loads the modules of the types it, its nav and its footer use, and the editor's preview loads them all.
 The loaders name their modules literally, so the modules stay out of the boot's static closure and the shells' preload list, and are fetched from the versioned engine folder as they are asked for (ADR-0013).
 
+## `const withSheets`
+
+A type is defined once its module and the sheets of the block modules it draws with are in (ADR-0036 decision 7), so the page that waits for its types is drawn with their rules in place, and a block module two types draw with (the image in the gallery, the timeline in the quote) brings its sheet with either. The sheets are fetched in the wave the modules are, so they cost no round trip of their own. Each is placed after base.css in the order `BLOCK_SHEETS` keeps, the order their rules stood in base.css (`placeInOrder` in render.js), since a rule that meets another at equal specificity wins by its place; base.css's link is found by its address, as the shells all name it. A sheet that fails resolves as not loaded, and its type draws without it, as a type whose module fails is drawn as unknown.
+
 ## `const beside`
 
 A type's module asked for beside the modules it imports, directly or through others, that the boot does not load, in one wave: the browser shares a request already on its way, so no module waits for the module that imports it to arrive first.

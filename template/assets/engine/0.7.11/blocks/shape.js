@@ -27,7 +27,7 @@ export const shapeBlock = {
     const color = resolveColor(props.color);
 
     // The chapter divider: the line drawn on both sides of a word. The two
-    // strokes are the element's ::before and ::after (base.css), so the word
+    // strokes are the element's ::before and ::after (shape.css), so the word
     // sits in the flow between them and the line keeps its thickness.
     const label = props.kind === 'line' && typeof props.label === 'string' ? props.label.trim() : '';
     if (label) {

@@ -76,10 +76,6 @@ A block with its own height places its content in the box (ADR-0025 decision 3; 
 
 A block with a height of its own on the phone (frames.mobile.height, render.js data-urd-phone-h) stands at least that tall, and its content fills the box, so a text's card is as tall as the block: the same grid of one row.
 
-### `.urd-block[data-urd-align="stretch"] > .urd-stats-box > .urd-stats`
-
-What stretch gives each block type that can use the height (STRETCHES in push-model.js, and the calendar by design): the figure stands in the middle of its box, the countdown's units grow with the box and keep their digits in the middle, a quote's text stands in the middle of its card, and the plain list and card calendar views spread their rows and cards over the height left under the finding tools and over the subscribe row.
-
 ### `.urd-block-ruler`
 
 A block's ruler (blocks/calendar.js): no height and the block's full width, so a ResizeObserver on it hears the width alone and a layout chosen in script by the block's width follows a drag, while the push pass changes the block's height freely.
@@ -132,18 +128,6 @@ Text box: a text block with its content in a card (props.box on the text block).
 
 The theme's thin border: visible enough to read as an edge. "Custom color" in the card style overrides it.
 
-### `.urd-faq`
-
-The FAQ accordion: question cards (sharing the .urd-text-box base style) where the answer unfolds with the ::details-content height transition below.
-
-### `.urd-faq-item`
-
-Each question is a native `<details>`.
-
-### `.urd-faq-head`
-
-`<summary>`: hide the default triangle (flex removes it in Chromium; list-style and the webkit marker cover the rest).
-
 ### `.urd-text[data-urd-measure] > *`
 
 «Force readable text» on the desktop (ADR-0034, blocks/text.js data-urd-measure): a text's lines wrap at 75 characters of its own font, each paragraph standing by the text's alignment, so the box and a text box's card keep their frame.
@@ -152,105 +136,13 @@ Each question is a native `<details>`.
 
 A paragraph aligned by itself (the text bar writes its alignment on it) stands by its own alignment within the box
 
-### `.urd-faq-list`
-
-The list variant (faq.variant): bare rows with a rule between them, not cards.
-
-### `.urd-shape-chapter`
-
-The chapter divider (a line shape with a label): the word in the middle and the line on both sides of it, at the line's own thickness.
-
-### `@supports (interpolate-size: allow-keywords) { .urd-faq`
-
-Soft unfolding where the browser supports ::details-content + interpolate-size (Chromium early 2026): the answer slides open and closed in height. Without support native `<details>` reveals the answer instantly. The content-visibility transition (allow-discrete) keeps the content visible through the collapse.
-
-### `.urd-timeline`
-
-The timeline: events along a drawn line, pure CSS. The accent follows the theme, but can be overridden per block (--urd-timeline-accent).
-
-### `.urd-timeline-left`
-
-The left variant: the line along the left edge, the content indented.
-
-### `.urd-timeline-ring .urd-timeline-item::before`
-
-The ring marker: an open circle on the line instead of a filled dot.
-
-### `.urd-timeline-alternating::before`
-
-The alternating variant: the line down the middle, cards on alternating sides.
-
-### `@container urd-block (max-width: 480px) { .urd-timeline-alternating`
-
-A narrow block (its own width, see urd-block) has no room for two columns of cards: the alternating variant lays its line along the left edge, with every card under the one before it.
-
-### `.urd-quote`
-
-The quote: a semantic figure/blockquote. The glyph is drawn in ::before.
-
-### `.urd-quote-portrait`
-
-The portrait's round frame clips its picture, which the image editor's settings place, turn and finish (picture.js)
-
-### `.urd-quote-card`
-
-The large quote in a card (quote.card): the spread set on the surface colour under a rule in the accent.
-
-### `.urd-stats`
-
-The stat: one key figure with a label. Tabular nums so the count-up animation does not jump in width along the way.
-
-### `.urd-stats-box`
-
-The figure stands in a box of its own, the width its narrow rules ask (see urd-block).
-
-### `.urd-stats-box:has(> .urd-stats-cards, > .urd-stats-band)`
-
-The figure's two dressed variants (stats.variant): a card on the surface colour, and a band of the accent colour with the accent's own text colour. Both fill the block's box, which follows the content (ADR-0025), so three in a row line up as one strip when their figures and labels take the same height.
-
-### `@container urd-block (max-width: 220px) { .urd-stat-number`
-
-A very narrow block (its own width, see urd-block): a smaller figure and less padding, so a long number stays inside the box.
-
-### `.urd-table`
-
-The table: a semantic table in an overflow wrapper, so wide tables scroll in their own surface instead of breaking the page layout.
-
 ### `@container urd-block (max-width: 420px) { .urd-table-table th, .urd-table-table td`
 
 A narrow block (its own width, see urd-block): tighter cells, so more of the table is seen before it scrolls sideways.
 
-### `.urd-share`
-
-Share buttons: plain links with drawn icons, no tracking.
-
-### `.urd-share-empty`
-
-Nothing to draw yet: the editor's own line where the row would be (the published page draws nothing).
-
-### `.urd-share-name`
-
-Icons only by default; the name variant turns the buttons into pills.
-
-### `.urd-countdown`
-
-The countdown: unit boxes with tabular nums, so the ticking never jumps in width.
-
-### `.urd-audio`
-
-The audio block: a native player with an optional title above.
-
 ### `.urd-audio audio : color-scheme`
 
 The player chrome follows the user's OS theme, like the date picker in the form.
-
-### `.urd-map`
-
-The map block: OpenStreetMap's own iframe with a "larger map" link; the empty state and the CSP note share one dashed box.
-
-### `.urd-map`
-
-The map's box is its frame (ADR-0025 decision 2): the iframe takes the height left over the «Larger map» line.
 
 ### `.urd-cover`
 
@@ -280,14 +172,6 @@ A small cover keeps the button whole: the line goes first, then the box, then th
 
 On the owner's own image the words are light, with a shadow to read on any picture
 
-### `.urd-form`
-
-The form block: the visitor form.
-
-### `.urd-form-select, .urd-form-input[type="date"]`
-
-Native select and date input for visitors (ADR-0009 covers editing UI only): color-scheme lets the popup and the date picker follow the user's OS theme.
-
 ### `.urd-cal[aria-busy="true"]`
 
 The loading state: quiet bars at the block's height until the calendar's code is in and draws its own design (blocks/calendar.js), shown only once that takes half a second, and the word for a screen reader.
@@ -295,10 +179,6 @@ The loading state: quiet bars at the block's height until the calendar's code is
 ### `.urd-cal-loading : min-height`
 
 On the phone a calendar stands at the height the editor measured there (--urd-loading-h, render.js), unless the session has seen it drawn on this device (the inline min-height, blocks/calendar.js).
-
-### `.urd-product-cardlist`
-
-The shop: product cards from a product collection. The card list is a responsive grid; the block can lock the column count in Style.
 
 ### `@supports (grid-template-rows: subgrid) { .urd-product-cardlist > .urd-product-card`
 
@@ -320,101 +200,21 @@ The children take their rows by what they are, so a missing part leaves its row 
 
 Positioned in the picture's grid area, so its offsets count from the picture's corner: 8 px, where the card's padding and the 22 px of .urd-product-badge-over meet
 
-### `.urd-product-cardlist.urd-product-cols`
-
-The owner's own column count (product.columns), which a narrow block (its own width, see urd-block) holds to two and then one.
-
-### `.urd-product-card : border`
-
-A thin border, so the card reads even where surface is nearly the background color.
-
-### `.urd-product-badge-over`
-
-With an image the badge is placed over the image's top left corner; without an image it sits as a static chip above the title (never on top of text).
-
-### `.urd-product-options : align-items`
-
-The chips keep their own height where the shared row is taller (another card's request for a choice)
-
-### `.urd-product-options.urd-product-missing .urd-product-chip`
-
-A choice the product asks for (its requireSize, requireColor) and the buyer left open at «Add to basket»: the chips' frames in the form error's colour, and the words under them (product.js markNeed).
-
 ### `.urd-product-buy.urd-product-buy-wait`
 
 A buy button waiting for its product's choices (disableUntilChosen, product.js holdBuy): greyed and inert until they are made
-
-### `.urd-product-buyrow`
-
-The quantity the buyer types (product.js quantityRow) stands with the buy button in one row of the card: its name, the basket's steps around the number, the limits beside it and the line's sum under it.
-
-### `.urd-product-opener`
-
-Quick view (visitors only): the product details in a native `<dialog>`. display is set ONLY in the open state, otherwise the built-in dialog:not([open]) { display: none } would be overridden.
-
-### `.urd-product-titlebtn`
-
-The opener inside the title: a button that looks like the heading's words.
-
-### `.urd-cart-button`
-
-The cart: a button with a count badge; the drawer is a native `<dialog>` anchored to the right edge (ADR-0011).
-
-### `.urd-cart-dialog : margin`
-
-A drawer along the right edge: the dialog's default centering is overridden.
 
 ### `.urd-cart-dialog[open]`
 
 display is set ONLY in the open state: a display value on the dialog itself would override the browser's dialog:not([open]) { display: none } and show the drawer permanently.
 
-### `.urd-cart-emptyrow`
-
-«Empty the basket» under the lines: a quiet text button that asks once in its own place (cart.js emptyRow)
-
-### `.urd-checkout`
-
-Checkout: order summary + order form (mailto/endpoint, ADR-0006).
-
-### `.urd-checkout-hp`
-
-Honeypot: moved out of view, never display:none (bots check for that).
-
-### `.urd-checkout-paychoice`
-
-The buyer's choice among the payment instructions: the form block's radio rows, each way to pay with its instruction under its name.
-
-### `.urd-checkout-recap`
-
-The summary right above the order buttons (angrerettloven § 16): the order in one line and the total.
-
-### `.urd-checkout-vippspay`
-
-Pay with Vipps (ADR-0020): the brand color, independent of the theme.
-
-### `.urd-checkout-confirmation`
-
-The printable order confirmation: a card above the form with the lines, the buyer, the seller and the withdrawal form; printed alone.
-
 ### `.urd-draft-view`
 
 The draft view's mark (?draft=1): the owner's unpublished changes are on the page, in this browser only.
 
-### `.urd-checkout-testmode`
-
-The line a checkout shows while a provider runs on its test keys: a note in a dashed box, never mistaken for the order.
-
 ### `@media print { html.urd-print-order body > :not(:has(.urd-checkout-confirmation)), html.urd-print-order #urd-root > :not(:has(.urd-checkout-confirmation)), html.urd-print-order .urd-section:has(.urd-checkout-confirmation) > :not(:has(.urd-checkout-confirmation)), html.urd-print-order .urd-canvas:has(.urd-checkout-confirmation) > :not(:has(.urd-checkout-confirmation)), html.urd-print-order .urd-checkout > :not(.urd-checkout-confirmation)`
 
 Printing an order: the confirmation alone, at the top of the sheet, in black on white. Everything beside the confirmation's own ancestors is left out, and those ancestors are taken out of the canvas's absolute layout, so the confirmation stands at the top of the first sheet at the sheet's width.
-
-### `.urd-checkout-seller`
-
-The seller under the order buttons (angrerettloven § 8 d): one small wrapping row.
-
-### `.urd-checkout-terms`
-
-The shop's terms of sale under the seller, in the same small type.
 
 ### The help chip (no rule here: engine/hint.js)
 
@@ -452,46 +252,6 @@ A collection or product block is busy while it fetches its entries; on the phone
 
 The image wrapper: the frame owns shape and rounding, and clips the zoom crop
 
-### `.urd-video-ratio`
-
-The video block: a placeholder without a URL, and a click shield while editing (a click should select the block, not start the player)
-
-### `.urd-video-ratio`
-
-A video given a shape: that shape at the block's width, and the block's height follows it (keepsShape in push-model.js)
-
-### `.urd-video-file`
-
-The self-hosted film: it fills the block's frame and keeps its own format inside it.
-
-### `.urd-video-shield`
-
-In the editor's desktop view a press on the video selects the block: the shield stands above the player and above the cover's button, which is lifted over its own picture
-
-### `.urd-icon`
-
-The icon block: the glyph is centered in the frame
-
-### `.urd-image-empty`
-
-Empty image block: a placeholder in the editor only
-
-### `.urd-image-frame`
-
-The image frame: clips the image, so rounding shows whatever the fit is and zoom crops cleanly towards the focal point.
-
-### `.urd-image-frame.urd-image-shaped`
-
-An image given a shape in the image editor: the frame is that shape at the block's width, and the block's height follows it (keepsShape in push-model.js)
-
-### `.urd-block[data-urd-phone-h] > .urd-image-frame.urd-image-shaped, .urd-block[data-urd-phone-h] > a > .urd-image-frame.urd-image-shaped`
-
-A picture or a film with a shape given a height of its own on the phone (frames.mobile.height, render.js) fills that box around its focus point instead of keeping its shape
-
-### `.urd-image-frame.urd-image-own:not(.urd-pic-turned) img`
-
-The picture's own shape: the picture gives the frame its height (a turned one gives it its ratio, picture.js)
-
 ### `:where(.urd-pic-turned, .urd-pic-look-vintage, .urd-pic-overlaid)`
 
 A picture's settings beyond the focus point, zoom and adjustments (picture.js). The turn (quarter turns, flips, straightening) is drawn on a wrapper around the image, so the zoom keeps its focal point inside it; a quarter turn lays the wrapper across its frame, which is then a size container for it. The vintage look's vignette and the overlay are drawn over the picture inside its frame, which isolates them; the duotone is a filter on the picture (an SVG gradient map, picture.js). The frame is placed for its layers only where it has no place of its own (:where), so a frame laid over its box (the embed cover's) stays where it is.
@@ -512,73 +272,17 @@ Image block with a lightbox: a zoom cursor for visitors and in Clean view; with 
 
 The gallery block: three views (grid/carousel/slideshow) over the same image list. The tiles are clipping frames (like .urd-image-frame); clickable tiles are button/a without any button styling of their own.
 
-### `.urd-gallery-grid, .urd-gallery-wall, .urd-gallery-cards`
-
-The grid views (grid, mosaic, polaroid) lay their tiles out in .urd-gallery-tiles inside the gallery, which is the width their narrow rules ask (see urd-block).
-
-### `.urd-gallery-wall > .urd-gallery-tiles`
-
-Mosaic (the gallery block's view; the background layer's mosaic has its own rules under .urd-gallery-mosaic): the grid's wall with rows of one height and tiles in varied spans. Every tile's place is set by the block (mosaicWall in gallery-model.js), so the wall is a full rectangle.
-
 ### `.urd-gallery-cards > .urd-gallery-tiles`
 
 Polaroid: each picture set in a card with a wider foot, leaning by its own throw of the seed (--urd-card-tilt from the block). The card is white with dark ink until the owner picks a colour (--urd-polaroid-color); then the words take the section's text colour. The grid's own padding gives the leaning corners room inside the block.
-
-### `@container urd-block (max-width: 540px) { .urd-gallery-tiles`
-
-A narrow gallery (the block's own width, see urd-block): the grid, the mosaic and the polaroids take the narrow column count the block writes (--urd-gallery-cols-narrow, at most two), and the mosaic its narrow wall. Without container queries the block writes the window's count instead.
-
-### `.urd-gallery-card-plain`
-
-The foot: bare on a card without words, otherwise the image text
-
-### `@media (hover: hover) and (pointer: fine) { .urd-gallery-card`
-
-Under a real pointer the card straightens and lifts, so the picture can be looked at; a touch never gets a hover state that sticks.
-
-### `.urd-gallery-track`
-
-Carousel: horizontal scroll with snap; the arrows scroll one viewport-width step.
-
-### `.urd-gallery-slides`
-
-Slideshow: stacked slides, only .on is visible (and clickable).
-
-### `.urd-gallery-pause`
-
-The slideshow's pause (renderSlides in blocks/gallery.js): the arrows' round button, at the foot beside the dots.
-
-### `.urd-ribbon`
-
-RIBBON (the ribbon block and the gallery's ribbon view). The band is a column of stripes: a thin one above, the main one, a thin one below. Each stripe clips, and its track holds the content in two equal periods, so translating by -50 % of the track lands one period on where the previous one started: a loop without a seam. The duration is measured (ribbon-model.js: the width of one period divided by the speed, or the item count times the dwell for the ticker) and arrives as --urd-ribbon-ms. Everything that moves stands still under reduced motion (the shared switch further down) and while the editing chrome is on (.urd-ribbon-still from the block). The band fills the frame and grows past it with the words, so the block's auto-grow sees the height the text needs.
 
 ### `.urd-ribbon-stripe : overflow`
 
 clip rather than hidden: a clipped flex item keeps its content as its smallest height, so the words are never squeezed to nothing. The width is the band's, never the track's.
 
-### `.urd-ribbon-main`
-
-The main stripe takes what is left; the thin ones keep their thickness.
-
-### `.urd-ribbon-solid`
-
-A stripe of colour alone: the rule above or below the words. The colour is the stripe's own (the block sets it), so currentColor paints it.
-
-### `.urd-ribbon-edges`
-
-On the edges: the thin stripes lie on the band's own top and bottom instead of taking a share of its height, and the main stripe keeps clear of them.
-
 ### `@supports (mask-image: linear-gradient(90deg, transparent, black)) { .urd-ribbon-fade`
 
 The soft edges: the words are not cut off with a hard line. The mask is gated, since without it the band simply keeps its straight edges.
-
-### `.urd-ribbon-motion-sway`
-
-Sway: the band drifts out and back instead of rolling on, for a few words that should move without ever leaving.
-
-### `.urd-ribbon-motion-sway`
-
-The swaying track is one copy, centred in the band and drifting as far to one side as to the other.
 
 ### `.urd-ribbon-motion-step .urd-ribbon-track`
 
@@ -604,22 +308,6 @@ Still: nothing to move, or reduced motion. The words then stand as a row that is
 
 A band that reaches past its block, across the content surface or the window (fitBandReach in blocks/ribbon.js): the block measures the canvas or the section and sets the width and the offset, since vw would count the scrollbar as well.
 
-### `.urd-ribbon-thin`
-
-A thin stripe sets its own scale from its thickness, so the marks and any words in it fit the rule they live in.
-
-### `@supports (-webkit-text-stroke: 1px red) { .urd-ribbon-outline .urd-ribbon-item`
-
-Outlined words: the classic frieze look. The stroke takes the resolved text colour from the block (--urd-ribbon-ink), never currentColor, since the fill is transparent and currentColor follows it. Gated: without the stroke the words are invisible rather than outlined.
-
-### `.urd-gallery-ribbon`
-
-The gallery's ribbon view: the same motion with the tiles as the items. The band fills the block's box (ADR-0025 decision 2) and its rows share the height, so a drag of the frame sets it. The height reaches the tiles through the stripe, the track and the run, since a tile takes its width from its height and the image keeps its aspect. Size containment keeps the images' own height out of the box's, so a box with no height of its own (a row track on the phone) is never stretched by a large picture.
-
-### `.urd-gallery-empty`
-
-Empty state: editor preview only, the same pattern as the image block
-
 ### `html:has(dialog:modal), body:has(dialog:modal)`
 
 Scroll lock while a modal dialog is open (the lightbox today, and any future showModal surface automatically): native :has()/:modal instead of JS bookkeeping of body.style.overflow. Without :has support (outside the baseline tail) only the lock is missing; the dialog itself still works.
@@ -635,14 +323,6 @@ Native `<dialog>` (showModal): top layer, so no z-index is needed. The UA styles
 ### `.urd-lightbox-img.urd-lightbox-across`
 
 A picture given a quarter turn lies across the view, so its largest width and height swap
-
-### `.urd-bg-slideshow`
-
-The image gallery background layer: two stacked images that cross-fade.
-
-### `.urd-bg-slideshow : container-type`
-
-The frames' travel is written in container units, so the section's own size is the unit whatever the window does.
 
 ### `.urd-placeholder`
 
@@ -1120,17 +800,9 @@ An item's description is a box of its own width, so it moves with the text.
 
 The submenu caret follows the text alignment in the column: right-aligned text puts the caret on the LEFT side; centered text is centered without the caret pushing it (the caret is placed absolutely at the edge).
 
-### `.urd-nav-side-resize`
-
-Drag handle for the column width (preview only; nav.js adds it)
-
 ### `body.urd-mobile .urd-nav-side-host`
 
 On mobile a side menu falls back to the top bar with a burger: the column becomes an ordinary sticky top bar and the body padding is removed. (Narrow windows below 900px are handled in nav.js: effective variant bar, no rules of their own.)
-
-### `body.urd-mobile .urd-nav-side-resize, body.urd-chrome-off .urd-nav-side-resize`
-
-The drag handle for the column width (preview only) is hidden when the column has fallen back to a top bar, and in Clean view
 
 ### `body.urd-mobile .urd-nav-var-floating.urd-nav-open .urd-nav-list, .urd-nav-mobile.urd-nav-var-floating.urd-nav-open .urd-nav-list`
 
@@ -1316,14 +988,6 @@ The row's room is the heading's own (in its own size), so a row is as tall in th
 
 In the editor a question's row is its heading itself, a plain block so its formatted words keep their spaces, the chevron at its right.
 
-### `.urd-text-doc[data-design="clauses"] .urd-text`
-
-Numbered clauses: each part numbered in a badge in the accent, and its paragraphs numbered under it (7.1, 7.2), as a contract sets them; a withdrawal form inside is left unnumbered.
-
-### `.urd-text-doc[data-design="clauses"] .urd-text > h2::before`
-
-The clause's number stands before the heading's words as an inline badge, so the words keep their own spacing.
-
 ### `.urd-doc-ledger-wrap`
 
 The ledgers: what is collected, why, who gets it and how long, at the text's own width and with the same look on a phone. The table puts it in three columns, who gets it under the why in a quieter line; the cards give each kind its own card, the names beside their lines.
@@ -1340,14 +1004,6 @@ A withdrawal form printed alone (doc-look.js addFormPrint): everything else on t
 
 The blocks and sections carry their sizes inline (render.js frameToCss), so the print's reset has to outweigh them, or the form prints with the section's height of blank paper after it.
 
-### `.urd-privacy`
-
-The privacy block (blocks/privacy.js): the site's privacy page, written from its settings, in its document design: a long read in a comfortable measure, the lists with room, and the visitor's own choices in a card with the press that takes a choice back.
-
-### `.urd-privacy[data-align="center"]:not([data-design="contents"])`
-
-The privacy page centred in its block, as it stands unless the owner sets it to the left: its column stands in the middle of the block (the contents design centres its text between the list and the block's other edge instead).
-
 ### `@container urd-doc (min-width: 641px) { .urd-privacy .urd-doc-cols`
 
 Beside its contents the privacy page keeps its text at its measure, on either side; a narrow page has the one column every document has.
@@ -1355,62 +1011,6 @@ Beside its contents the privacy page keeps its text at its measure, on either si
 ### `@container urd-doc (min-width: 641px) and (max-width: 940px) { .urd-doc[data-align="center"] .urd-doc-cols`
 
 Contents and text centred between them need room for both columns and the text: a document narrower than that stands beside its list, centred again once the block is wide enough.
-
-### `.urd-contact`
-
-The contact block (blocks/contact.js): the site's contact details in one of its designs, an `<address>` whose own width picks each design's narrow layout (a container query), so a phone and a narrow frame both get it. Links keep the text colour, labels and actions take the accent.
-
-### `.urd-contact-icons .urd-contact-in`
-
-Icon rows: each detail after its icon in a circle tinted with the accent.
-
-### `.urd-contact-card .urd-contact-in`
-
-The card: the details on the theme's surface, two columns that stack when the card is narrow, the legal line along the bottom.
-
-### `.urd-contact-tiles .urd-contact-in`
-
-Three tiles: visit, call and write, side by side while each has room and stacked when not.
-
-### `.urd-contact-facts .urd-contact-in`
-
-The fact list: a named row for each detail between thin rules.
-
-### `.urd-contact-actions`
-
-Action buttons, and the save button every design but the strip can carry: round buttons, the first action filled with the accent.
-
-### `.urd-contact-map .urd-contact-in`
-
-Beside a map: the details and OpenStreetMap's map behind a cover that loads it on a tap, stacked when the block is narrow.
-
-### `.urd-contact-mapbox > .urd-cover`
-
-The site's cover over the contact map: it fills the box and leaves the box's own grid behind it
-
-### `.urd-contact-strip .urd-contact-in`
-
-The strip: the name and every detail on one row, on a band in the theme's text colour unless the band is off; one per line when narrow.
-
-### `.urd-contact-poster .urd-contact-in`
-
-The poster: the email and the phone in large type on the accent colour, the address and the legal line small below.
-
-### `.urd-contact-roles .urd-contact-in`
-
-By role: a card for each contact point, a divided list when narrow.
-
-### `.urd-contact-qr .urd-contact-in`
-
-Beside a QR code: the code on white with its caption, beside the details; under them in a row of its own when narrow.
-
-### `.urd-contact-dock`
-
-The bar docked to the bottom of a phone's screen (the dock option): call, email and the map, the first filled. It is a manual popover in the top layer, and these rules place it whether the Popover API is there or not; the page keeps room for it below its last line.
-
-### `.urd-contact-dock[popover]:not(:popover-open)`
-
-Until it stands in the top layer the bar is hidden where the Popover API exists; without the API the selector is unknown, the rule drops, and the bar stands fixed by the rule above.
 
 ### `.urd-footer-linkrow`
 
@@ -1431,26 +1031,6 @@ Newsletter form.
 ### `.urd-footer-hp`
 
 Honeypot: completely hidden from humans, visible to bots.
-
-### `.urd-button`
-
-Buttons
-
-### `.urd-button-primary`
-
-The owner's colours (button.js) stand in --urd-btn-*: the fill, the words, the outline and the fill under the pointer; one not set falls back to the design's colour from the theme
-
-### `.urd-button-primary : color`
-
-Text on accent: without the token the background color is used, so palettes that do not define it render unchanged
-
-### `.urd-button-primary.urd-button-own-border`
-
-A filled button has a line only where the owner gives it one, so a button without one keeps every pixel of its room for its words
-
-### `.urd-button.urd-button-own-hover:hover`
-
-A fill of the owner's own under the pointer takes the place of the design's lightening
 
 ### `.urd-bg-pan-runner, .urd-bg-orbit-runner`
 
@@ -1487,74 +1067,6 @@ The image gallery layer's frame styles (backgrounds/slideshow.js). A frame is th
 ### `.urd-gallery-skin`
 
 The skin and the face both take the shape (a clip-path, or a rounding for the shapes that are drawn with one), so a look that sets the face in shows the skin around it in the same shape. The host writes --urd-frame-radius from the rounding setting; a shape that is not a rectangle overrides it.
-
-### `.urd-gallery-shape-circle`
-
-The shapes. The regular ones are cut, the organic ones are rounded.
-
-### `.urd-gallery-look-shadow .urd-gallery-box`
-
-The looks: what surrounds the picture. A shadow has to be a drop-shadow on the box, since a box-shadow is cut away with the shape.
-
-### `.urd-gallery-look-polaroid .urd-gallery-box`
-
-A polaroid: a white card with the picture set in and a wider foot; the card stays a card whatever shape the picture is cut to.
-
-### `.urd-gallery-look-border .urd-gallery-skin`
-
-The bordered looks draw with the frame colour the layer sets (--urd-frame-color: the owner's pick, or the look's own).
-
-### `.urd-gallery-look-tape .urd-gallery-box::before, .urd-gallery-look-pin .urd-gallery-box::before`
-
-Tape and a pin sit on the box, above the skin, and lean a touch.
-
-### `.urd-gallery-look-stamp .urd-gallery-skin`
-
-A stamp: perforated teeth around a white paper edge.
-
-### `.urd-gallery-look-film .urd-gallery-skin`
-
-Film: a dark strip with sprocket holes along the top and bottom.
-
-### `.urd-gallery-look-soft .urd-gallery-face`
-
-A soft edge: the picture fades out towards its rim.
-
-### `.urd-gallery-tone-mono .urd-gallery-face, .urd-gallery-tone-mono .urd-bg-slide`
-
-The tones: a finish on the picture itself, on the fill's slides too.
-
-### `.urd-gallery-tone-duotone .urd-gallery-face, .urd-gallery-tone-duotone .urd-bg-slide`
-
-Duotone: the picture in grey, tinted with the accent colour.
-
-### `.urd-gallery-travel`
-
-Travel: from outside one edge to outside the opposite one, in container units set by the layer (--tx0/--ty0 to --tx1/--ty1), so the jump back is never seen.
-
-### `.urd-gallery-kenburns`
-
-Breathing: grows a little and back. On the floating layout it rides on the whole frame, so a card breathes as one thing; on a mosaic tile, on the face.
-
-### `.urd-gallery-fade`
-
-The cross-fade: in, a long stand, and out, with the swap at the foot where the frame is invisible.
-
-### `.urd-gallery-bounce-x`
-
-The bounce: across on the box, up and down on the skin, two periods.
-
-### `.urd-gallery-band`
-
-The band: rows of tiles rolling on the ribbon's track, centred in the section.
-
-### `.urd-gallery-band .urd-ribbon-track, .urd-gallery-band .urd-ribbon-run`
-
-The height has to reach the tiles through the track and the run, since a tile takes its width from its height.
-
-### `.urd-gallery-mosaic`
-
-The mosaic: a wall of four columns, two on a phone, some tiles two wide or two high, clipped by the layer at the section's foot.
 
 ### `.urd-bg-demo, .urd-gallery-frame-empty`
 
@@ -1659,3 +1171,525 @@ The words alone answer the mouse as the menu's links do (nav.style.hover): the c
 ### `body.urd-mobile .urd-totop[class*="urd-totop-press-"]:active`
 
 And a touch on a phone as the menu's links answer it (nav.style.mobile.press): drawn at once while pressed and let go of slowly, so a short tap is seen
+
+# blocks/stats.css, rule by rule
+
+### `.urd-block[data-urd-align="stretch"] > .urd-stats-box > .urd-stats`
+
+What stretch gives each block type that can use the height (STRETCHES in push-model.js, and the calendar by design): the figure stands in the middle of its box, the countdown's units grow with the box and keep their digits in the middle, a quote's text stands in the middle of its card, and the plain list and card calendar views spread their rows and cards over the height left under the finding tools and over the subscribe row.
+
+### `.urd-stats`
+
+The stat: one key figure with a label. Tabular nums so the count-up animation does not jump in width along the way.
+
+### `.urd-stats-box`
+
+The figure stands in a box of its own, the width its narrow rules ask (see urd-block).
+
+### `.urd-stats-box:has(> .urd-stats-cards, > .urd-stats-band)`
+
+The figure's two dressed variants (stats.variant): a card on the surface colour, and a band of the accent colour with the accent's own text colour. Both fill the block's box, which follows the content (ADR-0025), so three in a row line up as one strip when their figures and labels take the same height.
+
+### `@container urd-block (max-width: 220px) { .urd-stat-number`
+
+A very narrow block (its own width, see urd-block): a smaller figure and less padding, so a long number stays inside the box.
+
+# blocks/countdown.css, rule by rule
+
+### `.urd-countdown`
+
+The countdown: unit boxes with tabular nums, so the ticking never jumps in width.
+
+# blocks/quote.css, rule by rule
+
+### `.urd-quote`
+
+The quote: a semantic figure/blockquote. The glyph is drawn in ::before.
+
+### `.urd-quote-portrait`
+
+The portrait's round frame clips its picture, which the image editor's settings place, turn and finish (picture.js)
+
+### `.urd-quote-card`
+
+The large quote in a card (quote.card): the spread set on the surface colour under a rule in the accent.
+
+# blocks/faq.css, rule by rule
+
+### `.urd-faq`
+
+The FAQ accordion: question cards (sharing the .urd-text-box base style) where the answer unfolds with the ::details-content height transition below.
+
+### `.urd-faq-item`
+
+Each question is a native `<details>`.
+
+### `.urd-faq-head`
+
+`<summary>`: hide the default triangle (flex removes it in Chromium; list-style and the webkit marker cover the rest).
+
+### `.urd-faq-list`
+
+The list variant (faq.variant): bare rows with a rule between them, not cards.
+
+### `@supports (interpolate-size: allow-keywords) { .urd-faq`
+
+Soft unfolding where the browser supports ::details-content + interpolate-size (Chromium early 2026): the answer slides open and closed in height. Without support native `<details>` reveals the answer instantly. The content-visibility transition (allow-discrete) keeps the content visible through the collapse.
+
+# blocks/shape.css, rule by rule
+
+### `.urd-shape-chapter`
+
+The chapter divider (a line shape with a label): the word in the middle and the line on both sides of it, at the line's own thickness.
+
+# blocks/timeline.css, rule by rule
+
+### `.urd-timeline`
+
+The timeline: events along a drawn line, pure CSS. The accent follows the theme, but can be overridden per block (--urd-timeline-accent).
+
+### `.urd-timeline-left`
+
+The left variant: the line along the left edge, the content indented.
+
+### `.urd-timeline-ring .urd-timeline-item::before`
+
+The ring marker: an open circle on the line instead of a filled dot.
+
+### `.urd-timeline-alternating::before`
+
+The alternating variant: the line down the middle, cards on alternating sides.
+
+### `@container urd-block (max-width: 480px) { .urd-timeline-alternating`
+
+A narrow block (its own width, see urd-block) has no room for two columns of cards: the alternating variant lays its line along the left edge, with every card under the one before it.
+
+# blocks/table.css, rule by rule
+
+### `.urd-table`
+
+The table: a semantic table in an overflow wrapper, so wide tables scroll in their own surface instead of breaking the page layout.
+
+# blocks/share.css, rule by rule
+
+### `.urd-share`
+
+Share buttons: plain links with drawn icons, no tracking.
+
+### `.urd-share-empty`
+
+Nothing to draw yet: the editor's own line where the row would be (the published page draws nothing).
+
+### `.urd-share-name`
+
+Icons only by default; the name variant turns the buttons into pills.
+
+# blocks/audio.css, rule by rule
+
+### `.urd-audio`
+
+The audio block: a native player with an optional title above.
+
+# blocks/map.css, rule by rule
+
+### `.urd-map`
+
+The map block: OpenStreetMap's own iframe with a "larger map" link; the empty state and the CSP note share one dashed box.
+
+### `.urd-map`
+
+The map's box is its frame (ADR-0025 decision 2): the iframe takes the height left over the «Larger map» line.
+
+# blocks/form.css, rule by rule
+
+### `.urd-form`
+
+The form block: the visitor form.
+
+### `.urd-form-select, .urd-form-input[type="date"]`
+
+Native select and date input for visitors (ADR-0009 covers editing UI only): color-scheme lets the popup and the date picker follow the user's OS theme.
+
+# blocks/product.css, rule by rule
+
+### `.urd-product-cardlist`
+
+The shop: product cards from a product collection. The card list is a responsive grid; the block can lock the column count in Style.
+
+### `.urd-product-cardlist.urd-product-cols`
+
+The owner's own column count (product.columns), which a narrow block (its own width, see urd-block) holds to two and then one.
+
+### `.urd-product-card : border`
+
+A thin border, so the card reads even where surface is nearly the background color.
+
+### `.urd-product-badge-over`
+
+With an image the badge is placed over the image's top left corner; without an image it sits as a static chip above the title (never on top of text).
+
+### `.urd-product-options : align-items`
+
+The chips keep their own height where the shared row is taller (another card's request for a choice)
+
+### `.urd-product-options.urd-product-missing .urd-product-chip`
+
+A choice the product asks for (its requireSize, requireColor) and the buyer left open at «Add to basket»: the chips' frames in the form error's colour, and the words under them (product.js markNeed).
+
+### `.urd-product-buyrow`
+
+The quantity the buyer types (product.js quantityRow) stands with the buy button in one row of the card: its name, the basket's steps around the number, the limits beside it and the line's sum under it.
+
+### `.urd-product-opener`
+
+Quick view (visitors only): the product details in a native `<dialog>`. display is set ONLY in the open state, otherwise the built-in dialog:not([open]) { display: none } would be overridden.
+
+### `.urd-product-titlebtn`
+
+The opener inside the title: a button that looks like the heading's words.
+
+# blocks/cart.css, rule by rule
+
+### `.urd-cart-button`
+
+The cart: a button with a count badge; the drawer is a native `<dialog>` anchored to the right edge (ADR-0011).
+
+### `.urd-cart-dialog : margin`
+
+A drawer along the right edge: the dialog's default centering is overridden.
+
+### `.urd-cart-emptyrow`
+
+«Empty the basket» under the lines: a quiet text button that asks once in its own place (cart.js emptyRow)
+
+# blocks/checkout.css, rule by rule
+
+### `.urd-checkout`
+
+Checkout: order summary + order form (mailto/endpoint, ADR-0006).
+
+### `.urd-checkout-hp`
+
+Honeypot: moved out of view, never display:none (bots check for that).
+
+### `.urd-checkout-paychoice`
+
+The buyer's choice among the payment instructions: the form block's radio rows, each way to pay with its instruction under its name.
+
+### `.urd-checkout-recap`
+
+The summary right above the order buttons (angrerettloven § 16): the order in one line and the total.
+
+### `.urd-checkout-vippspay`
+
+Pay with Vipps (ADR-0020): the brand color, independent of the theme.
+
+### `.urd-checkout-confirmation`
+
+The printable order confirmation: a card above the form with the lines, the buyer, the seller and the withdrawal form; printed alone.
+
+### `.urd-checkout-testmode`
+
+The line a checkout shows while a provider runs on its test keys: a note in a dashed box, never mistaken for the order.
+
+### `.urd-checkout-seller`
+
+The seller under the order buttons (angrerettloven § 8 d): one small wrapping row.
+
+### `.urd-checkout-terms`
+
+The shop's terms of sale under the seller, in the same small type.
+
+# blocks/video.css, rule by rule
+
+### `.urd-video-ratio`
+
+The video block: a placeholder without a URL, and a click shield while editing (a click should select the block, not start the player)
+
+### `.urd-video-ratio`
+
+A video given a shape: that shape at the block's width, and the block's height follows it (keepsShape in push-model.js)
+
+### `.urd-video-file`
+
+The self-hosted film: it fills the block's frame and keeps its own format inside it.
+
+### `.urd-video-shield`
+
+In the editor's desktop view a press on the video selects the block: the shield stands above the player and above the cover's button, which is lifted over its own picture
+
+# blocks/icon.css, rule by rule
+
+### `.urd-icon`
+
+The icon block: the glyph is centered in the frame
+
+# blocks/image.css, rule by rule
+
+### `.urd-image-empty`
+
+Empty image block: a placeholder in the editor only
+
+### `.urd-image-frame`
+
+The image frame: clips the image, so rounding shows whatever the fit is and zoom crops cleanly towards the focal point.
+
+### `.urd-image-frame.urd-image-shaped`
+
+An image given a shape in the image editor: the frame is that shape at the block's width, and the block's height follows it (keepsShape in push-model.js)
+
+### `.urd-block[data-urd-phone-h] > .urd-image-frame.urd-image-shaped, .urd-block[data-urd-phone-h] > a > .urd-image-frame.urd-image-shaped`
+
+A picture or a film with a shape given a height of its own on the phone (frames.mobile.height, render.js) fills that box around its focus point instead of keeping its shape
+
+### `.urd-image-frame.urd-image-own:not(.urd-pic-turned) img`
+
+The picture's own shape: the picture gives the frame its height (a turned one gives it its ratio, picture.js)
+
+# blocks/gallery.css, rule by rule
+
+### `.urd-gallery-grid, .urd-gallery-wall, .urd-gallery-cards`
+
+The grid views (grid, mosaic, polaroid) lay their tiles out in .urd-gallery-tiles inside the gallery, which is the width their narrow rules ask (see urd-block).
+
+### `.urd-gallery-wall > .urd-gallery-tiles`
+
+Mosaic (the gallery block's view; the background layer's mosaic has its own rules under .urd-gallery-mosaic): the grid's wall with rows of one height and tiles in varied spans. Every tile's place is set by the block (mosaicWall in gallery-model.js), so the wall is a full rectangle.
+
+### `@container urd-block (max-width: 540px) { .urd-gallery-tiles`
+
+A narrow gallery (the block's own width, see urd-block): the grid, the mosaic and the polaroids take the narrow column count the block writes (--urd-gallery-cols-narrow, at most two), and the mosaic its narrow wall. Without container queries the block writes the window's count instead.
+
+### `.urd-gallery-card-plain`
+
+The foot: bare on a card without words, otherwise the image text
+
+### `@media (hover: hover) and (pointer: fine) { .urd-gallery-card`
+
+Under a real pointer the card straightens and lifts, so the picture can be looked at; a touch never gets a hover state that sticks.
+
+### `.urd-gallery-track`
+
+Carousel: horizontal scroll with snap; the arrows scroll one viewport-width step.
+
+### `.urd-gallery-slides`
+
+Slideshow: stacked slides, only .on is visible (and clickable).
+
+### `.urd-gallery-pause`
+
+The slideshow's pause (renderSlides in blocks/gallery.js): the arrows' round button, at the foot beside the dots.
+
+### `.urd-gallery-ribbon`
+
+The gallery's ribbon view: the same motion with the tiles as the items. The band fills the block's box (ADR-0025 decision 2) and its rows share the height, so a drag of the frame sets it. The height reaches the tiles through the stripe, the track and the run, since a tile takes its width from its height and the image keeps its aspect. Size containment keeps the images' own height out of the box's, so a box with no height of its own (a row track on the phone) is never stretched by a large picture.
+
+### `.urd-bg-slideshow`
+
+The image gallery background layer: two stacked images that cross-fade.
+
+### `.urd-bg-slideshow : container-type`
+
+The frames' travel is written in container units, so the section's own size is the unit whatever the window does.
+
+### `.urd-gallery-shape-circle`
+
+The shapes. The regular ones are cut, the organic ones are rounded.
+
+### `.urd-gallery-look-shadow .urd-gallery-box`
+
+The looks: what surrounds the picture. A shadow has to be a drop-shadow on the box, since a box-shadow is cut away with the shape.
+
+### `.urd-gallery-look-polaroid .urd-gallery-box`
+
+A polaroid: a white card with the picture set in and a wider foot; the card stays a card whatever shape the picture is cut to.
+
+### `.urd-gallery-look-border .urd-gallery-skin`
+
+The bordered looks draw with the frame colour the layer sets (--urd-frame-color: the owner's pick, or the look's own).
+
+### `.urd-gallery-look-tape .urd-gallery-box::before, .urd-gallery-look-pin .urd-gallery-box::before`
+
+Tape and a pin sit on the box, above the skin, and lean a touch.
+
+### `.urd-gallery-look-stamp .urd-gallery-skin`
+
+A stamp: perforated teeth around a white paper edge.
+
+### `.urd-gallery-look-film .urd-gallery-skin`
+
+Film: a dark strip with sprocket holes along the top and bottom.
+
+### `.urd-gallery-look-soft .urd-gallery-face`
+
+A soft edge: the picture fades out towards its rim.
+
+### `.urd-gallery-tone-mono .urd-gallery-face, .urd-gallery-tone-mono .urd-bg-slide`
+
+The tones: a finish on the picture itself, on the fill's slides too.
+
+### `.urd-gallery-tone-duotone .urd-gallery-face, .urd-gallery-tone-duotone .urd-bg-slide`
+
+Duotone: the picture in grey, tinted with the accent colour.
+
+### `.urd-gallery-travel`
+
+Travel: from outside one edge to outside the opposite one, in container units set by the layer (--tx0/--ty0 to --tx1/--ty1), so the jump back is never seen.
+
+### `.urd-gallery-kenburns`
+
+Breathing: grows a little and back. On the floating layout it rides on the whole frame, so a card breathes as one thing; on a mosaic tile, on the face.
+
+### `.urd-gallery-fade`
+
+The cross-fade: in, a long stand, and out, with the swap at the foot where the frame is invisible.
+
+### `.urd-gallery-bounce-x`
+
+The bounce: across on the box, up and down on the skin, two periods.
+
+### `.urd-gallery-band`
+
+The band: rows of tiles rolling on the ribbon's track, centred in the section.
+
+### `.urd-gallery-band .urd-ribbon-track, .urd-gallery-band .urd-ribbon-run`
+
+The height has to reach the tiles through the track and the run, since a tile takes its width from its height.
+
+### `.urd-gallery-mosaic`
+
+The mosaic: a wall of four columns, two on a phone, some tiles two wide or two high, clipped by the layer at the section's foot.
+
+# blocks/ribbon.css, rule by rule
+
+### `.urd-ribbon`
+
+RIBBON (the ribbon block and the gallery's ribbon view). The band is a column of stripes: a thin one above, the main one, a thin one below. Each stripe clips, and its track holds the content in two equal periods, so translating by -50 % of the track lands one period on where the previous one started: a loop without a seam. The duration is measured (ribbon-model.js: the width of one period divided by the speed, or the item count times the dwell for the ticker) and arrives as --urd-ribbon-ms. Everything that moves stands still under reduced motion (the shared switch further down) and while the editing chrome is on (.urd-ribbon-still from the block). The band fills the frame and grows past it with the words, so the block's auto-grow sees the height the text needs.
+
+### `.urd-ribbon-main`
+
+The main stripe takes what is left; the thin ones keep their thickness.
+
+### `.urd-ribbon-solid`
+
+A stripe of colour alone: the rule above or below the words. The colour is the stripe's own (the block sets it), so currentColor paints it.
+
+### `.urd-ribbon-edges`
+
+On the edges: the thin stripes lie on the band's own top and bottom instead of taking a share of its height, and the main stripe keeps clear of them.
+
+### `.urd-ribbon-motion-sway`
+
+Sway: the band drifts out and back instead of rolling on, for a few words that should move without ever leaving.
+
+### `.urd-ribbon-motion-sway`
+
+The swaying track is one copy, centred in the band and drifting as far to one side as to the other.
+
+### `.urd-ribbon-thin`
+
+A thin stripe sets its own scale from its thickness, so the marks and any words in it fit the rule they live in.
+
+### `@supports (-webkit-text-stroke: 1px red) { .urd-ribbon-outline .urd-ribbon-item`
+
+Outlined words: the classic frieze look. The stroke takes the resolved text colour from the block (--urd-ribbon-ink), never currentColor, since the fill is transparent and currentColor follows it. Gated: without the stroke the words are invisible rather than outlined.
+
+# blocks/text.css, rule by rule
+
+### `.urd-text-doc[data-design="clauses"] .urd-text`
+
+Numbered clauses: each part numbered in a badge in the accent, and its paragraphs numbered under it (7.1, 7.2), as a contract sets them; a withdrawal form inside is left unnumbered.
+
+### `.urd-text-doc[data-design="clauses"] .urd-text > h2::before`
+
+The clause's number stands before the heading's words as an inline badge, so the words keep their own spacing.
+
+# blocks/privacy.css, rule by rule
+
+### `.urd-privacy`
+
+The privacy block (blocks/privacy.js): the site's privacy page, written from its settings, in its document design: a long read in a comfortable measure, the lists with room, and the visitor's own choices in a card with the press that takes a choice back.
+
+### `.urd-privacy[data-align="center"]:not([data-design="contents"])`
+
+The privacy page centred in its block, as it stands unless the owner sets it to the left: its column stands in the middle of the block (the contents design centres its text between the list and the block's other edge instead).
+
+# blocks/contact.css, rule by rule
+
+### `.urd-contact`
+
+The contact block (blocks/contact.js): the site's contact details in one of its designs, an `<address>` whose own width picks each design's narrow layout (a container query), so a phone and a narrow frame both get it. Links keep the text colour, labels and actions take the accent.
+
+### `.urd-contact-icons .urd-contact-in`
+
+Icon rows: each detail after its icon in a circle tinted with the accent.
+
+### `.urd-contact-card .urd-contact-in`
+
+The card: the details on the theme's surface, two columns that stack when the card is narrow, the legal line along the bottom.
+
+### `.urd-contact-tiles .urd-contact-in`
+
+Three tiles: visit, call and write, side by side while each has room and stacked when not.
+
+### `.urd-contact-facts .urd-contact-in`
+
+The fact list: a named row for each detail between thin rules.
+
+### `.urd-contact-actions`
+
+Action buttons, and the save button every design but the strip can carry: round buttons, the first action filled with the accent.
+
+### `.urd-contact-map .urd-contact-in`
+
+Beside a map: the details and OpenStreetMap's map behind a cover that loads it on a tap, stacked when the block is narrow.
+
+### `.urd-contact-mapbox > .urd-cover`
+
+The site's cover over the contact map: it fills the box and leaves the box's own grid behind it
+
+### `.urd-contact-strip .urd-contact-in`
+
+The strip: the name and every detail on one row, on a band in the theme's text colour unless the band is off; one per line when narrow.
+
+### `.urd-contact-poster .urd-contact-in`
+
+The poster: the email and the phone in large type on the accent colour, the address and the legal line small below.
+
+### `.urd-contact-roles .urd-contact-in`
+
+By role: a card for each contact point, a divided list when narrow.
+
+### `.urd-contact-qr .urd-contact-in`
+
+Beside a QR code: the code on white with its caption, beside the details; under them in a row of its own when narrow.
+
+### `.urd-contact-dock`
+
+The bar docked to the bottom of a phone's screen (the dock option): call, email and the map, the first filled. It is a manual popover in the top layer, and these rules place it whether the Popover API is there or not; the page keeps room for it below its last line.
+
+### `.urd-contact-dock[popover]:not(:popover-open)`
+
+Until it stands in the top layer the bar is hidden where the Popover API exists; without the API the selector is unknown, the rule drops, and the bar stands fixed by the rule above.
+
+# blocks/button.css, rule by rule
+
+### `.urd-button`
+
+Buttons
+
+### `.urd-button-primary`
+
+The owner's colours (button.js) stand in --urd-btn-*: the fill, the words, the outline and the fill under the pointer; one not set falls back to the design's colour from the theme
+
+### `.urd-button-primary : color`
+
+Text on accent: without the token the background color is used, so palettes that do not define it render unchanged
+
+### `.urd-button-primary.urd-button-own-border`
+
+A filled button has a line only where the owner gives it one, so a button without one keeps every pixel of its room for its words
+
+### `.urd-button.urd-button-own-hover:hover`
+
+A fill of the owner's own under the pointer takes the place of the design's lightening

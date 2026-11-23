@@ -4,7 +4,7 @@
  * open/closed state and the keyboard and screen reader semantics, and `name`
  * gives exclusive unfolding (one open answer at a time) without JS. Find-in-page
  * opens a match automatically. Soft unfolding via ::details-content where the
- * browser supports it (base.css, behind @supports); otherwise the answer unfolds
+ * browser supports it (faq.css, behind @supports); otherwise the answer unfolds
  * instantly.
  *
  * For visitors a click anywhere on the summary row opens it. In the editor the

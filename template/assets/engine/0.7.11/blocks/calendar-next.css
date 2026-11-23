@@ -859,12 +859,6 @@
   opacity: 1;
 }
 
-/* A cancelled row is dimmed like a cancelled event in the other designs. */
-.urd-cal-line-row.urd-cal-cancelled,
-.urd-cal-earlier-row.urd-cal-cancelled {
-  opacity: 0.6;
-}
-
 .urd-cal-line-dot {
   flex: none;
   width: 10px;

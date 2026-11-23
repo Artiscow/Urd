@@ -8,6 +8,7 @@ import { themeMode, toggleThemeMode, resolveColor } from './theme.js';
 import { renderBackgroundLayers } from './render.js';
 import { readCart, cartCount, onCartChange } from './shop.js';
 import { iconSvg } from './icons.js';
+import { loadBlockSheet } from './core-types.js';
 import { siteLinks, linkIconHtml, leavesSite } from './links-model.js';
 import { t, ta } from './i18n.js';
 
@@ -454,9 +455,9 @@ export function renderNav(site, host, pageId) {
     cartBtn.appendChild(cartBadge);
     // The checkout page: a page in the register (cart.page) or a path (cart.href).
     const checkoutLink = resolveLink(cartCfg, site.pages ?? []);
-    // The basket's drawer is the cart block's, loaded only when a nav with a basket is drawn; a press while it is still loading opens it as it comes.
+    // The basket's drawer is the cart block's, loaded with its sheet only when a nav with a basket is drawn; a press while it loads opens it as it comes.
     let drawer = null;
-    const drawerReady = import('./blocks/cart.js').then(({ createCartDrawer }) => {
+    const drawerReady = Promise.all([import('./blocks/cart.js'), loadBlockSheet('cart')]).then(([{ createCartDrawer }]) => {
       if (!cartBtn.isConnected) return null;
       drawer = createCartDrawer({ href: checkoutLink.missing ? '' : checkoutLink.href, currency: cartCfg.currency || 'kr' });
       nav.insertBefore(drawer.dialog, keptSheet?.parentNode === nav ? keptSheet : null);

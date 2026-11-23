@@ -950,24 +950,16 @@
   border-radius: 14px;
 }
 
-/* The box the switcher's week or month is drawn in: it carries the chosen design's class, and the block's set is its theme, so a design drawn from the theme's colours takes the set's. */
-.urd-cal-swview {
-  --urd-color-text: var(--urd-cal-set-ink);
-  --urd-color-bg: var(--urd-cal-set-bg);
-  --urd-color-surface: var(--urd-cal-set-surface);
-  --urd-color-accent: var(--urd-cal-set-accent);
-  --urd-color-accent-text: var(--urd-cal-set-accent-text);
-  --urd-cal-accent: var(--urd-cal-set-accent);
-  --urd-cal-accent-text: var(--urd-cal-set-accent-text);
-  --urd-cal-surface: var(--urd-cal-set-surface);
-  --urd-cal-line: var(--urd-cal-set-line);
-  display: grid;
-  gap: 12px;
-  color: var(--urd-cal-set-ink);
-}
-
 .urd-cal-swview .urd-cal-wstrip-label strong {
   font-size: 1em;
+}
+
+/* The tools' size (`toolsSize`): the switcher, the chips, the search and the arrows of the week and the month, small or large. */
+.urd-cal-tools-s .urd-cal-tools,
+.urd-cal-tools-s .urd-cal-chips,
+.urd-cal-tools-s .urd-cal-swview .urd-cal-month-head,
+.urd-cal-tools-s .urd-cal-swview .urd-cal-wstrip-head {
+  font-size: 0.82em;
 }
 
 .urd-cal-tools-s .urd-cal-switch-btn {
@@ -978,6 +970,13 @@
 .urd-cal-tools-s .urd-cal-searchbtn {
   width: 32px;
   height: 32px;
+}
+
+.urd-cal-tools-l .urd-cal-tools,
+.urd-cal-tools-l .urd-cal-chips,
+.urd-cal-tools-l .urd-cal-swview .urd-cal-month-head,
+.urd-cal-tools-l .urd-cal-swview .urd-cal-wstrip-head {
+  font-size: 1.2em;
 }
 
 .urd-cal-tools-l .urd-cal-switch-btn {
@@ -1446,11 +1445,6 @@
   background: var(--urd-cal-set-surface);
   border-color: var(--urd-cal-set-line);
   border-radius: var(--urd-cal-set-chip-radius);
-}
-
-.urd-cal-swview .urd-cal-day-empty {
-  background: transparent;
-  border-color: transparent;
 }
 
 .urd-cal-set-apCream .urd-cal-swview .urd-cal-day,
@@ -3023,6 +3017,10 @@
   text-transform: uppercase;
 }
 
+.urd-cal-mq-row.urd-cal-cancelled {
+  opacity: 0.45;
+}
+
 /* The marquee's set card: the board's paper in the red frame, the title in the display face. */
 .urd-cal-set-marquee.urd-cal-dialog .urd-cal-dialog-title {
   font-stretch: condensed;
@@ -3034,6 +3032,21 @@
   font-stretch: condensed;
   text-transform: uppercase;
   border-radius: 4px;
+}
+
+/* A cancelled row is struck through, its status line left whole. */
+.urd-cal-rc-event.urd-cal-cancelled {
+  opacity: 1;
+}
+
+.urd-cal-sv-row.urd-cal-cancelled {
+  opacity: 0.55;
+}
+
+/* A cancelled row is dimmed like a cancelled event in the other designs. */
+.urd-cal-line-row.urd-cal-cancelled,
+.urd-cal-earlier-row.urd-cal-cancelled {
+  opacity: 0.6;
 }
 
 /* ---- The ApeironLF set: the colours its designs in four families share ---- */

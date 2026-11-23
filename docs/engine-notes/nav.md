@@ -215,7 +215,7 @@ sheet with the list.
 
 ## `renderNav › let drawer`
 
-The basket's drawer is the cart block's, loaded as a nav with a basket is drawn, so a site without one never fetches it; a press before it is in opens it as it comes.
+The basket's drawer is the cart block's, loaded with its sheet (cart.css, `loadBlockSheet` in core-types.js) as a nav with a basket is drawn, so a site without one never fetches either; a press before it is in opens it as it comes.
 
 ## `renderNav › const burgerLook`
 

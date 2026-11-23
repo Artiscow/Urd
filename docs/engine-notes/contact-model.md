@@ -10,7 +10,7 @@ Pure functions with no DOM and no language: the render layer adds the words thro
 
 ## `const CONTACT_DESIGNS`
 
-The contact block's designs, the plain lines first: each id is the block's class `urd-contact-<id>`, which base.css styles where the design has rules of its own, and a label `opt.contact.<id>` in the admin dictionaries.
+The contact block's designs, the plain lines first: each id is the block's class `urd-contact-<id>`, which contact.css styles where the design has rules of its own, and a label `opt.contact.<id>` in the admin dictionaries.
 `points` marks the design that lists the contact points by role, `geo` the one that shows the site's point on a map, and `band` the one that may stand on a coloured band.
 
 ## `normaliseId`

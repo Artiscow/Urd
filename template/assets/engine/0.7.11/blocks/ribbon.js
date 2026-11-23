@@ -367,7 +367,7 @@ export const ribbonBlock = {
     // outlined word has no fill, so currentColor would be transparent too.
     host.style.setProperty('--urd-ribbon-ink', ink);
 
-    // The chrome's hold is a CSS rule on the body (base.css): Clean view never
+    // The chrome's hold is a CSS rule on the body (preview.css): Clean view never
     // re-renders, so a class decided here would stick. What is decided here is
     // only what cannot change without a new render.
     const reduced = reducedMotion();

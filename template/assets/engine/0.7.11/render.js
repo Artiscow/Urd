@@ -79,6 +79,27 @@ export function loadStylesheet(href, place = (link) => document.head.appendChild
   return sheets.get(href);
 }
 
+/**
+ * A `place` for loadStylesheet keeping a group's sheets in one order, whatever order they come in: by `rank`, the first after `after()`, else at the head's end.
+ * @param {string} group
+ * @param {number} rank
+ * @param {() => Element|null} [after]
+ * @returns {(link: HTMLLinkElement) => void}
+ */
+export function placeInOrder(group, rank, after = () => null) {
+  return (link) => {
+    link.dataset.urdSheetGroup = group;
+    link.dataset.urdSheetRank = String(rank);
+    const placed = [...document.head.querySelectorAll('link[data-urd-sheet-group]')].filter((other) => other.dataset.urdSheetGroup === group);
+    const later = placed.find((other) => Number(other.dataset.urdSheetRank) > rank);
+    const anchor = after();
+    if (later) later.before(link);
+    else if (placed.length) placed.at(-1).after(link);
+    else if (anchor) anchor.after(link);
+    else document.head.appendChild(link);
+  };
+}
+
 /** The picture layers waiting for their section to come near, each with what draws it. */
 const waitingLayers = new Map();
 

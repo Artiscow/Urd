@@ -101,7 +101,7 @@ function makeTile(props, index, ctx, blockEl) {
 /**
  * The column counts of the grid views, wide and narrow: a narrow block (its
  * own width, ADR-0025) takes the narrow count through a container query in
- * base.css. Without container queries the wide count is the window's, as the
+ * gallery.css. Without container queries the wide count is the window's, as the
  * page's phone view.
  * @returns {{wide: number, narrow: number}}
  */
@@ -115,7 +115,7 @@ function columnCounts(host, props, ctx) {
 
 /**
  * The element a grid view lays its tiles out in, inside the gallery: the
- * gallery itself is the width the narrow rules ask (base.css), so the
+ * gallery itself is the width the narrow rules ask (gallery.css), so the
  * columns follow the width the content is laid out in under a size.
  * @param {HTMLElement} host The gallery
  * @returns {HTMLElement}
@@ -267,7 +267,7 @@ function renderSlides(host, props, ctx, blockEl) {
  * The ribbon view: the tiles roll past in a band, one row or two running
  * against each other. The band fills the block's box (ADR-0025 decision 2),
  * the rows share its height, and a tile is as tall as its row with the image
- * at its own aspect (base.css), so the owner sets the height by the frame.
+ * at its own aspect (gallery.css), so the owner sets the height by the frame.
  * The motion is the ribbon block's (ribbon-model.js and
  * the .urd-ribbon rules in base.css): each row's track holds the tiles in two
  * periods, each as wide as the band needs (syncTrackCopies), and is
@@ -279,7 +279,7 @@ function renderRibbon(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-ribbon');
   host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
   const rows = ribbonRows(props.rows);
-  // The editing chrome's hold is a CSS rule on the body (base.css), so Clean
+  // The editing chrome's hold is a CSS rule on the body (preview.css), so Clean
   // view takes effect without a re-render.
   const still = !canRoll({ count: props.images.length, reducedMotion: reducedMotion() });
 
@@ -356,7 +356,7 @@ function renderMosaic(host, props, ctx, blockEl) {
   const { wide, narrow } = columnCounts(host, props, ctx);
   host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
   host.style.setProperty('--urd-gallery-row', `${mosaicRowHeight(props.rowHeight)}px`);
-  // Two walls from the same seed, one per column count: base.css places each
+  // Two walls from the same seed, one per column count: gallery.css places each
   // tile by the one that fits the block's width.
   const walls = { '': mosaicWall(props.images.length, props.seed, wide), '-narrow': mosaicWall(props.images.length, props.seed, narrow) };
   const tiles = tilesIn(host);
@@ -375,7 +375,7 @@ function renderMosaic(host, props, ctx, blockEl) {
  * The polaroid view: every picture set in a card with a wider foot, leaning
  * by its own throw of the seed (polaroidTilts). With `captions` the image
  * text is written in the foot. The card straightens under a real pointer
- * (base.css), and the tile inside keeps its click.
+ * (gallery.css), and the tile inside keeps its click.
  */
 function renderPolaroid(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-cards');

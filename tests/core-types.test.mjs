@@ -7,6 +7,12 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { ENGINE_DIR, engineImport } from './_engine.mjs';
 
+// A head the block modules' sheets are placed in: each one answers as loaded once it stands there, as a browser's link does.
+const answer = (link) => link.listeners.load?.();
+globalThis.document ??= {
+  createElement: () => ({ dataset: {}, listeners: {}, addEventListener(type, fn) { this.listeners[type] = fn; } }),
+  head: { querySelector: () => null, querySelectorAll: () => [], appendChild: answer },
+};
 const { CORE_BLOCKS, CORE_BACKGROUNDS, BLOCK_ALIASES, CORE_BLOCK_READY, READY_WAIT_MS, loadCoreTypes, reserveCoreTypes, pageBlocks, prepareBlocks } = await engineImport('core-types.js');
 const { createRegistry } = await engineImport('registry.js');
 const { createStagedUrd, needsPlugins } = await engineImport('plugins.js');
@@ -27,11 +33,68 @@ function exported(folder, suffix) {
 /** The definitions the tables load, read from their loaders' text: the first module a loader names is its type's own, any after it asked for beside it. */
 function loaded(table) {
   return Object.values(table).map((load) => {
-    const m = String(load).match(/^\(\) => (?:beside\()?import\('\.\/([^']+)'\)(?:, import\('\.\/[^']+'\))*\)?\.then\(\(m\) => m\.(\w+)\)$/);
+    const m = String(load).match(/^\(\) => (?:withSheets\()?(?:beside\()?import\('\.\/([^']+)'\)(?:, import\('\.\/[^']+'\))*\)?(?:, '[a-z]+')*\)?\.then\(\(m\) => m\.(\w+)\)$/);
     assert.ok(m, `a loader names its module and export literally: ${load}`);
     return `${m[1]}:${m[2]}`;
   }).sort();
 }
+
+test('a type loads the sheet of every block module it draws with, and only those, each sheet standing in blocks/', () => {
+  const sheets = new Set(readdirSync(new URL('blocks/', ENGINE_DIR)).filter((f) => /^[a-z]+\.css$/.test(f) && f !== 'calendar.css').map((f) => f.slice(0, -4)));
+  for (const [type, load] of Object.entries(CORE_BLOCKS)) {
+    const text = String(load);
+    const modules = [...text.matchAll(/import\('\.\/blocks\/([a-z]+)\.js'\)/g)].map(([, name]) => name);
+    const named = [...text.matchAll(/, '([a-z]+)'/g)].map(([, name]) => name);
+    assert.deepEqual(named, modules.filter((name) => sheets.has(name)), `${type} loads the sheets of its block modules`);
+  }
+  const listed = read('core-types.js').match(/^const BLOCK_SHEETS = \[([^\n]*)\];$/m)[1].match(/'[a-z]+'/g).map((s) => s.slice(1, -1));
+  assert.deepEqual([...listed].sort(), [...sheets].sort(), 'BLOCK_SHEETS names every block sheet, each once');
+});
+
+test('each template page asks for the block modules of the types it holds and those modules\' own imports alone, and for their sheets alone', async () => {
+  const { pageTypes } = await engineImport('plugins.js');
+  const { engineClosure } = await import('./_engine.mjs');
+  const site = JSON.parse(readFileSync(new URL('../template/content/site.json', import.meta.url), 'utf8'));
+  const asked = (type) => {
+    const text = String(CORE_BLOCKS[type] ?? CORE_BLOCKS[BLOCK_ALIASES[type]] ?? '');
+    return { modules: [...text.matchAll(/import\('\.\/(blocks\/[a-z-]+\.js)'\)/g)].map(([, path]) => path), sheets: [...text.matchAll(/, '([a-z]+)'/g)].map(([, name]) => `blocks/${name}.js`) };
+  };
+  for (const entry of site.pages) {
+    const page = JSON.parse(readFileSync(new URL(`../template/${entry.file}`, import.meta.url), 'utf8'));
+    const held = [...pageTypes(page, site.nav, site.footer).blocks].filter((type) => CORE_BLOCKS[type] || BLOCK_ALIASES[type]);
+    const mains = held.map((type) => asked(type).modules[0]);
+    const drawnWith = new Set(mains.flatMap((main) => [main, ...engineClosure(main)]));
+    for (const type of held) {
+      for (const module of asked(type).modules) assert.ok(drawnWith.has(module), `${entry.id}: ${module} is a type it holds or what one of their modules imports`);
+      for (const module of asked(type).sheets) assert.ok(asked(type).modules.includes(module), `${entry.id}: the sheet of ${module} comes with the module`);
+    }
+  }
+});
+
+test('the slideshow layer brings the gallery\'s sheet, since it draws a gallery, and the menu\'s basket the cart\'s with its drawer', () => {
+  assert.match(String(CORE_BACKGROUNDS.slideshow), /^\(\) => withSheets\(beside\(import\('\.\/backgrounds\/slideshow\.js'\)[^\n]*\), 'gallery'\)\.then/);
+  for (const [type, load] of Object.entries(CORE_BACKGROUNDS)) if (type !== 'slideshow') assert.doesNotMatch(String(load), /withSheets/, `${type} draws with no block's sheet`);
+  assert.match(read('nav.js'), /const drawerReady = Promise\.all\(\[import\('\.\/blocks\/cart\.js'\), loadBlockSheet\('cart'\)\]\)/);
+});
+
+test('placeInOrder keeps a group\'s sheets in their order whatever order they come in, the first after its anchor, and other groups apart', async () => {
+  const { placeInOrder } = await engineImport('render.js');
+  const head = [];
+  const node = (name) => ({ name, dataset: {}, before(link) { head.splice(head.indexOf(this), 0, link); }, after(link) { head.splice(head.indexOf(this) + 1, 0, link); } });
+  const base = node('base');
+  const theme = node('theme');
+  head.push(base, theme);
+  const saved = globalThis.document;
+  globalThis.document = { head: { querySelectorAll: () => head.filter((n) => n.dataset.urdSheetGroup), appendChild: (link) => head.push(link) } };
+  try {
+    for (const [name, rank] of [['c', 2], ['a', 0], ['d', 3], ['b', 1]]) placeInOrder('blocks', rank, () => base)(node(name));
+    placeInOrder('calendar', 1, () => null)(node('cal-1'));
+    placeInOrder('calendar', 0, () => null)(node('cal-0'));
+  } finally {
+    globalThis.document = saved;
+  }
+  assert.deepEqual(head.map((n) => n.name), ['base', 'a', 'b', 'c', 'd', 'theme', 'cal-0', 'cal-1']);
+});
 
 test('the tables load every block and background definition the engine has, each once', () => {
   assert.deepEqual(loaded(CORE_BLOCKS), exported('blocks', 'Block'));
