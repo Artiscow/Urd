@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.3.10): the boot, the languages and the plugins with short comments
+
+- [ ] Every page opens as before, and moving between pages (a link held over, then pressed) is as quick as before
+- [ ] A jump to a spot on a page (a link to `#name`) lands below the menu, and a reload keeps the place
+- [ ] The site in another language (English, Swedish from its plugin) shows its words and dates; the editor in another language shows its own
+- [ ] A saved draft looked at (the draft view) and the editor's preview show the drafts, and the published page counts visits as before
+
 ### Test batch (0.7.37.3.9): the menu's code with short comments
 
 - [ ] The menu works as before on the desktop and on a phone: its designs, submenus (opening on hover and on a press), the phone's menu and sheet, the tuck tab, the light and dark toggle, the basket, the link launcher, the announcement strip and the side column

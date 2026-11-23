@@ -1,7 +1,6 @@
 /**
- * Shared registry factory. Every extensible type in Urd (blocks, section
- * presets, background layers, animations) uses the same registry pattern,
- * and plugins use the identical define APIs as the core.
+ * Shared registry factory for every extensible type in Urd (blocks, section presets, backgrounds, animations); plugins use the same define APIs as the core.
+ * Notes: docs/engine-notes/registry.md (Urd repository).
  */
 
 /**
@@ -18,13 +17,11 @@ export function createRegistry(kind) {
       if (defs.has(id)) throw new Error(`Urd.${kind}: '${id}' is already defined`);
       defs.set(id, def);
     },
-    // Resolves an old contract id to its current one (ADR-0021). Aliases are
-    // consulted only on a direct miss, so a plugin that still defines the
-    // old id keeps winning for its own data.
+    // Maps an old contract id to its current one (ADR-0021); get() follows it only when the old id itself is not defined.
     alias(oldId, id) {
       aliases.set(oldId, id);
     },
-    // Marks ids as the engine's own before their modules have defined them (core-types.js, ADR-0036): define() refuses them, and the definer returned here, which the engine keeps, defines them.
+    // Marks ids as the engine's own (core-types.js, ADR-0036): define() refuses them, and the definer returned here defines them.
     reserve(ids) {
       for (const id of ids) reserved.add(id);
       return (id, def) => {

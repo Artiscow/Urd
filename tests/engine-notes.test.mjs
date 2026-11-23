@@ -38,14 +38,14 @@ const PENDING = new Set([
   'blocks/faq.js', 'blocks/form.js', 'blocks/gallery.js', 'blocks/icon.js', 'blocks/image.js', 'blocks/map.js',
   'blocks/privacy.js', 'blocks/product.js', 'blocks/quote.js', 'blocks/ribbon.js', 'blocks/shape.js',
   'blocks/share.js', 'blocks/spacer.js', 'blocks/stats.js', 'blocks/table.js', 'blocks/text.js', 'blocks/timeline.js',
-  'blocks/video.js', 'boot.js', 'box-style.js', 'calendar-designs.js', 'calendar-format.js', 'collections.js',
-  'contact-checks.js', 'contact-model.js', 'contact-profiles.js', 'core-types.js', 'divider-model.js', 'doc-look.js',
+  'blocks/video.js', 'box-style.js', 'calendar-designs.js', 'calendar-format.js', 'collections.js',
+  'contact-checks.js', 'contact-model.js', 'contact-profiles.js', 'divider-model.js', 'doc-look.js',
   'embed-cover.js', 'footer-cta.js', 'footer-model.js', 'footer.js', 'form-model.js', 'gallery-layout.js',
-  'gallery-model.js', 'i18n.js', 'icons.js', 'ics.js', 'keep-minutes.js', 'links-model.js', 'locales/site/nb.js',
+  'gallery-model.js', 'icons.js', 'ics.js', 'links-model.js',
   'map-links.js', 'meeting-links.js', 'migrate.js', 'osm.js', 'phone-order.js',
-  'photo-source.js', 'picture.js', 'plugins.js', 'prefetch.js', 'privacy-model.js', 'push-model.js', 'registry.js',
+  'photo-source.js', 'picture.js', 'privacy-model.js', 'push-model.js',
   'ribbon-model.js', 'sanitize.js', 'seo.js', 'shape-model.js', 'shop.js', 'sticky-model.js', 'sticky.js', 'theme.js',
-  'totop.js', 'urd.js',
+  'totop.js',
 ]);
 
 const source = (module) => readFileSync(new URL(module, ENGINE_DIR), 'utf8');
@@ -60,11 +60,11 @@ test('a module a visitor\'s page loads keeps each comment short, its longer text
   for (const module of VISITOR_MODULES) {
     const src = source(module);
     const notes = notesOf(src);
+    const mark = `Notes: ${notesPath(module)} (Urd repository).`;
     if (PENDING.has(module)) {
       assert.ok(notes.some((n) => n.long), `${module} has no long comment left, so it leaves PENDING`);
       continue;
     }
-    const mark = `Notes: ${notesPath(module)} (Urd repository).`;
     for (const note of notes) {
       const prose = note.header ? note.prose.replace(mark, '') : note.prose;
       assert.ok(proseLength(prose) <= LIMIT, `${module}:${lineOf(src, note.start)} holds ${proseLength(prose)} characters of prose; its full text goes in ${notesPath(module)} (scripts/engine-notes.mjs)`);

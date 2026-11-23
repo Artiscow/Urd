@@ -1,14 +1,6 @@
 /**
- * Page prefetch on intent: when a visitor hovers, presses or focuses an
- * internal link, the target's page file is fetched and parked in
- * sessionStorage, so the boot on the next page reads it without a round
- * trip and only revalidates in the background. The page files are served
- * with max-age=0, so the browser's own cache would still cost a 304 round
- * trip per navigation; the parked copy is what removes that hop.
- *
- * Pure functions (link resolution, the parked store, revalidation) are
- * separated from the DOM wiring so they are contract-tested in node. Inert
- * in the editor preview, where page switches happen via postMessage.
+ * Page prefetch on intent: an internal link hovered, pressed or focused has its page file parked in sessionStorage for the next page's boot.
+ * Notes: docs/engine-notes/prefetch.md (Urd repository).
  */
 
 import { PREFETCH_MINUTES } from './keep-minutes.js';
@@ -33,9 +25,7 @@ export function sessionStore() {
 const normalizePath = (pathname) => pathname.replace(/\/$/, '') || '/';
 
 /**
- * The page-register entry a link points to, or null when the link is not a
- * plain internal page link: another origin, a query string, a path outside
- * the register, or the current page itself (an in-page hash included).
+ * The page-register entry a link points to, or null for a link to another origin, with a query string, outside the register or to the current page.
  * @param {string} href The link's href attribute
  * @param {{pages?: Array<{path?: string, file?: string}>}} site
  * @param {{origin: string, pathname: string}} current The current location
@@ -92,9 +82,7 @@ export function storePrefetched(file, text, etag, storage, now = Date.now()) {
 }
 
 /**
- * Takes a parked page file out of the store (consumed once). Returns the
- * parsed page, the raw text and the ETag it was fetched with, or null when
- * nothing fresh is parked for that file.
+ * Takes a parked page file out of the store (consumed once): its parsed page, raw text and ETag, or null when nothing fresh is parked for it.
  * @returns {{page: object, text: string, etag: string|null}|null}
  */
 export function readPrefetched(file, storage, now = Date.now()) {
@@ -128,12 +116,7 @@ export async function prefetchPage(file, { fetchFn = fetch, storage, now } = {})
 }
 
 /**
- * Revalidates a served JSON file against the copy a page was rendered from
- * (a parked copy, or the boot fetch of a prerendered or restored page).
- * Resolves to the fresh page with its text and ETag when the server has a
- * different version, or null when the copy was current (304, same ETag, or
- * identical text). Without an ETag the request is unconditional and the
- * text comparison decides.
+ * Revalidates a served JSON file against the copy a page was rendered from; null when that copy is current (304, the same ETag or identical text).
  * @returns {Promise<{page: object, text: string, etag: string|null}|null>}
  */
 export async function revalidateFile(file, etag, { fetchFn = fetch, text = null } = {}) {
@@ -153,9 +136,7 @@ export async function revalidatePage(file, etag, opts) {
 }
 
 /**
- * Attaches the intent listeners: hover (mouse), press (touch and pen, which
- * fire before the click) and keyboard focus on any internal page link. Each
- * page file is prefetched at most once per MAX_AGE_MS window.
+ * Attaches the intent listeners (hover, press, focus) for internal page links; each page file is prefetched at most once per MAX_AGE_MS window.
  * @param {object} site The lifted site (the page register)
  * @param {{doc?: Document, storage?: Storage, fetchFn?: typeof fetch}} [deps]
  * @returns {() => void} Detaches the listeners

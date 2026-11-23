@@ -1,13 +1,6 @@
 /**
- * The Urd engine - entry point.
- *
- * Run by template/index.html. Creates the global Urd object with the
- * registries, registers the core types and plugins, finds the right page in
- * the page register, and renders. All data is version-lifted on load
- * (migrate.js) - see docs/SCHEMA.md.
- *
- * In preview mode (?preview=1) the engine additionally listens for
- * postMessage drafts from the editor and rerenders incrementally.
+ * The engine's entry point: the global Urd registries, the boot that finds, lifts and draws the page, and the preview's bridge to the editor.
+ * Notes: docs/engine-notes/urd.md (Urd repository).
  */
 import { createRegistry } from './registry.js';
 import { liftPageFile, liftSiteFile, PAGE_SCHEMA_VERSION } from './migrate.js';
@@ -27,7 +20,7 @@ import { applyHeadMeta, mountAnalytics, pageTitle } from './seo.js';
 import { readPrefetched, revalidateFile, wirePrefetch, sessionStore } from './prefetch.js';
 import { t, ta, initSiteLocale, initAdminLocale, requestedLang, siteLang } from './i18n.js';
 
-/** The shop gate for the «+ New block» menu: the preview module reads it from the site's own choice and whether a product catalogue stands among the collection drafts (block-palette.js shopOn, kept out of the visitor closure). */
+/** Hands the preview module the «+ New block» shop gate: the site's own settings and whether the collection drafts hold a product catalogue. */
 function refreshShopGate(site) {
   window.UrdPreviewEdit?.setShopOn?.(site?.site, draftHasKind('products'));
 }
@@ -50,9 +43,7 @@ export const Urd = {
   // kind, section|blocks}); the section gallery merges kind section into
   // the plugin group.
   templates: createRegistry('templates'),
-  // Commands for the editor's command palette (Ctrl/⌘+K): a plugin defines
-  // `{ label, labelKey?, run }`, the preview reports the list to the editor,
-  // and a chosen command runs here, where the plugin's code lives.
+  // Commands for the editor's palette (Ctrl/⌘+K): a plugin defines `{ label, labelKey?, run }`, and a chosen one runs here, where the plugin's code lives.
   commands: createRegistry('commands'),
 };
 
@@ -64,13 +55,10 @@ Urd.maler = Urd.templates;
 window.Urd = Urd;
 
 function registerCore() {
-  // The block and background types are defined as a page asks for them (core-types.js, ADR-0036), and held as the engine's own from the start; the animations are few and every page may use them.
+  // The core block and background ids are reserved now, their types defined as a page asks for them (core-types.js, ADR-0036); the animations defined at once.
   reserveCoreTypes(Urd);
   for (const [id, def] of Object.entries(coreAnimations)) Urd.animations.define(id, def);
-  // Old plugin contract ids resolve to the renamed ids (ADR-0021): pages
-  // built before the rename still carry the old ones. Map, form and calendar
-  // are core blocks since 0.7.18; a plugin that still defines an old id wins
-  // directly (registry alias semantics).
+  // Old plugin contract ids resolve to the renamed ones (ADR-0021), as pages may carry them; a plugin that defines an old id itself wins over the alias.
   Urd.blocks.alias('kalender', 'calendar');
   Urd.blocks.alias('kart', 'map');
   Urd.blocks.alias('skjema', 'form');
@@ -80,8 +68,7 @@ function registerCore() {
 }
 
 /**
- * The engine version, the basis for the plugins' requiresEngine check: the name of the folder this module is served from, which is always urd.json's `engine` (ADR-0013), so it costs no request; urd.json is read only where the module stands elsewhere.
- * An unreachable manifest yields '0.0.0', which rejects the version requirements instead of loading blindly.
+ * The engine version for the plugins' requiresEngine check: the name of this module's folder, else urd.json's `engine`, else '0.0.0'.
  */
 async function engineVersion() {
   const folder = engineVersionOf(import.meta.url);
@@ -97,11 +84,7 @@ async function engineVersion() {
 let jumpControl = null;
 
 /**
- * Follows a jump to the element with this id.
- * A menu that hides on scroll is held in view while the page moves.
- * A change of size (the menu shrinking on the way, data blocks still measuring above the spot) puts the spot back below the menu once the page has stood still for a moment; scrolling only postpones a correction that is waiting.
- * After the first correction, any scroll the follow did not make is the visitor's own and ends it, as do a wheel, a key or a touch, or `ms` passing.
- * The element is looked up again on every correction, since a render replaces it.
+ * Follows a jump to this id, holding the menu in view and the spot below as sizes settle; a press, wheel, key, `ms` or the visitor's scroll once landed ends it.
  * @param {string} id
  * @param {number} ms
  * @param {number} [offset] How far past the element's top the window stands, in px
@@ -159,7 +142,7 @@ function followJump(id, ms, offset = 0) {
 }
 
 /**
- * Brings the element with this id to the top of the window at once, below a menu that stays on screen (the scroll-padding in base.css), or `offset` px past it, and follows the jump while the page that has just been drawn settles.
+ * Scrolls at once to the element with this id, below a menu that stays on screen or `offset` px past it, and follows the jump while the page settles.
  * @param {string|null} id
  * @param {number} [offset]
  * @returns {boolean} Whether the element was there
@@ -173,8 +156,7 @@ function jumpTo(id, offset = 0) {
 }
 
 /**
- * The scroll position that brings an element's top right below a menu that stays on screen (the page's scroll-padding-top).
- * The top is the one the page lays out, without the transforms an entrance animation still holds the element in before it is revealed (offsetTop up the offsetParent chain), so the spot lands where it ends up.
+ * The scroll position that puts an element's top, as laid out without an entrance animation's transforms, right below the page's scroll-padding-top.
  * @param {HTMLElement} el
  * @returns {number}
  */
@@ -195,10 +177,7 @@ function spotName(id) {
 }
 
 /**
- * A link to a spot on this page: the browser's own jump does the work, shaped by the scroll-padding and the smooth scrolling in base.css, and the engine follows it.
- * A link holds a spot's id, so the jump goes to its name when it has one, and the address shows the name; a link that names the page with a different trailing slash would load the page again.
- * In both cases the fragment is handed to the address, which jumps in place.
- * A plain left click only: a link the page has already handled, one opened in a new tab and a download are left alone.
+ * Follows a plain left click's jump to a spot on this page; for a named spot, or a link whose path has another trailing slash, the engine makes the jump itself.
  */
 function wireJumps() {
   document.addEventListener('click', (event) => {
@@ -218,8 +197,7 @@ function wireJumps() {
 }
 
 /**
- * The arrival jump: the page is drawn after the browser has looked for the address's fragment, so the engine jumps there once the page stands (jumpOnArrival says when).
- * A prerendered page jumps when it is shown.
+ * The arrival jump to the address's fragment, made once the page is drawn where jumpOnArrival allows it; a prerendered page jumps when it is shown.
  */
 function arriveAtSpot() {
   const jump = () => {
@@ -238,14 +216,7 @@ function arriveAtSpot() {
 }
 
 /**
- * Cross-document View Transitions (ADR-0011): the arriving page is captured
- * at its first rendering opportunity, before the engine has fetched its
- * data and rendered anything. The hold keeps the old page's snapshot on
- * screen and the empty shell out of sight (the html class, styled in
- * base.css) until the first render, which ends the transition as a cut. A
- * page already rendered at arrival (a prerendered document) takes the plain
- * cross-fade. Without cross-document support the event never fires and the
- * page navigates normally (end state).
+ * Cross-document View Transitions (ADR-0011): an arriving page's transition is held under the `urd-arriving` class until the first render ends it as a cut.
  */
 let arrival = null;
 let firstRenderDone = false;
@@ -283,11 +254,7 @@ function applyFavicon(href) {
 }
 
 /**
- * Finds the page for the current URL in the page register.
- * ?page=<id> overrides (useful locally, where simple file servers do not
- * route the paths); otherwise location.pathname is matched; the fallback is
- * the first page in the register. A hidden page is found only in the
- * preview, where the owner works on it; for a visitor it is not there.
+ * Finds the current URL's page in the register: ?page=<id> first, then the path, else the register's first page; a hidden page is matched only in the preview.
  * @param {object} site
  * @param {boolean} [preview]
  */
@@ -303,7 +270,7 @@ function resolvePage(site, preview = false) {
   return pages.find((p) => p.path === path) ?? site.pages[0];
 }
 
-/** The drafts this browser's editor keeps, for the draft view and the preview's first paint (drafts.js, loaded for those alone); with `look`, a saved draft the editor handed this tab (receiveLook) stands over this browser's own; a browser whose storage is closed has none. */
+/** This browser's editor drafts (drafts.js); with `look`, a saved draft handed to this tab stands over them; null where storage is closed. */
 async function loadDrafts(look = false, lookId = null) {
   try {
     const { readDrafts, overlayDrafts, receiveLook } = await import('./drafts.js');
@@ -329,8 +296,7 @@ function markDraftView() {
 let spellcheckOn = true;
 
 /**
- * The Clean view's texts: every text the editor lets the owner write in place (contenteditable) is plain text while the Clean view stands, its own kind kept (data-urd-editable) and given back as the editing view returns.
- * A text drawn while the Clean view stands (a section drawn anew, a calendar's card opened) is made plain as it comes.
+ * The Clean view makes the texts written in place plain, their kind kept in data-urd-editable and given back as it ends; a text drawn meanwhile turns plain too.
  */
 let cleanWatcher = null;
 function cleanTexts(on) {
@@ -362,21 +328,13 @@ function cleanTexts(on) {
 const definedCount = () => ['blocks', 'sections', 'backgrounds', 'animations', 'templates', 'commands'].reduce((n, kind) => n + Urd[kind].ids().length, 0);
 
 /**
- * Attaches postMessage listening and height reporting in preview mode.
- * state = { page, site, viewport } is shared with boot, so breakpoint
- * switches and editor messages always work on the same data.
+ * Attaches the listener for the editor's messages in preview mode; `state` is shared with boot, so every message works on the same data.
  */
 function enablePreview(state, opts) {
   const root = opts.root;
   const vp = () => ({ preview: true, viewport: state.viewport });
 
-  /* Language switches in the preview are serialized: initSiteLocale can wait
-     on the network (pack languages), and a quick switch back must not be
-     clobbered by the OLD load finishing last. Each task reads the draft's
-     language at RUN time, so the last one in the queue always lands on the
-     current choice; langPending says whether something is in flight, so the
-     fast path (same language, render synchronously) is never taken while a
-     load could undo it. */
+  /* Language switches run one at a time, each reading the draft's language as it runs; langOutOfSync stays true while one is in flight. */
   let langQueue = Promise.resolve();
   let langPending = 0;
   const langOutOfSync = () => langPending > 0 || requestedLang(state.site.site?.lang) !== siteLang();
@@ -394,10 +352,9 @@ function enablePreview(state, opts) {
     });
     return langQueue;
   }
-  /** Preserves the scroll position across a full rerender: the document
-   *  collapses transiently while the data blocks measure asynchronously, and
-   *  the browser otherwise clamps scrollY. Restored after two rAF (after the
-   *  regrow layout). */
+  /**
+   * Keeps the scroll position across a full rerender, restored two frames later, as the document collapses while the data blocks measure.
+   */
   const keepScroll = (fn) => {
     const y = window.scrollY;
     fn();
@@ -414,7 +371,7 @@ function enablePreview(state, opts) {
   /** The measures waiting per block for the editor's fit of its frame (urd-fit-block). */
   const fitTimers = new Map();
 
-  // The bars on the blocks and the sections take the form, the gear, the phone button and the size Urd settings choose, a block's bar its look, what its design button opens and where they stand in the phone view (BAR_CHOICES in bar-tools.js); a change in the editor, which shares the origin's storage, draws them anew.
+  // The bars' choices in the Urd settings (BAR_CHOICES in bar-tools.js) stand in the storage the editor shares, so a change there draws the page anew.
   window.addEventListener('storage', (event) => {
     if (['urd-block-toolbar', 'urd-toolbar-look', 'urd-toolbar-gear', 'urd-toolbar-phone', 'urd-toolbar-size', 'urd-toolbar-design', 'urd-toolbar-phone-place'].includes(event.key) && state.page) keepScroll(() => typing(() => renderPage(state.page, state.site, root, vp())));
   });
@@ -423,7 +380,7 @@ function enablePreview(state, opts) {
     // Only the editor on the same site, and only through the frame it holds: a window the page opened shares the origin but is not the editor.
     if (event.origin !== location.origin || event.source !== window.parent) return;
     const msg = event.data;
-    // The view, site and page the editor sends as the preview reports ready (marked `startup`) repeat what the preview drew from the same drafts as it booted: one that changes nothing draws nothing again, so the page does not flicker as the editor opens.
+    // A `startup` view, site or page that matches what the preview already holds is skipped, so the page does not flicker as the editor opens.
     if (msg?.startup === true && ((msg.type === 'urd-viewport' && msg.mode === state.viewport) || (msg.type === 'urd-site' && !msg.page && sameData(msg.site, state.site)) || (msg.type === 'urd-preview-full' && sameData(msg.page, state.page)))) return;
     if (msg?.type === 'urd-preview' && msg.section) {
       const host = root.querySelector(`[data-section-id="${msg.section.id}"]`);
@@ -431,10 +388,7 @@ function enablePreview(state, opts) {
       const i = state.page.sections.findIndex((s) => s.id === msg.section.id);
       if (i >= 0) state.page.sections[i] = msg.section;
     } else if (msg?.type === 'urd-preview-full' && msg.page) {
-      // Same normalization as boot(): a page without sections must give an
-      // empty view, not throw in renderPage (and in findIndex on the next
-      // message). The same page (undo/redo and the like) keeps the scroll
-      // position; a real page switch naturally starts at the top.
+      // A page without sections draws empty, as in boot(); the same page again (an undo, a redo) keeps the scroll position, a switch to another page does not.
       const samePage = msg.page?.meta?.id === state.page?.meta?.id;
       state.page = msg.page;
       if (!Array.isArray(state.page.sections)) state.page.sections = [];
@@ -462,12 +416,7 @@ function enablePreview(state, opts) {
       // The bar the editor draws for a selected block in the phone view goes and comes back with the handles.
       window.UrdPreviewEdit?.watchPhoneBar?.();
     } else if (msg?.type === 'urd-fit-block' && msg.blockId) {
-      // The editor has edited a block whose height follows its content
-      // (ADR-0025) and asks for the height the content needs, so the block's
-      // frame can follow it. A design drawn by a module loaded on demand
-      // draws late and a feed can answer late, so the measure is taken three
-      // times; a block still loading its content is not measured, and a
-      // newer request for the same block replaces the measures still waiting.
+      // Measures the height a block that follows its content needs (ADR-0025) three times, as a design or feed can draw late; a newer request replaces those waiting.
       for (const timer of fitTimers.get(msg.blockId) ?? []) clearTimeout(timer);
       const measure = () => {
         const el = root.querySelector(`.urd-block[data-block-id="${CSS.escape(msg.blockId)}"]`);
@@ -484,9 +433,7 @@ function enablePreview(state, opts) {
       // A block just added from «+ New block», the Blocks panel or the palette: its box is fitted to what it draws (add-fit.js).
       window.UrdPreviewEdit?.fitNewBlock?.(msg.sectionId, msg.blockId, msg.w);
     } else if (msg?.type === 'urd-frames' && msg.sectionId && msg.frames) {
-      // The editor has fitted a frame to its content and moved the blocks
-      // below: the new frames are put in place without drawing the section
-      // again, so a caret in the block stays where it is.
+      // Frames the editor fitted to their content are put in place without drawing the section again, so a caret in the block stays where it is.
       const host = root.querySelector(`[data-section-id="${CSS.escape(msg.sectionId)}"]`);
       if (host) updateFrames(host, msg.frames);
     } else if (msg?.type === 'urd-announce-reset') {
@@ -495,10 +442,7 @@ function enablePreview(state, opts) {
       clearAnnounceDismissal(state.site);
       if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
     } else if (msg?.type === 'urd-demo-motion') {
-      // The ribbons stand still while the editing chrome is on, so the words
-      // can be read and typed. This lets them roll for a few seconds, the way
-      // the entrance animations are played as a demo. Reduced motion is left
-      // alone: there the band never moves.
+      // The ribbons stand still while the editing chrome is on; this rolls them for a few seconds as a demo, except under reduced motion.
       if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         document.body.classList.add('urd-motion-demo');
         clearTimeout(motionDemoTimer);
@@ -508,10 +452,7 @@ function enablePreview(state, opts) {
       // The grid menu in the editor is open: show the grid in all sections.
       window.UrdPreviewEdit?.toggleGridOverlays(msg.visible, state.page, state.site);
     } else if (msg?.type === 'urd-admin-theme' && msg.colors) {
-      // The admin color theme: the editor menus in the preview (the block
-      // menu, the section gallery) follow admin, not the page being edited.
-      // The values are set as separate variables; base.css uses them ONLY on
-      // the editor chrome, never on the page's own content.
+      // The admin colour theme, set as `--urd-admin-*` variables that only the editor's chrome in the preview reads, never the page's own content.
       for (const key of ['bg', 'surface', 'accent', 'text', 'accent-text']) {
         if (typeof msg.colors[key] === 'string') {
           document.documentElement.style.setProperty(`--urd-admin-${key}`, msg.colors[key]);
@@ -533,7 +474,7 @@ function enablePreview(state, opts) {
       // config toggle in the block.
       root.querySelector(`[data-block-id="${msg.blockId}"] .urd-cfg-toggle`)?.click();
     } else if (msg?.type === 'urd-text-style' && msg.blockId) {
-      // A style for the whole text from the text's menu: the field takes focus, which brings the text toolbar, and the style is handed to the toolbar as an event on the field (preview-edit.js).
+      // A style for the whole text from the text's menu: the field takes focus, which brings the text toolbar, and gets the style as an `urd-text-style` event.
       const field = root.querySelector(`[data-block-id="${CSS.escape(msg.blockId)}"] .urd-text[contenteditable="true"]`);
       if (field) {
         field.scrollIntoView({ block: 'center', behavior: 'instant' });
@@ -541,7 +482,7 @@ function enablePreview(state, opts) {
         if (msg.style && typeof msg.style === 'object') field.dispatchEvent(new CustomEvent('urd-text-style', { detail: msg.style, bubbles: true }));
       }
     } else if (msg?.type === 'urd-attention' && msg.sectionId) {
-      // The editor flagged a section for the phone's review, or cleared it: marked live, and kept in the page the preview holds, so the section drawn again (a switch of view) keeps its mark.
+      // A section flagged for the phone's review, or cleared: marked live and in the page the preview holds, so a redraw keeps the mark.
       const needed = msg.needed !== false;
       const held = state.page?.sections?.find((s) => s.id === msg.sectionId);
       if (held) {
@@ -552,24 +493,19 @@ function enablePreview(state, opts) {
         ?.classList.toggle('urd-attention', needed);
       window.UrdPreviewEdit?.reportAttention?.();
     } else if (msg?.type === 'urd-scroll-section' && msg.sectionId) {
-      // The attention badge in the top bar: scroll to the section that needs review, so the badge points at a place and not just a mode.
-      // The badge also switches the view to the phone, whose layout settles over the next frames (blocks measure their heights), so the jump settles.
+      // The attention badge in the top bar: a jump to the section that needs review, followed while the phone view it switches to settles.
       jumpTo(msg.sectionId);
     } else if (msg?.type === 'urd-scroll-to' && typeof msg.sectionId === 'string') {
-      // A reload of the editor: the canvas comes back to where it was scrolled, as the section at its top and how far past that section's top (the editor's lib/reload-place.js).
+      // A reload of the editor: the canvas comes back to where it was scrolled, by the section at its top and the offset past it (the editor's lib/reload-place.js).
       jumpTo(msg.sectionId, Math.max(0, Number(msg.offset) || 0));
     } else if (msg?.type === 'urd-link-apply') {
       // The link editor's answer for the text being edited: written on the selection the text toolbar kept.
       window.UrdPreviewEdit?.applyTextLink(msg.link ?? null, state.site.pages ?? []);
     } else if (msg?.type === 'urd-scroll-anchor' && typeof msg.hash === 'string') {
-      // A link in the preview to a spot on a page: the editor sends it once the page the link names stands, and the preview jumps there as the published page does on arrival.
+      // A link in the preview to a spot on a page: the editor sends it once that page stands, and the preview jumps there as the published page does on arrival.
       jumpTo(hashTarget(msg.hash));
     } else if (msg?.type === 'urd-collections' && msg.collections) {
-      // Collection drafts from the editor: used instead of the server files.
-      // Only sections with collection blocks are rerendered: a full
-      // renderPage collapses the document transiently (the data blocks
-      // measure asynchronously), and the browser then clamps the scroll
-      // position to the top.
+      // Collection drafts from the editor stand in for the server files; only the sections with collection blocks are drawn again, keeping the scroll position.
       setCollectionsDraft(msg.collections);
       refreshShopGate(state.site);
       const usesCollections = (b) => Boolean(Urd.blocks.get(b.type)?.usesCollections);
@@ -625,7 +561,7 @@ function enablePreview(state, opts) {
     } else if (msg?.type === 'urd-ctx-closed') {
       window.UrdPreviewEdit?.phoneMenuClosed(msg.focus === true);
     } else if (msg?.type === 'urd-block-words' && msg.sectionId && msg.blockId) {
-      // A block's words written on the page, the desktop's and the phone's own (ADR-0033), as the editor keeps them: put in the page's copy without drawing the block, where the words already stand as typed, so a later drawing reads them.
+      // A block's desktop and phone words (ADR-0033) as the editor keeps them go into the page's copy without a redraw, so a later drawing reads them.
       const held = state.page?.sections?.find((s) => s.id === msg.sectionId)?.blocks?.find((b) => b.id === msg.blockId);
       if (held) {
         if (msg.props && typeof msg.props === 'object') held.props = msg.props;
@@ -660,10 +596,7 @@ function enablePreview(state, opts) {
         for (const type of Urd.blocks.ids()) {
           const def = Urd.blocks.get(type);
           if (!def?.fromPlugin) continue;
-          // The admin WINDOW's dictionary never has plugin keys: the labels
-          // are resolved HERE (the iframe side, where the plugin dictionary
-          // lives) and sent as finished strings. fromPlugin already carries
-          // the display name (manifest.names).
+          // Plugin labels are resolved here, where the plugin dictionary lives, and sent as finished strings, since the admin window's dictionary has no plugin keys.
           blocks.push({
             type,
             label: def.labelKey ? ta(def.labelKey) : (def.label ?? type),
@@ -673,10 +606,7 @@ function enablePreview(state, opts) {
             variants: Array.isArray(def.variants)
               ? def.variants.map((v) => ({ label: v.labelKey ? ta(v.labelKey) : v.label, props: v.props ?? {} }))
               : [],
-            // The field contract (additive): a def with `fields` gets its
-            // settings rendered directly in the Properties panel instead of
-            // a separate config panel. The labels are resolved here for the
-            // same reason as above.
+            // The field contract (additive): a def with `fields` gets its settings in the Properties panel, their labels resolved here as the block's are.
             fields: Array.isArray(def.fields)
               ? def.fields.map((f) => ({
                   key: f.key,
@@ -704,11 +634,7 @@ function enablePreview(state, opts) {
       const def = Urd.commands.get(msg.id);
       if (typeof def?.run === 'function') def.run({ Urd, page: state.page, site: state.site });
     } else if (msg?.type === 'urd-zoom') {
-      // The canvas is scaled with a transform on the iframe, so EVERYTHING
-      // inside shrinks with the zoom, including the editing handles. They
-      // should however keep the same screen size as the admin panels, so
-      // they are counter-scaled with 1/zoom. Only a CSS variable: no
-      // rerender, and visitors never see it.
+      // The editing handles keep their screen size under the canvas zoom: `--urd-chrome-scale` is set to 1/zoom, with no redraw.
       const z = Number(msg.scale);
       document.documentElement.style.setProperty(
         '--urd-chrome-scale',
@@ -723,15 +649,11 @@ function enablePreview(state, opts) {
       // The menu follows the view as well: a phone menu left open closes on the desktop, and its submenus take the view's own form.
       if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
     } else if (msg?.type === 'urd-site' && msg.site && !msg.page && onlyColoursChanged(state.site, msg.site)) {
-      // A change of the theme's colours alone (a colour dragged in the Theme panel) is the theme's CSS: nothing is drawn again.
-      // The theme goes into the site the nav holds, so its light and dark toggle reads the new one.
+      // A change of the theme's colours alone applies the theme's CSS without a redraw, and goes into the site the nav holds for its light and dark toggle.
       state.site.theme = msg.site.theme;
       applyTheme(state.site.theme);
     } else if (msg?.type === 'urd-site' && msg.site) {
-      // Site draft from the editor (grid, theme, nav): everything that
-      // depends on site.json is rerendered. Same truncation guard as in
-      // boot(): a draft missing these parts must never throw and freeze the
-      // preview.
+      // A site draft from the editor redraws everything that depends on site.json, its missing parts given empty defaults as in boot().
       state.site = msg.site;
       state.site.site ??= { title: '', lang: 'no' };
       state.site.pages ??= [];
@@ -754,12 +676,7 @@ function enablePreview(state, opts) {
         renderToTop(state.site);
         renderPage(state.page, state.site, root, vp());
       }));
-      // Changed site.lang in the draft: reload the visitor locale BEFORE the
-      // re-render, so the preview is WYSIWYG for the language too (boot read
-      // the published site.json and may have a different language). The
-      // plugin texts are layered back on inside syncSiteLocale:
-      // initSiteLocale builds the dictionary from the engine's nb base,
-      // without the plugin keys.
+      // A changed site.lang reloads the visitor locale and the plugin texts (syncSiteLocale) and then redraws, so the preview shows the draft's language.
       if (langOutOfSync()) {
         syncSiteLocale().then(rerender);
       } else {
@@ -779,32 +696,21 @@ function enablePreview(state, opts) {
  */
 export async function boot(opts) {
   registerCore();
-  // Before the first await: the shell loads this module render-blocking, so
-  // the listener is in place when the arriving document's pagereveal fires
-  // at its first rendering opportunity. Inert in preview (page switches
-  // happen via postMessage, never navigation).
+  // Wired ahead of the first await, so the listener is in place as the arriving page's pagereveal fires; inert in the preview, which switches pages by message.
   wireArrivalHold();
 
   // The engine version, read from this module's own folder (engineVersion), is awaited right before the plugins load; site.json goes first.
   const enginePromise = engineVersion();
 
-  // The raw file is kept as migration context: the v1 page lift needs the
-  // ORIGINAL grid (columns/rowHeight), which the lifted site has lost. The
-  // served text and ETag are kept too: a prerendered or restored page
-  // rechecks them against the server (see recheck below).
+  // The served texts and ETags, kept so a prerendered or restored page can recheck them against the server (recheck below).
   const served = { site: null, page: null };
   const params = new URLSearchParams(location.search);
   const preview = params.get('preview') === '1';
-  // The canvas chrome follows the ADMIN language (two registers, ADR-0012), with the same detection as the editor's main.js (shared localStorage, same origin).
-  // The editing layer is loaded dynamically ONLY in preview - visitors never fetch this code - and must be in place before the first render.
-  // The preview's own rules (preview.css) come with it, so the editing chrome is never drawn without them.
-  // All three are asked for as the boot starts, beside the site and the page, since none reads them and the editing layer calls no ta() as it loads.
+  // In the preview alone, the editing layer, its preview.css and the admin language (ADR-0012) are asked for as the boot starts, beside the site and the page.
   const editing = preview ? Promise.all([import('./preview-edit.js'), loadStylesheet(new URL('./preview.css', import.meta.url).href), initAdminLocale()]) : null;
   // The rejection is consumed here; the failure is handled where the promise is awaited.
   editing?.catch(() => {});
-  // The draft view (?draft=1, drafts.js): the drafts this browser's editor keeps, drawn as a visitor's page; ?draft=look draws a saved draft the Drafts window opened in a tab of its own.
-  // The preview draws the same drafts from its first paint, the ones the editor holds, so a change not yet published shows at once and is never first drawn as published until the editor's own message arrives.
-  // They are read alongside site.json.
+  // The draft view (?draft=1) draws this browser's editor drafts as a visitor's page, ?draft=look a saved draft; the preview reads them too, beside site.json.
   const draftMode = preview ? null : params.get('draft');
   const draftsRead = preview || draftMode === '1' || draftMode === 'look' ? loadDrafts(draftMode === 'look', params.get('look')) : null;
   const siteRes = await fetch('/content/site.json');
@@ -818,24 +724,17 @@ export async function boot(opts) {
   site.pages ??= [];
   site.theme ??= { version: 1, tokens: {} };
   site.nav ??= { version: 1, items: [] };
-  // The visitor language (ADR-0012): site.lang governs the engine's own
-  // texts and date names. Must be loaded BEFORE the first render; the
-  // document's lang attribute is set from the same source (the shells
-  // hardcode "no" as the pre-JS default).
+  // The visitor language (ADR-0012): site.lang sets the engine's own texts and date names and the document's lang attribute, ahead of the first render.
   document.documentElement.lang = await initSiteLocale(site.site.lang);
   applyTheme(site.theme);
   applySiteLayout(site);
   applyFavicon(site.site.icon);
   // An empty page register (hand-edited site.json) gives an empty page, not a crash.
   const entry = resolvePage(site, preview) ?? { id: 'empty', title: '', file: 'content/pages/missing.json' };
-  // A page file parked by the previous page's intent prefetch (prefetch.js) is used as it is and revalidated after the first render.
-  // Visitors only: the preview and the draft view read the page's draft, and the preview then receives its pages via postMessage.
+  // The preview and the draft view take the page's draft; a visitor a file parked by the previous page's prefetch (prefetch.js), rechecked after the first render.
   const draftPage = drafts?.page(entry.id) ?? null;
   const parked = preview || drafts ? null : readPrefetched(entry.file, sessionStore());
-  // Otherwise the page file depends only on the register, so its fetch
-  // starts here and runs alongside the plugin loading instead of after it:
-  // with the engine cached, the serial round trips are what a page switch
-  // costs.
+  // Otherwise the page file's fetch starts here, as it depends only on the register, and runs alongside the plugin loading.
   const pagePromise = draftPage
     ? Promise.resolve({ page: draftPage, text: null, etag: null })
     : parked
@@ -848,25 +747,16 @@ export async function boot(opts) {
   // promise is awaited.
   pagePromise.catch(() => {});
   const engine = await enginePromise;
-  // In preview the EDITOR owns the plugin list (the draft in plugins.json): boot loads nothing,
-  // and the urd-plugins message loads the draft's active plugins so they work before publishing.
-  // For a visitor the plugins load beside the page, and the page waits for them only when it uses a type no core module defines (pageTypes below).
+  // The plugins: in the preview the urd-plugins message loads them; for a visitor they load beside the page, awaited only for a type no core module defines.
   const pluginsLoaded = preview ? Promise.resolve() : loadPlugins(Urd, engine).catch(() => {});
 
-  // Responsive: the viewport follows the screen width (also in the
-  // editor's preview, where the iframe is narrowed to mobile width). When
-  // the breakpoint is crossed, the page is rerendered in the right mode.
-  // In preview the editor owns the viewport (the urd-viewport message); for
-  // visitors it follows the screen width. Both body classes are set before
-  // the menu renders, so it is built for the right mode and the right
-  // audience from the first paint.
+  // A visitor's viewport follows the mobile breakpoint, the preview's starts on desktop for the editor to set; both body classes are set ahead of the menu.
   const mq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
   const viewport = preview ? 'desktop' : (mq.matches ? 'mobile' : 'desktop');
   document.body.classList.toggle('urd-mobile', viewport === 'mobile');
   if (preview) document.body.classList.add('urd-preview');
 
-  // The page id is known from the register, so a page the menu stays off (nav.hideOn) starts without it.
-  // The core types the nav draws with are loaded before it is drawn; the preview loads every core type, and the section presets, since the editor offers them all.
+  // The nav is drawn with the page id, its core types loaded first; the preview loads every core type and the section presets, which the editor offers.
   if (preview) {
     await Promise.all([loadCoreTypes(Urd, null, { all: true }), import('./sections/presets.js').then(({ registerSectionPresets }) => registerSectionPresets(Urd))]);
   } else {
@@ -876,18 +766,13 @@ export async function boot(opts) {
   }
   if (!preview && needsPlugins(pageTypes(site.nav), Urd)) await pluginsLoaded;
   if (opts.nav) renderNav(site, opts.nav, entry.id);
-  // The shared footer: its own element right after the main content, created here since index.html is Urd-owned and cannot be changed by publishing.
-  // It joins the document once the page is drawn (below), so it is never shown at the top while the page loads and then pushed down.
+  // The shared footer is created here as an element of its own, and joins the document after the main content once the page is drawn (below).
   opts.footer = document.createElement('footer');
   opts.footer.id = 'urd-footer';
   // The site's «Back to top» button, as site.layout.toTop sets it (totop.js).
   renderToTop(site);
 
-  // Version lifting at file level: older page files are lifted to the
-  // current format in memory (disk is written first at the next publish).
-  // If the page file is missing (half-finished deploy, hand-edited
-  // register), an empty page is shown instead of a crash - the page never
-  // dies from bad data.
+  // The page file is lifted to the current format in memory; a page file that cannot be loaded gives an empty page, never a crash.
   let page;
   try {
     const loaded = await pagePromise;
@@ -898,21 +783,19 @@ export async function boot(opts) {
     page = { schemaVersion: PAGE_SCHEMA_VERSION, meta: { id: entry.id, title: entry.title }, sections: [] };
   }
   if (!Array.isArray(page.sections)) page.sections = [];
-  // A visitor's page loads the core types it and the footer use (core-types.js), and what its own blocks draw with beyond their module is readied beside them, so a calendar stands in its own design from the first drawing (prepareBlocks).
+  // A visitor's page loads the core types it and the footer use; prepareBlocks readies what the blocks draw with beyond their module for the first drawing.
   const readied = prepareBlocks(pageBlocks(page, site.footer), { site, preview, viewport });
   if (!preview) await loadCoreTypes(Urd, pageTypes(page, site.footer));
   if (!preview && needsPlugins(pageTypes(page, site.footer), Urd)) await pluginsLoaded;
   await readied;
   if (drafts) setCollectionsDraft(drafts.collections);
   document.title = pageTitle(site, page, entry);
-  // SEO metadata (description, canonical, og: fields, JSON-LD) is set only
-  // for visitors: the preview address (?preview=1) is never a canonical page.
-  // The owner's own draft view is never counted.
+  // SEO metadata (description, canonical, og: fields, JSON-LD) is set only outside the preview, and the analytics mounted only where no drafts were read.
   if (!preview) {
     applyHeadMeta(site, page, location.origin, location.pathname, entry);
     if (!drafts) mountAnalytics(site);
   }
-  // The footer is rendered now that the page id is known (per-page hideOn visibility): in the preview at once, and for a visitor as it joins the document, so its background layers start in the page.
+  // The footer is drawn with the page id (per-page hideOn): in the preview at once, for a visitor as it joins the document.
   const drawFooter = () => renderFooter(site, opts.footer, page.meta?.id ?? entry.id);
   if (preview) drawFooter();
 
@@ -924,7 +807,7 @@ export async function boot(opts) {
   const state = { page, site, engine, viewport };
 
   renderPage(state.page, state.site, opts.root, { preview, viewport: state.viewport, arriving: true });
-  // A visitor's footer joins once no block on the page is still fetching its content, so the page's own content never pushes it down; the editor's preview shows it at once.
+  // A visitor's footer joins once no block on the page is busy fetching its content, or after FOOTER_WAIT_MS (whenSettled); the preview's joins at once.
   if (preview) opts.root.insertAdjacentElement('afterend', opts.footer);
   else {
     whenSettled(opts.root, FOOTER_WAIT_MS).then(() => {
@@ -950,14 +833,12 @@ export async function boot(opts) {
     // Intent prefetch of the next page (hover, press, focus on internal links).
     wirePrefetch(site);
 
-    // A newer page file rerenders in place. The scroll position survives
-    // the rerender (the document collapses transiently while the data
-    // blocks measure), and the sticky blocks are re-pinned right away.
+    // A newer page file is drawn in place, keeping the scroll position and pinning the sticky blocks again.
     const applyFreshPage = async (fresh) => {
       served.page = { text: fresh.text, etag: fresh.etag };
       const freshPage = liftPageFile(fresh.page, rawSite);
       if (!Array.isArray(freshPage.sections)) freshPage.sections = [];
-      // A page published since with a type of its own waits for its module, and for the plugins where it uses a plugin's type, as the first drawing does; until then the page shown stays the one a redraw draws.
+      // A newer page waits for its types' modules, and for the plugins where it needs them, as the first drawing does; until then a redraw draws the page shown.
       const freshReadied = prepareBlocks(pageBlocks(freshPage, site.footer), { site, preview, viewport: state.viewport });
       await loadCoreTypes(Urd, pageTypes(freshPage, site.footer));
       if (needsPlugins(pageTypes(freshPage, site.footer), Urd)) await pluginsLoaded;
@@ -972,12 +853,7 @@ export async function boot(opts) {
         refreshSticky();
       }));
     };
-    // The page shown may predate the site as published: a parked copy, a
-    // prerendered document, or one restored from the back-forward cache.
-    // One check at a time against the server: a changed site.json (the
-    // register, nav, theme, layout or language) reloads, a changed page
-    // file rerenders, a current copy leaves the page be. Errors are
-    // swallowed: the page never dies from a failed check.
+    // Rechecks a parked, prerendered or restored page against the server, one check at a time: a changed site.json reloads, a changed page file redraws.
     let checking = null;
     let queuedSite = false;
     const recheck = ({ site: checkSite }) => {
@@ -997,8 +873,7 @@ export async function boot(opts) {
       });
       return checking;
     };
-    // A prerendered document checks at activation, everything else now.
-    // The draft view never trades its drafts for the server's files: it reads them anew on a return from the back-forward cache.
+    // A parked page checks now, a prerendered one at activation and a restored one as it is shown; the draft view reloads on a return from the back-forward cache.
     if (drafts) {
       window.addEventListener('pageshow', (event) => {
         if (event.persisted) location.reload();

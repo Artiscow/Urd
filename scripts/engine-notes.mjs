@@ -49,11 +49,14 @@ function proseOf(kind, texts) {
   if (kind === 'line') return { prose: texts.map((t) => t.replace(/^ /, '')).join('\n').trim(), tags: '' };
   const lines = texts[0].split('\n').map((l) => l.replace(/^\s*\*?[ \t]?/, ''));
   if (kind === 'jsdoc') lines[0] = lines[0].replace(/^\*\s?/, '');
-  const at = lines.findIndex((l) => l.startsWith('@'));
+  const at = lines.findIndex((l) => /^@[a-z]+(\s|\{|$)/.test(l.trimStart()));
   const prose = (at < 0 ? lines : lines.slice(0, at)).join('\n').trim();
   const tags = at < 0 ? '' : lines.slice(at).map((l) => l.trim()).filter(Boolean).join('\n');
   return { prose, tags };
 }
+
+/** A header's line naming its module's notes, which a limit does not count. */
+const NOTES_LINE = /Notes: docs\/engine-notes\/\S+ \(Urd repository\)\./;
 
 /** The length a limit counts: the prose with its whitespace collapsed. */
 export const proseLength = (prose) => prose.replace(/\s+/g, ' ').trim().length;
@@ -88,7 +91,9 @@ export function notesOf(src) {
   return notes.map((n, i) => {
     const { prose, tags } = proseOf(n.kind, n.texts);
     const slot = slotOf(n.start);
-    return { kind: n.kind, start: n.start, end: n.end, raw: src.slice(n.start, n.end), prose, tags, slot, alone: n.alone, header: i === 0 && slot === 0, long: proseLength(prose) > LIMIT };
+    const header = i === 0 && slot === 0;
+    const counted = header ? prose.replace(NOTES_LINE, '') : prose;
+    return { kind: n.kind, start: n.start, end: n.end, raw: src.slice(n.start, n.end), prose, tags, slot, alone: n.alone, header, long: proseLength(counted) > LIMIT };
   });
 }
 
@@ -367,7 +372,7 @@ export function checkModule(module, base, now, md) {
         const summary = neu.prose.replace(mark, '');
         if (anyLong && !neu.prose.includes(mark)) errors.push(`${where}: the header does not name ${notesPath(module)}`);
         if (proseLength(summary) > LIMIT) errors.push(`${where}: the header holds ${proseLength(summary)} characters of prose beside the path to its notes`);
-        if (!old.long && normal(summary) !== normal(old.prose)) errors.push(`${where}: a short header changed beyond the path to its notes`);
+        if (!old.long && normal(summary) !== normal(old.prose.replace(mark, ''))) errors.push(`${where}: a short header changed beyond the path to its notes`);
         if (old.long) {
           shortened++;
           shortChecks(where, old, neu, summary);

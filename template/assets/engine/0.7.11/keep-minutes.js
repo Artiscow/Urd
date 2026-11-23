@@ -1,6 +1,6 @@
 /**
- * How long the engine keeps what it fetches ahead in a visitor's browser, in minutes.
- * The modules that keep it read these numbers, and the privacy page names them from here too (privacy-model.js), so its minutes are the code's; a module of its own, so the boot loads no more than it for them.
+ * Minutes a page fetched ahead and a calendar feed are kept in a visitor's browser, read by the modules that keep them and by privacy-model.js.
+ * Notes: docs/engine-notes/keep-minutes.md (Urd repository).
  */
 
 /** How long a page fetched ahead of a press on its link is kept (prefetch.js). */

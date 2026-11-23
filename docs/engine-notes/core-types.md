@@ -1,0 +1,36 @@
+# core-types.js
+
+The full text of the longer comments in the engine's `core-types.js`, in the file's order, under the name each one explains: a declaration by its name, a comment inside a function by the names around it and the code it stands before. The code keeps a short version of each in its place.
+
+## The module
+
+The engine's own block and background types, each with the module that defines it (ADR-0036): a visitor's page loads the modules of the types it, its nav and its footer use, and the editor's preview loads them all.
+The loaders name their modules literally, so the modules stay out of the boot's static closure and the shells' preload list, and are fetched from the versioned engine folder as they are asked for (ADR-0013).
+
+## `const beside`
+
+A type's module asked for beside the modules it imports, directly or through others, that the boot does not load, in one wave: the browser shares a request already on its way, so no module waits for the module that imports it to arrive first.
+tests/visitor-speed.test.mjs holds every type's loader to name them all.
+
+## `const CORE_BLOCK_READY`
+
+The core block types readied before a page is drawn, each with what readies a block of it (prepareBlocks): the calendar's, asked for in one wave with the parser, the design model, the formats and the links it draws with (calendarParts in blocks/calendar-load.js), beside the calendar's own module.
+Each gives what takes a block's props and the page's context once its own module is in; the parts asked for beside it come in on their own.
+
+## `loadCoreTypes`
+
+Loads and defines the core types a page uses (pageTypes in plugins.js), an old id's type among them, or every core type with `all`; a type already defined is left as it is.
+
+## `const READY_WAIT_MS`
+
+How long a page waits for its blocks' readying at most: as long as a calendar's loading bars wait before they show (base.css), so on a slow connection the page is drawn and the calendar comes in as its code does.
+
+## `prepareBlocks`
+
+Readies what the engine's own blocks on a page draw with beyond their module, before the page is drawn (CORE\_BLOCK\_READY: a calendar's parts, its designs, and its feeds asked for), so such a block stands in its own design from the page's first drawing.
+It runs beside the page's types (loadCoreTypes) and settles once they are readied or after `wait`, whichever comes first.
+Only a core id is readied, never an old one, which a plugin may still define and draw (ADR-0021); a block hidden on the visitor's screen is left until it shows, and a block whose readying fails is drawn as it is without it.
+
+## `reserveCoreTypes`
+
+Holds every core block and background id as the engine's own in the registries, before any module has defined it: a plugin may then never take one, however its loading and the page's interleave, and the engine defines them through the definers the registries hand back.

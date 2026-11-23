@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.37.3.10 - The boot, the languages and the plugins' code load 7 KB lighter on every page - 23 November 2026
+
+- urd.js's 58 long comments, i18n.js's 17, plugins.js's 19, core-types.js's 7 and prefetch.js's 5, and those of registry.js, boot.js, keep-minutes.js and the site's bokmål dictionary, have short versions written by hand, their full text in docs/engine-notes/; urd.js is 15.3 KB compressed, from 18.5, the code proven unchanged and the editor's bundle with it.
+- The notes script read a tag line written with two spaces (` *  @returns`) as prose, and counted a header's line naming its notes against the limit, which let a finished module stand in the guard's pending list; it finds the tag and counts a header's summary alone.
+
+The independent review before the commit found these:
+
+1. Six short versions read wrong or unclearly: followJump's list of what ends the follow, which left out a press, draftPage's, which left out the drafts the preview takes, satisfiesEngine's caret at 0.x, pluginBlockDesigns's null, which comes after the invalid items are dropped, and two in the preview's messages and a newer page's drawing. Each is rewritten.
+2. The script took any line beginning with «@» after its spaces for a tag line; it takes a JSDoc tag name alone.
+3. The list of comments that disagree with their code missed the section scroll's senders in urd.js and the draft view's head tags; it holds them.
+
 ### 0.7.37.3.9 - The menu's code loads 8 KB lighter on every page, its long comments in notes beside it - 23 November 2026
 
 - nav.js's 63 long comments and nav-model.js's 52 have short versions written by hand, their full text in docs/engine-notes/nav.md and nav-model.md; nav.js is 19.9 KB compressed, from 24.4, and nav-model.js 12.9, from 16.5, the code proven unchanged and the editor's bundle with it.

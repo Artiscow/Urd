@@ -1,10 +1,6 @@
 /**
- * Visitor-facing strings, Norwegian Bokmål. This is the BASE: every other
- * language layers on top of it, so a key missing in another language falls
- * back here. The keys are English identifiers (the data contract rule); the
- * parity test (tests/i18n.test.mjs) keeps the language files in sync.
- * The date tables below are the fallback when ICU lacks the language;
- * normally date names come from Intl (see i18n.js).
+ * Visitor-facing strings in Norwegian Bokmål, the base every other language falls back to; its date tables are the fallback when ICU lacks the language.
+ * Notes: docs/engine-notes/locales/site/nb.md (Urd repository).
  */
 export default {
   lang: 'nb',

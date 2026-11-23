@@ -1,14 +1,6 @@
 /**
- * The multilingual core (ADR-0012): two registries - t() for visitor texts
- * (follows site.lang) and ta() for the admin chrome (follows the admin
- * language in localStorage 'urd-admin-lang'). Norwegian bokmål is always the
- * static base; other languages are layered on top with Object.assign, so a
- * missing key yields the bokmål text and a completely unknown key yields the
- * key itself (a visible error, never a crash). Date names, plurals and
- * relative time go through native Intl (ADR-0011: the platform's CLDR data
- * over homegrown tables), with the bokmål tables in locales/site/nb.js as
- * fallback where ICU lacks the language. The translation files are plain ES
- * modules with no build step.
+ * The multilingual core (ADR-0012): t() for visitor texts and ta() for the admin, each over the bokmål base; dates, plurals and relative time through Intl.
+ * Notes: docs/engine-notes/i18n.md (Urd repository).
  */
 import nb from './locales/site/nb.js';
 
@@ -17,21 +9,11 @@ import nb from './locales/site/nb.js';
 export const SUPPORTED_LANGS = ['nb', 'nn', 'en-GB', 'se', 'tr'];
 
 /**
- * The shape of a language code: BCP-47-like, with a lowercase primary tag
- * (nb, se, sv, en-GB). Used to tell a possible LANGUAGE PACK code from
- * garbage: a code the engine does not know is looked up among the language
- * packs, while a value that does not even look like a language code falls
- * straight back to bokmål.
+ * The shape of a language code (nb, se, en-GB): a code of this shape the engine lacks may be a language pack's; requestedLang reads anything else as bokmål.
  */
 export const LANG_CODE_RE = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
 
-/* The tags that mean each built-in language. Both the two- and three-letter
-   codes (ISO 639-1 and -3) are listed: if a system sends 'nob' it must
-   become bokmål, and the code must also be taken so a language pack cannot
-   hijack bokmål through it. Southern and Lule Sami (sma/smj) are an
-   APPROXIMATION of Northern Sami, not an identity; they are therefore also
-   taken, and a real Southern Sami language belongs in the engine, not in a
-   pack. */
+/* The tags that mean each built-in language, ISO 639-1 and -3 alike, so 'nob' reads as bokmål and never as a pack's; sma and smj read as Northern Sami. */
 const LANG_TAGS = {
   nb: ['no', 'nor', 'nb', 'nob'],
   nn: ['nn', 'nno'],
@@ -41,14 +23,7 @@ const LANG_TAGS = {
 };
 
 /**
- * Matches a language tag (site.lang, navigator.language) against the
- * BUILT-IN languages, or null when nothing fits. The tag must be the whole
- * code or the code plus subtags ('nb-NO' is bokmål, 'nbx' is not):
- * otherwise a language pack whose code happens to start the same way
- * ('ses', 'trv') would be redirected to a built-in language and never
- * loaded. Null carries meaning: auto-detection should then try the NEXT tag
- * in navigator.languages, and a site.lang with no match may belong to a
- * language pack (see requestedLang).
+ * Matches a language tag (site.lang, navigator.language) against the built-in languages, whole or with subtags ('nb-NO' is bokmål, 'nbx' is not); else null.
  * @param {unknown} raw
  * @returns {string|null}
  */
@@ -68,11 +43,7 @@ export function isBuiltinLang(code) {
 }
 
 /**
- * Validates the languages list in a plugin manifest (mirrors
- * schema/plugin.schema.json, which cannot run in the browser without
- * dependencies). Lives here, not in language-packs.js, because the plugin
- * loader validates the manifest SYNCHRONOUSLY for all plugins - the pack
- * module itself is only fetched when a pack language is actually in use.
+ * Validates a plugin manifest's `languages` list as schema/plugin.schema.json does: a valid code not built in, an own name, and `site`, `admin` or both.
  * @param {unknown} list
  * @returns {string[]} Error messages; empty list = valid.
  */
@@ -110,13 +81,7 @@ export function requestedLang(raw) {
 }
 
 /**
- * Fetches the strings of a language pack (plugin). The module is loaded
- * ONLY here, so a site in a built-in language never pays for pack support.
- * Runtime import from an absolute path, the same pattern as the admin
- * dictionaries: the code then works both in the engine and in the admin
- * bundle, without the build emitting separate chunk files. (In admin this
- * gives a separate module instance of i18n.js behind the pack module; it is
- * used only for pure functions, never for dictionary state.)
+ * Fetches a language pack's site or admin strings through language-packs.js, imported at runtime by its absolute path; null when that fails.
  * @param {string} code
  * @param {'site'|'admin'} kind
  * @returns {Promise<Record<string, string>|null>}
@@ -130,7 +95,7 @@ async function loadPack(code, kind) {
   }
 }
 
-// `own` is the language's own strings alone, with nothing of bokmål under them, for the look-up that must know whether the language has a word of its own (themeString).
+// `own` holds the site language's strings alone, without the bokmål base, for look-ups that ask whether the language has a word of its own (themeString).
 const site = { lang: 'nb', dict: { ...nb.strings }, own: nb.strings, dates: null };
 const admin = { lang: 'nb', dict: {} };
 
@@ -153,8 +118,7 @@ export function ta(key, params) {
 }
 
 /**
- * The plural form a count takes in the visitor language, and the key that holds it.
- * The form is the Intl.PluralRules category ('one'/'two'/'few'/'many'/'other'; Northern Sami has a dual form) when the dictionary has a key for it, else 'other'.
+ * The plural form a count takes in the visitor language and its key: the Intl.PluralRules category, or 'other' when that category has no key and `other` has one.
  */
 export function pluralForm(baseKey, n) {
   let cat = 'other';
@@ -164,9 +128,7 @@ export function pluralForm(baseKey, n) {
 }
 
 /**
- * A design's own words for a text (a calendar design's theme words, `calendar.theme.<design>.<text>`), with the placeholders left in: the theme key in the site's own language, else the common key in the site's own language, else the theme key in bokmål, else the common key there.
- * So a design without a translation still speaks the site's language, with the common words, and a bokmål site gets the design's own.
- * With a plural form, the form's key is tried before the `other` form at every step.
+ * A design's words for a text, placeholders left in: the theme key, then the common key, in the site's own language, then in bokmål; a form's key before `other`.
  * @param {string} themeKey The design's own key
  * @param {string} baseKey The common key the text falls back to
  * @param {string|null} [form] The plural form (pluralForm), for a text with forms
@@ -183,8 +145,7 @@ export function themeString(themeKey, baseKey, form) {
 }
 
 /**
- * The language a site text is written in: the site's own where its dictionary has the key, else bokmål, whose words a missing key falls back to.
- * For words formatted beside the text (a period's unit by Intl), so they are in the same language as the sentence around them.
+ * The language a site text is written in: the site's own where its own dictionary has the key, else bokmål; for words formatted beside the text by Intl.
  * @param {string} key
  */
 export function siteTextLang(key) {
@@ -201,11 +162,7 @@ export function tp(baseKey, n, params) {
 }
 
 /**
- * Error responses from the publishing layer (functions): the
- * machine-readable `code` is looked up as api.<code> and interpolated with
- * the response's own fields ({key}, {login}, {host} ...). An unknown code
- * falls back to the backend text (`error`), which always exists; null when
- * the response is missing entirely, so the caller can `??` its own fallback.
+ * Translates a functions error response: its `code` as `api.<code>`, filled with the response's own fields, else its `error` text, else null.
  */
 export function taApiError(data) {
   const key = `api.${data?.code}`;
@@ -222,11 +179,7 @@ export function addSiteDict(strings) { Object.assign(site.dict, strings ?? {}); 
 export function addAdminDict(strings) { Object.assign(admin.dict, strings ?? {}); }
 
 /**
- * Loads the visitor language (called by boot() once site.json is read).
- * Dynamic import on purpose: invisible to the modulepreload list, and
- * Norwegian sites (the base) pay nothing. A code the engine does not have
- * built in is looked up among the language packs (plugins). If loading
- * fails, the nb base stays in place.
+ * Loads the visitor language, a built-in language's file or a language pack's strings, by runtime import; bokmål when it fails. Returns the language in use.
  */
 export async function initSiteLocale(rawLang) {
   const lang = requestedLang(rawLang);
@@ -240,12 +193,7 @@ export async function initSiteLocale(rawLang) {
       strings = await loadPack(lang, 'site');
     }
   }
-  // The dictionary is swapped ONLY once the strings are in hand, in one go:
-  // a render that happens while loading is in flight must see the previous
-  // language, never a half-built one (in the preview a new draft can arrive
-  // in the middle of a language switch). Always a fresh copy of the base, so
-  // the overlay does not mutate the nb dictionary and a switch does not
-  // inherit the previous language.
+  // The dictionary is swapped in one go once the strings are in hand: a fresh copy of the bokmål base with the language's strings on top.
   site.lang = lang === 'nb' || strings ? lang : 'nb';
   site.dict = { ...nb.strings, ...(strings ?? {}) };
   site.own = strings ?? nb.strings;
@@ -254,13 +202,7 @@ export async function initSiteLocale(rawLang) {
 }
 
 /**
- * Admin language detection (shared by the editor's main.js and the preview
- * chrome): an explicit choice in localStorage 'urd-admin-lang' wins;
- * otherwise the device language is matched strictly against the supported
- * ones (the next tag is tried on a miss); no match yields English. A stored
- * choice can be a language-pack code the engine does not know: it is kept,
- * and initAdminLocale looks it up. Auto-detection covers only the built-in
- * languages (it is synchronous, and the pack list requires network).
+ * The admin language: a choice stored in localStorage 'urd-admin-lang', even a pack's code, else the first device language matching a built-in one, else English.
  */
 export function detectAdminLang() {
   let stored = null;
@@ -274,21 +216,13 @@ export function detectAdminLang() {
 }
 
 /**
- * Resolves when the admin dictionary is loaded. Preview chrome that can be
- * rendered BEFORE initAdminLocale finishes (the help chips in the core
- * blocks: the first page render happens before the preview branch in boot)
- * waits on this before calling ta(), so key names are never frozen into
- * chrome from the first render. The visitor path never resolves it - the
- * chips only exist in the preview.
+ * `adminLocaleReady` resolves with the admin language once initAdminLocale has run; preview chrome drawn before then waits on it before calling ta().
  */
 let adminLocaleReadyResolve;
 export const adminLocaleReady = new Promise((resolve) => { adminLocaleReadyResolve = resolve; });
 
 /**
- * Loads the admin dictionary: the nb base at the bottom, the chosen language on top, the two read together.
- * Runtime import from an absolute path, so the same code works in the admin bundle AND in the preview iframe, and the dictionaries are never bundled.
- * A language that is not built in is fetched from a language pack; if none exists, the bokmål base stays.
- * If loading fails entirely (vite dev without the template server) the keys are shown.
+ * Loads the admin dictionary by runtime import: the chosen language, built in or a language pack's, over the bokmål base; a pack that fails leaves bokmål.
  */
 export async function initAdminLocale(lang = detectAdminLang()) {
   const load = (code) => import(/* @vite-ignore */ `/assets/urd/locales/admin/${code}.js`).then((m) => m.default.strings, () => null);
@@ -304,11 +238,7 @@ export async function initAdminLocale(lang = detectAdminLang()) {
   return admin.lang;
 }
 
-/* Date names: built from Intl for the current site language and cached per
-   language. Weekdays start on Monday (Norwegian convention, same as the
-   tables). Short month names are normalized without the period ('jan.' ->
-   'jan'), matching the badge format. If ICU lacks the language, the bokmål
-   tables from the base are used. */
+/* Date names from Intl for a language, weekdays from Monday and short names without a closing period; the bokmål tables where Intl lacks the language. */
 function buildDates(lang) {
   try {
     if (!Intl.DateTimeFormat.supportedLocalesOf([lang]).length) return nb.dates;
