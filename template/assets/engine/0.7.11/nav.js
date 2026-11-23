@@ -1,22 +1,6 @@
 /**
- * Builds the navigation from site.json - the page register (site.pages) and
- * the nav data (site.nav). Nothing is hardcoded: nav items with `page` look
- * up their path in the page register; items with `href` are external links.
- *
- * Submenus follow the WAI-ARIA "disclosure navigation" pattern (not
- * menubar): real buttons with aria-expanded/aria-controls, natural Tab
- * order and no role="menu". An item with both its own target and a submenu
- * renders as a link plus its own arrow button, so the page stays reachable.
- * The submenu has two levels: a child's own submenu opens beside the panel,
- * or stands as a headed group under the child when the submenu is laid out
- * in columns or as the flyout. The mobile menu (the burger) is a non-modal
- * disclosure of the same list, styled by body.urd-mobile (the breakpoint is
- * set in urd.js from site.json), or with nav.style.mobileMenu 'sheet' a
- * full-screen native <dialog> the list moves into while it is open
- * (ADR-0011: top layer, focus trap, Escape and the scroll lock come from the
- * browser). The menu stays off the pages listed in nav.hideOn: gone, or
- * tucked above the top edge and reached by the pointer at the edge, a faint
- * ghost there, or a pull tab (nav.hideMode).
+ * Builds the navigation from site.json's page register and nav data: the bar, its disclosure submenus and the phone menu behind the burger.
+ * Notes: docs/engine-notes/nav.md (Urd repository).
  */
 
 import { navItems, navClasses, navSurface, navSubSurface, navLayerVeil, hostClasses, clampSideWidth, clampBorderWidth, navScrollState, scrollClear, resolveLink, linkAttrs, navSizeVars, logoParts, effectiveNav, subOpenMode, mobileMenuMode, mobileSubMode, phoneMenuModel, sheetMotion, announcementModel, launcherModel, launcherVars, toolOrder, isSafeImage, burgerModel, navHidden, hideMode, tabModel, subGrouped, keepsSheet, subsAfterRender } from './nav-model.js';
@@ -30,13 +14,10 @@ import { t, ta } from './i18n.js';
 /** How long the submenu stays open after the pointer leaves the item. */
 const HOVER_CLOSE_DELAY = 250;
 
-// renderNav runs again for every site draft from the editor; the controller
-// detaches the previous render's listeners (including those on document) so
-// there is never more than one active set.
+// Detaches the previous render's listeners, those on document included, since renderNav runs again for every site draft from the editor.
 let navController = null;
 
-// The current render's phone menu as the next render finds it: the bar, its full-screen dialog, whether the menu is open, its open submenus and its scroll.
-// The next render reads it before it clears anything, so a menu open in the editor's preview stays open through a change of a setting.
+// The current render's phone menu as the next render reads it, so a menu open in the editor's preview stays open through a change of a setting.
 let readMenu = null;
 
 // The current render's scroll-state pass, so a switch between the editor's
@@ -52,7 +33,7 @@ export function refreshNavScroll() {
 let jumpHoldUntil = 0;
 
 /**
- * Holds a menu that hides on scroll in view while a jump to a spot on the page runs, so the spot lands under the bar rather than under the gap it leaves; the menu then hides again only after a scroll down from where the jump ended.
+ * Holds a menu that hides on scroll in view while a jump to a spot on the page runs, so the spot lands under the bar.
  * @param {number} [ms] How long the jump may take
  */
 export function holdNavForJump(ms = 1200) {
@@ -70,11 +51,7 @@ export function clearAnnounceDismissal(site) {
   try { localStorage.removeItem(dismissKeyFor(announce.text)); } catch { /* storage may be unavailable */ }
 }
 
-// Side column on narrow windows: below 900px the menu renders as a REGULAR
-// top bar (effective variant bar) with horizontal items; the burger only
-// appears at the mobile breakpoint, as for the bar variant. A separate
-// break edge independent of the mobile breakpoint AND of the editor's
-// viewport choice, so it also works in the preview's desktop mode.
+// Below 900px the side column renders as a regular top bar, an edge independent of the mobile breakpoint and the editor's viewport choice.
 const narrowMq = window.matchMedia('(max-width: 900px)');
 let lastRender = null;
 narrowMq.addEventListener('change', () => {
@@ -123,8 +100,7 @@ function dismissedNow(key) {
 }
 
 /**
- * The announcement strip as an element: its words or its link, its colours, and the cross that closes it for the visitor.
- * A strip closed, here or in a document kept from before (a prerender, the back-forward cache), leaves and calls onGone.
+ * The announcement strip: words or link, colours, closing cross; closed here, or elsewhere while this page was prerendered or cached, it leaves and calls onGone.
  * @param {object} announce announcementModel's result
  * @param {AbortSignal} signal The render's listeners
  * @param {() => void} onGone Called after the strip has left
@@ -187,9 +163,7 @@ export function renderNav(site, host, pageId) {
   // further down, where the nav element exists.
   const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
 
-  // An open full-screen menu stays open through the render: its dialog and the bar holding it are kept and filled with this render's contents.
-  // A dialog that stays open keeps the focus where it is, in the preview in the field the owner is typing in.
-  // It is kept while this render also wants the full-screen menu and the phone state holds: the breakpoint, the preview's phone view, or a bar folded to the burger.
+  // An open full-screen menu stays open through the render, its dialog and bar kept, while this render wants it too and the phone state holds.
   const keep = keepsSheet({
     sheetOpen: Boolean(was?.sheet?.open),
     sameHost: was?.nav.parentNode === host,
@@ -206,8 +180,7 @@ export function renderNav(site, host, pageId) {
   }
   // A strip placed outside the nav host by the previous render leaves with it.
   document.getElementById('urd-announce')?.remove();
-  // A page the menu stays off (nav.hideOn): with hideMode hidden the host is hidden with its classes and clearances cleared, so the page starts at the top with nothing parked above it.
-  // The other modes tuck the menu above the top edge as a fixed bar (tuckNav below), where the page starts at the top the same way.
+  // On a page the menu stays off (nav.hideOn), hideMode hidden hides the host and clears its classes and clearances; the other modes tuck it above the top edge.
   const tucked = navHidden(site.nav, pageId) ? hideMode(site.nav) : 'hidden';
   if (navHidden(site.nav, pageId) && tucked === 'hidden') {
     if (keptNav) {
@@ -226,12 +199,7 @@ export function renderNav(site, host, pageId) {
   }
   host.style.removeProperty('display');
 
-  // Narrow windows: the side variant renders as a regular top bar
-  // (effective variant bar); the breakpoint listener above re-renders on
-  // crossing. At the mobile breakpoint the overrides in nav.style.mobile
-  // replace the desktop values they name (effectiveNav), so the appearance
-  // is computed from one resolved nav.
-  // A tucked menu is always a plain top bar, out of the flow and without the scroll behaviours and the clear top: the modes below the bar's variant have no meaning above the edge.
+  // A tucked menu is a plain top bar, the side column a top bar on narrow windows, and the phone's nav.style.mobile overrides apply at the breakpoint.
   const isTucked = tucked !== 'hidden';
   const wantsSide = !isTucked && (site.nav.variant === 'side-left' || site.nav.variant === 'side-right');
   const baseNav = isTucked
@@ -239,16 +207,7 @@ export function renderNav(site, host, pageId) {
     : wantsSide && narrowMq.matches ? { ...site.nav, variant: 'bar' } : site.nav;
   const effSite = { ...site, nav: effectiveNav(baseNav, { mobile: mobileMq.matches }) };
 
-  // The announcement bar (nav.announcement, additive since v0.7): a strip
-  // above the menu inside the host. It follows the menu by default; with
-  // sticky false the host's sticky top is raised by the strip's height
-  // (--urd-announce-h, measured below), so the strip scrolls away and the
-  // menu sticks alone. Hosts out of the flow (floating, overlay) are fixed
-  // and keep the strip with the menu regardless.
-  // A dismissed strip stays away as long as the message is the same
-  // (localStorage keyed by the text). The preview reads and writes the same
-  // key as the published page, so the editor shows what the visitor gets;
-  // the Announcement panel has a control that clears it again.
+  // The announcement strip above the menu (nav.announcement); a dismissed one stays away while the message is the same, kept in localStorage by its text.
   const announce = announcementModel(site.nav.announcement, site.pages, pageId);
   let announceEl = null;
   if (announce && !(announce.dismiss && dismissedNow(dismissKeyFor(announce.text)))) {
@@ -256,10 +215,7 @@ export function renderNav(site, host, pageId) {
       announceEl = null;
       setNavH();
     });
-    // The side column honours the chosen place: the strip in the column
-    // (its top), fixed across the whole page above column and content, or
-    // in the flow above the content beside the column. The other variants,
-    // a menu waiting above the edge among them, carry it inside the host.
+    // The side column places the strip in the column, fixed across the page, or above the content beside it; the other variants carry it inside the host.
     const place = wantsSide && !narrowMq.matches ? announce.place : 'nav';
     if (place === 'page') {
       announceEl.id = 'urd-announce';
@@ -275,9 +231,7 @@ export function renderNav(site, host, pageId) {
       host.insertBefore(announceEl, keptNav);
     }
   }
-  // Whether the strip actually scrolls away: the host must be in the flow
-  // and sticky (a fixed host, floating, overlaid or the side column, keeps
-  // the strip; a host that is not sticky scrolls away as a whole).
+  // Whether the strip scrolls away: it is not sticky, and the host is sticky and in the flow, not floating, overlaid or the side column.
   const announceScrolls = !!announce && !announce.sticky && site.nav.sticky !== false
     && !hostClasses(effSite).host.some((cls) => cls === 'urd-nav-float' || cls === 'urd-nav-overlay' || cls === 'urd-nav-side-host');
   host.classList.toggle('urd-nav-announce-scroll', announceScrolls);
@@ -286,23 +240,12 @@ export function renderNav(site, host, pageId) {
   // layout (additive since v0.5): where the menu items sit; the logo, where
   // it is shown, is first and doubles as the "Home" button.
   nav.className = navClasses(effSite, { mobile: mobileMq.matches });
-  // The burger follows the ACTUAL width via its own class on the nav: in
-  // preview the editor's viewport choice owns body.urd-mobile (and with it
-  // the structure tools), but the menu alone must still go mobile when the
-  // window is narrower than the mobile breakpoint. For visitors,
-  // body.urd-mobile is set at the same threshold; the double coverage in
-  // the CSS is harmless.
+  // The burger follows the actual width through the nav's own class, since in the preview the editor's viewport choice owns body.urd-mobile.
   mobileMq.addEventListener('change', () => renderNav(lastRender.site, lastRender.host, lastRender.pageId), { signal });
   if (mobileMq.matches) nav.classList.add('urd-nav-mobile');
-  // Sticky menu (the default): sticky must sit on the HOST (the header
-  // element), not on the nav - a sticky element can never leave its parent,
-  // and the parent here is exactly as tall as the nav.
+  // Sticky (the default) sits on the host, not the nav: a sticky element never leaves its parent, and that parent is exactly as tall as the nav.
   host.classList.toggle('urd-nav-sticky', effSite.nav.sticky !== false);
-  // The variant drives the host and body: floating takes the host out of
-  // the flow (the hero starts behind the pill), the side variant turns the
-  // host into a fixed column and gives body content padding. All classes
-  // are toggled on every render, so a variant switch in the editor never
-  // leaves leftovers.
+  // The variant drives the host and body classes, floating out of the flow and the side column fixed with body padding, all toggled on every render.
   const hc = hostClasses(effSite);
   if (isTucked) hc.host.push('urd-nav-tuck', `urd-nav-tuck-${tucked}`);
   for (const cls of HOST_CLASSES) {
@@ -319,31 +262,18 @@ export function renderNav(site, host, pageId) {
   } else {
     document.body.style.removeProperty('--urd-nav-side-width');
   }
-  // Whether the bar is folded to the burger by its content, not by the breakpoint (evalFold below). A bar the previous render had folded stays folded until the fold is measured again, so a menu open in it is still the phone's.
+  // Whether the bar is folded to the burger by its content (evalFold below); a bar the previous render folded stays folded until it is measured again.
   let contentFolded = Boolean(was?.folded && !isSide && !mobileMq.matches);
   if (contentFolded) nav.classList.add('urd-nav-mobile');
 
-  // Scroll behavior (nav.scroll, additive since v0.6): 'shrink' shrinks the
-  // menu after some scrolling, 'hide' hides it on scroll down and shows it
-  // on scroll up. The state is computed by pure navScrollState; only
-  // meaningful for a sticky top bar (not the side variant, not sticky off).
-  // The behavior runs in every view, the editor's preview included, so the
-  // owner sees what the visitor gets; it is off only while the mobile panel
-  // is open. The editing chrome parks against --urd-nav-h-base rather than
-  // the shrinking height (setNavH below). The listener is rAF-throttled,
-  // passive and aborted with the rest of the render's listeners.
+  // Scroll behaviour (nav.scroll): 'shrink' shrinks the menu after some scrolling, 'hide' hides it going down and shows it going up; for a sticky top bar only.
   const scrollMode = effSite.nav.scroll;
   const wantsScroll = (scrollMode === 'shrink' || scrollMode === 'hide')
     && !isSide && effSite.nav.sticky !== false;
-  // A strip that does not follow the menu out (announcement.followNav false,
-  // the default): the slide moves from the host to the menu, so the strip
-  // keeps its place while the bar passes behind it.
+  // A strip that does not follow the menu out (announcement.followNav false) keeps its place while the hiding bar passes behind it.
   host.classList.toggle('urd-nav-announce-keep',
     !!announceEl && host.contains(announceEl) && wantsScroll && scrollMode === 'hide' && !announce.followNav);
-  // Transparent at the top (nav.style.atTop 'clear', additive since v0.7):
-  // the host class comes from hostClasses, the surface appears once the
-  // page has left the top zone (urd-nav-scrolled). Independent of sticky:
-  // a menu that scrolls away is only ever seen in the top zone.
+  // Transparent at the top (nav.style.atTop 'clear'): the surface appears once the page has left the top zone (urd-nav-scrolled), sticky or not.
   const clearTop = host.classList.contains('urd-nav-clear');
   host.classList.toggle('urd-nav-scroll', wantsScroll);
   if (!wantsScroll && !clearTop) {
@@ -382,15 +312,9 @@ export function renderNav(site, host, pageId) {
     applyScroll();
   }
 
-  // Appearance (nav.style, additive since v0.5): background color with
-  // opacity, blur behind, and its own text color. The background is set as
-  // a CSS var so submenus and the mobile panel inherit the same surface;
-  // without style the CSS default applies.
+  // Appearance (nav.style): background colour with opacity, blur and text colour, the background set as a CSS variable.
   const surface = navSurface(site.nav.style);
-  // Full layer-based background (additive since v0.6, shared with sections
-  // and the footer): a backdrop behind the nav content with the same layer
-  // stack as sections. When present it takes over the surface, and the
-  // plain veil/image path is skipped.
+  // A layer background (nav.style.background) is drawn behind the nav content with the sections' layer stack, and takes over the surface.
   const navBg = site.nav.style?.background;
   const hasNavBgLayers = Array.isArray(navBg?.layers) && navBg.layers.length > 0;
   if (hasNavBgLayers) {
@@ -408,15 +332,10 @@ export function renderNav(site, host, pageId) {
   } else if (surface.bg) {
     nav.style.setProperty('--urd-nav-bg', surface.bg);
   }
-  // Blur is driven via a custom property (inherits to submenus and the mobile
-  // panel; backdrop-filter itself does not inherit, so inherit in the CSS
-  // would stop at the li).
+  // Blur runs through a custom property, which inherits to the submenus and phone panel where backdrop-filter does not.
   if (surface.blur === false) nav.style.setProperty('--urd-nav-blur', 'none');
   if (surface.color) nav.style.color = surface.color;
-  // The submenu and mobile panel get their own surface: by default only the
-  // color veil, never the background image (subImage turns the image on).
-  // With a layer background, submenu/mobile keep the veil default (the layer
-  // stack applies to the main bar).
+  // The submenu and phone panel get their own surface, the colour veil without the image unless subImage is on; a layer background skips it.
   const subBg = navSubSurface(site.nav.style);
   if (subBg && !hasNavBgLayers) nav.style.setProperty('--urd-nav-sub-bg', subBg);
   // Hover colors (additive since v0.6): the effect color (underline/pill
@@ -442,12 +361,7 @@ export function renderNav(site, host, pageId) {
   // Submenu columns (n x n): the items are laid out in a grid with the chosen column count.
   const subCols = Math.round(Number(site.nav.style?.subColumns));
   if (subCols >= 2) nav.style.setProperty('--urd-nav-sub-cols', String(Math.min(4, subCols)));
-  // Size (additive since v0.7, ADR-0023): thickness, side padding, item
-  // gap, text size, pill width and the shrink factor and its duration as
-  // inline custom properties the CSS reads with today's look as the
-  // fallback. The mobile overrides are chosen from the breakpoint here
-  // (pure navSizeVars), and the breakpoint listener above re-renders on
-  // crossing.
+  // Size (ADR-0023): thickness, padding, gap, text size, pill width and shrink as custom properties from navSizeVars, the phone's values chosen at the breakpoint.
   const size = navSizeVars(effSite.nav.style, site.nav.logo, { mobile: mobileMq.matches });
   for (const [name, value] of Object.entries(size.vars)) nav.style.setProperty(name, value);
   // Border (additive since v0.7): the side is a class from navClasses; the
@@ -469,11 +383,7 @@ export function renderNav(site, host, pageId) {
     const img = document.createElement('img');
     img.src = src;
     img.alt = site.site.title;
-    // The height is set via a base variable, not inline height: the CSS
-    // derives the drawn size from it (the scroll shrink can scale it) and
-    // its calibration (a negative block margin scaling with the size) keeps
-    // the bar height constant regardless of image height - the image fills
-    // out, the bar never grows. The mobile size is chosen by navSizeVars.
+    // The logo's height goes in a base variable the CSS draws from, so the scroll shrink can scale it and the bar never grows with the image.
     img.style.setProperty('--urd-logo-base', `${size.logoSize}px`);
     if (logoDef.radius) img.style.borderRadius = `${logoDef.radius}px`;
     return img;
@@ -509,25 +419,18 @@ export function renderNav(site, host, pageId) {
   } else {
     logo.appendChild(logoText());
   }
-  // The logo stands in the bar unless the owner takes it out (nav.logo.show false); the bar's other parts keep their places without it.
-  // It goes in before a kept full-screen menu, where a new one would follow it; without one this appends.
+  // The logo stands in the bar unless nav.logo.show is false, placed ahead of a kept full-screen menu, where a new one would follow it.
   const showLogo = logoDef.show !== false;
   if (showLogo) nav.insertBefore(logo, keptSheet);
   nav.classList.toggle('urd-nav-no-logo', !showLogo);
 
-  // The tool cluster at the far right: the launcher, the cart and the
-  // light/dark toggle in the owner's own order (nav.style.tools.order), then
-  // the burger, which is the mobile menu's opener and always ends the row.
-  // An empty cluster is hidden in CSS (:empty).
+  // The tool cluster: its tools in the owner's order (nav.style.tools.order), and the burger, the phone menu's opener.
   const tools = document.createElement('span');
   tools.className = 'urd-nav-tools';
   /** @type {Record<string, HTMLElement|null>} The built tools, by id */
   const toolEls = { launcher: null, cart: null, theme: null, links: null };
 
-  // The link launcher (nav.launcher): the shortcuts behind a launcher button.
-  // The button is the desktop opener; on mobile the same shortcuts are a
-  // section at the foot of the menu list, which travels into the full-screen
-  // sheet with the list.
+  // The link launcher (nav.launcher): a button opens its shortcuts on desktop, and on the phone they are a section at the foot of the menu list.
   const launcher = launcherModel(site.nav?.launcher, site.pages ?? []);
   const launcherWrap = launcher ? buildLauncher(launcher, signal) : null;
   if (launcherWrap) toolEls.launcher = launcherWrap.el;
@@ -551,7 +454,7 @@ export function renderNav(site, host, pageId) {
     cartBtn.appendChild(cartBadge);
     // The checkout page: a page in the register (cart.page) or a path (cart.href).
     const checkoutLink = resolveLink(cartCfg, site.pages ?? []);
-    // The basket's drawer is the cart block's, loaded as a nav with a basket is drawn, so a site without one never fetches it; a press before it is in opens it as it comes.
+    // The basket's drawer is the cart block's, loaded only when a nav with a basket is drawn; a press while it is still loading opens it as it comes.
     let drawer = null;
     const drawerReady = import('./blocks/cart.js').then(({ createCartDrawer }) => {
       if (!cartBtn.isConnected) return null;
@@ -628,13 +531,7 @@ export function renderNav(site, host, pageId) {
     if (toolEls[id]) tools.appendChild(toolEls[id]);
   }
 
-  // The burger (only visible in mobile view via CSS). With the dropdown it
-  // is a non-modal disclosure of the menu list - no focus trap or scroll
-  // lock, the panel scrolls itself. With the sheet it opens a modal dialog
-  // that the list moves into (and back out of on close), so the same list
-  // with its submenu accordions serves both. The drawing and the word
-  // beside it are the owner's choice (nav.style.burger); a visible word is
-  // the button's name.
+  // The burger opens the menu list as a non-modal dropdown, or the full-screen sheet the list moves into; its drawing and word come from nav.style.burger.
   const burgerLook = burgerModel(site.nav.style);
   const burgerName = burgerLook.label || t('nav.menu');
   const burger = document.createElement('button');
@@ -661,14 +558,12 @@ export function renderNav(site, host, pageId) {
   list.className = 'urd-nav-list';
   list.id = 'urd-nav-menu';
 
-  // The phone menu's own look: where its text stands, the submenu arrow, and whether the bar keeps its tools beside the full-screen menu (the classes from navClasses carry the first two to the CSS).
+  // The phone menu's own look: where its text stands, the submenu arrow, and whether the bar keeps its tools beside the full-screen menu.
   const phoneMenu = phoneMenuModel(site.nav.style);
   const sheet = mobileMenuMode(site.nav.style) === 'sheet'
     ? buildSheet(nav, { list, tools, burger, logo: showLogo && site.nav.style?.sheetLogo === true ? logo : null, announce: () => (site.nav.style?.sheetAnnounce === true ? announceEl : null), withTheme: site.nav.style?.sheetTheme === true, withCart: site.nav.style?.sheetCart === true, barTools: phoneMenu.barTools, labels: site.nav.style?.sheetToolLabels === true, motion: sheetMotion(site.nav.style), surface: navSurface(site.nav.style?.sheet ?? {}), kept: keptSheet }, signal)
     : null;
-  // The announcement comes back to the host on close, so the clearance the
-  // guard in setNavH held is measured again. Registered after buildSheet's
-  // own close listener, which is what puts the strip back.
+  // On the sheet's close the strip is back in the host, so setNavH measures the clearance again; this runs after buildSheet's own close listener.
   if (sheet) sheet.dialog.addEventListener('close', () => setNavH(), { signal });
   const isMobileOpen = () => (sheet ? sheet.dialog.open : nav.classList.contains('urd-nav-open'));
   // The mobile state as the CSS sees it: the breakpoint, content folding, or
@@ -715,9 +610,9 @@ export function renderNav(site, host, pageId) {
   // A child's own submenu stands as a headed group when the submenu is laid
   // out in columns or as the flyout (navClasses sets the class the CSS reads).
   const grouped = subGrouped(site.nav.style);
-  /** Whether an opener stands open with nothing to close it: the column with every submenu open and no arrow, or a headed group; in the phone menu, every submenu open from the start with no arrow (nav.style.mobileSubArrow). */
+  /** Whether an opener stands open with nothing to close it: off the phone a headed group or the open column without arrows; on the phone, all open without arrows. */
   const isFixed = (entry) => (isMobileState() ? subMode === 'expanded' && !phoneMenu.arrow : columnFixedOpen || entry.grouped);
-  /** On a phone with submenus that start closed, a split item's own link opens its submenu, so it carries the opener's state too; elsewhere the link only leads to its page. */
+  /** On a phone with submenus that start closed, a split item's own link carries its opener's state; elsewhere the link only leads to its page. */
   const markLink = (entry) => {
     if (!entry.link) return;
     if (subMode === 'collapsed' && isMobileState()) {
@@ -728,7 +623,7 @@ export function renderNav(site, host, pageId) {
       entry.link.removeAttribute('aria-controls');
     }
   };
-  /** A fixed opener leaves the tab order and reads as a heading, not as an expanded button that cannot collapse; the state follows the mobile fold, so it is applied again when the bar folds or unfolds. */
+  /** A fixed opener leaves the tab order and reads as a heading, not a button that cannot collapse; it is applied again as the bar folds or unfolds. */
   const applyFixed = () => {
     for (const entry of subs) {
       const fixed = isFixed(entry);
@@ -747,14 +642,7 @@ export function renderNav(site, host, pageId) {
     }
   };
 
-  // Hover only opens on devices with a real pointer - touch must never get
-  // hover states that take an extra tap to dismiss. nav.style.subOpen
-  // decides whether hover opens at all and whether leaving closes
-  // (subOpenMode); click always works.
-  // In the side column the submenus are accordions in the flow: there,
-  // hover opens but never closes per item - closing would shorten the
-  // column under the pointer and cause misclicks. The accordions close
-  // only when the pointer leaves the whole menu.
+  // Hover opens submenus only with a real pointer, as nav.style.subOpen allows, and click always works; in the side column hover never closes a single item.
   const isColumn = hc.host.includes('urd-nav-side-host');
   const { hoverOpens, hoverCloses } = subOpenMode(site.nav.style);
   const mouseHover = hoverOpens && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -814,11 +702,7 @@ export function renderNav(site, host, pageId) {
     let link = null;
     if (item.kind === 'split') {
       link = makeLink(item);
-      // Collapsed submenus on mobile: the whole item opens the submenu
-      // instead of navigating (the menu is for touch, and a tap that
-      // navigates never shows the submenu); the item's own page is the
-      // first submenu entry instead. Expanded submenus are already visible,
-      // so there the item stays a plain link.
+      // With collapsed submenus on the phone, the item's own link opens its submenu, and the item's page stands first in the submenu instead.
       if (subMode === 'collapsed') {
         link.addEventListener('click', (event) => {
           if (!isMobileState()) return;
@@ -864,10 +748,7 @@ export function renderNav(site, host, pageId) {
     }, { signal });
 
     if (mouseHover && !columnExpanded && !entry.grouped) {
-      // Real mouse only: on hybrid devices (laptop with touchscreen) a tap
-      // fires both pointerenter and click, and without the guard the
-      // submenu would open on enter and close again on click. The mobile
-      // menu is built for touch: hover never opens or closes there.
+      // Real mouse only, so a tap on a hybrid device never opens on enter and closes on click; hover never opens or closes the mobile menu.
       let closeTimer = null;
       li.addEventListener('pointerenter', (event) => {
         if (event.pointerType !== 'mouse' || isMobileState()) return;
@@ -900,11 +781,7 @@ export function renderNav(site, host, pageId) {
   applyFixed();
   if (columnExpanded && !isMobileState()) for (const entry of subs) setOpen(entry, true);
 
-  // The launcher's shortcuts inside the mobile menu: a section at the foot
-  // of the list (hidden on desktop, where the button carries them), so it
-  // travels into the full-screen sheet with the list. The menu must not grow
-  // without end, so only the first mobileMax stand there; the rest sit in a
-  // native <details> that opens in place (ADR-0011).
+  // The launcher's shortcuts as a section at the foot of the phone menu list: the first mobileMax, and the rest in a native <details> that opens in place.
   if (launcher) {
     const row = document.createElement('li');
     row.className = 'urd-nav-launcher-row';
@@ -925,9 +802,7 @@ export function renderNav(site, host, pageId) {
     list.appendChild(row);
   }
 
-  // A link in the dropdown panel or an open submenu closes them, so a link to a spot on this page, which never leaves the page, shows the spot rather than the menu.
-  // A link whose own handler cancelled it (the item that opens its submenu on a phone) leaves them open.
-  // The sheet closes on its own.
+  // A link in the dropdown panel or an open submenu closes them, so a spot on this page shows; a cancelled link leaves them open, and the sheet closes itself.
   list.addEventListener('click', (event) => {
     if (event.defaultPrevented || !event.target.closest('a[href]')) return;
     if (!expandedSubs()) closeAll();
@@ -944,12 +819,11 @@ export function renderNav(site, host, pageId) {
   // the observer below keeps it current.
   setNavH();
 
-  // The phone menu comes back as the previous render left it, where the phone state still holds: open, with the same submenus open and the same scroll.
-  // A kept full-screen menu was never closed and takes this render's contents; where the phone state no longer holds, it closes.
+  // The phone menu comes back as the previous render left it while the phone state holds: open, its submenus and its scroll; else a kept sheet closes.
   if (was?.open && isMobileState()) {
     if (sheet?.kept) sheet.fill();
     setMobileOpen(true);
-    // The submenus that were open open again; where every submenu stood open from the start before the change and still does, one closed by hand stays closed (subsAfterRender). A fixed one stays open.
+    // The submenus that were open open again (subsAfterRender); where every submenu starts open in both renders, one closed by hand stays closed.
     const idOf = (entry) => entry.button.getAttribute('aria-controls');
     const again = new Map(subsAfterRender(subs.filter((entry) => !isFixed(entry)).map(idOf), was, expandedSubs()));
     for (const entry of subs) if (again.has(idOf(entry))) setOpen(entry, again.get(idOf(entry)));
@@ -960,19 +834,9 @@ export function renderNav(site, host, pageId) {
     sheet.dialog.close();
   }
 
-  // The measured menu height as a CSS var on the root element: the nav
-  // clearance in base.css (menu out of the flow) and the chrome parking in
-  // preview read it. The distance is measured from the host's top to the
-  // nav's bottom edge (offsetTop includes the pill's top gap and a sticky
-  // announcement); an announcement that scrolls away is left out, since the
-  // menu alone is what stays. The column variant takes no top height.
-  // --urd-nav-h-base holds the unshrunk height: the editing chrome parks
-  // against that one, so the section handles stand still while the scroll
-  // shrink runs under them.
+  // Writes the menu's measured height on the root as --urd-nav-h, from the host's top to the nav's bottom, and the unshrunk height as --urd-nav-h-base.
   function setNavH() {
-    // While the full-screen menu is open the strip has moved into it and the
-    // host is short; the page behind keeps the clearance it had before the
-    // menu opened, and the close puts it back.
+    // While the full-screen menu is open the strip stands in it and the host is short, so the page behind keeps the clearance it had.
     if (sheet?.dialog.open) return;
     // Above the edge the menu takes no room: the page starts at the top and a jump lands there too.
     if (isTucked) {
@@ -982,9 +846,7 @@ export function renderNav(site, host, pageId) {
     }
     const announceH = announceEl?.offsetHeight ?? 0;
     const scrolledAway = announceScrolls ? announceH : 0;
-    // A strip fixed across the whole page: the column starts and the body
-    // is padded below it (base.css reads the variable on the root), and it
-    // is the column's only top clearance.
+    // A strip fixed across the whole page: the column starts and the body is padded below it, and it is the column's only top clearance.
     const pageH = announceEl?.classList.contains('urd-announce-page') ? announceH : 0;
     const h = isSide ? pageH : nav.offsetTop + nav.offsetHeight - scrolledAway;
     document.documentElement.style.setProperty('--urd-nav-h', `${h}px`);
@@ -993,18 +855,14 @@ export function renderNav(site, host, pageId) {
     if (!navHBase || !host.classList.contains('urd-nav-compact')) navHBase = h;
     document.documentElement.style.setProperty('--urd-nav-h-base', `${navHBase}px`);
     host.style.setProperty('--urd-announce-h', `${announceH}px`);
-    // The two heights on the root as well, for a background that keeps its
-    // pictures out from under the strip or the menu: the strip's own, and
-    // the menu's own below it. A strip inside the column or beside the
-    // content stands over no section, so the root reads it as nothing.
+    // The strip's and the menu's own heights on the root, for backgrounds that keep clear of them; a strip in the column or beside the content counts as nothing.
     document.documentElement.style.setProperty('--urd-announce-h', `${isSide ? pageH : announceH}px`);
     document.documentElement.style.setProperty('--urd-nav-own-h', `${isSide ? 0 : Math.max(0, nav.offsetTop + nav.offsetHeight - announceH)}px`);
     document.documentElement.style.setProperty('--urd-announce-page-h', `${pageH}px`);
     setScrollClear();
   }
 
-  // The room a jump to a spot leaves above it, which base.css gives the page as scroll-padding-top.
-  // Unlike --urd-nav-h it follows the scroll shrink, so a spot reached mid-page lands right under the compact menu.
+  // The room a jump to a spot leaves above it, scroll-padding-top in base.css; unlike --urd-nav-h it follows the scroll shrink.
   function setScrollClear() {
     if (sheet?.dialog.open || isTucked) return;
     // Written only when it changes: the observer reports every frame of the shrink.
@@ -1017,12 +875,7 @@ export function renderNav(site, host, pageId) {
     }
   }
 
-  // Content-aware folding: menu items never wrap (nowrap in base.css), so
-  // when the items no longer fit in the width, the whole list folds to the
-  // burger via the same class as the mobile breakpoint. The unfolded full
-  // width is remembered (foldNeeds), because after folding the list is
-  // hidden and cannot be measured: unfolding happens only once the bar is
-  // wider than the need, and then measures again in case the need has grown.
+  // Content-aware folding: items that do not fit the width fold the list to the burger, and it unfolds once the bar is wider than the remembered width (foldNeeds).
   let foldNeeds = 0;
   // The bar is measured again when the full-screen menu closes: while it is open, the list stands in the dialog and the bar would measure as fitting.
   const evalFold = () => {
@@ -1053,9 +906,7 @@ export function renderNav(site, host, pageId) {
   };
   if (sheet) sheet.dialog.addEventListener('close', () => evalFold(), { signal });
 
-  // A ResizeObserver on the nav (not the host: a host out of the flow has
-  // no height of its own to observe) catches window width, font loading and
-  // scroll shrink; it always delivers a first measurement on observe.
+  // A ResizeObserver on the nav, not the host, catches window width, font loading and the scroll shrink, and measures once on observe.
   const navRo = new ResizeObserver(() => {
     setNavH();
     evalFold();
@@ -1086,9 +937,7 @@ export function renderNav(site, host, pageId) {
     }, { signal });
   }
 
-  // The side column's width is adjusted by dragging its inner edge (preview
-  // only, like section heights). Live update via the CSS var; on release
-  // the width is reported to the editor, which owns the draft (urd-nav-width).
+  // In the preview a drag on the side column's inner edge sets its width live, and the release posts it to the editor (urd-nav-width).
   if (isSide && document.body.classList.contains('urd-preview')) {
     const grip = document.createElement('div');
     grip.className = 'urd-nav-side-resize';
@@ -1116,15 +965,10 @@ export function renderNav(site, host, pageId) {
     host.appendChild(grip);
   }
 
-  // A tucked menu (nav.hideMode on a page in nav.hideOn) stands above the
-  // top edge and comes in by the pointer at the edge, a ghost there, or the
-  // pull tab; keyboard focus inside brings it in whatever the mode.
+  // A tucked menu (nav.hideMode) stands above the top edge and comes in by the pointer at the edge, a ghost or the pull tab, and by keyboard focus.
   const tuck = isTucked ? tuckNav(host, nav, tucked, site, signal) : null;
 
-  // Escape closes the nearest open layer and returns focus to the button
-  // that opened it, so keyboard users land where they were. An open
-  // accordion inside the sheet closes alone: the cancelled keydown keeps
-  // the dialog's own Escape handling from closing the sheet as well.
+  // Escape closes the nearest open layer and returns focus to its opener; an accordion in the sheet closes alone, its cancelled key keeping the sheet open.
   nav.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
     // The innermost open submenu around the focus closes first; a fixed one has nothing to close.
@@ -1169,17 +1013,7 @@ export function renderNav(site, host, pageId) {
 }
 
 /**
- * The menu above the top edge of a page it is kept off (nav.hideMode): the
- * host is fixed and translated out of view (base.css), and the mode decides
- * what brings it in. `hover`: the pointer within TUCK_EDGE of the top, and
- * it leaves TUCK_LEAVE after the pointer has left the bar. `ghost`: the
- * pointer at the edge shows the bar faint (urd-nav-peek), and it turns
- * solid once the pointer has rested on it for GHOST_SETTLE or clicked it.
- * `tab`: a pull tab hangs below the edge at all times and toggles the bar;
- * the pointer resting on the tab brings it in too. Touch has no hover, so
- * the tab is drawn for every mode there (ADR-0011: the menu stays
- * reachable). Focus inside the bar brings it in in every mode, and focus
- * leaving it lets it go.
+ * The menu above the top edge of a page it is kept off: by nav.hideMode the pointer at the edge, a faint ghost or a pull tab brings it in, and so does focus.
  * @param {HTMLElement} host
  * @param {HTMLElement} nav
  * @param {'hover' | 'ghost' | 'tab'} mode
@@ -1210,9 +1044,7 @@ function tuckNav(host, nav, mode, site, signal) {
     leaveTimer = setTimeout(hide, TUCK_LEAVE);
   };
 
-  // The pull tab: the owner's own mark, word and colours, or the burger
-  // lines in the menu's surface. Drawn for the tab mode, and on a device
-  // without hover for the other modes as well.
+  // The pull tab, with the owner's own mark, word and colours or the burger lines; drawn for the tab mode, and for every mode on a device without hover.
   let tab = null;
   if (mode === 'tab' || !canHover) {
     const look = tabModel(site.nav);
@@ -1285,9 +1117,7 @@ function tuckNav(host, nav, mode, site, signal) {
       host.addEventListener('click', () => { if (!isShown()) show(); }, { signal });
     }
   }
-  // Keyboard: focus inside brings the bar in, focus leaving lets it go, and
-  // Escape puts it away from the tab as well as from the bar (the bar's own
-  // Escape handling, which closes an open submenu first, has cancelled the key then).
+  // Focus inside brings the bar in and focus leaving lets it go; Escape puts it away unless the bar's own Escape handling has taken the key.
   host.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape' || event.defaultPrevented || !isShown()) return;
     event.preventDefault();
@@ -1305,24 +1135,7 @@ function tuckNav(host, nav, mode, site, signal) {
 }
 
 /**
- * The full-screen mobile menu: a native <dialog> inside the nav with a close
- * button, that the menu list moves into on open and back to its place before
- * the tool cluster on close (the list keeps its id, so the burger's
- * aria-controls stays valid). With `logo` the logo moves along into the
- * head, with `withTheme` and `withCart` the theme button and the cart move
- * into a foot, and with `barTools` false the theme button, the cart and the
- * site's links all do, since the bar shows none of them on the phone; all
- * return to the bar on close, in their original order. A link click and a
- * backdrop click close it; Escape, the focus trap, the focus return to the
- * burger and the scroll lock (body:has(dialog:modal) in base.css) are
- * native. `motion` is the allowlisted entrance from sheetMotion, drawn by
- * base.css. `surface` is the sheet's own surface (nav.style.sheet through
- * navSurface); without choices the sheet follows the bar's veil and blur.
- * `labels` shows the tool buttons' text beside the icons in the foot.
- * `kept` is the previous render's dialog, still open: it is emptied and
- * built again in place and never leaves the page, so it stays open and the
- * focus stays where it is; `fill()` then moves this render's parts into it
- * where `show()` would also open it.
+ * The full-screen phone menu: a native <dialog> in the nav that the menu list and the chosen logo and tools move into on open and back out of on close.
  */
 function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withCart, barTools = true, labels, motion, surface, kept = null }, signal) {
   const dialog = kept ?? document.createElement('dialog');
@@ -1351,18 +1164,11 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
   const foot = document.createElement('div');
   foot.className = 'urd-nav-sheet-foot';
   if (withTheme || withCart || !barTools) dialog.appendChild(foot);
-  // Light dismiss: a click on the ::backdrop hits the dialog element itself.
-  // A link click closes too, unless the link's own handler cancelled it (an
-  // item with a submenu opens it instead of navigating).
+  // Light dismiss: a click on the backdrop or on a link closes the sheet, unless the link's own handler cancelled it.
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog || (event.target.closest('a[href]') && !event.defaultPrevented)) dialog.close();
   }, { signal });
-  // Touch scrolling stays inside the sheet: the page behind ignores the
-  // overflow lock on some touch browsers, so a touch move outside the
-  // sheet's own scroll area is cancelled while the sheet is open. The
-  // listener lives only while the sheet is open (it must be non-passive,
-  // which costs every scroll it is attached for), and a dialog opened on
-  // top of the sheet, the cart drawer, scrolls on its own.
+  // While the sheet is open, a touch move outside both its scroll area and any dialog on top of it is cancelled, so touch scrolling stays in the sheet.
   let touchLock = null;
   const lockTouch = () => {
     touchLock = new AbortController();
@@ -1377,9 +1183,7 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
   // Whether this render's parts stand in the dialog, so a close puts back only what was moved.
   let filled = false;
   let logoNext = null;
-  // Where the announcement came from, so it goes back there on close. The
-  // strip is read through a getter: the cross inside the sheet removes it,
-  // and a removed strip must not be put back.
+  // Where the announcement came from, so it goes back there on close; it is read through a getter, since the cross in the sheet can remove it.
   let announceHome = null;
   // Each tool's place in the cluster, so it returns to it. Restored last
   // to first: a tool's next sibling may be another moved tool, which is
@@ -1401,7 +1205,7 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
       else tools.insertBefore(btn, next.parentNode === tools ? next : null);
     }
     toolHomes = [];
-    // A dialog kept through a render was opened by a burger that render replaced, so the browser had nowhere to return the focus, which is left in the closed dialog or on the page: this burger takes it, while the page has the focus.
+    // Focus left in the closed dialog or on the page, as when a kept dialog's opener was replaced, goes to this burger while the page has the focus.
     const lost = !document.activeElement || document.activeElement === document.body || dialog.contains(document.activeElement);
     if (document.hasFocus() && lost) burger.focus();
   }, { signal });
@@ -1434,13 +1238,7 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
 }
 
 /**
- * The launcher's shortcuts as one list of tiles. The markup is the same for
- * all three designs (`view`: grid, list or cover) - the class on the list
- * decides the shape, so the desktop panel and the mobile section can carry
- * different designs from the same builder. A tile's mark is the uploaded
- * image when there is one, otherwise the drawn icon, and a tile with
- * neither stands with its label alone.
- * A name too long for its tile is cut with an ellipsis, the whole name then in the tile's tooltip, or folded onto more lines (`longNames`).
+ * The launcher's shortcuts as one list of tiles, the same markup for each design (`view`); a long name is cut with an ellipsis or folded (`longNames`).
  * @param {Array<{label: string, href: string, external: boolean, icon: string, image: string}>} links
  * @param {string} view One of LAUNCHER_VIEWS
  * @param {'cut'|'wrap'} [longNames]
@@ -1500,17 +1298,7 @@ function launcherTitle(model) {
 }
 
 /**
- * The link launcher's opener (nav.launcher): a drawn grid button in the tool
- * cluster with the link grid under it. With the Popover API and anchor
- * positioning the grid opens in the top layer, placed by CSS under the
- * button with the browser flipping it away from the viewport edge;
- * otherwise it is the submenu's disclosure pattern, a box positioned
- * against the wrapper inside the nav (ADR-0011). The gate is the stricter
- * feature, the same one the editor's floating menus use (anchored.js): a
- * popover's containing block is the viewport, so without anchoring there is
- * nothing to place the grid against, and anchoring without fallbacks would
- * let it run off a narrow screen. That module belongs to the editor layer
- * and stays out of the visitor's import closure, so the check stands here.
+ * The link launcher's opener: a grid button with the link grid, opened as an anchored popover where the browser supports it, else as a disclosure (ADR-0011).
  * @param {Array<object>} links The model from launcherLinks
  * @param {AbortSignal} signal
  * @returns {{el: HTMLElement, btn: HTMLButtonElement, isOpen: () => boolean, close: () => void}}
@@ -1578,9 +1366,7 @@ function buildLauncher(model, signal) {
     wrap.classList.toggle('open', open);
     btn.setAttribute('aria-expanded', String(open));
   }, { signal });
-  // Tabbing out of the grid closes it - focus must never leave an open
-  // layer behind. A press on the grid's own padding or heading moves focus
-  // to the body without leaving the grid, so a press inside is let through.
+  // Tabbing out of the grid closes it, while a press inside, which can move focus to the body, is let through.
   let pressing = false;
   wrap.addEventListener('pointerdown', () => { pressing = true; }, { signal });
   for (const type of ['pointerup', 'pointercancel']) {
