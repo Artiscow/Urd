@@ -185,4 +185,6 @@ test('each core type\'s and feature\'s loader asks for every module its own modu
   // A page drawing pictures alone loads no gallery code for them.
   assert.ok(!closureOf('blocks/image.js').has('gallery-layout.js'));
   assert.ok(!closureOf('backgrounds/image.js').has('gallery-layout.js'));
+  // A gallery loads the ribbon's band and the photo layer's layout only with its ribbon view (loadRibbonView).
+  for (const name of ['gallery-layout.js', 'blocks/ribbon.js', 'ribbon-model.js', 'blocks/gallery-ribbon.js']) assert.ok(!closureOf('blocks/gallery.js').has(name), `a gallery loads ${name} only with the view that draws with it`);
 });

@@ -14,8 +14,11 @@
  */
 import { ribbonRows } from './ribbon-model.js';
 import { PICTURE_LOOKS, placeholderPhoto } from './picture.js';
+import { hash32, roll, round2, clamp, FRAME_TILT, clampTilt, frameTilt, mosaicSpan } from './layout-die.js';
 
 export { placeholderPhoto };
+// The die's parts the photo layer's callers read beside the layer's own.
+export { hash32, FRAME_TILT, clampTilt, frameTilt, mosaicSpan };
 
 /**
  * How the pictures are laid out: scattered frames floating over the section,
@@ -97,9 +100,6 @@ export const FRAME_ASPECT = 1.35;
 /** How far from the middle the scatter reaches. */
 export const FRAME_SPREAD = { min: 0, max: 1, dflt: 0.85 };
 
-/** Maximum lean, in degrees either way. */
-export const FRAME_TILT = { min: 0, max: 15, dflt: 5 };
-
 /** Corner rounding in px. */
 export const FRAME_RADIUS = { min: 0, max: 48, dflt: 5 };
 
@@ -116,39 +116,6 @@ export const MOSAIC_COLS = 4;
 export const MOSAIC_COUNT = { min: 4, max: 20, dflt: 12 };
 
 /**
- * djb2, the same hash the media file names use (imageTools.js). Written out
- * here rather than imported: imageTools is outside the visitor import closure,
- * and pulling it in would put the whole image pipeline in every page.
- * @param {unknown} text
- * @returns {number} Unsigned 32-bit
- */
-export function hash32(text) {
-  const s = String(text);
-  let hash = 5381;
-  for (let i = 0; i < s.length; i++) hash = ((hash << 5) + hash + s.charCodeAt(i)) >>> 0;
-  return hash;
-}
-
-/**
- * A fraction in [0, 1) from the seed and a field name: one throw of the die.
- *
- * The djb2 alone is not enough here. Neighbouring keys (`x1`, `x2`) hash to
- * neighbouring numbers, which would give frame after frame almost the same
- * throw and a scatter that reads as a pattern. The avalanche step below
- * spreads the bits, so two keys one character apart land nowhere near each
- * other.
- */
-function roll(seed, key) {
-  let h = hash32(`${seed}:${key}`);
-  h ^= h >>> 15;
-  h = Math.imul(h, 0x2c1b3c6d) >>> 0;
-  h ^= h >>> 12;
-  h = Math.imul(h, 0x297a2d39) >>> 0;
-  h ^= h >>> 15;
-  return (h >>> 0) / 4294967296;
-}
-
-/**
  * Example pictures in the layer's own image shape, so a layer with nothing in
  * it can still show what it does.
  * @param {number} count
@@ -157,22 +124,6 @@ function roll(seed, key) {
 export function placeholderPhotos(count) {
   return Array.from({ length: Math.max(1, Math.round(Number(count) || 0)) },
     (_, i) => ({ src: placeholderPhoto(i) }));
-}
-
-/** Rounded to two decimals, so the CSS the layer writes stays readable. */
-const round2 = (n) => Math.round(n * 100) / 100;
-
-/**
- * A number inside its bounds, with the default for anything unusable. An
- * absent value (undefined, null or an empty field) is unset, not zero: the
- * panel writes an empty field while the owner is typing, and a spread of zero
- * is a legitimate setting that must not be reachable by accident.
- */
-function clamp(value, { min, max, dflt }) {
-  if (value === undefined || value === null || value === '') return dflt;
-  const n = Number(value);
-  if (!Number.isFinite(n)) return dflt;
-  return Math.min(max, Math.max(min, n));
 }
 
 /** The style, with the floating frames for anything unknown. */
@@ -289,10 +240,6 @@ export function clampSpread(spread) {
   return clamp(spread, FRAME_SPREAD);
 }
 
-export function clampTilt(tilt) {
-  return clamp(tilt, FRAME_TILT);
-}
-
 export function clampRadius(radius) {
   return Math.round(clamp(radius, FRAME_RADIUS));
 }
@@ -374,35 +321,6 @@ export function photoLayout(images, { count, seed, size, spread, tilt, style = '
     });
   }
   return out;
-}
-
-/**
- * One frame's lean in degrees, inside plus or minus `tilt`: the same throw
- * for the same seed and index, so a frame keeps its lean across renders. The
- * scatter and the gallery block's polaroid view share it. Pure.
- * @param {unknown} seed
- * @param {number} index
- * @param {unknown} tilt The largest lean, clamped by clampTilt
- * @returns {number}
- */
-export function frameTilt(seed, index, tilt) {
-  const die = seed === undefined || seed === null || seed === '' ? 1 : seed;
-  return round2((roll(die, `r${index}`) - 0.5) * 2 * clampTilt(tilt));
-}
-
-/**
- * One tile's span on the mosaic wall: most tiles one cell, some two wide,
- * some two high, a few both. Pure; mosaicSpans deals a whole wall from it and
- * the gallery block one span per picture.
- * @param {unknown} seed
- * @param {number} index
- * @returns {{cols: number, rows: number, phase: number}}
- */
-export function mosaicSpan(seed, index) {
-  const die = seed === undefined || seed === null || seed === '' ? 1 : seed;
-  const t = roll(die, `m${index}`);
-  // Roughly a fifth of the tiles are wide, a fifth tall, one in ten both.
-  return { cols: t < 0.3 ? 2 : 1, rows: t > 0.7 || t < 0.1 ? 2 : 1, phase: round2(roll(die, `mp${index}`)) };
 }
 
 /**

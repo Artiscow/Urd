@@ -23,8 +23,7 @@ import {
   slidesRun,
 } from '../gallery-model.js';
 import { resolveColor, inkOn } from '../theme.js';
-import { ribbonDuration, ribbonRows, ribbonPeriods, canRoll, ribbonWidth, ribbonPause } from '../ribbon-model.js';
-import { syncTrackCopies, fitBandReach, bandPauseControl, PAUSE_ICON, PLAY_ICON } from './ribbon.js';
+import { loadBlockSheet } from '../core-types.js';
 import { resolveLink, linkAttrs } from '../nav-model.js';
 // ta/adminLocaleReady: only called in preview (after the admin dictionary is loaded), never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
@@ -165,6 +164,10 @@ function renderCarousel(host, props, ctx, blockEl) {
 /** The slideshows the visitor has stopped, by block id: a pause or a step by hand lasts, through a re-render too. */
 const STOPPED_SLIDES = new Set();
 
+/** The slides' pause and play marks, drawn as the ribbon's and the calendar's are. */
+const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>';
+const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
+
 function renderSlides(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-slides');
   const count = props.images.length;
@@ -263,86 +266,27 @@ function renderSlides(host, props, ctx, blockEl) {
   startTimer();
 }
 
+/** The ribbon view's own module (blocks/gallery-ribbon.js) once it is in. */
+let ribbonPart = null;
+/** Its loading, asked for once. */
+let ribbonLoading = null;
+
 /**
- * The ribbon view: the tiles roll past in a band, one row or two running
- * against each other. The band fills the block's box (ADR-0025 decision 2),
- * the rows share its height, and a tile is as tall as its row with the image
- * at its own aspect (gallery.css), so the owner sets the height by the frame.
- * The motion is the ribbon block's (ribbon-model.js and
- * the .urd-ribbon rules in base.css): each row's track holds the tiles in two
- * periods, each as wide as the band needs (syncTrackCopies), and is
- * translated by half its width, so the loop has no seam. Still under reduced
- * motion and while the editing chrome is on, and the pointer or the keyboard
- * holds it, so a tile can be clicked into the lightbox.
+ * Loads what the ribbon view draws with: its module, the ribbon block's band and sheet, and the ribbon model, in one wave.
+ * @returns {Promise<object>} blocks/gallery-ribbon.js
  */
-function renderRibbon(host, props, ctx, blockEl) {
-  host.classList.add('urd-gallery-ribbon');
-  host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
-  const rows = ribbonRows(props.rows);
-  // The editing chrome's hold is a CSS rule on the body (preview.css), so Clean
-  // view takes effect without a re-render.
-  const still = !canRoll({ count: props.images.length, reducedMotion: reducedMotion() });
+export function loadRibbonView() {
+  ribbonLoading ??= Promise.all([import('./gallery-ribbon.js'), import('./ribbon.js'), import('../ribbon-model.js'), loadBlockSheet('ribbon')]).then(([module]) => (ribbonPart = module));
+  return ribbonLoading;
+}
 
-  for (let row = 0; row < rows; row += 1) {
-    const band = el2('div', 'urd-ribbon-stripe urd-ribbon-motion-roll');
-    if (props.fade !== false) band.classList.add('urd-ribbon-fade');
-    if (props.pauseOnHover !== false) band.classList.add('urd-ribbon-pausable');
-    if (still) band.classList.add('urd-ribbon-still');
-    const track = el2('div', 'urd-ribbon-track');
-    // The second row runs against the first, whichever way the first goes.
-    const rightwards = (props.direction === 'right') !== (row === 1);
-    if (rightwards) track.classList.add('urd-ribbon-right');
-    // Every copy is built from the tiles' own factory, so each one carries
-    // its load guard and its click into the lightbox.
-    const buildRun = () => {
-      const row = el2('div', 'urd-ribbon-run');
-      props.images.forEach((_, i) => row.appendChild(makeTile(props, i, ctx, blockEl)));
-      return row;
-    };
-    const run = buildRun();
-    track.appendChild(run);
-    band.appendChild(track);
-    host.appendChild(band);
+/** Readies a gallery before the page is drawn (CORE_BLOCK_READY): the ribbon view's module where it draws the ribbon on either screen. */
+export const prepareGallery = (props) => ([props.view, props.phoneDesign].some((view) => galleryView(view) === 'ribbon') ? loadRibbonView() : null);
 
-    const measure = () => {
-      const width = run.scrollWidth;
-      if (!width) return;
-      const periods = ribbonPeriods(width, band.clientWidth);
-      syncTrackCopies(track, run, periods, buildRun);
-      track.style.setProperty('--urd-ribbon-ms', `${ribbonDuration(width * periods, props.speed) * 1000}ms`);
-    };
-    measure();
-    if (typeof ResizeObserver === 'function') {
-      const ro = new ResizeObserver(() => {
-        if (!run.isConnected) {
-          ro.disconnect();
-          return;
-        }
-        measure();
-      });
-      ro.observe(run);
-      ro.observe(band);
-    }
-  }
-  // The pause that stays, where the band actually rolls.
-  if (!still) bandPauseControl(host, ribbonPause(props.pause), { pause: 'ribbon.pause', play: 'ribbon.play' });
-  // The band's reach (the content surface, the window, or the block's own
-  // box) is laid out once the block is in the page, and again when the
-  // section changes width.
-  if (ribbonWidth(props.width) !== 'content') host.classList.add('urd-ribbon-wide');
-  requestAnimationFrame(() => {
-    const sectionEl = fitBandReach(host, blockEl, props.width);
-    if (sectionEl && typeof ResizeObserver === 'function') {
-      const ro = new ResizeObserver(() => {
-        if (!host.isConnected) {
-          ro.disconnect();
-          return;
-        }
-        fitBandReach(host, blockEl, props.width);
-      });
-      ro.observe(sectionEl);
-    }
-  });
+/** The ribbon view, drawn at once where it was readied before the page was drawn, else as it comes. */
+function renderRibbonView(host, props, ctx, blockEl) {
+  if (ribbonPart) ribbonPart.renderRibbon(host, props, ctx, blockEl, makeTile);
+  else loadRibbonView().then((part) => { if (host.isConnected) part.renderRibbon(host, props, ctx, blockEl, makeTile); }, () => {});
 }
 
 /**
@@ -402,7 +346,7 @@ function renderPolaroid(host, props, ctx, blockEl) {
 }
 
 const VIEWS = {
-  grid: renderGrid, carousel: renderCarousel, slides: renderSlides, ribbon: renderRibbon,
+  grid: renderGrid, carousel: renderCarousel, slides: renderSlides, ribbon: renderRibbonView,
   mosaic: renderMosaic, polaroid: renderPolaroid,
 };
 

@@ -35,7 +35,7 @@ export const CORE_BLOCKS = {
   video: () => withSheets(beside(import('./blocks/video.js'), import('./backgrounds/image.js'), import('./backgrounds/video.js'), import('./embed-cover.js'), import('./picture.js')), 'video').then((m) => m.videoBlock),
   icon: () => withSheets(import('./blocks/icon.js'), 'icon').then((m) => m.iconBlock),
   collection: () => withSheets(beside(import('./blocks/collection.js'), import('./collections.js'), import('./picture.js'), import('./sanitize.js')), 'collection').then((m) => m.collectionBlock),
-  gallery: () => withSheets(beside(import('./blocks/gallery.js'), import('./blocks/image.js'), import('./blocks/ribbon.js'), import('./gallery-layout.js'), import('./gallery-model.js'), import('./picture.js'), import('./ribbon-model.js')), 'gallery', 'image', 'ribbon').then((m) => m.galleryBlock),
+  gallery: () => withSheets(beside(import('./blocks/gallery.js'), import('./blocks/image.js'), import('./gallery-model.js'), import('./layout-die.js'), import('./picture.js')), 'gallery', 'image').then((m) => m.galleryBlock),
   faq: () => withSheets(beside(import('./blocks/faq.js'), import('./box-style.js'), import('./sanitize.js')), 'faq').then((m) => m.faqBlock),
   timeline: () => withSheets(import('./blocks/timeline.js'), 'timeline').then((m) => m.timelineBlock),
   quote: () => withSheets(beside(import('./blocks/quote.js'), import('./blocks/timeline.js'), import('./picture.js')), 'quote', 'timeline').then((m) => m.quoteBlock),
@@ -63,7 +63,7 @@ export const CORE_BACKGROUNDS = {
   grain: () => import('./backgrounds/grain.js').then((m) => m.grainLayer),
   pattern: () => import('./backgrounds/pattern.js').then((m) => m.patternLayer),
   image: () => beside(import('./backgrounds/image.js'), import('./picture.js')).then((m) => m.imageLayer),
-  slideshow: () => withSheets(beside(import('./backgrounds/slideshow.js'), import('./backgrounds/image.js'), import('./gallery-layout.js'), import('./gallery-model.js'), import('./photo-source.js'), import('./picture.js'), import('./ribbon-model.js')), 'gallery').then((m) => m.slideshowLayer),
+  slideshow: () => withSheets(beside(import('./backgrounds/slideshow.js'), import('./backgrounds/image.js'), import('./gallery-layout.js'), import('./gallery-model.js'), import('./layout-die.js'), import('./photo-source.js'), import('./picture.js'), import('./ribbon-model.js')), 'gallery').then((m) => m.slideshowLayer),
   video: () => beside(import('./backgrounds/video.js'), import('./backgrounds/image.js'), import('./picture.js')).then((m) => m.videoLayer),
 };
 
@@ -78,10 +78,11 @@ export const CORE_BLOCK_READY = {
   text: () => import('./blocks/text.js').then((m) => m.prepareText),
   terms: () => import('./blocks/text.js').then((m) => m.prepareTerms),
   contact: () => import('./blocks/contact.js').then((m) => m.prepareContact),
+  gallery: () => import('./blocks/gallery.js').then((m) => m.prepareGallery),
 };
 
 /** The parts of core blocks' designs the preview loads with every type (`loadCoreTypes` with `all`), so a design added on the canvas draws at once. */
-export const CORE_BLOCK_PARTS = [() => import('./blocks/text.js').then((m) => m.loadDocs()), () => import('./blocks/contact.js').then((m) => m.loadContactMap())];
+export const CORE_BLOCK_PARTS = [() => import('./blocks/text.js').then((m) => m.loadDocs()), () => import('./blocks/contact.js').then((m) => m.loadContactMap()), () => import('./blocks/gallery.js').then((m) => m.loadRibbonView())];
 /** The old plugin contract ids of the core blocks calendar, map and form (ADR-0021): a page holding one loads the type it stands for. */
 export const BLOCK_ALIASES = { kalender: 'calendar', kart: 'map', skjema: 'form' };
 

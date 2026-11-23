@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.38.2.3): the gallery's ribbon with its view
+
+- [ ] A gallery in each view (Grid, Carousel, «Slideshow (advances automatically)», Ribbon, Mosaic, Polaroid) looks and works as before on the desktop and on a phone: the ribbon rolls and pauses, the slideshow advances and its pause button works, the mosaic and the polaroids keep their layout, and a picture opens in the lightbox
+- [ ] A gallery whose «Phone design» is Ribbon rolls on a phone
+- [ ] In the editor, switching a gallery to Ribbon shows the band at once
+- [ ] A section with an «Image gallery» background looks and moves as before in each of its styles
+- [ ] On a page with a gallery whose view and «Phone design» are both other than Ribbon, DevTools' network list shows no gallery-ribbon.js, ribbon.js, ribbon.css or gallery-layout.js
+
 ### Test batch (0.7.38.2.2): the contact block's map with its design
 
 - [ ] A contact block in each design looks as before on the desktop and on a phone, its legal line included; in «With a map» the map stands behind its cover and loads on a press

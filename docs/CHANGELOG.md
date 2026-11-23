@@ -8,6 +8,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.38.2.3 - A gallery loads 17 KB less unless it draws the ribbon - 23 November 2026
+
+- Every gallery loaded the ribbon block's band code, its model and ribbon.css, which only its ribbon view draws with, and the photo layer's layout module, of which its mosaic and polaroid views use the die alone (24.7 KB compressed with the gallery's own code). The ribbon view stands in `blocks/gallery-ribbon.js`, readied before the page is drawn where a gallery draws the ribbon on either screen (`prepareGallery` and `loadRibbonView` in blocks/gallery.js), drawn as it comes where it comes later, and loaded by the preview with every type.
+- The seeded die stands in `layout-die.js`, which the gallery's model and the photo layer's layout (gallery-layout.js) import; a gallery in another view loads 7.9 KB of these where it loaded 24.7, and the ribbon view 3.3 KB less.
+
+The independent review before the commit found these:
+
+1. The two new modules stood on the comment limit's pending list with their moved comments, one wrapping mid-sentence; their comments are short, their reasoning in docs/engine-notes/, and they left the list.
+2. Nothing tested the gallery's readying or kept the ribbon's code out of a gallery's closure; tests hold both.
+3. The test round's network item would fail for a gallery whose «Phone design» is Ribbon, and the entry's 7.9 KB read as a whole gallery; each says what holds.
+
 ### 0.7.38.2.2 - A contact block loads no map code unless it draws the map - 23 November 2026
 
 - Every contact block loaded the map's code and sheet (osm.js, map.js, embed-cover.js, picture.js, map.css, 14.6 KB compressed), which only the map design draws with. The map stands in `blocks/contact-map.js`, readied before the page is drawn where a block draws the map design on either screen and the site has a point (`prepareContact` and `loadContactMap` in blocks/contact.js), drawn into its box as it comes where it comes later, and loaded by the preview with every type.

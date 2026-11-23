@@ -2,11 +2,11 @@
  * Pure logic for the gallery block, the lightbox and the image gallery
  * background layer: index stepping, autoplay conditions, column maths, and the
  * mosaic spans and polaroid leans of the block's two framed views (dealt by
- * the same die as the background layer's, gallery-layout.js).
+ * the same die as the background layer's, layout-die.js).
  * DOM-free, so all of it is tested with node --test (tests/gallery.test.mjs);
  * the DOM rendering is tested manually.
  */
-import { mosaicSpan, frameTilt } from './gallery-layout.js';
+import { mosaicSpan, frameTilt } from './layout-die.js';
 
 /** The views the block can draw; grid is the one an unknown value falls back to. */
 export const GALLERY_VIEWS = ['grid', 'carousel', 'slides', 'ribbon', 'mosaic', 'polaroid'];

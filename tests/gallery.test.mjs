@@ -227,3 +227,18 @@ test('the gallery block: the framed views are views of the same block, at the sa
   assert.equal(galleryBlock.version, 1);
   assert.equal(galleryBlock.defaults().view, 'grid');
 });
+
+test('the ribbon view\'s module is readied where a gallery draws the ribbon on either screen, and loaded once', async () => {
+  const { prepareGallery, loadRibbonView } = await engineImport('blocks/gallery.js');
+  for (const props of [{}, { view: 'grid' }, { view: 'mosaic', phoneDesign: 'slides' }]) assert.equal(prepareGallery(props), null, JSON.stringify(props));
+  // The ribbon's sheet is placed in the head, as a page places it.
+  Object.defineProperty(globalThis, 'document', { value: { createElement: () => ({ dataset: {}, listeners: {}, addEventListener(type, fn) { this.listeners[type] = fn; } }), head: { querySelector: () => null, querySelectorAll: () => [], appendChild: (link) => link.listeners.load?.() } }, configurable: true, writable: true });
+  try {
+    const part = await prepareGallery({ view: 'ribbon' });
+    assert.equal(typeof part.renderRibbon, 'function');
+    assert.equal(await prepareGallery({ view: 'grid', phoneDesign: 'ribbon' }), part, 'the phone\'s own view counts');
+    assert.equal(await loadRibbonView(), part, 'loaded once');
+  } finally {
+    delete globalThis.document;
+  }
+});
