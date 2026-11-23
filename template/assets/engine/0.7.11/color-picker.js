@@ -323,7 +323,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   };
   close.addEventListener('click', dismiss);
 
-  // The card's zoom (the chrome scale in base.css) keeps it at the admin's size; an engine that cannot report the zoom draws it unscaled.
+  // The card's zoom (the chrome scale in preview.css) keeps it at the admin's size; an engine that cannot report the zoom draws it unscaled.
   if (!('currentCSSZoom' in panel)) panel.style.zoom = '1';
 
   // Placement: PREFERABLY above the anchor (the text toolbar sits above the text,

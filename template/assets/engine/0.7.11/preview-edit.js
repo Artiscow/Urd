@@ -1980,11 +1980,8 @@ function addGuideOverlays(host) {
  * click), so the click can be suppressed.
  */
 /**
- * Direction-indicating cursor during section height drags: arrow down when
- * dragging down, arrow up when dragging up (the CSS classes in base.css
- * override everything with !important, since the cursor otherwise follows
- * the element beneath it). Small threshold against jitter; the direction
- * is kept until it actually reverses.
+ * Direction-indicating cursor during section height drags: arrow down when dragging down, arrow up when dragging up (the CSS classes in preview.css hold it over every element with !important).
+ * Small threshold against jitter; the direction is kept until it actually reverses.
  */
 function dragCursor() {
   let lastY = null;

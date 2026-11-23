@@ -1,5 +1,5 @@
 /**
- * The stylesheets: base.css holds what a visitor's page draws, the engine's preview.css the rules that need the preview's body class (`.urd-preview`, which the boot sets in the preview alone), and the calendar's sheets its views and designs (blocks/calendar.css, and each design family's own).
+ * The stylesheets: base.css holds what a visitor's page draws, the engine's preview.css the rules that need the preview's body class (`.urd-preview`, which the boot sets in the preview alone) or name a class only the editing layer writes, and the calendar's sheets its views and designs (blocks/calendar.css, and each design family's own).
  * These tests keep each rule in its sheet as rules are added, and keep a preview rule from silently outranking a base rule it used to lose to by order alone.
  */
 import { test } from 'node:test';
@@ -7,7 +7,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ENGINE_DIR, calendarSheets, engineImport } from './_engine.mjs';
+import { ENGINE_DIR, calendarSheets, engineImport, engineClosure } from './_engine.mjs';
+import { visitorModules } from '../scripts/engine-notes.mjs';
 
 const engine = fileURLToPath(ENGINE_DIR);
 const read = (path) => readFileSync(path, 'utf8');
@@ -46,10 +47,60 @@ function selectorsOf(css) {
 }
 const outside = (sel) => { let s = sel; for (;;) { const n = s.replace(/:(?:not|is|where|has)\((?:[^()]|\([^()]*\))*\)/g, ''); if (n === s) return s; s = n; } };
 const classes = (sel) => [...outside(sel).matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((m) => m[1]);
-const needsPreview = (sel) => classes(sel).includes('urd-preview');
+/**
+ * The classes only the editing layer's modules write: by a module the preview's editing layer (preview-edit.js) loads, and by no module a visitor's page can come to load or the admin bundles (it loads base.css, never preview.css).
+ * A class built from a name at run time counts by its prefix (`urd-cal-f-${key}`, `'urd-x-' + name`); one a selector queries (`.urd-x`) or `classList.contains` asks about counts as read.
+ */
+function editorClasses() {
+  const read = (module) => { try { return readFileSync(join(engine, module), 'utf8'); } catch { return ''; } };
+  // Every module the roots load, statically or when asked (a dynamic import), the preview's editing layer left out where `skip` says.
+  const reachFrom = (roots, skip) => {
+    const seen = new Set();
+    const queue = [...roots];
+    while (queue.length) {
+      const module = queue.pop();
+      let closure = [];
+      try { closure = [...engineClosure(module)]; } catch { /* a path outside the engine is no module of it */ }
+      for (const name of [module, ...closure]) {
+        if (seen.has(name)) continue;
+        seen.add(name);
+        for (const [, spec] of read(name).matchAll(/import\(\s*(?:\/\* @vite-ignore \*\/\s*)?'(\.{1,2}\/[^']+)'\)/g)) {
+          const target = new URL(spec, new URL(name, 'file:///e/')).pathname.slice(3);
+          if (!skip(target)) queue.push(target);
+        }
+      }
+    }
+    return seen;
+  };
+  const reach = reachFrom(visitorModules(), (module) => module === 'preview-edit.js');
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? walk(join(dir, entry.name)) : [join(dir, entry.name)]));
+  const bundled = new Set();
+  for (const file of walk(fileURLToPath(new URL('../editor/src', import.meta.url))).filter((f) => /\.(js|svelte)$/.test(f))) {
+    for (const [, module] of readFileSync(file, 'utf8').matchAll(/\$engine\/([\w/.-]+\.js)/g)) bundled.add(module);
+  }
+  const admin = reachFrom([...bundled], () => false);
+  const editing = [...reachFrom(['preview-edit.js'], () => false)].filter((module) => !reach.has(module) && !admin.has(module));
+  const written = (modules) => {
+    const exact = new Set();
+    const prefixes = [];
+    for (const module of modules) {
+      for (const [, name, open] of read(module).matchAll(/(?<![.\w-])(?<!contains\(\s*['"])(urd-[A-Za-z0-9-]*)(\$\{|['"]\s*\+)?/g)) {
+        if (open) prefixes.push(name);
+        else exact.add(name.replace(/-$/, ''));
+      }
+    }
+    return (name) => exact.has(name) || prefixes.some((prefix) => prefix.length > 4 && name.startsWith(prefix));
+  };
+  const byEditor = written(editing);
+  const byVisitor = written([...reach, ...admin]);
+  return (name) => byEditor(name) && !byVisitor(name);
+}
+const editorOnly = editorClasses();
+/** A rule the preview alone draws: it needs the preview's body class (on the body, or in a `:has` that asks for it), or names a class only the editing layer writes. */
+const needsPreview = (sel) => classes(sel).includes('urd-preview') || /:has\((?:[^()]|\([^()]*\))*\.urd-preview(?![\w-])/.test(sel) || classes(sel).some(editorOnly);
 const isCalendar = (sel) => classes(sel).some((c) => c === 'urd-cal' || c.startsWith('urd-cal-')) && !/urd-cal-loading|aria-busy/.test(sel);
 
-test('every rule in preview.css needs the preview\'s body class', () => {
+test('every rule in preview.css needs the preview\'s body class or names a class only the editing layer writes', () => {
   const rules = selectorsOf(PREVIEW);
   assert.ok(rules.length > 300, `${rules.length} rules`);
   for (const sels of rules) for (const sel of sels) assert.ok(needsPreview(sel), `«${sel}» is drawn on a visitor's page too, so it belongs in base.css`);

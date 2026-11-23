@@ -416,30 +416,6 @@ The seller under the order buttons (angrerettloven § 8 d): one small wrapping r
 
 The shop's terms of sale under the seller, in the same small type.
 
-### `.urd-cp`
-
-The shared color picker (color-picker.js): a floating card in preview mode
-
-### `.urd-cp : zoom`
-
-Chrome, kept at the admin's size at any preview zoom. Zoom scales the box itself, so the anchoring and the flip measure the size it is drawn at.
-
-### `.urd-cp : grid-template-columns`
-
-Bind the column to the box width: without this the implicit grid column becomes max-content wide (the RGB fields) and the content spills out of the box.
-
-### `@supports (anchor-name: --a) { .urd-cp[popover]`
-
-The anchored branch (anchored.js, ADR-0011 addendum): above the toolbar button, flipped below by the browser when it does not fit.
-
-### `.urd-cp-alpha`
-
-The alpha slider: checkerboard + color gradient are set inline (they follow the color)
-
-### `.urd-cp-del`
-
-A saved colour's deletion: the bin on the dark red every deletion draws, small on the swatch's corner
-
 ### The help chip (no rule here: engine/hint.js)
 
 The help chip (ADR-0008) styles itself: engine/hint.js injects its own style tag, so the chip can never end up unstyled with an outdated base.css.
@@ -1236,26 +1212,6 @@ A menu tucked above the top edge (nav.hideMode on a page in nav.hideOn): fixed a
 
 The pull tab hangs below the host's bottom edge, so it stays in view while the bar is tucked and sits under the bar once it is in. The default is the burger lines in the submenu's surface; the owner's own colours come as variables from nav.js.
 
-### `.urd-multi-toolbar : transform`
-
-Counter-scaling (urd-zoom): the anchor is set by JS in viewport coordinates, so the origin has to be that corner.
-
-### `.urd-multi-toolbar .urd-multi-delete`
-
-The delete button in the selection bar: the bin on the dark red of every deletion, lighter on hover.
-
-### `.urd-multi-toolbar .urd-multi-drag`
-
-The drag handle in the selection bar: the whole selection is dragged as one.
-
-### `.urd-multi-toolbar button:disabled`
-
-A button in a set's bar with nothing to act on stands greyed (the phone's set bar, preview-edit.js updatePhoneSetBar).
-
-### `.urd-phone-set-body`
-
-The phone view's set bar (0.7.36.3): its count and buttons in a row of their own, which the editor watches for the copy it draws beside the phone.
-
 ### `#urd-footer .urd-footer`
 
 Shared footer (site.footer): shown on every page when show is on
@@ -1703,23 +1659,3 @@ The words alone answer the mouse as the menu's links do (nav.style.hover): the c
 ### `body.urd-mobile .urd-totop[class*="urd-totop-press-"]:active`
 
 And a touch on a phone as the menu's links answer it (nav.style.mobile.press): drawn at once while pressed and let go of slowly, so a short tap is seen
-
-### `html:has(body.urd-preview)`
-
-The preview: hide the viewport scrollbar (scrolling still works with wheel and touch). The canvas is a scaled-down iframe, not a real window, so the height is the editor's and not the visitor's; the scrollbar therefore measures something that does not exist for a visitor, and lands as a stripe next to the content. Visitors and "View site" keep the browser's ordinary scrollbar.
-
-### `body.urd-mobile .urd-add-section:not(.urd-phone-seam)`
-
-Mobile view in the editor: the structure tools (the bars on the seams with their grips) are hidden; mobile is for layout adjustment and review. Its own seams (preview-edit.js phoneSeam) carry only the grip of the room above and below the sections' blocks.
-
-### `#urd-nav.urd-nav-float + #urd-root > .urd-add-section:first-child, #urd-nav.urd-nav-overlay + #urd-root > .urd-add-section:first-child`
-
-With the menu outside the flow (floating pill or overlay) the first section's top lies under the menu, and its content starts the menu's height below it (the nav clearance). The first seam stands there, its line, chip and grip with it, so they are seen and reached on the line where the content starts, as on every other seam.
-
-### The editorial markers (no rule in base.css)
-
-Editorial markers sit as classes on the section itself and cannot be display:none-d: the effects are zeroed instead, so Clean view is identical to the published page.
-
-### `html.urd-drag-down, html.urd-drag-down *`
-
-A directional cursor while a section boundary is dragged (preview-edit sets the class on the root element): arrow down when dragging down, arrow up when dragging up. !important because the cursor otherwise follows the element beneath.
