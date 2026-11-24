@@ -56,7 +56,7 @@ Every recommendation has one status:
 
 | Status | Means |
 |---|---|
-| Taken | Sorted into the backlog; the backlog place is named (a milestone such as 0.7.23, a v0.8 item such as the Element round and its stage ER-A to ER-H, URGENT or Bugs) |
+| Taken | Sorted into the backlog; the backlog place is named (a milestone such as 0.7.23, a v0.8 item such as the Element round and its stage ER-A to ER-I, URGENT or Bugs) |
 | Delivered | Built; the milestone or commit number is named, nothing more (CHANGELOG has the story) |
 | Watch | Not ready; the gate that would make it ready is named (often a browser engine shipping a feature) |
 | Not taken | Deliberately left out; the reason is named (it needs a server, a third party or a runtime library, or it works only on hover) |

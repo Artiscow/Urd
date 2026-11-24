@@ -73,10 +73,10 @@ The WordPress libraries and Elementor give an element its cross-cutting settings
 **Where Urd's gaps go:**
 - **A CSS class:** Not taken: the class-based cascade is not adopted (FEATURES.md «Custom classes»).
 - **Custom CSS:** v0.8 OL-4, a scoped style per look; site-wide custom CSS stays not taken.
-- **Lock and rename:** 0.7.9, the layers panel, with a name per block and a lock field.
+- **Lock and rename:** 0.7.42, the layers panel, with a name per block and a lock field.
 - **Visibility:** elements shown only on the phone (Delivered 0.7.3.8); hiding on a tablet Not taken: Urd has two layouts ([ADR-0019](../adr/0019-synced-mobile-model.md)); a hidden section, and a hidden block beside it, in v0.8 AR-5.
 - **Pinning on the phone:** as a choice per block in the row grid, with the desktop's release (Delivered 0.7.3.10).
-- **Border, shadow and background on more blocks:** 0.7.9, the box styles of the design gallery and the component tokens.
+- **Border, shadow and background on more blocks:** v0.8 ER-I, the box styles of the design gallery, and v0.8 DS-3, the component tokens.
 - **Typography:** a font weight and letter case in 0.7.9.
 - **A link on the whole element:** v0.8 ER-G, any block or group of blocks as a link.
 - **Reuse:** templates are copies; synced reuse is After v1.0: synced global blocks.
@@ -92,13 +92,13 @@ Urd: the heading levels of the text block (ELEMENTS.md #22).
 
 | Setting | Offered by | Urd | Where |
 |---|---|---|---|
-| Heading level or tag, H1 to H6 | WP, EL, WS, PK, KB, SP, GB | Partial: H1 to H3 in the text toolbar | 0.7.9 (text styles: H4 to H6) |
+| Heading level or tag, H1 to H6 | WP, EL, WS, PK, KB, SP, GB | Partial: H1 to H3 in the text toolbar | 0.7.9 (H4 to H6); v0.8 DS-2 (text styles) |
 | Alignment | WP, EL, PK, KB, SP, GB | Has | - |
 | Size presets | EL, PK | Has: «Size» on the block, with a size of the phone's own (0.7.36.2), and a px size per selection | - |
-| Link colour | WP, EL, KB, SP, GB | Missing | 0.7.9 (link styles) |
+| Link colour | WP, EL, KB, SP, GB | Missing | v0.8 DS-2 (link styles) |
 | A link on the whole heading, with new tab, nofollow and sponsored | EL, KB | Partial: links on words, through the link editor | v0.8 ER-G (any block as a link) |
-| Text shadow | WP, EL, KB, SP | Missing | 0.7.9 (text shadow) |
-| Gradient text | KB, SP | Missing | Not taken: low value |
+| Text shadow | WP, EL, KB, SP | Missing | v0.8 DS-2 (text shadow) |
+| Gradient text | KB, SP | Missing | v0.8 BE-4 (a gradient fill on a heading's text) |
 | A highlighted part in its own colour | KB, SP | Has: highlight in the accent or a custom colour | - |
 | An icon beside the heading | KB, GB | Missing | Not taken: an icon block placed beside the heading does it |
 | A line above or below | SP, ST | Partial: a line block placed above or below | Not taken: as a setting of the heading; a line block does it |
@@ -110,10 +110,10 @@ Urd: the text block (ELEMENTS.md #23 and #24).
 | Setting | Offered by | Urd | Where |
 |---|---|---|---|
 | Bold, italic, underline, strike and links in the text | WP, EL, GJ, PK | Has, with superscript, subscript, lists and a quote | - |
-| The tag (p, span, div) | EL, WS, ST, GB | Partial: paragraph, H1 to H3, lists and quote | 0.7.9 text styles (H4 to H6); Not taken: span and div |
+| The tag (p, span, div) | EL, WS, ST, GB | Partial: paragraph, H1 to H3, lists and quote | 0.7.9 (H4 to H6); Not taken: span and div |
 | Alignment | WP, EL, PK | Has, justify included | - |
-| Text and link colour | WP, EL, PK | Partial: a text colour and a highlight per selection; no link colour | 0.7.9 (link styles) |
-| Drop cap | WP, EL | Missing | 0.7.9 (a drop cap behind a gate) |
+| Text and link colour | WP, EL, PK | Partial: a text colour and a highlight per selection; no link colour | v0.8 DS-2 (link styles) |
+| Drop cap | WP, EL | Missing | v0.8 DS-2 (a drop cap behind a gate) |
 | Columns with a gap | EL, ST | Missing | 0.7.9 (text in columns) |
 
 ### Button
@@ -125,12 +125,12 @@ Urd: the button block (ELEMENTS.md #153, #154 and #155).
 | A link, and a new tab | WP, EL, WS, PK, BI, KB, SP, GB | Has (0.7.27) | - |
 | nofollow and sponsored | WP, KB, SP, GB | Has, for a web address (0.7.27) | - |
 | Download | WS, KB | Has, for a file (0.7.27.9) | - |
-| A style variant (filled, outline, primary, secondary) | WP, EL, PK, GB | Partial: «Filled» and «Outline», each in colours of the owner's own (0.7.0.84); no pill or ghost look | 0.7.9 (component tokens: pill and ghost looks) |
-| Size presets | EL, KB, SP | Partial: the dragged frame and «Size» | 0.7.9 component tokens |
+| A style variant (filled, outline, primary, secondary) | WP, EL, PK, GB | Partial: «Filled» and «Outline», each in colours of the owner's own (0.7.0.84); no pill or ghost look | v0.8 DS-3 (component tokens: pill and ghost looks) |
+| Size presets | EL, KB, SP | Partial: the dragged frame and «Size» | v0.8 DS-3 component tokens |
 | An icon before or after the label, or an icon alone | EL, KB, SP, ST, GB | Missing | v0.8 ER-G (an icon in the button block) |
-| Hover colours or an effect | EL, KB, SP, ST | Partial: the shared lift and an own fill under the pointer (0.7.0.84); no colour of its own for the words or the outline under the pointer | 0.7.9 (button states) |
-| A gradient background | WP, KB, SP, GB | Missing | 0.7.9 component tokens |
-| Border, radius and shadow | EL, KB, SP, ST | Partial: the theme's small corners and an own outline colour (0.7.0.84); no radius, border width or shadow of its own | 0.7.9 (component tokens: radius, border width) |
+| Hover colours or an effect | EL, KB, SP, ST | Partial: the shared lift and an own fill under the pointer (0.7.0.84); no colour of its own for the words or the outline under the pointer | v0.8 DS-3 (component tokens); 0.7.40 (focus and pressed styles) |
+| A gradient background | WP, KB, SP, GB | Missing | v0.8 BE-4 (gradient fills) |
+| Border, radius and shadow | EL, KB, SP, ST | Partial: the theme's small corners and an own outline colour (0.7.0.84); no radius, border width or shadow of its own | v0.8 DS-3 (component tokens: radius, border width) |
 | Width or full width | KB, ST | Has: the dragged width | - |
 | An accessible name apart from the label | WS, KB, GB | Missing | v0.8 ER-G (an accessible name in the link editor) |
 | An id for the button | EL, ST | Has: a name and a stable id (0.7.27) | - |
@@ -155,8 +155,8 @@ Urd: the image block (ELEMENTS.md #48, #69 and #72).
 | Lazy or eager loading | BI, KB, SP | Partial: by place, the first image block of a page's first section eager and every other lazy (0.7.37.3.2), with no setting of the owner's | 0.7.0 (T44: the first picture of a page eager) |
 | Filters | EL, KB, ST | Has: brightness, contrast, saturation and blur, and twelve looks with a two-colour duotone (Delivered 0.7.29.1-3) | - |
 | An overlay, or an effect on hover | EL, KB, SP, ST | Partial: an overlay colour with its strength (Delivered 0.7.29.1-3) and the shared lift; no overlay or zoom on hover | v0.8 ER-B (an overlay colour and a zoom on hover, shown on focus too) |
-| A mask or shape | KB, SP, ST | Partial: three corner choices | 0.7.9 (mask shapes on the image block) |
-| Border and shadow | EL, KB, SP, ST | Missing | 0.7.9 (box styles on more blocks) |
+| A mask or shape | KB, SP, ST | Partial: three corner choices | v0.8 BE-2 (mask shapes on the image block) |
+| Border and shadow | EL, KB, SP, ST | Missing | v0.8 ER-I (box styles on more blocks) |
 
 ### Gallery
 
@@ -228,7 +228,7 @@ Urd: the form block (ELEMENTS.md #171 to #199 and #325).
 | Sending to an address of one's own | WS, BI | Has: a JSON endpoint | - |
 | Spam protection | KB, SP | Partial: a honeypot | v0.9 (Turnstile with forms through the site's own function) |
 | A consent checkbox with a link | KB, SP | Partial: a checkbox field, with no link in its label | 0.7.24.4 (a consent field with a link to the privacy page) |
-| The submit button's text and style | BI, KB, SP | Partial: the text | 0.7.9 (component tokens, with the submit button's width and alignment) |
+| The submit button's text and style | BI, KB, SP | Partial: the text | v0.8 DS-3 (component tokens, with the submit button's width and alignment) |
 
 ### Accordion
 
@@ -242,7 +242,7 @@ Urd: the FAQ block (ELEMENTS.md #102 to #104).
 | The title's heading level | WP, EL, SP | Missing | v0.8 ER-A |
 | FAQPage structured data | EL, KB, SP, ST | Missing | v0.8 baking (JSON-LD) |
 | Items in columns | BI, KB, SP | Missing | Not taken: two FAQ blocks side by side do it |
-| An open colour for the title and the icon | EL, SP | Missing | 0.7.9 box styles and block designs |
+| An open colour for the title and the icon | EL, SP | Missing | 0.7.9 (the small settings) |
 
 The answers are rich text; other blocks inside an item are in no item.
 
@@ -275,7 +275,7 @@ Urd: the countdown block (ELEMENTS.md #161).
 | What happens at the end (a message, hiding, a redirect) | KB, SP, ST | Partial: a text at the end | Hiding: v0.8 ER-H (a date window); a redirect: Not taken (ELEMENTS.md #161) |
 | The units shown | KB, SP, ST | Partial: the seconds can be hidden | ER-H |
 | Own words for the units | KB, SP, ST | Missing: the site language's words | Not taken: the units follow the site's language |
-| A separator between the units | KB, SP | Missing | 0.7.9 box styles and block designs |
+| A separator between the units | KB, SP | Missing | 0.7.9 (the small settings) |
 
 ### Icon
 
@@ -285,9 +285,9 @@ Urd: the icon block (ELEMENTS.md #67, #68 and #34).
 |---|---|---|---|
 | An icon from a library | WP, EL, KB, SP, ST | Has: 56 drawn icons, characters by category, or an own image | A search in the picker: 0.7.10 |
 | Size and colour | EL, KB, SP, ST | Has: 8 to 400 px, a theme or custom colour | - |
-| A hover colour | EL, KB, SP, ST | Missing | 0.7.9 box styles and block designs |
+| A hover colour | EL, KB, SP, ST | Missing | 0.7.9 (the small settings) |
 | A link, with a target | EL, KB, SP | Missing | v0.8 ER-G (any block as a link) |
-| A background shape (circle, square, framed) | EL, KB, SP, ST | Missing | 0.7.9 (icon designs with a badge background) |
+| A background shape (circle, square, framed) | EL, KB, SP, ST | Missing | v0.8 ER-I (icon designs with a badge background) |
 | Rotation or flip | WP, EL, SP, ST | Partial: the frame's rotation | Flip: No item |
 | An accessible name, or decorative | KB, SP, ST | Partial: always decorative | v0.8 ER-G (an accessible name for an icon made a link) |
 
@@ -301,9 +301,9 @@ Urd: the quote block (ELEMENTS.md #31, #32, #137 and #138).
 |---|---|---|---|
 | The quote and who said it | WP, EL, KB, SP | Has: the quote and a name | - |
 | A role or company | EL, KB, SP | Has: the role | - |
-| A portrait and its position | EL, KB, SP | Partial: a round portrait in the card design, framed, turned and finished in the image editor (0.7.29.4); no position choice | 0.7.9 box styles and block designs |
+| A portrait and its position | EL, KB, SP | Partial: a round portrait in the card design, framed, turned and finished in the image editor (0.7.29.4); no position choice | 0.7.9 (the small settings) |
 | A star rating | KB, SP | Missing | Not taken: low value |
-| Alignment | WP, EL, SP | Missing | 0.7.9 (the quote's alignment, background and border) |
+| Alignment | WP, EL, SP | Missing | 0.7.9 (the quote's alignment); v0.8 ER-I (its background and border) |
 | A style variant | WP, SP | Has: «Large quote» and «Card with portrait» | - |
 | Several quotes in a grid or a carousel, with autoplay | KB, SP | Missing | v0.8 ER-D (a carousel view, with a quote source) |
 
@@ -329,8 +329,8 @@ Urd: the timeline block (ELEMENTS.md #123). Only Spectra and Stackable have a ti
 |---|---|---|---|
 | The line on one side, or alternating | SP, ST | Has: «Line on the left» and «Alternating sides» | - |
 | An icon per item, and the dot's size and colour | SP, ST | Partial: a filled dot or a ring, in the accent colour | v0.8 ER-C (an icon or picture per event) |
-| The line's colour and thickness | SP, ST | Partial: the colour | 0.7.9 box styles and block designs |
-| The gap between items | SP, ST | Missing | 0.7.9 box styles and block designs |
+| The line's colour and thickness | SP, ST | Partial: the colour | 0.7.9 (the small settings) |
+| The gap between items | SP, ST | Missing | 0.7.9 (the small settings) |
 
 Only Spectra formats a date per item and stacks the line on phones; Urd's year is free text, and the alternating design turns into one line on a narrow block.
 
@@ -341,10 +341,10 @@ Urd: the links block (ELEMENTS.md #142 and #143).
 | Setting | Offered by | Urd | Where |
 |---|---|---|---|
 | A list of networks, each with its address | WP, EL, SP | Has: the site's links, registered once, and the block's own | - |
-| Brand colours or own colours | WP, EL, SP | Partial: one colour for every icon | 0.7.9 (links designs with brand colours) |
-| A background shape (square, rounded, circle, pill) | WP, EL, SP | Missing | 0.7.9 (the same) |
-| Size and spacing | WP, EL, SP | Partial: size 24 to 64 px | 0.7.9 (the same) |
-| Alignment and layout | EL, SP | Missing | 0.7.9 (the same) |
+| Brand colours or own colours | WP, EL, SP | Partial: one colour for every icon | v0.8 ER-I (links designs with brand colours) |
+| A background shape (square, rounded, circle, pill) | WP, EL, SP | Missing | v0.8 ER-I (the same) |
+| Size and spacing | WP, EL, SP | Partial: size 24 to 64 px | v0.8 ER-I (the same) |
+| Alignment and layout | EL, SP | Missing | v0.8 ER-I (the same) |
 
 Sharing the current page (Spectra's social share) was removed from the links block in its version 2, since the share links led nowhere a visitor wants (ELEMENTS.md #143).
 
@@ -384,7 +384,7 @@ Urd: the section (ELEMENTS.md #1 and #2).
 | Vertical alignment of the content | WP, EL, KB | n/a: free placement | - |
 | A background image, video, gradient and overlay | WP, EL, KB, SP | Has: eight layer types | - |
 | A parallax or fixed background | WP, SP | Has: on the image and video layers | - |
-| Shape dividers at the top and bottom | EL, KB, SP | Has: five shapes with height, colour, mirror and invert | 0.7.9 (more shapes, and a divider over the content) |
+| Shape dividers at the top and bottom | EL, KB, SP | Has: five shapes with height, colour, mirror and invert | v0.8 BE-3 (more shapes, and a divider over the content) |
 | A link on the whole container | EL, KB, SP | Missing | v0.8 ER-G (a section or a group of blocks as one link) |
 | Text and link colours inside | KB, SP | Has: eight section themes | - |
 
@@ -434,7 +434,7 @@ Urd: the collection block (ELEMENTS.md #14, #88, #252 and #254).
 | Showing or hiding the parts (image, date, author, excerpt, read more) | WP, KB, SP, ST | Missing | v0.8 ER-D (the parts shown per view) |
 | The excerpt's length | WP, KB, SP, ST | Missing | ER-D |
 | A read-more link | KB, SP, ST | Missing: the title is the link | v0.8 ER-D (the entry's link as a button) |
-| The image's size, ratio and position | WP, KB, SP | Partial: an image shape per collection | ER-D; 0.7.9 component tokens (the image ratio) |
+| The image's size, ratio and position | WP, KB, SP | Partial: an image shape per collection | ER-D; v0.8 DS-3 component tokens (the image ratio) |
 | Pagination | WP, SP, GB | Missing | v0.8 ER-D (load more and pagination) |
 | An item template built from elements | WP, WS, GJ, GB, PL | Missing: three fixed views | v0.8 entry pages (a card bound to the entry's fields) |
 
