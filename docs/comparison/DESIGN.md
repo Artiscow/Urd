@@ -352,7 +352,7 @@ OKLCH reaches the P3 gamut directly, and `@media (color-gamut: p3)` can raise th
 ### Contrast rules
 - WCAG 1.4.3 asks for 4.5:1 for body text and 3:1 for large text, at level AA since 2.0, so it is inside the Norwegian floor ([W3C](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), primary).
 - Webflow's colour picker shows the ratio against AA and AAA ([Webflow](https://webflow.com/updates/check-text-accessibility-with-built-in-color-contrast-ratio-tool), primary), and Duda's text widget has a checker ([Duda](https://www.duda.co/accessibility), primary).
-- In Urd the check belongs to the accessibility round 0.7.11: AA and AAA in the colour picker, and contrast in the audit panel ([FEATURES.md](FEATURES.md)). Every colour preset here (D15 to D19, D22 and D23) must pass it in both light and dark.
+- In Urd the check belongs to the accessibility round 0.7.40: AA and AAA in the colour picker, and contrast in the audit panel ([FEATURES.md](FEATURES.md)). Every colour preset here (D15 to D19, D22 and D23) must pass it in both light and dark.
 - Urd's own calendar designs Glass and Dark glass read at about 4:1 for body text by default, under the floor; they are listed under 0.7.19.28 in [BACKLOG](../BACKLOG.md).
 
 ---
@@ -695,7 +695,7 @@ As a page starter, it is D33.
 
 ## Recommendations
 
-The status words and the ID scheme are explained in [README.md](README.md). Every preset that sets colours must pass the contrast check of 0.7.11 in light and in dark, and every motion preset must stand still under reduced motion.
+The status words and the ID scheme are explained in [README.md](README.md). Every preset that sets colours must pass the contrast check of 0.7.40 in light and in dark, and every motion preset must stand still under reduced motion.
 
 ### Open
 

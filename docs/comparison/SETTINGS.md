@@ -144,7 +144,7 @@ Urd: the image block (ELEMENTS.md #48, #69 and #72).
 | Setting | Offered by | Urd | Where |
 |---|---|---|---|
 | Alt text | WP, WS, GJ, BI, KB, SP, ST | Has | - |
-| Decorative, with an empty alt | WP, ST | Missing | 0.7.11 (a «decorative» toggle on images) |
+| Decorative, with an empty alt | WP, ST | Missing | 0.7.40 (a «decorative» toggle on images) |
 | Caption | WP, EL, KB, SP, ST | Missing | v0.8 ER-B (a plain caption beside the caption overlay) |
 | A link with target and rel | WP, EL, KB, SP | Has (0.7.27) | - |
 | Lightbox | WP, EL, ST | Has | - |
@@ -174,8 +174,8 @@ Urd: the gallery block (ELEMENTS.md #50, #52 and #53).
 | Random order | WP, EL | Missing | Watch: a site that asks for a shuffled gallery |
 | Image size | WP, EL, KB, SP | Missing | v0.8 responsive pictures |
 | Lazy loading | EL, KB, SP | Has | - |
-| Autoplay, speed, pause on hover and loop | EL, KB, SP, ST | Partial: the slideshow plays, holds on hover and focus, wraps and has a pause button; autoplay cannot be switched off | 0.7.11 (carousel semantics) |
-| Arrows, dots and slides per view | EL, KB, SP, ST | Partial: arrows on both, dots on the slideshow, one slide per view | 0.7.11 (carousel semantics); v0.8 ER-D (dots on the carousel) |
+| Autoplay, speed, pause on hover and loop | EL, KB, SP, ST | Partial: the slideshow plays, holds on hover and focus, wraps and has a pause button; autoplay cannot be switched off | 0.7.40 (carousel semantics) |
+| Arrows, dots and slides per view | EL, KB, SP, ST | Partial: arrows on both, dots on the slideshow, one slide per view | 0.7.40 (carousel semantics); v0.8 ER-D (dots on the carousel) |
 | A slide or fade transition | EL, SP | Partial: fade only | v0.8 ER-D (a slide transition) |
 
 ### Video
@@ -188,7 +188,7 @@ Urd: the video block (ELEMENTS.md #55 and #57).
 | Autoplay, loop, muted and controls | WP, EL, WS, GJ, BI, PL | Partial: loop, muted and «Start by itself» on a file, with the controls always shown; on an embed, «Start playing when pressed» (0.7.24.1.1), no loop, muted or controls yet | 0.7.24.1 (the embed's own options); v0.8 ER-B (a controls switch on a file) |
 | A poster image | WP, EL, GJ, BI, KB, PL | Has: on a file, and on an embed as its cover's picture, framed and adjusted in the image editor (Delivered 0.7.24.1.1) | - |
 | Plays inline, and preload | WP, EL, WS, BI, PL | Partial: always inline, preload always metadata | Not taken: inline and metadata suit every site |
-| Captions | WP, EL, WS | Missing | 0.7.11 (a captions file on a self-hosted video) |
+| Captions | WP, EL, WS | Missing | 0.7.40 (a captions file on a self-hosted video) |
 | A privacy mode | EL, WS, KB | Has: youtube-nocookie, and do-not-track on Vimeo | - |
 | Loading on a click, behind a preview image | EL, WS, BI | Has: every embed behind a cover in the site's colours or the owner's own picture, the choice remembered per provider (Delivered 0.7.24.1.1), and «Ask before loading» to load it with the page instead (Delivered 0.7.29.4) | - |
 | Start and end time | EL, WS | Missing | 0.7.24.1 (embeds); v0.8 ER-B (a file) |
@@ -221,7 +221,7 @@ Urd: the form block (ELEMENTS.md #171 to #199 and #325).
 |---|---|---|---|
 | Field types | WS, BI, KB, SP | Partial: eight types (text, email, phone, multi-line, dropdown, checkbox, radio, date) | v0.8 ER-E (number, URL, time, range and hidden fields) |
 | Label, placeholder, required and a default value per field | WS, BI, KB, SP | Partial: label and required | v0.8 ER-E (placeholder, help text, default value, width) |
-| Autocomplete tokens | KB, SP | Missing | 0.7.11 (with the form errors) |
+| Autocomplete tokens | KB, SP | Missing | 0.7.40 (with the form errors) |
 | Own error messages | BI, KB | Missing | ER-E |
 | A success message, or a redirect after sending | BI, KB, SP | Partial: a success text | v0.8 ER-E (a redirect after sending) |
 | Sending to an email address | BI, KB, SP | Has: the mailto mode | - |
@@ -360,7 +360,7 @@ Urd: the menu, set in the Nav panel (ELEMENTS.md #80 to #83).
 | Submenus that open on hover or on a click | WP, WS, KB | Has: hover, hover closed by a click, or click only | - |
 | More than one submenu level | WP, KB | Has: two levels, the second beside the panel or as a headed group in columns and the flyout (0.7.13.21) | - |
 | A phone menu behind a button | WP, PL | Has: a panel below the bar or a full-screen sheet; the button's drawing and word chosen (0.7.13.21); the items' alignment, the submenu arrow, and the bar alone beside the sheet with its tools in the sheet's foot (0.7.13.17) | - |
-| The current page marked | WS, KB | Missing | 0.7.11 (the current page marked) |
+| The current page marked | WS, KB | Missing | 0.7.40 (the current page marked) |
 | The gap between items | KB, PL | Has: the item spacing | - |
 
 Only Kadence offers a highlighted label on an item and a mega menu with media; only Gutenberg sets the overlay's colours and a limit on nesting. Gutenberg's «Show arrow» for submenus has its counterpart in the phone menu's «Submenu arrow» (0.7.13.17).
