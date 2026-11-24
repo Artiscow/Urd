@@ -269,7 +269,7 @@ export function liftTermsBlocks(target) {
 
 /**
  * The gap and the «Larger map» line under a map's iframe before v5, in px: the
- * 6 px gap of `.urd-map` and a line of text at 0.82 em (base.css).
+ * 6 px gap of `.urd-map` and a line of text at 0.82 em (blocks/map.css).
  */
 const MAP_LINK_PX = 26;
 

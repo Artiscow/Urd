@@ -29,7 +29,7 @@ export function docRadius(value) {
 }
 
 /**
- * The look of a document as CSS custom properties: only what the owner has set, so the rest follows the theme (base.css gives each its fallback).
+ * The look of a document as CSS custom properties: only what the owner has set, so the rest follows the theme (doc-look.css gives each its fallback).
  * @param {{accent?: string, headingColor?: string, cardColor?: string, corners?: string, headingFont?: string, font?: string}} props
  * @returns {Record<string, string>}
  */

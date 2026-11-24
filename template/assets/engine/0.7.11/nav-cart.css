@@ -1,5 +1,5 @@
 /*
- * The basket in the menu's own rules (nav.js, drawn with shop.js), loaded with it by features.js, after base.css in the order its rules stood there.
+ * The basket in the menu's own rules (nav.js, drawn with shop.js), loaded with it by features.js, placed after base.css in the order ENGINE_SHEETS keeps (sheets.js).
  * Its reasoning stands in docs/STYLES.md, under nav-cart.css.
  */
 /* The cart in the menu */

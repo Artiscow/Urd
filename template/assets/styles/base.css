@@ -3357,10 +3357,6 @@ body:has(.urd-contact-dock) {
   .urd-bg-rotate,
   .urd-bg-pulse,
   .urd-bg-motion,
-  .urd-gallery-frame,
-  .urd-gallery-skin,
-  .urd-gallery-face,
-  .urd-gallery-tile,
   .urd-ribbon-track {
     animation: none;
   }

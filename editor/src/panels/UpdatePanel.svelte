@@ -76,6 +76,8 @@
     try {
       // The update copies the template's binary files in batches, one call each, and commits in the call that finds few enough of them left (ADR-0014 decision 6).
       // A call that copies nothing new stops the loop, and its words ask for a new start.
+      // A sign-in falling due is renewed first, so its planned renewal does not end it in the middle of the update's calls.
+      await ed.renewIfDue();
       let res;
       let data;
       let copied = -1;

@@ -1562,6 +1562,10 @@ The cross-fade: in, a long stand, and out, with the swap at the foot where the f
 
 The bounce: across on the box, up and down on the skin, two periods.
 
+### `@media (prefers-reduced-motion: reduce) { .urd-gallery-frame, .urd-gallery-skin, .urd-gallery-face, .urd-gallery-tile`
+
+Under reduced motion the frames, their skins and faces and the tiles stand still. The rule stands after the motions above, which name the animation on the same elements with a class of equal weight, so it has the last word; in base.css, which loads before this sheet, it would lose to them.
+
 ### `.urd-gallery-band`
 
 The band: rows of tiles rolling on the ribbon's track, centred in the section.

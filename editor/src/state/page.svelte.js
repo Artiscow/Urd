@@ -727,7 +727,7 @@ const missingAsked = new Set();
 
 /**
  * Asks once per session for the phone height of each block on the open page that fetches its content and has none stored (a block whose phone height was never measured).
- * Called once the canvas stands (preview.svelte.js answerReady), so the hidden preview never competes with the editor's start; the height then goes out with the page's next publish.
+ * Called as the canvas's cover lifts (preview.svelte.js liftCover), so the hidden preview never competes with the canvas's start; the height then goes out with the page's next publish.
  */
 function fitMissingPhoneHeights() {
   for (const section of store?.data.sections ?? []) {

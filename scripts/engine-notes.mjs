@@ -41,9 +41,12 @@ export function visitorModules() {
     const src = readFileSync(new URL(loader, ENGINE_DIR), 'utf8');
     for (const m of src.matchAll(/import\('\.\/([^']+)'\)/g)) for (const name of engineClosure(m[1])) set.add(name);
   }
-  // A block's design parts, which it loads from its own folder as it draws (the contact block's map, the calendar's renderers).
+  // A block's design parts, which it loads as it draws: from its own folder (the contact block's map, the calendar's renderers) or from the engine's (the QR code, the vCard, the lightbox); the help chips load in the preview alone.
   for (const block of [...set].filter((name) => /^blocks\/[a-z]+\.js$/.test(name))) {
-    for (const m of readFileSync(new URL(block, ENGINE_DIR), 'utf8').matchAll(/import\('\.\/([a-z-]+\.js)'\)/g)) for (const name of engineClosure(`blocks/${m[1]}`)) set.add(name);
+    for (const m of readFileSync(new URL(block, ENGINE_DIR), 'utf8').matchAll(/import\('(\.\.?)\/([a-z-]+\.js)'\)/g)) {
+      const module = m[1] === '..' ? m[2] : `blocks/${m[2]}`;
+      if (module !== 'hint.js') for (const name of engineClosure(module)) set.add(name);
+    }
   }
   const load = readFileSync(new URL('blocks/calendar-load.js', ENGINE_DIR), 'utf8');
   const designs = load.match(/export const DESIGN_MODULES = \{([^\n]*)\};/)[1];

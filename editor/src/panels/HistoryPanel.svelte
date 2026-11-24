@@ -48,6 +48,8 @@
     historyBusy = true;
     setStatus(ta('status.reverting'));
     try {
+      // A sign-in falling due is renewed first, so its planned renewal does not end it in the middle of the revert's calls.
+      await ed.renewIfDue();
       const res = await fetch('/api/github/revert', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },

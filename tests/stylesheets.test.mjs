@@ -215,6 +215,17 @@ test('no base rule is the twin of an engine sheet\'s rule: an override under an 
   }
 });
 
+test('the gallery\'s frames stand still under reduced motion in its own sheet, after the motions that name their animation with classes of equal weight', () => {
+  const gallery = read(join(engine, 'blocks/gallery.css'));
+  const still = gallery.search(/@media \(prefers-reduced-motion: reduce\) \{\s*\.urd-gallery-frame,\s*\.urd-gallery-skin,\s*\.urd-gallery-face,\s*\.urd-gallery-tile \{\s*animation: none;/);
+  assert.ok(still > 0, 'gallery.css stills its frames');
+  const lastMotion = Math.max(...[...gallery.matchAll(/animation-name:/g)].map((m) => m.index));
+  assert.ok(still > lastMotion, 'after its last motion, so it has the last word');
+  for (const block of BASE.match(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n\}/g) ?? []) {
+    assert.doesNotMatch(block, /\.urd-gallery-(frame|skin|face|tile)\b/, 'base.css, which loads before it, holds no such override that the motions would outrank');
+  }
+});
+
 test('the preview loads its sheet with the editing layer, and a calendar loads its own with its modules', () => {
   const urd = read(join(engine, 'urd.js'));
   assert.match(urd, /const editing = preview \? Promise\.all\(\[import\('\.\/preview-edit\.js'\), import\('\.\/preview-queue\.js'\), loadStylesheet\(new URL\('\.\/preview\.css', import\.meta\.url\)\.href\), initAdminLocale\(\)\]\) : null;/, 'the editing layer, its draw queue, its sheet and the admin dictionary are asked for together');

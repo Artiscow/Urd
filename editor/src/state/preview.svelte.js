@@ -241,7 +241,7 @@ function onIframeLoad() {
   // A canvas that never answers its start lets its cover go all the same, a while after its frame has loaded; a newer round takes the wait with it.
   const round = canvasRound;
   clearTimeout(coverWait);
-  coverWait = setTimeout(() => { if (round === canvasRound) canvasCovered = false; }, CANVAS_WAIT);
+  coverWait = setTimeout(() => { if (round === canvasRound) liftCover(); }, CANVAS_WAIT);
   // A click in the preview (block, text field, canvas) closes the block
   // menu and the top bar's tool menu. The iframe is same-origin, so we
   // listen directly. A press on a bar button that opens the menu (the gear,
@@ -398,7 +398,14 @@ async function onReady() {
 function onShown(msg) {
   if (msg.round !== canvasRound) return;
   clearTimeout(coverWait);
+  liftCover();
+}
+
+/** The cover lifts once a round: then a fetching block without its phone height is measured, so the hidden phone preview that measures it never competes with the canvas's start, and the published page's loading state stands at it. */
+function liftCover() {
+  if (!canvasCovered) return;
   canvasCovered = false;
+  pageState.fitMissingPhoneHeights();
 }
 
 async function answerReady() {
@@ -454,8 +461,6 @@ async function answerReady() {
     // A section chosen while the canvas loaded (the Phone panel's, as another page opens) is marked once the canvas stands.
     bridge?.sendActiveSection(pageState.activeSectionId);
   }
-  // A fetching block without its phone height is measured once the canvas stands, so the published page's loading state stands at it.
-  pageState.fitMissingPhoneHeights();
 }
 
 /** Internal link clicked in the preview: switch page properly, and jump to the spot the link's fragment names. */

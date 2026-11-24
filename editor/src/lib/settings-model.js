@@ -252,7 +252,7 @@ export const SETTINGS_GROUPS = [
     shared: true,
     when: (c) => !!c.ed.siteDraft,
     settings: [
-      { id: 'gridSize', labelKey: 'settings.gridSize', tipKey: 'tip.gridSize', kind: 'range', min: 4, max: 96, step: 2, unit: 'px',
+      { id: 'gridSize', labelKey: 'settings.gridSize', tipKey: 'tip.settings.gridSize', kind: 'range', min: 4, max: 96, step: 2, unit: 'px',
         get: (c) => c.ed.grid?.size ?? 16, set: (c, v) => c.ed.setGrid('size', v) },
       { id: 'gridSnap', labelKey: 'lbl.gridSnap', tipKey: 'tip.gridSnap', kind: 'seg',
         options: (c) => [['on', c.ta('common.on')], ['off', c.ta('common.off')]],

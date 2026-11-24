@@ -42,10 +42,10 @@ function asked(code, folder = '') {
 /** The basket's drawer, which nav.js loads with the cart block's sheet as a menu with a basket is drawn. */
 const DRAWER = read('nav.js').match(/const drawerReady = Promise\.all\(\[[^\]]*\]\)/)[0];
 
-/** What a block readies before its page is drawn beyond its type's module (CORE_BLOCK_READY), by the engine's own readying; one hidden on both screens readies nothing. */
+/** What a block readies before its page is drawn beyond its type's module (CORE_BLOCK_READY), by the engine's own readying; one hidden on both screens readies nothing, nor one of an old id, which a plugin may still draw (prepareBlocks). */
 async function readied(block, site) {
   if (block.hideDesktop && block.hideMobile) return [];
-  const type = CORE_BLOCK_READY[block.type] ? block.type : BLOCK_ALIASES[block.type];
+  const type = CORE_BLOCK_READY[block.type] ? block.type : null;
   if (type === 'calendar') {
     const designs = designModules(calendarDesigns, block.props ?? {}).filter(Boolean).flatMap((name) => [...asked(DESIGN_MODULES[name], 'blocks/'), ...(CALENDAR_SHEETS[name] ? [CALENDAR_SHEETS[name]] : [])]);
     // The event card comes once the page is idle (cardWhenIdle in blocks/calendar.js).

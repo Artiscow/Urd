@@ -50,7 +50,7 @@ export function placeInOrder(group, rank, after = () => null) {
 /** The base sheet's link, which the engine's own sheets follow. */
 export const baseSheet = () => document.head.querySelector('link[rel="stylesheet"][href*="/assets/styles/base.css"]');
 
-/** The engine's own sheets beside the modules that draw with them, in the order their rules stood in base.css, which they follow. */
+/** The engine's own sheets beside the modules that draw with them, placed after base.css in this order. */
 const ENGINE_SHEETS = ['nav-launcher.css', 'nav-cart.css', 'footer.css', 'doc-look.css', 'totop.css'];
 
 /** An engine sheet (ENGINE_SHEETS), placed after base.css in their order; resolves to whether it loaded. */

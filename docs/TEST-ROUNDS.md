@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.37.5.2-0.7.0.96p): the push preparation's fixes
+
+- [ ] Before the next release is tagged: sign in once through an OAuth App (a throwaway one with the local server, or a site still on one) and check the login, which now asks GitHub for `offline_access`, goes through and the editor opens signed in
+- [ ] With reduced motion on in the system, a section with an «Image gallery» background in a moving style (Travel, Breathing, the cross-fade, the bounce) stands still from the first moment, turned on while the page is open too
+- [ ] Opening the editor on a page with a product, collection or calendar block whose phone height was never measured, the canvas's cover lifts as soon as on any other page, and the block's phone height is filled in after
+- [ ] An update from the Updates panel and an undo of the last publish from History go through when the sign-in is due to renew within a few minutes
+- [ ] In Urd settings, the tooltip of «Grid cell size» says a section sets its own grid in its menu, and the section menu's own grid slider has its plain tooltip
+
 ### Test batch (0.7.0.96): the phone order column, the grid in Urd settings, and the settings list by click
 
 - [ ] With «Phone panel» on «Order on the right», switching to the phone view with another panel open (Pages, Site) shows «Blocks in their order» at the stage's right; back on the desktop it goes, and stands again while the Phone panel is open

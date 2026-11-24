@@ -5,6 +5,7 @@
  * REGARDLESS (defence in depth), this response is only for the UI.
  * A sign-in that expires is renewed here once it falls due, or a little earlier with `?soon=1` (before a publish or a save), and `renewIn` tells the editor in how many seconds to ask again (_lib/session.js).
  * `renewFailed` says a renewal was refused, as when another tab renewed the sign-in a moment before with the same refresh token; the editor then asks once more with the cookies that tab was given.
+ * Only a request from the site itself renews (its Sec-Fetch-Site same-origin, or none where a browser sends none): a link from another site, which the lax cookies come with, reads the sign-in as it stands, so it can never end a sign-in under a publish.
  */
 import { cfg, currentUser } from '../../_lib/github.js';
 import { readCookie } from '../../_lib/cookies.js';
@@ -27,7 +28,8 @@ export async function onRequestGet({ request, env }) {
   let cookies = [];
   let renewFailed = false;
   const lead = new URL(request.url).searchParams.get('soon') === '1' ? RENEW_SOON : 0;
-  if (renewal && (!token || renewDue(renewal.expiresAt, now, lead))) {
+  const fromSite = ['same-origin', 'none', null].includes(request.headers.get('sec-fetch-site'));
+  if (renewal && fromSite && (!token || renewDue(renewal.expiresAt, now, lead))) {
     let answer = null;
     try {
       answer = await renewToken(cfg(env), renewal.refreshToken);

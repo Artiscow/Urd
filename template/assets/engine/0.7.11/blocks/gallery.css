@@ -382,6 +382,17 @@
   animation-direction: alternate;
 }
 
+/* Still under reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .urd-gallery-frame,
+  .urd-gallery-skin,
+  .urd-gallery-face,
+  .urd-gallery-tile {
+    animation: none;
+  }
+
+}
+
 /* The band */
 .urd-gallery-band {
   display: flex;

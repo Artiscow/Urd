@@ -108,9 +108,9 @@ test('the sign-in keeps its refresh token beside it where GitHub gives one, and 
   assert.equal(res.headers.get('set-cookie'), null);
 });
 
-/** A sign-in status request carrying the sign-in and, where given, its renewal ending at `endsAt`; `soon` asks as the editor does before a publish or a save. */
-const status = (endsAt, { token = 'ghu_old', refresh = REFRESH, soon = false } = {}) => me({
-  request: new Request(`${ORIGIN}/api/github/me${soon ? '?soon=1' : ''}`, { headers: { cookie: [token ? `urd_gh=${token}` : '', endsAt ? `urd_ghr=${endsAt}.${refresh}` : ''].filter(Boolean).join('; ') } }),
+/** A sign-in status request carrying the sign-in and, where given, its renewal ending at `endsAt`; `soon` asks as the editor does before a publish or a save, and `site` is the browser's Sec-Fetch-Site, where it sends one. */
+const status = (endsAt, { token = 'ghu_old', refresh = REFRESH, soon = false, site = null } = {}) => me({
+  request: new Request(`${ORIGIN}/api/github/me${soon ? '?soon=1' : ''}`, { headers: { cookie: [token ? `urd_gh=${token}` : '', endsAt ? `urd_ghr=${endsAt}.${refresh}` : ''].filter(Boolean).join('; '), ...(site ? { 'sec-fetch-site': site } : {}) } }),
   env: ENV,
 });
 
@@ -158,6 +158,17 @@ test('a sign-in that has fallen due is renewed once, its new cookies set and the
   // A renewal with no sign-in cookie left (it went before the renewal) is renewed too.
   github({ live: ['ghu_new'] });
   assert.equal((await (await status(now() + 4 * 3600, { token: null })).json()).loggedIn, true);
+
+  // The editor's own call renews; a link from another site, which the lax cookies come with, reads the sign-in as it stands and renews nothing.
+  const own = github({ live: ['ghu_new'] });
+  await status(now() + 60, { site: 'same-origin' });
+  assert.equal(renewals(own).length, 1, 'the site itself renews');
+  for (const site of ['cross-site', 'same-site']) {
+    const linked = github({ live: ['ghu_old'] });
+    const res = await status(now() + 60, { site });
+    assert.equal(renewals(linked).length, 0, `${site}: nothing renewed`);
+    assert.deepEqual(cookies(res), [], `${site}: no cookie written`);
+  }
 });
 
 test('a refused renewal leaves the cookies alone and says so, so the editor asks again with what another tab was given', async () => {
@@ -219,4 +230,9 @@ test('the editor asks for the sign-in at the planned moment, before its other ca
   assert.ok(once.indexOf('await shellState.renewIfDue();') > 0 && once.indexOf('await shellState.renewIfDue();') < once.indexOf("fetch('/api/github/commit'"), 'publishing renews first');
   const saved = readFileSync(new URL('../editor/src/state/saved.svelte.js', import.meta.url), 'utf8');
   assert.match(saved, /async function save\([^)]*\) \{\s*if \(busy \|\| available === false\) return false;\s*busy = true;\s*try \{\s*\/\/[^\n]*\n\s*await shellState\.renewIfDue\(\);/, 'and so does a save of drafts, autosave and Ctrl+S included');
+  // An update and a revert from History reach GitHub in several calls each, and renew first too.
+  const update = readFileSync(new URL('../editor/src/panels/UpdatePanel.svelte', import.meta.url), 'utf8');
+  assert.ok(update.indexOf('await ed.renewIfDue();') > 0 && update.indexOf('await ed.renewIfDue();') < update.indexOf("fetch('/api/github/update'"), 'an update renews first');
+  const history = readFileSync(new URL('../editor/src/panels/HistoryPanel.svelte', import.meta.url), 'utf8');
+  assert.ok(history.indexOf('await ed.renewIfDue();') > 0 && history.indexOf('await ed.renewIfDue();') < history.indexOf("fetch('/api/github/revert'"), 'a revert renews first');
 });

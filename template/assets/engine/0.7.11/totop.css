@@ -1,5 +1,5 @@
 /*
- * The back-to-top button's own rules (totop.js), loaded with it by features.js, after base.css in the order its rules stood there.
+ * The back-to-top button's own rules (totop.js), loaded with it by features.js, placed after base.css in the order ENGINE_SHEETS keeps (sheets.js).
  * Its reasoning stands in docs/STYLES.md, under totop.css.
  */
 /* The site's «Back to top» button */

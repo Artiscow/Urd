@@ -100,7 +100,7 @@ function draw(el, props, options) {
   const shape = galleryShape(props.shape);
   const look = galleryLook(props.look);
   el.classList.add('urd-bg-slideshow', `urd-gallery-${style}`, `urd-gallery-tone-${galleryTone(props.tone)}`);
-  // The shape and the look are the host's classes; base.css carries them down
+  // The shape and the look are the host's classes; gallery.css carries them down
   // to every skin and face, so a band tile and a floating frame wear the same.
   if (style !== 'fill') el.classList.add(`urd-gallery-shape-${shape}`, `urd-gallery-look-${look}`);
   el.style.setProperty('--urd-frame-radius', `${clampRadius(props.radius)}px`);

@@ -72,8 +72,10 @@ test('each document the canvas or the live phone is asked for is a round of cove
   const preview = editorFile('state/preview.svelte.js');
   assert.match(preview, /function coverCanvas\(\) \{\s*canvasRound \+= 1;\s*canvasCovered = true;\s*canvasStep = 0;\s*clearTimeout\(coverWait\);/, 'a new round covers the canvas, its drawing from the start, and takes the last wait with it');
   assert.match(preview, /async function onReady\(\) \{\s*\/\/[^\n]*\n\s*const round = canvasRound;\s*const own = bridge;\s*if \(canvasStep < 2\) canvasStep = 2;\s*try \{\s*await answerReady\(\);\s*\} finally \{\s*canvasOpened = true;\s*\/\/[^\n]*\n\s*if \(round === canvasRound && own === bridge\) own\?\.sendStartupDone\(round\);/, 'the start\'s end is sent after the start, or a start that failed, to its own document alone');
-  assert.match(preview, /function onShown\(msg\) \{\s*if \(msg\.round !== canvasRound\) return;\s*clearTimeout\(coverWait\);\s*canvasCovered = false;/, 'an earlier document\'s answer lifts nothing');
-  assert.match(preview, /const round = canvasRound;\s*clearTimeout\(coverWait\);\s*coverWait = setTimeout\(\(\) => \{ if \(round === canvasRound\) canvasCovered = false; \}, CANVAS_WAIT\);/, 'a canvas that never answers lets its cover go, an earlier round\'s wait never');
+  assert.match(preview, /function onShown\(msg\) \{\s*if \(msg\.round !== canvasRound\) return;\s*clearTimeout\(coverWait\);\s*liftCover\(\);/, 'an earlier document\'s answer lifts nothing');
+  assert.match(preview, /const round = canvasRound;\s*clearTimeout\(coverWait\);\s*coverWait = setTimeout\(\(\) => \{ if \(round === canvasRound\) liftCover\(\); \}, CANVAS_WAIT\);/, 'a canvas that never answers lets its cover go, an earlier round\'s wait never');
+  assert.match(preview, /function liftCover\(\) \{\s*if \(!canvasCovered\) return;\s*canvasCovered = false;\s*pageState\.fitMissingPhoneHeights\(\);/, 'the hidden phone preview waits for the cover to lift, once a round');
+  assert.equal((preview.match(/fitMissingPhoneHeights\(\)/g) ?? []).length, 1, 'and is asked for nowhere else');
   assert.match(preview, /coverCanvas\(\);\s*iframeEl\.src = iframeEl\.src;/, 'a canvas loaded again is covered again');
   const stage = editorFile('shell/PreviewStage.svelte');
   assert.match(stage, /\$effect\.pre\(\(\) => \{\s*void src;\s*untrack\(\(\) => ed\.coverCanvas\(\)\);\s*\}\);/, 'another page asked for is a new round, covered before the frame loads it');
