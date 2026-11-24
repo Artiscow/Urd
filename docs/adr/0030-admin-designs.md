@@ -27,3 +27,5 @@ Thirteen separate rows give no way to say «the whole admin like this», and a f
 ## Addendum
 
 24 November 2026 (0.7.39.2): the cover the canvas and the live phone stand under while a page loads («Canvas loading» in Urd settings) is one of decision 5's own settings of the owner, kept per browser and set by no design.
+
+24 November 2026 (0.7.0.96): the grid moved from a panel of its own into Urd settings; how it is drawn («Grid drawn as») is one of decision 5's own settings of the owner, kept per browser, and its cell size and snapping («Grid cell size», «Snap to grid», under «This site») are the site's own, shared by everyone who edits it; no design sets any of them.

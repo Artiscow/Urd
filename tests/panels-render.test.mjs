@@ -21,7 +21,7 @@ globalThis.matchMedia ??= () => ({ matches: false, addEventListener() {}, remove
 register('./_svelte-loader.mjs', import.meta.url);
 const { render } = await import('svelte/server');
 const { liftSiteFile } = await import('$engine/migrate.js');
-const NAMES = ['Pages', 'Nav', 'Site', 'Theme', 'Grid', 'Footer', 'Blocks', 'Properties', 'Collections', 'Plugins', 'History', 'Update'];
+const NAMES = ['Pages', 'Nav', 'Site', 'Theme', 'Footer', 'Blocks', 'Properties', 'Collections', 'Plugins', 'History', 'Update'];
 const panels = Object.fromEntries(await Promise.all(NAMES.map(async (name) => [name, (await import(`../editor/src/panels/${name}Panel.svelte`)).default])));
 const { default: BackgroundEditor } = await import('../editor/src/section/BackgroundEditor.svelte');
 const { default: Dropdown } = await import('../editor/src/lib/Dropdown.svelte');

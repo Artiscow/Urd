@@ -136,6 +136,24 @@ const PRESS = {
   spring: btn(24, 16, 16, 8) + `<path d="M18 14l-3-2M18 26l-3 2M46 14l3-2M46 26l3 2" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`,
 };
 
+/** How the grid is drawn: a block on the canvas under faint lines, under dots, or bare, the lines standing only round a block being dragged from its dashed place. */
+const gridLinesIn = (x0, y0, x1, y1, o = 0.24) => {
+  let out = '';
+  for (let x = x0; x <= x1; x += 8) out += `<path d="M${x} ${y0}V${y1}" stroke="currentColor" stroke-width="0.5" opacity="${o}"/>`;
+  for (let y = y0; y <= y1; y += 8) out += `<path d="M${x0} ${y}H${x1}" stroke="currentColor" stroke-width="0.5" opacity="${o}"/>`;
+  return out;
+};
+const gridDotsIn = (x0, y0, x1, y1) => {
+  let out = '';
+  for (let x = x0; x <= x1; x += 8) for (let y = y0; y <= y1; y += 8) out += `<circle cx="${x}" cy="${y}" r="0.8" fill="currentColor" opacity="0.5"/>`;
+  return out;
+};
+const GRID_LOOK_PICS = {
+  lines: gridLinesIn(8, 8, 56, 32) + block(16, 12, 24, 16),
+  dots: gridDotsIn(8, 8, 56, 32) + block(16, 12, 24, 16),
+  drag: `<rect x="10.5" y="8.5" width="24" height="16" rx="1" stroke="currentColor" stroke-dasharray="2 2" opacity="0.45"/>` + gridLinesIn(16, 8, 56, 32, 0.3) + block(24, 16, 24, 16),
+};
+
 /** What covers the canvas while its page loads: the canvas with each look's drawing finished at its middle (canvas-cover.js). */
 const CANVAS_COVERS = Object.fromEntries(COVER_LOOKS.map((id) => [id, coverPicture(id)]));
 
@@ -349,6 +367,7 @@ const LOOKS = {
   phoneColumn: PHONE_COLUMNS,
   press: PRESS,
   canvasCover: CANVAS_COVERS,
+  gridLook: GRID_LOOK_PICS,
   tabMenus: TAB_MENUS,
   sidebarFolds: SIDEBAR_FOLDS,
   dragMark: DRAG_MARKS,

@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.96 - Bug Fixes: the phone order column through the phone view, the grid in Urd settings, and the settings list folded by a click - 24 November 2026
+
+- The phone order column stood only while the Phone panel was open, so switching to the phone view from another panel left the order out of reach (from BACKLOG's bug list). With «Phone panel» on «Order on the right» it stands through the phone view whatever panel is open, and on the desktop with the Phone panel as before.
+- The Grid panel held three settings in a tab of its own (from BACKLOG's bug list). The panel is gone: «Grid cell size», a slider, and «Snap to grid» stand under «Grid» in «This site», shared, since they are kept in the site, and «Grid drawn as» with its three pictures under «Editing», kept in this browser; Urd settings has a slider kind for it, and the section grid's hint moved into the cell size's tooltip.
+- A section of the Urd settings list opened and closed over and over with the mouse on the list's scrollbar over its entry (test finding; reproduced at 16 flips in 2 s), since opening it brought the scrollbar there, which took the mouse off it. The list keeps its scrollbar's room, and its sections open at a click and fold at the next click on them alone, several at once, never on a rest or a scroll; the sidebar of words keeps its scrollbar's room while its folds open on hover.
+- BACKLOG's delivered milestones 0.7.3 and 0.7.36 to 0.7.39 are one line each as the others are, and 0.7.28 stands in the v0.7 list, where it had stood under v0.8.
+
+The independent review before the commit found these:
+
+1. The phone order column, now standing through the phone view, stood under a table laid over the stage and stayed reachable by the keys there; it stands aside while one does.
+2. «This site» showed twice in the settings, since the shared Grid section stood first in its group; the group's own section stands first.
+3. The gone panel's intro and three keys no code read stayed in the dictionaries, ADR-0030 and its test did not name the grid's settings as the owner's and the site's own, and ARCHITECTURE.md, the Phone panel's comment and the settings memory's comment still described the old places; each is fixed, and tests hold the column's place and the slider's drawing.
+
 ### 0.7.39.3 - The loading cover's drawing shows at once - 24 November 2026
 
 - On urdweb the cover's ground came at once but its drawing visibly after, since the drawing waited 0.3 s, faded in over 0.2 s and was drawn from nothing. It now shows as the cover goes up, faded in over 0.1 s, its first part drawn (the load's first point, `COVER_POINTS` in lib/canvas-cover.js), and is drawn on as the load goes; measured locally, it is fully visible 0.1 s after the cover, where it took 0.5 s.
@@ -24,7 +37,7 @@ The independent review before the commit found these:
 - The cover is the canvas's own dotted ground, its dots in line with the ground around the canvas, and its drawing shows after 0.3 s and is drawn as the load goes, each step of the canvas carrying it further and the answer finishing it; reduced motion shows it whole and still.
 - «Canvas loading» in Urd settings chooses the drawing, with a picture of each: Rune circle (the default), Runes carved, Tiles and Runestone (`lib/canvas-cover.js`); ADR-0030 has an addendum naming it among the owner's own settings.
 - The preview loads the rest of the engine once the start is answered, and the answer waits for the plugins only where the page draws a type of theirs or its language comes from one, since the template's Swedish pack held every open about half a second.
-- The canvas frame keeps waiting for the saved drafts' meeting where it waits now, as BACKLOG 0.7.39.2 records.
+- The canvas frame keeps waiting for the saved drafts' meeting where it waits now; ARCHITECTURE.md (Startup) says why.
 
 The independent review before the commit found these:
 

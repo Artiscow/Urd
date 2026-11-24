@@ -131,7 +131,7 @@ test('the shell renders the workspace with every panel open in turn, from the mo
   const site = liftSiteFile(JSON.parse(readFileSync(new URL('../template/content/site.json', import.meta.url), 'utf8')));
   siteState.site = site;
   siteState.siteDraft = structuredClone(site);
-  for (const panel of ['pages', 'nav', 'site', 'theme', 'blocks', 'grid', 'properties', 'footer', 'collections', 'plugins', 'history', 'update', 'settings']) {
+  for (const panel of ['pages', 'nav', 'site', 'theme', 'blocks', 'properties', 'footer', 'collections', 'plugins', 'history', 'update', 'settings']) {
     shellState.activePanel = panel;
     const { body } = render(App);
     assert.match(body, /class="rail/, `${panel}: the rail is drawn`);

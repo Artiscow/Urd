@@ -36,6 +36,9 @@ function ctx() {
     canvasCover: 'circle',
     DRAG_MARK_OPTIONS: [['slot', 'Slot'], ['line', 'Line']],
     dragMark: 'slot',
+    GRID_LOOK_OPTIONS: ['lines', 'dots', 'drag'].map((id) => [id, id]),
+    gridLook: 'lines',
+    grid: { size: 16, snap: true },
     TAB_MENU_OPTIONS: ['groups', 'lines', 'plain'].map((id) => [id, id]),
     tabMenus: 'groups',
     tabMenuStay: 'stay',
@@ -111,7 +114,7 @@ test('the search keeps the settings a word of the query names, and the sheet spl
   // The admin design is found by a design's name.
   assert.deepEqual(visibleGroups('small panels', null, c).map((g) => g.id), ['design']);
   const all = visibleGroups('', null, c);
-  assert.deepEqual(all.map((g) => g.id), ['design', 'menu', 'panels', 'open', 'canvas', 'look', 'editing', 'window', 'site']);
+  assert.deepEqual(all.map((g) => g.id), ['design', 'menu', 'panels', 'open', 'canvas', 'look', 'editing', 'window', 'site', 'grid']);
   // A setting under another (`parent`) stands with it, so «After a pick» goes with «Panel menus» into the look and brings it into the rest.
   const look = visibleGroups('', 'look', c).flatMap((g) => g.settings);
   assert.ok(look.every((s) => s.look || look.some((p) => p.id === s.parent)));
@@ -121,8 +124,12 @@ test('the search keeps the settings a word of the query names, and the sheet spl
   assert.ok(plain.every((s) => !s.look || plain.some((child) => child.parent === s.id) || plain.some((p) => p.id === s.parent)));
   assert.deepEqual(new Set([...look, ...plain].map((s) => s.id)), new Set(all.flatMap((g) => g.settings).map((s) => s.id)));
   assert.deepEqual(visibleGroups('spellcheck', null, c).map((g) => [g.id, g.settings.map((s) => s.id)]), [['editing', ['spellcheck']]]);
+  // The grid's size and snapping are the site's, shared, and how it is drawn this browser's own; a search for the grid finds all three.
+  assert.deepEqual(visibleGroups('grid', null, c).map((g) => [g.id, g.settings.map((s) => s.id)]), [['editing', ['gridLook']], ['grid', ['gridSize', 'gridSnap']]]);
+  assert.equal(row('gridSize').get(c), 16);
+  assert.equal(row('gridSnap').get({ ...c, ed: { ...c.ed, grid: { size: 16, snap: false } } }), 'off');
   c.ed.siteDraft = null;
-  assert.ok(!visibleGroups('', null, c).some((g) => g.id === 'site'));
+  assert.ok(!visibleGroups('', null, c).some((g) => g.id === 'site' || g.id === 'grid'));
 });
 
 test('the panel to start with stands under its choice only while «Always the same panel» is chosen, and a search for either shows both', () => {
@@ -144,7 +151,7 @@ test('the sections stand in three groups: the admin design with every part, Loca
   assert.deepEqual(SETTINGS_BANDS.map((b) => b.id), ['design', 'local', 'site']);
   for (const group of SETTINGS_GROUPS) assert.ok(SETTINGS_BANDS.some((b) => b.id === group.band), `${group.id} stands in a group`);
   const bands = inBands(visibleGroups('', null, c));
-  assert.deepEqual(bands.map((b) => [b.id, b.groups.map((g) => g.id)]), [['design', ['design', 'menu', 'panels', 'open', 'canvas']], ['local', ['look', 'editing', 'window']], ['site', ['site']]]);
+  assert.deepEqual(bands.map((b) => [b.id, b.groups.map((g) => g.id)]), [['design', ['design', 'menu', 'panels', 'open', 'canvas']], ['local', ['look', 'editing', 'window']], ['site', ['site', 'grid']]]);
   const settings = (band) => SETTINGS_GROUPS.filter((g) => g.band === band).flatMap((g) => g.settings);
   assert.ok(settings('design')[0].design, 'the admin design stands first');
   assert.ok(settings('design').slice(1).every((s) => s.part), 'every row under the admin design is one of its parts');

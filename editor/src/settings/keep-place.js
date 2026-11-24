@@ -1,5 +1,5 @@
 /**
- * Where the Urd settings were left, kept for as long as the tab is open (sessionStorage): each scroll of the window's forms, and the entry the dialog's list holds open.
+ * Where the Urd settings were left, kept for as long as the tab is open (sessionStorage): each scroll of the window's forms, and the entries the dialog's list holds open.
  * A scroll's place is the setting row at its top and how far past that row's top it stood, so a row above it that grows or hides moves nothing; the scroll's own offset is the fallback when that row is gone.
  * A scroll at its top keeps no place, and a search clears it and keeps none while it stands, since its rows are not the window's own; the window then opens at the top.
  */

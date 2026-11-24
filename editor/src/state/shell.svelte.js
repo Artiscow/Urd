@@ -11,7 +11,7 @@ import { PHONE_PANEL_LAYOUTS, PHONE_COLUMN_LOOKS } from '../lib/phone-panel.js';
 import { tick } from 'svelte';
 import { ICONS } from '../lib/icons.js';
 import { opensShortcuts, togglesGrid } from '../lib/shortcuts.js';
-import { gridLookOf } from '$engine/snap-model.js';
+import { GRID_LOOKS, gridLookOf } from '$engine/snap-model.js';
 import { UPDATE_NOTICES, updateNoticeForm } from '../lib/update-notice.js';
 import { SETTINGS_PLACES, settingsPlace as settingsPlaceOf, settingsPictures as settingsPicturesOf } from '../lib/settings-model.js';
 import { ADMIN_LAYOUTS } from '../lib/admin-designs.js';
@@ -476,7 +476,7 @@ function unfoldPanel() {
  *  The ids are stable English identifiers (never display text); PANEL_LABELS owns what the user sees.
  *  Drafts stands first in the System group as a tab of its own, which opens the Drafts window (state/drafts.svelte.js) rather than a panel. */
 const PANEL_GROUPS = [
-  ['pages', 'blocks', 'properties', 'grid', 'phone'],
+  ['pages', 'blocks', 'properties', 'phone'],
   ['site', 'legal', 'theme', 'nav', 'footer', 'collections', 'plugins'],
   ['drafts', 'history', 'update'],
 ];
@@ -533,7 +533,6 @@ const PANELS_START_OPTIONS = $derived(PANEL_IDS.map((id) => [id, PANEL_LABELS[id
 const PANEL_INTROS = {
   pages: ['hint.pages.drafts'],
   blocks: ['hint.blocks.intro'],
-  grid: ['hint.grid.intro', 'hint.grid.section'],
   phone: ['hint.phone.intro'],
   collections: ['hint.collections.intro'],
   plugins: ['hint.plugins.intro'],
@@ -1033,6 +1032,8 @@ function setGridLook(v) {
   if (guidesOn) previewState.bridge?.sendShowGuides(true);
 }
 
+const GRID_LOOK_OPTIONS = $derived(GRID_LOOKS.map((id) => [id, ta(`opt.gridLook.${id}`)]));
+
 /* Submenu (one level, additive): the children always have their own
  * target; the parent can additionally be a pure opener ('__none' in
  * setNavTarget). */
@@ -1436,6 +1437,7 @@ export const shellState = {
   set gridOn(v) { gridOn = v; },
   toggleGrid,
   get gridLook() { return gridLook; },
+  get GRID_LOOK_OPTIONS() { return GRID_LOOK_OPTIONS; },
   setGridLook,
   get panelEl() { return panelEl; },
   set panelEl(v) { panelEl = v; },

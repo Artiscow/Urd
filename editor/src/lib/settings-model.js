@@ -37,7 +37,7 @@ export const SETTINGS_BANDS = [
 
 /**
  * The sections, each in its group (`band`), and in each section the settings.
- * `kind`: `choice` (one of the options; a picture per option when `look` names a picture set and the pictures are on), `seg` (a few words side by side) and `text` (a text field).
+ * `kind`: `choice` (one of the options; a picture per option when `look` names a picture set and the pictures are on), `seg` (a few words side by side), `range` (a number from `min` to `max` in steps of `step`, shown in `unit`) and `text` (a text field).
  * `design` on a setting: it is the admin design, read and chosen through the context's `designs`, with the parts that differ and the ways back beside it.
  * `tipKey` on a section: what its settings act on, shown on its heading.
  * `shared` on a section: its values live in the site and are shared by everyone who edits it.
@@ -214,6 +214,8 @@ export const SETTINGS_GROUPS = [
         get: (c) => c.ed.spellcheckPref, set: (c, v) => c.ed.setSpellcheck(v) },
       { id: 'dragMark', labelKey: 'settings.dragMark', tipKey: 'tip.settings.dragMark', kind: 'choice', look: 'dragMark',
         options: (c) => c.ed.DRAG_MARK_OPTIONS, get: (c) => c.ed.dragMark, set: (c, v) => c.ed.setDragMark(v) },
+      { id: 'gridLook', labelKey: 'settings.gridLook', tipKey: 'tip.gridLook', kind: 'choice', look: 'gridLook',
+        options: (c) => c.ed.GRID_LOOK_OPTIONS, get: (c) => c.ed.gridLook, set: (c, v) => c.ed.setGridLook(v) },
     ],
   },
   {
@@ -240,6 +242,21 @@ export const SETTINGS_GROUPS = [
         options: (c) => c.ed.UPDATE_NOTICE_OPTIONS, get: (c) => c.ed.siteDraft?.admin?.updateNotice ?? 'dot', set: (c, v) => c.ed.setUpdateNotice(v) },
       { id: 'analytics', labelKey: 'lbl.analyticsToken', tipKey: 'tip.analytics', kind: 'text', placeholderKey: 'ph.analyticsToken',
         get: (c) => c.ed.siteDraft?.analytics?.token ?? '', set: (c, v) => c.ed.setAnalyticsToken(v) },
+    ],
+  },
+  {
+    id: 'grid',
+    band: 'site',
+    labelKey: 'settings.group.grid',
+    tipKey: 'tip.settings.shared',
+    shared: true,
+    when: (c) => !!c.ed.siteDraft,
+    settings: [
+      { id: 'gridSize', labelKey: 'settings.gridSize', tipKey: 'tip.gridSize', kind: 'range', min: 4, max: 96, step: 2, unit: 'px',
+        get: (c) => c.ed.grid?.size ?? 16, set: (c, v) => c.ed.setGrid('size', v) },
+      { id: 'gridSnap', labelKey: 'lbl.gridSnap', tipKey: 'tip.gridSnap', kind: 'seg',
+        options: (c) => [['on', c.ta('common.on')], ['off', c.ta('common.off')]],
+        get: (c) => (c.ed.grid?.snap === false ? 'off' : 'on'), set: (c, v) => c.ed.setGrid('snap', v === 'on') },
     ],
   },
 ];

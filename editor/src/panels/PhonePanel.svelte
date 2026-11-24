@@ -2,7 +2,7 @@
   /* The Phone panel (0.7.3.13): what is set for the phone, gathered in one place; each setting stands in the Nav or Site panel, or in the section's or the block's menu too.
      The section is the one at work on the canvas; where none is, as the panel opens or another page loads, the topmost one mostly in view, else the first. Another is picked at the top, which brings it into view.
      Under it stand the folds of the whole site (the menu on the phone from the Nav panel, the space between blocks for every section from the Site panel) and of this section (PhoneSectionRows, one part per fold), with their values while closed.
-     The section's blocks in their order (phone/PhoneOrder.svelte) stand where Urd settings «Phone panel» puts them (lib/phone-panel.js): in a column of their own at the stage's right edge (phone/PhoneDock.svelte, drawn by App.svelte while this panel stands), first in the panel, or in a fold under its settings. */
+     The section's blocks in their order (phone/PhoneOrder.svelte) stand where Urd settings «Phone panel» puts them (lib/phone-panel.js): in a column of their own at the stage's right edge (phone/PhoneDock.svelte, drawn by App.svelte through the phone view, and on the desktop while this panel stands), first in the panel, or in a fold under its settings. */
   import { getContext, onMount, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sectionWords } from '$engine/anchor-model.js';

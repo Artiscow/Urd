@@ -15,7 +15,6 @@
   import Dropdown from './lib/Dropdown.svelte';
   import PagesPanel from './panels/PagesPanel.svelte';
   import BlocksPanel from './panels/BlocksPanel.svelte';
-  import GridPanel from './panels/GridPanel.svelte';
   import PhonePanel from './panels/PhonePanel.svelte';
   import PhoneDock from './panels/phone/PhoneDock.svelte';
   import PropertiesPanel from './panels/PropertiesPanel.svelte';
@@ -186,8 +185,6 @@
             <LazyPart name="ThemePanel" />
           {:else if ed.activePanel === 'blocks'}
             <BlocksPanel />
-          {:else if ed.activePanel === 'grid'}
-            <GridPanel />
           {:else if ed.activePanel === 'phone'}
             <PhonePanel />
           {:else if ed.activePanel === 'properties'}
@@ -216,8 +213,8 @@
         {#if ed.livePhoneOn && ed.viewMode === 'desktop' && ed.chromeVisible && !ed.looking && !stageTable}
           <LazyPart name="LivePhone" />
         {/if}
-        <!-- The Phone panel's blocks in their order in a column of their own at the stage's right edge, while the panel stands (Urd settings «Phone panel») -->
-        {#if ed.activePanel === 'phone' && ed.phonePanelPref === 'dock' && ed.chromeVisible && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)}
+        <!-- The page's blocks in their phone order in a column of their own at the stage's right edge (Urd settings «Phone panel»): through the phone view, whatever panel stands, and on the desktop while the Phone panel stands; not under a table that stands over the stage -->
+        {#if ed.phonePanelPref === 'dock' && ed.chromeVisible && !stageTable && (ed.viewMode === 'mobile' || (ed.activePanel === 'phone' && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)))}
           <PhoneDock />
         {/if}
         {#if ed.csvImport?.view === 'table' && ed.chromeVisible}

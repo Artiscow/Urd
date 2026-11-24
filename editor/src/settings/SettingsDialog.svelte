@@ -1,9 +1,9 @@
 <script>
   /**
    * Urd's own settings over the admin, in the form «Settings window» asks for: the dialog with the sections down the left in their three groups (Admin layout, Local settings, This site), a search above them and every section's rows at the right, in one scroll a section button jumps in and the list follows;
-   * each section's entry folds out to its settings, which jump to their rows, the setting in view marked: on a rest of the mouse for as long as it stays, and held open by a press until it or another entry is pressed, while a rest on another still opens that one beside it; scrolled by hand, the entry held open follows the section in view;
+   * each section's entry folds out to its settings at a press and back at the next press, and at nothing else, so several can stand open; its settings jump to their rows, the setting in view marked;
    * or the sheet, with the look choices at the left and the rest as rows at the right. Both end in the way to the shortcut sheet and the version.
-   * It opens where it was left while the tab is open: each scroll at the row it stood at, and the entry the list held open (keep-place.js).
+   * It opens where it was left while the tab is open: each scroll at the row it stood at, and the entries the list holds open (keep-place.js).
    * A native modal dialog (ADR-0011) like the shortcut sheet: Escape is its own cancel, and a press outside the card closes it.
    */
   import { getContext } from 'svelte';
@@ -32,7 +32,7 @@
   const navBands = $derived(inBands(navGroups));
   /** The section marked in the list: the one in view, or the first one a search leaves when it hides that one. */
   const marked = $derived(navGroups.some((g) => g.id === current) ? current : navGroups[0]?.id);
-  const GROUP_ICONS = { design: 'designs', menu: 'panel_properties', panels: 'foldLeft', open: 'external', canvas: 'panel_grid', look: 'panel_theme', editing: 'pencil', window: 'device_desktop', site: 'panel_site' };
+  const GROUP_ICONS = { design: 'designs', menu: 'panel_properties', panels: 'foldLeft', open: 'external', canvas: 'panel_grid', look: 'panel_theme', editing: 'pencil', window: 'device_desktop', grid: 'gridToggle', site: 'panel_site' };
 
   const close = () => dialogEl?.close();
 
@@ -51,26 +51,23 @@
     if (dialogEl && !dialogEl.open) dialogEl.showModal();
   });
 
-  /** A section button scrolls its section to the top of the content and holds its entry open; pressed while it is held, it folds the entry back, even under the resting mouse, and leaves the scroll where it is. */
-  function jump(id) {
-    if (held === id) {
-      held = null;
-      rested = null;
-      clearTimeout(restTimer);
+  /** A section button scrolls its section to the top of the content and opens its entry (`folds`, where it lists its settings); pressed while open, it folds the entry back and leaves the scroll where it is. */
+  function jump(id, folds = true) {
+    if (folds && opened.includes(id)) {
+      opened = opened.filter((open) => open !== id);
       return;
     }
+    if (folds) opened = [...opened, id];
     current = id;
-    held = id;
     byHand = false;
     jumpedRow = null;
     contentEl?.querySelector(`#st-sec-${id}`)?.scrollIntoView({ block: 'start', behavior: ed.reducedMotion ? 'auto' : 'smooth' });
   }
 
-  /** A setting under an entry scrolls its row to the middle of the content and lights it for a moment, its section's entry held open; a setting without a row of its own (the presets) brings its section to the top. */
+  /** A setting under an entry scrolls its row to the middle of the content and lights it for a moment; a setting without a row of its own (the presets) brings its section to the top. */
   let flashTimer = 0;
   function jumpTo(groupId, settingId) {
     current = groupId;
-    held = groupId;
     byHand = false;
     const row = contentEl?.querySelector(`#st-sec-n-${settingId}`)?.closest('.st-row');
     jumpedRow = row ?? null;
@@ -90,27 +87,14 @@
   }
   $effect(() => () => clearTimeout(flashTimer));
 
-  /* The entries that stand folded out: the one a press holds open, and the one the mouse rests on, after a moment so a pointer passing over the list opens nothing; leaving an entry folds it back unless it is held.
-     Only a mouse rests: a touch or a pen opens an entry by its press (the hybrid-device guard, AGENTS.md). */
-  let held = $state(recall('held'));
-  let rested = $state(null);
-  $effect(() => remember('held', held));
-  let restTimer = 0;
-  function restOn(event, id) {
-    if (event.pointerType !== 'mouse') return;
-    clearTimeout(restTimer);
-    restTimer = setTimeout(() => (rested = id), 160);
-  }
-  function restOff(event, id) {
-    if (event.pointerType !== 'mouse') return;
-    clearTimeout(restTimer);
-    if (rested === id) rested = null;
-  }
-  $effect(() => () => clearTimeout(restTimer));
+  /* The entries that stand folded out, each opened by a press on it and folded back by the next press on it alone. */
+  const keptOpen = recall('opened');
+  let opened = $state(Array.isArray(keptOpen) ? keptOpen.filter((id) => typeof id === 'string') : []);
+  $effect(() => remember('opened', opened.length ? $state.snapshot(opened) : null));
   /** Whether an entry lists its settings: not a section whose one setting bears its own name (the presets). */
   const listsSettings = (group) => !(group.settings.length === 1 && group.settings[0].labelKey === group.labelKey);
 
-  /** Whether the content is scrolled by hand (the wheel, a finger, the keys or the scrollbar), so the entry held open follows the section in view; a jump from the list scrolls by itself and leaves the entries as it set them. */
+  /** Whether the content is scrolled by hand (the wheel, a finger, the keys or the scrollbar), which ends the mark of a row a press brought into view; a jump from the list scrolls by itself. */
   let byHand = false;
   const scrollingByHand = () => { byHand = true; };
 
@@ -141,7 +125,6 @@
     }
     const el = atEnd ? sections[sections.length - 1] : seen;
     const id = el.id.replace('st-sec-', '');
-    if (byHand && held && held === current && id !== current) held = id;
     current = id;
     const rows = [...el.querySelectorAll('.st-row')];
     let row = rows[0] ?? null;
@@ -201,10 +184,10 @@
             <span class="st-nav-band" title={ta(band.tipKey)}>{ta(band.labelKey)}</span>
             {#each band.groups as group (group.id)}
               {@const lists = listsSettings(group)}
-              {@const open = lists && (held === group.id || rested === group.id)}
-              <div class="st-nav-entry" role="presentation" onpointerenter={(e) => restOn(e, group.id)} onpointerleave={(e) => restOff(e, group.id)}>
+              {@const open = lists && opened.includes(group.id)}
+              <div class="st-nav-entry">
                 <button type="button" class="st-nav-item" aria-current={marked === group.id ? 'true' : undefined}
-                  aria-expanded={lists ? open : undefined} aria-controls={lists ? `st-nav-sub-${group.id}` : undefined} onclick={() => jump(group.id)}>
+                  aria-expanded={lists ? open : undefined} aria-controls={lists ? `st-nav-sub-${group.id}` : undefined} onclick={() => jump(group.id, lists)}>
                   {@html ICONS[GROUP_ICONS[group.id]] ?? ''}<span class="st-nav-name">{ta(group.labelKey)}</span>
                   {#if group.shared}<span class="st-nav-shared" title={ta('tip.settings.shared')}>{ta('settings.shared')}</span>{/if}
                 </button>
@@ -319,6 +302,7 @@
   }
 
   /* The list scrolls on its own where the window is too low for every section */
+  /* The scrollbar's room is kept whether it stands or not, so the entries keep their width as sections open and fold */
   .st-nav-list {
     display: flex;
     flex-direction: column;
@@ -326,6 +310,7 @@
     min-height: 0;
     overflow-y: auto;
     scrollbar-width: thin;
+    scrollbar-gutter: stable;
   }
 
   /* An entry and its settings, the entry across the list's width as the entries stand */

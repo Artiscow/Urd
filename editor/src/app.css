@@ -5586,6 +5586,8 @@
   .rail .side-more { display: inline-flex; margin-left: 0.6rem; opacity: 0.55; transition: transform 0.2s ease; }
   .rail .side-more.open { transform: rotate(90deg); }
   .rail .side-item { display: flex; flex-direction: column; }
+  /* Folds that open under a resting mouse keep the scrollbar's room, so a fold opening never brings a scrollbar over its word, which would close it again */
+  .rail.rest-folds { scrollbar-width: thin; scrollbar-gutter: stable; }
   .rail .side-folds { display: flex; flex-direction: column; padding-bottom: 0.2rem; }
   .rail .side-folds .side-fold:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) { padding-left: 1.7rem; font-size: 0.7rem; opacity: 0.62; }
   @media (prefers-reduced-motion: reduce) {

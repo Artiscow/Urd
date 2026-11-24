@@ -63,7 +63,7 @@
     </span>
   </nav>
 {:else if ed.adminLayout === 'sidebar'}
-  <nav class="rail" class:hidden={!ed.chromeVisible} aria-label={ta('rail.panels')}>
+  <nav class="rail" class:hidden={!ed.chromeVisible} class:rest-folds={ed.sidebarFolds === 'hover'} aria-label={ta('rail.panels')}>
     {#each ed.PANEL_GROUPS as group, gi (gi)}
       <!-- Uppercase label above each group: page tools, site settings
            and system read as three levels. -->

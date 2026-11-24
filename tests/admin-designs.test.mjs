@@ -91,7 +91,7 @@ test('every part with a row in the Urd settings is that row\'s part, every row m
   for (const part of PARTS.filter((p) => !p.setting)) assert.match(part.builds ?? '', /^0\.7\.33\.\d+$/, `${part.id} names the step that builds it`);
   // The element menu's row offers every form (0.7.33.6).
   assert.deepEqual(PARTS.find((p) => p.id === 'menu').options, ['wide', 'narrow', 'docked', 'docked-tabs', 'tabs']);
-  for (const id of ['theme', 'language', 'press', 'canvasCover', 'pictures', 'spellcheck', 'dragMark', 'panels', 'panelsStart', 'updateNotice', 'analytics']) {
+  for (const id of ['theme', 'language', 'press', 'canvasCover', 'pictures', 'spellcheck', 'dragMark', 'gridLook', 'panels', 'panelsStart', 'updateNotice', 'analytics', 'gridSize', 'gridSnap']) {
     assert.ok(!rows.find((r) => r.id === id)?.part, `${id} is the owner's or the site's own, never a part`);
   }
 });

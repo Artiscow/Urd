@@ -1,5 +1,5 @@
 <script>
-  /* One Urd setting's control (lib/settings-model.js): a picture per option when the setting has a look and the pictures are on (lib/settings-pictures.js), each with the option's own tooltip where it has one, else a themed dropdown; a few words side by side in the row kit's segment for a two-way choice; and a text field.
+  /* One Urd setting's control (lib/settings-model.js): a picture per option when the setting has a look and the pictures are on (lib/settings-pictures.js), each with the option's own tooltip where it has one, else a themed dropdown; a few words side by side in the row kit's segment for a two-way choice; the row kit's slider for a number in a range, its value in its unit beside it; and a text field.
      `c` is the settings' context the row reads and writes through (state/admin-design.svelte.js settingsContext), `label` the setting's name for a screen reader on the segment.
      `compact` is the panel's narrow column: the tiles wrap into fewer columns and carry their names as tooltips only. */
   import { ta } from '$engine/i18n.js';
@@ -7,6 +7,7 @@
   import Choice from '../lib/Choice.svelte';
   import { pictured } from '../lib/settings-model.js';
   import { settingPicture } from '../lib/settings-pictures.js';
+  import SliderRow from '../lib/rows/SliderRow.svelte';
 
   let { setting, c, pictures = 'pictures', compact = false, nameId, label = '' } = $props();
   const options = $derived(setting.options ? setting.options(c) : []);
@@ -28,6 +29,9 @@
   <Dropdown {value} {options} labelledby={nameId} onchange={(v) => setting.set(c, v)} />
 {:else if setting.kind === 'seg'}
   <Choice fill {label} {value} {options} onchange={(v) => setting.set(c, v)} />
+{:else if setting.kind === 'range'}
+  <div class="st-range"><SliderRow compact {label} {value} min={setting.min} max={setting.max} step={setting.step ?? 1} shown={setting.unit ? `${value} ${setting.unit}` : undefined}
+    oninput={(v) => setting.set(c, v)} /></div>
 {:else if setting.kind === 'text'}
   <input type="text" class="st-text" spellcheck="false" placeholder={setting.placeholderKey ? ta(setting.placeholderKey) : ''}
     aria-labelledby={nameId} value={value} onchange={(e) => setting.set(c, e.target.value)} />
@@ -105,6 +109,18 @@
 
   .compact .st-tile-name {
     display: none;
+  }
+
+  /* The slider takes the row's width beside the setting's name */
+  .st-range {
+    width: 100%;
+    min-width: 10rem;
+  }
+
+  /* In the accent, as a panel's sliders are (app.css .panel-body) */
+  .st-range :global(input[type='range']) {
+    width: 100%;
+    accent-color: var(--urd-color-accent, #7c5cff);
   }
 
   /* A text field in the admin's own box: the darker ground, a faint border that turns to the accent while it has the focus */

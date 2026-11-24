@@ -46,6 +46,6 @@ test('the page\'s tabs: the column folds without a panel, and its handle opens t
   assert.equal(unfoldedPanel('page-tabs', null, 'theme'), 'theme');
   assert.equal(unfoldedPanel('page-tabs', null, null), 'pages');
   assert.equal(unfoldedPanel('page-tabs', null, 'settings'), 'pages', 'the settings panel is never reopened by the handle');
-  assert.equal(unfoldedPanel('page-tabs', 'grid', 'theme'), 'grid', 'a panel already open stays');
+  assert.equal(unfoldedPanel('page-tabs', 'phone', 'theme'), 'phone', 'a panel already open stays');
   assert.equal(unfoldedPanel('panel-tabs', null, 'theme'), null);
 });

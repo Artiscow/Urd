@@ -2,6 +2,15 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.96): the phone order column, the grid in Urd settings, and the settings list by click
+
+- [ ] With «Phone panel» on «Order on the right», switching to the phone view with another panel open (Pages, Site) shows «Blocks in their order» at the stage's right; back on the desktop it goes, and stands again while the Phone panel is open
+- [ ] The panel strip has no Grid tab; in Urd settings, «This site» shows «This site» and then «Grid», marked Shared, with «Grid cell size» as a slider in the accent and «Snap to grid»; «Editing» shows «Grid drawn as» with pictures of Lines, Dots and In a drag
+- [ ] Dragging «Grid cell size» and switching «Snap to grid» off change the grid on the canvas at once, and both are kept after a publish and a reload
+- [ ] A search for «grid» in Urd settings finds all three grid settings
+- [ ] In the Urd settings list, a section opens at a click and folds only at a second click on it; resting the mouse on a section or on the list's scrollbar opens or closes nothing, two sections can stand open together, and scrolling the settings folds nothing
+- [ ] With the sidebar of words and «Folds in the sidebar» on hover, resting the mouse on a word near the sidebar's scrollbar opens its folds once, without flickering
+
 ### Test batch (0.7.39.3): the cover's drawing at once
 
 - [ ] On urdweb, opening the editor and switching pages shows the cover's drawing together with its dotted ground, with part of it already drawn, never the ground alone first
