@@ -19,6 +19,7 @@ import { panelsPrefOf, panelsPrefsFor, startPanels, PANELS_START_DEFAULT, foldsE
 import { COLLECTION_LAYOUTS, collectionLayoutOf, CSV_PREVIEWS, csvPreviewOf } from '../lib/collection-layout.js';
 import { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf } from '../lib/page-settings.js';
 import { PRESS_FEELS, pressFeelOf, pressTarget, ripple } from '../lib/press-feel.js';
+import { COVER_LOOKS, coverLookOf } from '../lib/canvas-cover.js';
 import { TAB_MENU_STYLES, tabMenuStyleOf } from '../lib/panel-folds.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
@@ -786,6 +787,19 @@ function setPressFeel(v) {
 
 const PRESS_OPTIONS = $derived(PRESS_FEELS.map((id) => [id, ta(`opt.press.${id}`)]));
 
+/** What covers the desktop canvas and the live phone while a page loads (Urd settings «Canvas loading», lib/canvas-cover.js): the rune circle by default, not stored; kept per browser. */
+const CANVAS_COVER_KEY = 'urd-canvas-cover';
+
+let canvasCover = $state(coverLookOf(localStorage.getItem(CANVAS_COVER_KEY)));
+
+function setCanvasCover(v) {
+  canvasCover = coverLookOf(v);
+  if (canvasCover === 'circle') localStorage.removeItem(CANVAS_COVER_KEY);
+  else localStorage.setItem(CANVAS_COVER_KEY, canvasCover);
+}
+
+const CANVAS_COVER_OPTIONS = $derived(COVER_LOOKS.map((id) => [id, ta(`opt.canvasCover.${id}`)]));
+
 /** How a list shows where a dragged row will land (Urd settings «Moving rows», lib/rows/row-drag.svelte.js): the slot by default, not stored, or the line; kept per browser. */
 const DRAG_MARK_KEY = 'urd-drag-mark';
 const DRAG_MARKS = ['slot', 'line'];
@@ -1386,6 +1400,9 @@ export const shellState = {
   setPanelTabMenus,
   setPressFeel,
   get PRESS_OPTIONS() { return PRESS_OPTIONS; },
+  get canvasCover() { return canvasCover; },
+  setCanvasCover,
+  get CANVAS_COVER_OPTIONS() { return CANVAS_COVER_OPTIONS; },
   get dragMark() { return dragMark; },
   setDragMark,
   get DRAG_MARK_OPTIONS() { return DRAG_MARK_OPTIONS; },

@@ -53,6 +53,7 @@
  *                  { type: 'urd-edit-on-phone', sectionId } (a section showing its phone layout in the desktop view, its words too narrow there: «Edit on the phone» on its bar opens it in the phone view)
  *                  { type: 'urd-block-design', sectionId, blockId, phone? } (open the design picker for the block, from the design button on its toolbar; `phone` from the phone view: its design on a phone)
  *                  { type: 'urd-ready' }                      (the engine is listening; safe to send drafts)
+ *                  { type: 'urd-shown', round }               (what the editor's start sent is drawn and painted; answers urd-startup-done with its round)
  *                  { type: 'urd-plugin-blocks', blocks }      (the plugin blocks: type/label/defaults for the Blocks panel)
  *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
  *                  { type: 'urd-picture-edit', kind, sectionId?, blockId?, index?, collection?, entryId?, frameRatio, frameWidth, frameHeight } (a picture on the canvas asks the image editor to open: an image block's, a video's cover, a gallery picture, a collection entry's or a quote's portrait, with its frame's width over its height and its size in pixels as drawn)
@@ -114,7 +115,7 @@
  */
 
 /** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. The review cards' places and the phone view's bars and menu pass so the editor holds what the page last sent; it draws none of them while a draft is looked at. */
-const LOOK_PASSES = new Set(['urd-ready', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards', 'urd-block-bar', 'urd-section-bar', 'urd-nav-bar', 'urd-ctx-close']);
+const LOOK_PASSES = new Set(['urd-ready', 'urd-shown', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards', 'urd-block-bar', 'urd-section-bar', 'urd-nav-bar', 'urd-ctx-close']);
 
 /**
  * @param {HTMLIFrameElement} iframe The iframe showing the page with ?preview=1
@@ -162,6 +163,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     if (msg?.type === 'urd-edit-on-phone') handlers.onEditOnPhone?.(msg);
     if (msg?.type === 'urd-plugin-blocks') handlers.onPluginBlocks?.(msg);
     if (msg?.type === 'urd-ready') handlers.onReady?.(msg);
+    if (msg?.type === 'urd-shown') handlers.onShown?.(msg);
     if (msg?.type === 'urd-navigate') handlers.onNavigate?.(msg);
     if (msg?.type === 'urd-link-edit') handlers.onLinkEdit?.(msg);
     if (msg?.type === 'urd-add-block') handlers.onAddBlock?.(msg);
@@ -251,6 +253,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
      *  same on-screen size as the admin panels at any zoom level. */
     sendZoom(scale) {
       post({ type: 'urd-zoom', scale });
+    },
+    /** The editor's start is sent: the preview answers urd-shown with the same round once it has drawn it and the drawing is painted. */
+    sendStartupDone(round) {
+      post({ type: 'urd-startup-done', round });
     },
     /** A click in the admin panels closes any open menus in the preview. */
     sendCloseMenus() {

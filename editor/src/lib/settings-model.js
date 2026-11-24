@@ -198,6 +198,8 @@ export const SETTINGS_GROUPS = [
         options: (c) => [['auto', c.ta('lang.auto')], ...c.ed.adminLangOptions()], get: (c) => c.ed.adminLangChoice, set: (c, v) => c.ed.setAdminLang(v) },
       { id: 'press', labelKey: 'settings.press', tipKey: 'tip.settings.press', kind: 'choice', look: 'press',
         options: (c) => c.ed.PRESS_OPTIONS, get: (c) => c.ed.pressFeel, set: (c, v) => c.ed.setPressFeel(v) },
+      { id: 'canvasCover', labelKey: 'settings.canvasCover', tipKey: 'tip.settings.canvasCover', kind: 'choice', look: 'canvasCover',
+        options: (c) => c.ed.CANVAS_COVER_OPTIONS, get: (c) => c.ed.canvasCover, set: (c, v) => c.ed.setCanvasCover(v) },
       { id: 'pictures', labelKey: 'settings.pictures', tipKey: 'tip.settings.pictures', kind: 'seg',
         options: (c) => c.ed.SETTINGS_PICTURES_OPTIONS, get: (c) => c.ed.settingsPictures, set: (c, v) => c.ed.setSettingsPictures(v) },
     ],

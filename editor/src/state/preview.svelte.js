@@ -237,6 +237,11 @@ function onIframeLoad() {
   bridge?.destroy();
   // A canvas that never reports ready (a page that fails to boot) lets go of what waits for it all the same, a while after its frame has loaded.
   if (!canvasOpened) setTimeout(() => { canvasOpened = true; }, CANVAS_WAIT);
+  if (canvasStep < 1) canvasStep = 1;
+  // A canvas that never answers its start lets its cover go all the same, a while after its frame has loaded; a newer round takes the wait with it.
+  const round = canvasRound;
+  clearTimeout(coverWait);
+  coverWait = setTimeout(() => { if (round === canvasRound) canvasCovered = false; }, CANVAS_WAIT);
   // A click in the preview (block, text field, canvas) closes the block
   // menu and the top bar's tool menu. The iframe is same-origin, so we
   // listen directly. A press on a bar button that opens the menu (the gear,
@@ -293,6 +298,7 @@ function onIframeLoad() {
     onBlockDesign: pageState.onBlockDesign,
     onMenuArea: pageState.onMenuArea,
     onReady,
+    onShown,
     onNavigate,
     onLinkEdit,
     onAddBlock: (msg) => blocksState.insertBlock(msg.sectionId, msg.block, { fit: msg.fit === true, phone: blocksState.phoneOf(msg) }),
@@ -346,6 +352,21 @@ function onIframeLoad() {
 let pendingAnchor = '';
 /** Whether the canvas has answered its first handshake: what the admin reads for itself alone (the Legal panel's other pages) waits for it, so the canvas's own files are fetched first. */
 let canvasOpened = $state(false);
+/** Whether the canvas stands under its cover (lib/CanvasCover.svelte): from the moment it is asked for a document until that document has drawn the editor's start. */
+let canvasCovered = $state(true);
+/** How far the covered document has come, which the cover's drawing follows: 1 its frame loaded, 2 its page drawn (urd-ready). */
+let canvasStep = $state(0);
+/** The round of covering: each document the canvas is asked for has its own, and only its own start's answer, or its own wait, lifts the cover. */
+let canvasRound = 0;
+let coverWait = null;
+
+/** The canvas is asked for another document (another page, or the same loaded again): it is covered anew, its drawing from the start. */
+function coverCanvas() {
+  canvasRound += 1;
+  canvasCovered = true;
+  canvasStep = 0;
+  clearTimeout(coverWait);
+}
 /** How long after its frame has loaded a canvas that has not reported ready is waited for. */
 const CANVAS_WAIT = 5000;
 
@@ -360,11 +381,24 @@ function scrollOnReady(sectionId) {
 /** The engine in the iframe is listening now: send the draft and the current editor state. */
 /** The canvas's ready handshake answered: whatever happens in the answer, what waits for the canvas to open (canvasOpened) is let go. */
 async function onReady() {
+  // The answer belongs to this document's round and bridge: a canvas asked for another meanwhile has a start of its own.
+  const round = canvasRound;
+  const own = bridge;
+  if (canvasStep < 2) canvasStep = 2;
   try {
     await answerReady();
   } finally {
     canvasOpened = true;
+    // The start is sent, or failed: the preview answers with the round once it has drawn what came, and the cover lifts.
+    if (round === canvasRound && own === bridge) own?.sendStartupDone(round);
   }
+}
+
+/** The canvas has drawn the editor's start: its cover lifts, where the answer is the current round's. */
+function onShown(msg) {
+  if (msg.round !== canvasRound) return;
+  clearTimeout(coverWait);
+  canvasCovered = false;
 }
 
 async function answerReady() {
@@ -462,7 +496,9 @@ function onLinkEdit(msg) {
 
 /** Plugin changes require a fresh boot in the preview (an import cannot be undone); onReady sends the new list. */
 function reloadPreview() {
-  if (iframeEl) iframeEl.src = iframeEl.src;
+  if (!iframeEl) return;
+  coverCanvas();
+  iframeEl.src = iframeEl.src;
 }
 
 /** The panel's place in the list while Clean view has it hidden. */
@@ -640,6 +676,9 @@ export const previewState = {
   set iframeEl(v) { iframeEl = v; },
   get chromeVisible() { return chromeVisible; },
   get canvasOpened() { return canvasOpened; },
+  get canvasCovered() { return canvasCovered; },
+  get canvasStep() { return canvasStep; },
+  coverCanvas,
   /** The saved draft looked at in the canvas, or null. */
   get looking() { return look; },
   /** Counts the looks started and ended. */

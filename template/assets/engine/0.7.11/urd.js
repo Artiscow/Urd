@@ -370,6 +370,17 @@ function enablePreview(state, opts, queue) {
   /** The measures waiting per block for the editor's fit of its frame (urd-fit-block). */
   const fitTimers = new Map();
 
+  /** The plugin list last sent, loaded and drawn; the start's answer waits for it. */
+  let pluginsIn = Promise.resolve();
+  /** Whether every type, part and feature is in, which the background load asked for once (rest) brings. */
+  let allIn = false;
+  let restAsked = false;
+  const rest = () => {
+    if (restAsked) return;
+    restAsked = true;
+    queue.loadEverything(Urd).then(() => { allIn = true; });
+  };
+
   /** One message from the editor, or the preview's own redraw, handled in its turn. */
   const handle = (msg) => {
     // Pinning is wired once its module is in, which a page opened without a pinned block loads only as one comes.
@@ -575,12 +586,19 @@ function enablePreview(state, opts, queue) {
     } else if (msg?.type === 'urd-light' && Array.isArray(msg.ids)) {
       // A row under the pointer in the editor's lists (the Phone panel's order) lights its block, or its stack's blocks.
       window.UrdPreviewEdit?.lightBlocks?.(msg.ids, msg.sectionId);
+    } else if (msg?.type === 'urd-startup-done') {
+      // The start is drawn: the answer waits for its language, and its plugins where the page draws their type or language; then the rest of the engine comes in.
+      const needed = langOutOfSync() || needsPlugins(pageTypes(state.page, state.site.nav, state.site.footer), Urd);
+      Promise.all([langQueue, needed ? pluginsIn : null].map((step) => step?.catch(() => {}))).then(() => requestAnimationFrame(() => requestAnimationFrame(() => {
+        window.parent?.postMessage({ type: 'urd-shown', round: msg.round ?? null }, location.origin);
+        rest();
+      })));
     } else if (msg?.type === 'urd-plugins') {
       // The editor's plugin draft: load the enabled plugins (the files are
       // already in the repo) and rerender, so plugins work in the preview
       // BEFORE publishing.
       const before = definedCount();
-      loadPluginList(Urd, state.engine, msg.enabled).then(async () => {
+      pluginsIn = loadPluginList(Urd, state.engine, msg.enabled).then(async () => {
         // The list may have contained a LANGUAGE PACK: if the draft's
         // language was unknown when the site draft arrived (or at boot), it
         // is loaded now.
@@ -684,7 +702,6 @@ function enablePreview(state, opts, queue) {
   };
 
   // Until every type, part and feature is in, a message that draws loads what it draws first, and the messages after it wait in turn (preview-queue.js).
-  let allIn = false;
   const pending = (msg) => {
     if (allIn) return null;
     const drawn = queue.drawnBy(msg, state);
@@ -706,11 +723,12 @@ function enablePreview(state, opts, queue) {
   // Tell the editor the listener is attached: drafts sent before this
   // point would be lost (the iframe load happens before boot finishes).
   window.parent?.postMessage({ type: 'urd-ready' }, location.origin);
-  // Every other core type, design part and feature comes in the background at the first idle time after ready, so the canvas can add any of them.
-  const rest = () => queue.loadEverything(Urd).then(() => { allIn = true; });
-  if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(rest, { timeout: 2000 });
-  else setTimeout(rest, 300);
+  // The rest comes as the editor's start is drawn (urd-startup-done), or, for a frame that sends none, at an idle time a moment after ready.
+  setTimeout(() => (typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(rest, { timeout: 1000 }) : rest()), START_WAIT_MS);
 }
+
+/** How long after ready a preview whose editor sends no start (the design picker's, the phone fit's) waits before it loads the rest of the engine. */
+const START_WAIT_MS = 2500;
 
 /**
  * Asks for a background's image layer pictures ahead of its drawing, as such a layer stays hidden until its picture is in; resolves decoded or at READY_WAIT_MS.

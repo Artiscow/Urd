@@ -23,3 +23,7 @@ Thirteen separate rows give no way to say «the whole admin like this», and a f
 - The settings window (0.7.33.4 and 0.7.33.5) draws the design first and the parts under it; a part that has no effect while a design stands is hidden there.
 - The element menu's forms, the folds, the extra settings and the shortcuts are built (0.7.33.6), the toolbar on the blocks and the sections (0.7.33.7), and how a design is chosen (0.7.33.8), so every part has its row in Urd settings, and the default design is the admin a browser with nothing stored opens with.
 - Since the standing design is read from the parts, an owner who changes many parts by hand may see another design named as the nearest; the parts are the truth, and the name follows them.
+
+## Addendum
+
+24 November 2026 (0.7.39.2): the cover the canvas and the live phone stand under while a page loads («Canvas loading» in Urd settings) is one of decision 5's own settings of the owner, kept per browser and set by no design.

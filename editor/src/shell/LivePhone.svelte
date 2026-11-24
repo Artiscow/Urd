@@ -4,6 +4,7 @@
      With «Scroll together» on, scrolling the canvas scrolls the phone and scrolling the phone scrolls the canvas, each section reaching the top of both together.
      The frame stays the same through the switch, so the page in it is not loaded again.
      It is for looking: a press on a block opens it in the phone view, selected.
+     It stands under the canvas's cover (lib/CanvasCover.svelte) until its frame has drawn the first feed.
      The frame is the real page (`/?preview=1`) in the mobile viewport and Clean view, fed the drafts the canvas is drawn from, as the hidden phone frame of lib/phone-fit.js is; its own listener hears its own frame alone.
      The frame scrolls as a page does. The editor listens in the frame's own document, as it reads the canvas's: a press there acts on nothing on the page and opens the block under it, and the pointer over a block rings it. */
   import { getContext, untrack } from 'svelte';
@@ -14,6 +15,7 @@
   import Dropdown from '../lib/Dropdown.svelte';
   import { scrollMap, mapScroll } from '../lib/scroll-map.js';
   import { dockMotion, menuMotion } from '../lib/motion.svelte.js';
+  import CanvasCover from '../lib/CanvasCover.svelte';
   const ed = getContext('urd-editor');
 
   /** Changes close together are drawn once. */
@@ -73,6 +75,25 @@
   let shownPage = null;
   /** What the frame was last sent, so the site, the collections and the plugins go again only when they changed: each of them draws the whole page anew. */
   let sent = { site: '', collections: '', plugins: '' };
+  /** Whether the frame has drawn its first feed (urd-shown): until then the phone stands under its cover (lib/CanvasCover.svelte). */
+  let shown = $state(false);
+  /** How far the frame has come, which the cover's drawing follows: 1 loaded, 2 its page drawn (urd-ready). */
+  let phoneStep = $state(0);
+  /** The round of covering: each load of the frame has its own, and only its own answer, or its own wait, lifts the cover. */
+  let round = 0;
+  /** How long after its frame has loaded a phone that has not answered is waited for, as the canvas is. */
+  const COVER_WAIT = 5000;
+  let coverTimer = null;
+
+  /** A frame that never answers its first feed lets its cover go all the same, a while after it has loaded. */
+  function onFrameLoad() {
+    phoneStep = Math.max(phoneStep, 1);
+    const own = round;
+    clearTimeout(coverTimer);
+    coverTimer = setTimeout(() => { if (own === round) shown = true; }, COVER_WAIT);
+  }
+
+  $effect(() => () => clearTimeout(coverTimer));
 
   /** The phone's size: the Phone device's while it is a phone, else the phone's standard width; its height the device's, or the common phone's shape. */
   const phone = $derived.by(() => {
@@ -121,6 +142,10 @@
     // A plugin taken away cannot leave a page that has loaded it: the frame loads anew, as the canvas does.
     if (!first && sent.plugins && JSON.parse(sent.plugins).some((id) => !enabled.includes(id))) {
       ready = false;
+      shown = false;
+      phoneStep = 0;
+      round += 1;
+      clearTimeout(coverTimer);
       frame.src = src;
       return;
     }
@@ -151,6 +176,8 @@
     }
     // The page is drawn anew in the frame's next frames; the ring follows the selected block there.
     setTimeout(placePicked, SETTLE_MS);
+    // The first feed is all of the start: the frame answers once it has drawn it.
+    if (first) post({ type: 'urd-startup-done', round });
   }
 
   function feedSoon() {
@@ -174,10 +201,14 @@
     const msg = event.data;
     if (msg?.type === 'urd-ready') {
       ready = true;
+      phoneStep = 2;
       sent = { site: '', collections: '', plugins: '' };
       feed(true);
       listenInFrame();
       quietEmbeds();
+    } else if (msg?.type === 'urd-shown' && msg.round === round) {
+      clearTimeout(coverTimer);
+      shown = true;
     } else if (msg?.type === 'urd-redraw-section') {
       // A block whose phone design changed with its width asks for its section again, as it asks the canvas.
       feedSoon();
@@ -503,8 +534,9 @@
   {/if}
   <div class="lp-room" bind:clientWidth={roomW} bind:clientHeight={roomH}>
     <div class="lp-phone" style:width="{phoneBox.width}px" style:height="{phoneBox.height}px" style:--lp-scale={scale}>
-      <iframe bind:this={frame} {src} title={ta('livePhone.frame')} tabindex="-1" aria-hidden="true"
+      <iframe bind:this={frame} {src} title={ta('livePhone.frame')} tabindex="-1" aria-hidden="true" onload={onFrameLoad}
         style:width="{phone.width}px" style:height="{phone.height}px" style:transform="scale({scale})"></iframe>
+      <CanvasCover covered={!shown} step={phoneStep} look={ed.canvasCover} />
       <!-- The rings round the block under the pointer and the block selected on the canvas, over the frame and taking no pointer -->
       <div class="lp-rings" aria-hidden="true">
         {#if pickedBox}<span class="lp-ring picked" style:left="{pickedBox.left}px" style:top="{pickedBox.top}px" style:width="{pickedBox.width}px" style:height="{pickedBox.height}px"></span>{/if}

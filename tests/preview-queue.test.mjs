@@ -114,7 +114,7 @@ test('the preview draws its page as a visitor\'s, reports ready, and loads the r
   const ready = urd.indexOf("window.parent?.postMessage({ type: 'urd-ready' }, location.origin);");
   assert.ok(ready > 0);
   assert.ok(!urd.includes('{ all: true }'), 'the boot loads no type it does not draw');
-  assert.ok(urd.indexOf('queue.loadEverything(Urd)') > ready, 'everything else comes after ready');
+  assert.ok(urd.indexOf('START_WAIT_MS);') > ready && /type: 'urd-shown', round: msg\.round \?\? null \}, location\.origin\);\s*rest\(\);/.test(urd), 'everything else comes after ready, as the editor\'s start is drawn and answered (tests/canvas-cover.test.mjs)');
   assert.match(urd, /window\.addEventListener\('message', \(event\) => \{\s*\/\/[^\n]*\n\s*if \(event\.origin !== location\.origin \|\| event\.source !== window\.parent\) return;\s*take\(event\.data\);\s*\}\);/, 'each message goes through the queue');
   assert.match(urd, /\]\.includes\(event\.key\)\) take\(queue\.REDRAW\);/, 'the bars\' redraw too');
   assert.ok(urd.includes('const siteHeld = siteFeatures(site, entry.id);'), 'the preview loads the site\'s features as a visitor does');

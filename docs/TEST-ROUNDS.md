@@ -2,6 +2,16 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.39.2): the canvas's loading cover
+
+- [ ] Opening the editor, the canvas shows its dotted ground with the rune circle drawing itself as the page loads, and the page appears whole as the cover fades; no block comes in after the rest
+- [ ] With the live phone on, it shows the same cover until its page appears whole
+- [ ] Switching pages from the page switcher, from a link on the canvas and in the phone view covers the canvas until the new page appears whole; switching away and straight back does the same
+- [ ] In Urd settings, «Canvas loading» under Look and language shows a picture of Rune circle, Runes carved, Tiles and Runestone; each chosen shows on the next page opened, and the choice is kept after a reload
+- [ ] In the phone view, the cover keeps the phone's rounded corners, and its dots run on from the ground around the phone
+- [ ] With reduced motion on in the system, the drawing stands whole and still, and the cover comes and goes without fading
+- [ ] On urdweb, signed in, the canvas stands sooner after the editor opens than the 2.3 s measured after 0.7.37.4.3
+
 ### Test batch (0.7.39.1): the canvas draws the open page first
 
 - [ ] Opening the editor on each template page shows the page on the canvas as before, menu, footer and every block in its own design, and the live phone shows it too

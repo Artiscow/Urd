@@ -15,6 +15,7 @@ const SRC = fileURLToPath(new URL('../editor/src/', import.meta.url));
 const DRAWN = [
   ['lib/CanvasBar.svelte', 'tool.html', 'the drawing of a tool on the canvas bar, the canvas button\'s own markup sent by the canvas (toolOf in preview-edit.js)'],
   ['lib/CanvasBar.svelte', 'step.icon', 'an ICONS drawing chosen for a size step'],
+  ['lib/CanvasCover.svelte', 'coverArt(look)', 'a canvas cover look\'s drawing from the editor\'s own constant strings (canvas-cover.js), any other look read as the rune circle'],
   ['lib/DesignPicker.svelte', 'source.thumb(d.id)', 'a design\'s picture, drawn by its design source (design-sources.js)'],
   ['lib/GlyphPicker.svelte', 'iconSvg(icon)', 'an icon of the engine\'s set by its id (icons.js), null for any other id'],
   ['lib/GlyphPicker.svelte', 'iconSvg(id)', 'an icon of the engine\'s set by its id'],

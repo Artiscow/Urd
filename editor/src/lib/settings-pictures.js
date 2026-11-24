@@ -3,6 +3,7 @@
  * Drawn as SVG strings, the way preset-thumb.js draws the section presets, so the pictures follow the admin theme; the theme swatches alone carry their own colours, the palettes of app.css.
  * Pure, node-tested (tests/settings-model.test.mjs).
  */
+import { COVER_LOOKS, coverPicture } from './canvas-cover.js';
 
 const ACCENT = 'var(--urd-color-accent, #7c5cff)';
 
@@ -134,6 +135,9 @@ const PRESS = {
   ring: btn(22, 15, 20, 10) + `<rect x="19" y="12" width="26" height="16" rx="5" stroke="${ACCENT}" stroke-width="2"/>`,
   spring: btn(24, 16, 16, 8) + `<path d="M18 14l-3-2M18 26l-3 2M46 14l3-2M46 26l3 2" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`,
 };
+
+/** What covers the canvas while its page loads: the canvas with each look's drawing finished at its middle (canvas-cover.js). */
+const CANVAS_COVERS = Object.fromEntries(COVER_LOOKS.map((id) => [id, coverPicture(id)]));
 
 /** How a tab's menu sets its rows apart: a tab over a menu of short rows, in groups under small labels, with a hairline between the rows, or as a plain list. */
 const tabMenu = (inner) => dim(18, 3, 16, 4, 0.4) + `<rect x="14" y="8" width="36" height="29" rx="2" fill="currentColor" opacity="0.12"/>` + inner;
@@ -344,6 +348,7 @@ const LOOKS = {
   phonePanel: PHONE_PANELS,
   phoneColumn: PHONE_COLUMNS,
   press: PRESS,
+  canvasCover: CANVAS_COVERS,
   tabMenus: TAB_MENUS,
   sidebarFolds: SIDEBAR_FOLDS,
   dragMark: DRAG_MARKS,

@@ -32,6 +32,8 @@ function ctx() {
     pageSettingsPref: 'dialog',
     PRESS_OPTIONS: ['ripple', 'press', 'nudge', 'sink', 'ring', 'spring'].map((id) => [id, id]),
     pressFeel: 'ripple',
+    CANVAS_COVER_OPTIONS: ['circle', 'stave', 'tiles', 'stone'].map((id) => [id, id]),
+    canvasCover: 'circle',
     DRAG_MARK_OPTIONS: [['slot', 'Slot'], ['line', 'Line']],
     dragMark: 'slot',
     TAB_MENU_OPTIONS: ['groups', 'lines', 'plain'].map((id) => [id, id]),

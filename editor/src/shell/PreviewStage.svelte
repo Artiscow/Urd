@@ -1,11 +1,19 @@
 <script>
   /* The preview stage: the iframe with the real page, scaled to the device and the zoom, inside the frame that pans when the page is larger than it. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle.
      A press on the stage around the canvas deselects what is selected on it (ed.clearSelection), and the wheel there scrolls the page in the canvas, as it does over the canvas, while the stage itself has nothing to pan.
+     The canvas stands under its cover (lib/CanvasCover.svelte) from the moment it is asked for a page until that page has drawn the editor's start, so its blocks are never seen coming in one by one.
      The bar at the canvas's right edge is dragged to set any width (ed.setFreeWidth): the width follows the pointer in canvas px with its number beside it and snaps to the devices' widths and the site's phone breakpoint, which a dashed mark shows on the canvas while the drag runs; the arrow keys step it. */
-  import { getContext } from 'svelte';
+  import { getContext, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import LookBanner from './LookBanner.svelte';
+  import CanvasCover from '../lib/CanvasCover.svelte';
   const ed = getContext('urd-editor');
+  const src = $derived(`/?page=${ed.pageId}&preview=1`);
+  // Another page asked for covers the canvas anew, before the frame starts loading it.
+  $effect.pre(() => {
+    void src;
+    untrack(() => ed.coverCanvas());
+  });
   let dragging = $state(false);
   /** Where on the handle the pointer took hold, from the canvas's right edge, so the first move does not jump. */
   let grab = 0;
@@ -72,10 +80,11 @@
     <iframe
       bind:this={ed.iframeEl}
       title={ta('ui.previewTitle')}
-      src={`/?page=${ed.pageId}&preview=1`}
+      {src}
       onload={ed.onIframeLoad}
       style="width:{ed.targetW}px; height:{ed.iframeH}px; transform:scale({ed.scale}); transform-origin:top left"
     ></iframe>
+    <CanvasCover covered={ed.canvasCovered} step={ed.canvasStep} look={ed.canvasCover} />
     {#if ed.chromeVisible && !ed.looking}
       <button type="button" class="stage-handle" class:out={handleOut} title={ta('tip.dragWidth')} aria-label={ta('tip.dragWidth')}
         onpointerdown={onDown} onpointermove={onMove} onpointerup={onUp} onpointercancel={onUp} onkeydown={onKey}></button>

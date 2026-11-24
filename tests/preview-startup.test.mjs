@@ -25,7 +25,7 @@ test('the view, site and page the editor marks as its ready handshake draw nothi
 });
 
 test('a plugin list draws the page again only where it defined something or brought its language', () => {
-  assert.match(urd, /const before = definedCount\(\);\s+loadPluginList\(Urd, state\.engine, msg\.enabled\)\.then\(async \(\) => \{/);
+  assert.match(urd, /const before = definedCount\(\);\s+pluginsIn = loadPluginList\(Urd, state\.engine, msg\.enabled\)\.then\(async \(\) => \{/);
   assert.match(urd, /if \(language \|\| definedCount\(\) !== before\) renderPage\(state\.page, state\.site, root, vp\(\)\);/);
 });
 
@@ -71,7 +71,7 @@ test('the saved drafts hold the stores back only where the meeting may let a par
 
 test('the Legal panel reads the other pages and the beacon once the canvas has opened', () => {
   const preview = editorFile('state/preview.svelte.js');
-  assert.match(preview, /async function onReady\(\) \{\s*try \{\s*await answerReady\(\);\s*\} finally \{\s*canvasOpened = true;\s*\}\s*\}/, 'set as the first handshake is answered, however the answer ends');
+  assert.match(preview, /async function onReady\(\) \{[\s\S]*?try \{\s*await answerReady\(\);\s*\} finally \{\s*canvasOpened = true;/, 'set as the first handshake is answered, however the answer ends');
   assert.match(preview, /if \(!canvasOpened\) setTimeout\(\(\) => \{ canvasOpened = true; \}, CANVAS_WAIT\);/, 'and a while after the frame has loaded where it never reports ready');
   const legal = editorFile('state/legal.svelte.js');
   assert.match(legal, /if \(siteState\.siteDraft && previewState\.canvasOpened\) readBeacon\(\);/);
