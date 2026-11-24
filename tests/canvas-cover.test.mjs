@@ -41,10 +41,13 @@ test('a look stands finished without the cover: each stroke is drawn over a span
     assert.equal(parts.length, (art.match(/class="cc-(?:draw|pop)"/g) ?? []).length, `${look}: every drawn part has its span`);
     for (const [, , a, b] of parts) assert.ok(Number(a) >= 0 && Number(a) < Number(b) && Number(b) <= 1, `${look}: ${a} to ${b}`);
     assert.equal(Math.max(...parts.map(([, , , b]) => Number(b))), 1, `${look} is whole only as the cover lifts`);
+    assert.ok(parts.some(([, , a]) => Number(a) < COVER_POINTS[0]), `${look} shows a part from the start, where its drawing begins`);
   }
   assert.ok(coverArt('stone').includes('class="cc-mote"') && /class="cc-mote"[^>]*opacity="0"/.test(coverArt('stone')), 'the sparks are hidden at rest');
   const cover = editorFile('lib/CanvasCover.svelte');
-  assert.match(cover, /animation: cc-in 0\.2s ease 0\.3s both;/, 'the drawing comes after 0.3 s');
+  assert.match(cover, /\.cc-art \{\s*width: min\(108px, 36%\);\s*aspect-ratio: 1;\s*animation: cc-in 0\.1s ease both;/, 'the drawing shows at once, with no wait');
+  assert.match(cover, /style:--p=\{COVER_POINTS\[0\]\}/, 'its first part drawn from the start');
+  assert.match(cover, /let progress = COVER_POINTS\[0\];/, 'and its progress from the first step\'s point');
   assert.match(cover, /stroke-dashoffset: calc\(1 - clamp\(0, \(var\(--p\) - var\(--a, 0\)\) \/ \(var\(--b, 1\) - var\(--a, 0\)\), 1\)\);/, 'a stroke follows the load over its span');
   assert.match(cover, /@media \(prefers-reduced-motion: reduce\) \{[\s\S]*\.cc-art \{\s*--p: 1 !important;[\s\S]*\.cc-art :global\(\*\) \{\s*animation: none !important;/, 'reduced motion stands the drawing whole and still');
   assert.match(cover, /role="status"/);

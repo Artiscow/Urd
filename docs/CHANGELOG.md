@@ -8,6 +8,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.39.3 - The loading cover's drawing shows at once - 24 November 2026
+
+- On urdweb the cover's ground came at once but its drawing visibly after, since the drawing waited 0.3 s, faded in over 0.2 s and was drawn from nothing. It now shows as the cover goes up, faded in over 0.1 s, its first part drawn (the load's first point, `COVER_POINTS` in lib/canvas-cover.js), and is drawn on as the load goes; measured locally, it is fully visible 0.1 s after the cover, where it took 0.5 s.
+
+The independent review before the commit found these:
+
+1. The runestone's sparks still waited the old 0.3 s; they rise from the start.
+2. Nothing held every look to show a part from the start, so a later look drawn wholly after the first point would show empty; the test holds it.
+3. BACKLOG named only 0.7.39.2's wait; 0.7.39.3 has its own item.
+
 ### 0.7.39.2 - The canvas appears whole, under a loading cover drawn as the page loads - 24 November 2026
 
 - The desktop canvas and the live phone showed the page as it was drawn, the published page first, then the drafts and the late blocks. Each now stands under a cover until the preview has drawn and painted what the editor's start sent (`urd-startup-done`, answered with `urd-shown`), and the page appears whole; a frame that never answers lets its cover go after 5 s (`lib/CanvasCover.svelte`).

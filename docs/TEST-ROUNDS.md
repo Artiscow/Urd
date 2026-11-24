@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.39.3): the cover's drawing at once
+
+- [ ] On urdweb, opening the editor and switching pages shows the cover's drawing together with its dotted ground, with part of it already drawn, never the ground alone first
+- [ ] With the Runestone look, the sparks rise from the moment the drawing shows
+
 ### Test batch (0.7.39.2): the canvas's loading cover
 
 - [ ] Opening the editor, the canvas shows its dotted ground with the rune circle drawing itself as the page loads, and the page appears whole as the cover fades; no block comes in after the rest

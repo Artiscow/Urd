@@ -1,5 +1,5 @@
 <script>
-  /* The cover over a canvas while its page loads (Urd settings «Canvas loading», lib/canvas-cover.js): the canvas's own ground at once, its dots in line with the ground around the canvas, the chosen look after 0.3 s, lifted as the page stands whole, so no block is seen coming in after the rest.
+  /* The cover over a canvas while its page loads (Urd settings «Canvas loading», lib/canvas-cover.js): the canvas's own ground, its dots in line with the ground around the canvas, and the chosen look at once, lifted as the page stands whole, so no block is seen coming in after the rest.
      The look is drawn as the load goes: each step the canvas reports (`step`) carries the drawing to its point, it creeps on towards the next while a step takes long, and it is finished quickly as the cover lifts and fades.
      With reduced motion asked for, the look stands finished and still, and the cover comes and goes at once. */
   import { untrack } from 'svelte';
@@ -65,11 +65,11 @@
     return () => clearTimeout(timer);
   });
 
-  // The drawing's progress follows the steps a frame at a time, from nothing as a new round of covering begins.
+  // The drawing's progress follows the steps a frame at a time, from the first step's point as a new round of covering begins.
   $effect(() => {
     const el = artEl;
     if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    let progress = 0;
+    let progress = COVER_POINTS[0];
     let seen = untrack(() => step);
     let since = performance.now();
     let last = since;
@@ -86,7 +86,7 @@
       el.style.setProperty('--p', progress.toFixed(4));
       if (progress < 0.9995) frame = requestAnimationFrame(tick);
     };
-    el.style.setProperty('--p', '0');
+    el.style.setProperty('--p', String(progress));
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   });
@@ -96,7 +96,7 @@
   {#if covered}<span class="sr-only">{ta('ui.loading')}</span>{/if}
   {#if drawn}
     <!-- The look's drawing, from the admin's own constant strings -->
-    {#key round}<div class="cc-art" bind:this={artEl}>{@html coverArt(look)}</div>{/key}
+    {#key round}<div class="cc-art" style:--p={COVER_POINTS[0]} bind:this={artEl}>{@html coverArt(look)}</div>{/key}
   {/if}
 </div>
 
@@ -124,12 +124,11 @@
     transition: opacity 0.28s ease, visibility 0s 0.28s;
   }
 
-  /* The drawing comes after 0.3 s, so a quick load shows the ground alone */
+  /* The drawing stands at once, its first part drawn (the first step's point), so the cover is never seen without it */
   .cc-art {
-    --p: 0;
     width: min(108px, 36%);
     aspect-ratio: 1;
-    animation: cc-in 0.2s ease 0.3s both;
+    animation: cc-in 0.1s ease both;
   }
 
   .cc-art :global(svg) {
@@ -177,7 +176,7 @@
   }
 
   .cc-art :global(.cc-mote) {
-    animation: cc-rise 2.8s ease-out calc(0.3s + var(--d, 0s)) infinite backwards;
+    animation: cc-rise 2.8s ease-out var(--d, 0s) infinite backwards;
   }
 
   @keyframes cc-rise {
