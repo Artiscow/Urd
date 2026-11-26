@@ -65,7 +65,7 @@ Projenin ana dili İngilizcedir. Yalnızca Norveççe olan belgeler işaretlenmi
 | [Yol haritası](../ROADMAP-en-GB.md) | İskeletten v1.0'a kadar aşamalar (İngilizce) |
 | [Kullanıcı kılavuzu](../user-guide/GUIDE-tr.md) | Site sahipleri için: düzenleyicinin kodsuz kullanımı |
 | [Geliştirme](../DEVELOPMENT-en-GB.md) | Urd'u geliştiren bizler için: kurulum, kurallar, sık yapılan işler (İngilizce) |
-| [Yayımlama kurulumu](../setup-publication/SETUP-tr.md) | Tek seferlik yayımlama kurulumu: GitHub OAuth uygulaması + Cloudflare |
+| [Yayımlama kurulumu](../setup-publication/SETUP-tr.md) | Tek seferlik yayımlama kurulumu: bir GitHub uygulaması (GitHub App) + Cloudflare |
 | [Paylaşılan bir klasörden resimler](../setup-photos/PHOTOS-en-GB.md) | Bir Google Drive klasöründen, Google Fotoğraflar albümünden ya da Nextcloud paylaşımından arka plan resimleri ve gereken Cloudflare değişkenleri (İngilizce) |
 | [Takvim](../calendar-guide/CALENDAR-en-GB.md) | Site sahipleri için: takvim hizmetleri, toplantı bağlantıları, kayıt, haritalar ve Takvim bloğunun bir etkinlikten okudukları (İngilizce) |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Güncel görev listesi: yapılacaklar, hatalar ve öneriler (eski kayıtlar Norveççe) |

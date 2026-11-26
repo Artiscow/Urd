@@ -63,7 +63,7 @@ Engelsk er hovudspråket i prosjektet. Dokument som berre finst på bokmål er m
 | [docs/VEIKART.md](../../VEIKART.md) | Fasar frå skjelett til v1.0 (på bokmål) |
 | [Brukarrettleiing](../user-guide/GUIDE-nn.md) | For sideeigarar: korleis editoren blir brukt, utan kode |
 | [docs/UTVIKLING.md](../../UTVIKLING.md) | For oss som utviklar Urd: oppsett, reglar, vanlege oppgåver (på bokmål) |
-| [Oppsett av publisering](../setup-publication/SETUP-nn.md) | Eingongsoppsett av publisering: GitHub OAuth-app + Cloudflare |
+| [Oppsett av publisering](../setup-publication/SETUP-nn.md) | Eingongsoppsett av publisering: ein GitHub-app + Cloudflare |
 | [Bilete frå ei delt mappe](../setup-photos/PHOTOS-nb.md) | Bakgrunnsbilete frå ei Google Drive-mappe, eit Google Foto-album eller ei Nextcloud-deling, og Cloudflare-variablane dei treng (på bokmål) |
 | [Kalenderen](../calendar-guide/CALENDAR-nb.md) | For nettstadeigarar: kalendertenester, møtelenkjer, påmelding, kart og kva kalenderblokka les frå eit arrangement (på bokmål) |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Løpande oppgåveliste: gjeremål, buggar og forslag (eldre innslag på bokmål) |

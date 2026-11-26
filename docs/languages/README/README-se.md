@@ -65,7 +65,7 @@ Prošeavtta váldogiella lea eaŋgalasgiella. Dokumeanttat mat leat dušše dár
 | [Luoddakárta](../ROADMAP-en-GB.md) | Muttut skálžžus gitta v1.0 rádjai (eaŋgalasgillii) |
 | [Geavaheaddjirávvagat](../user-guide/GUIDE-se.md) | Siidooamasteddjiide: movt doaimmaheaddji geavahuvvo, almmá koda haga |
 | [Ovddideapmi](../DEVELOPMENT-en-GB.md) | Midjiide geat ovddidit Urd: heiveheapmi, njuolggadusat, dábálaš barggut (eaŋgalasgillii) |
-| [Almmuhanheiveheapmi](../setup-publication/SETUP-se.md) | Ovttageardánis almmuhanheiveheapmi: GitHub OAuth-app + Cloudflare |
+| [Almmuhanheiveheapmi](../setup-publication/SETUP-se.md) | Ovttageardánis almmuhanheiveheapmi: GitHub App + Cloudflare |
 | [Govat juogaduvvon máhpas](../setup-photos/PHOTOS-en-GB.md) | Duogášgovat Google Drive-máhpas, Google Photos-albumis dahje Nextcloud-juogadeamis, ja Cloudflare-variábelat maid dat dárbbašit (eaŋgalasgillii) |
 | [Kaleandar](../calendar-guide/CALENDAR-en-GB.md) | Siidooamasteddjiide: kaleandarbálvalusat, čoahkkinliŋkkat, dieđiheapmi, kárttat ja maid Kaleandar-blohkka lohká dáhpáhusas (eaŋgalasgillii) |
 | [docs/BACKLOG.md](../../BACKLOG.md) | Jotkkolaš bargolistu: barggut, meattáhusat ja evttohusat (boarráset merkkašumit dárogillii) |
