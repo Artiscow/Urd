@@ -29,8 +29,10 @@
   right: -4px;
   min-width: 15px;
   height: 15px;
-  display: grid;
-  place-items: center;
+  display: block;
+  align-content: center;
+  text-align: center;
+  text-box: trim-both cap alphabetic;
   padding: 0 3px;
   background: var(--urd-color-accent);
   color: var(--urd-color-accent-text, var(--urd-color-bg));

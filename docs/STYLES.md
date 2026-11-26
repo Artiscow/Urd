@@ -968,9 +968,13 @@ The cart in the menu (nav.cart): the same expression as the theme toggle, with a
 
 The clearance towards the next tool sits on the neighbor: the badge hangs outside the button, and a cart last in the cluster should sit flush.
 
+### `.urd-nav-cart-badge`
+
+The count stands in the middle of the pill, trimmed to the digits' own height as the cart block's badge is (blocks/cart.css).
+
 ### `.urd-nav-cart-badge[hidden]`
 
-nav.js hides the count while the basket is empty (`hidden`), which the badge's own `display: grid` would otherwise outrank, since an author rule wins over the browser's hiding.
+nav.js hides the count while the basket is empty (`hidden`), which the badge's own `display: block` would otherwise outrank, since an author rule wins over the browser's hiding.
 
 # footer.css, rule by rule
 
@@ -1363,6 +1367,14 @@ The opener inside the title: a button that looks like the heading's words.
 ### `.urd-cart-button`
 
 The cart: a button with a count badge; the drawer is a native `<dialog>` anchored to the right edge (ADR-0011).
+
+### `.urd-cart-badge`
+
+The count stands in the middle of the pill: `text-box` trims its line to the digits' own height, the cap height over the baseline, and `align-content` centres that in the badge, so a face whose line reaches further above its capitals than below its baseline, or the other way round (Courier New), does not set the digit off-centre. Old-style figures (Georgia's) reach below the baseline and still sit low. Without `text-box` the whole line is centred.
+
+### `.urd-cart-badge[hidden]`
+
+blocks/cart.js hides the count while the basket is empty (`hidden`), which the badge's own `display: block` would otherwise outrank, since an author rule wins over the browser's hiding.
 
 ### `.urd-cart-dialog : margin`
 

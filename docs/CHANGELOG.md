@@ -8,6 +8,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.102 - The newer platform features weighed: spoken statuses, the description field by CSS and the basket's count centred - 26 November 2026
+
+- The editor's status toast had no live region, so no status reached a screen reader. `setStatus` hands each one to `ariaNotify` where the browser has it, an error at high priority ([comparison/CODE.md](comparison/CODE.md) T64).
+- The Site panel's description grew by `field-sizing` with `lib/autogrow.js` as a fallback; the fallback is removed, and without `field-sizing` the field stands three lines tall, scrolls and keeps its grip (T58).
+- The count badges of the cart block and the menu's basket are trimmed to the digits' height with `text-box` and centred, so a face such as Courier New no longer sets the digit off-centre (T59).
+- The cart block's badge showed «0» on an empty basket, since its own `display` outranked the browser's hiding; it hides as the menu's badge does.
+- Invoker commands, `hidden="until-found"`, `sibling-index()`, `shape()`, `light-dark()` for images, `@starting-style` and Trusted Types were weighed: none removes code or fixes a bug in today's engine, so each CODE.md row gives its reason or the later item that takes it (T56, T57, T60 to T63, T66), and the logo per colour mode in 0.7.41.19 names `light-dark()` for its images.
+
+The independent review before the commit found these:
+
+1. T57's reason called the stacked cards today's one collapsed content and left out the menu's submenus, and its probe figures read as true of every pile; it weighs the submenus and gives the mechanism alone.
+2. T56, T58 and T59 said not taken where the backlog takes them (ER-A's popup block, ER-E's growing textarea, DS-6's poster hero headings); they name those items, as do the map's other lines on them.
+3. The touched rows on inline handlers and textarea autosize read «Has» with options missing; they read «Partial», the missing parts placed.
+4. The badge note in STYLES.md named Courier New as a face reaching further above its capitals, where it reaches further below its baseline; it names both directions, and that old-style figures (Georgia's) still sit low.
+5. The test step asked for a centred digit in Georgia, whose old-style figures sit low; it tries Courier New.
+6. A full local storage set its error at every draft save, so a screen reader would speak it again after every pause in typing; `draftSaveError` sets it only when it is not already showing.
+7. T64 was marked Delivered without a word on the rows' drag's own live region; the row says it stays, since it speaks in browsers without `ariaNotify` too.
+8. T62 read «Not taken» for work 0.7.41.19 takes, and T63 gave as fact a Safari close the map marks unverified; T62 reads «Taken» there, and T63 keeps the reason that holds.
+9. T59 did not say why the buttons and the word badges keep their line boxes: a trim would change their height on every built site.
+
 ### 0.7.0.101 - A stylesheet test for every override a later sheet outranks, and the slideshow still under reduced motion - 26 November 2026
 
 - The twin test compared identical selectors in base.css and the engine sheets alone, so a base.css override under an at-rule that a block sheet outranks on the same element went unnoticed until the gallery's frames. A check in `tests/stylesheets.test.mjs` reads every sheet against the sheets that load after it, pairs rules by the classes the engine's modules set on one element, and fails where the later rule would win; fixtures for the ribbon and the gallery's frames show it fails such a pair.

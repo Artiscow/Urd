@@ -101,6 +101,8 @@ function setStatus(msg, kind = 'info', action = null) {
   status = msg;
   statusKind = kind;
   statusAction = msg && action && typeof action.run === 'function' ? { label: String(action.label ?? ''), run: action.run } : null;
+  // A screen reader speaks the status where the browser has ariaNotify (ADR-0011); an error goes ahead of anything it has queued.
+  if (msg) globalThis.document?.ariaNotify?.(msg, { priority: kind === 'error' ? 'high' : 'normal' });
   const mine = ++statusSeq;
   if (kind === 'ok') {
     setTimeout(() => {
@@ -114,7 +116,10 @@ function setStatus(msg, kind = 'info', action = null) {
 
 /** Shared error message when a draft does not fit in localStorage (used by all draftStores). */
 function draftSaveError() {
-  setStatus(ta('status.storageFull'), 'error');
+  const msg = ta('status.storageFull');
+  // Set once while it stands, so a screen reader does not speak it again at every save.
+  if (status === msg && statusKind === 'error') return;
+  setStatus(msg, 'error');
 }
 
 /** Direct draft write (outside draftStore) with the same quota guard. */

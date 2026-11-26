@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.102): spoken statuses, the growing description and the basket's count
+
+- [ ] With a screen reader on (NVDA, VoiceOver or Orca) in a browser that has `ariaNotify`, a status in the editor is spoken as it shows, such as «Undone» after an undo; an error is spoken ahead of what was queued
+- [ ] In the Site panel, the description grows downwards line by line as it is typed and shrinks again as it is cut
+- [ ] The count on the cart block's badge and on the menu's basket stands in the middle of its pill, also with the site's font set to Courier New
+- [ ] A cart block on a page with an empty basket shows no badge; adding a product shows it with the count
+
 ### Test batch (0.7.0.101): the slideshow under reduced motion
 
 - [ ] With reduced motion on in the system, a gallery in its slideshow view and a section with an «Image gallery» background change picture without the cross-fade, also when the slideshow is paged by hand; with it off they fade as before

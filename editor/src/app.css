@@ -4346,13 +4346,21 @@
     border-bottom-color: var(--urd-color-accent);
   }
 
-  /* A text field that grows downwards with its text (the site's description); lib/autogrow.js sizes it where field-sizing is missing. */
+  /* A text field that grows downwards with its text (the site's description); without field-sizing it stands three lines tall, scrolls and keeps its grip. */
   .panel-body textarea.field-grow {
     field-sizing: content;
     min-height: 2.2rem;
     padding: 0.45rem 0.5em;
     resize: none;
     overflow: hidden;
+  }
+
+  @supports not (field-sizing: content) {
+    .panel-body textarea.field-grow {
+      min-height: 4.6rem;
+      resize: vertical;
+      overflow: auto;
+    }
   }
 
   /* Two stacked fields on one row, the first narrow (the postcode beside the town). */

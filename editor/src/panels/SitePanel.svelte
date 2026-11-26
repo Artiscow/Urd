@@ -20,7 +20,6 @@
   import IconButton from '../lib/rows/IconButton.svelte';
   import CardList from '../lib/rows/CardList.svelte';
   import { siteGroup } from '../lib/site-groups.js';
-  import { autogrow } from '../lib/autogrow.js';
   import { ta } from '$engine/i18n.js';
   import { zoneValid } from '$engine/calendar-format.js';
   import { MAP_SERVICES, mapService } from '$engine/map-links.js';
@@ -225,7 +224,7 @@
     </Setting>
     <label class="field-stack" title={ta('tip.site.description')}>{ta('lbl.description')}
       <!-- One paragraph that wraps and grows downwards as it is typed -->
-      <textarea class="field-grow" rows="1" value={siteDraft.site.description ?? ''} placeholder={ta('ph.site.description')} use:autogrow={siteDraft.site.description}
+      <textarea class="field-grow" rows="1" value={siteDraft.site.description ?? ''} placeholder={ta('ph.site.description')}
         onkeydown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
         oninput={(e) => setSiteDescription(e.target.value)}></textarea>
     </label>

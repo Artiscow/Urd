@@ -34,14 +34,21 @@
   right: -6px;
   min-width: 18px;
   height: 18px;
-  display: grid;
-  place-items: center;
+  display: block;
+  align-content: center;
+  text-align: center;
+  text-box: trim-both cap alphabetic;
   padding: 0 4px;
   background: var(--urd-color-accent);
   color: var(--urd-color-accent-text, var(--urd-color-bg));
   border-radius: 999px;
   font-size: 0.68em;
   font-weight: 700;
+}
+
+/* An empty basket shows no count */
+.urd-cart-badge[hidden] {
+  display: none;
 }
 
 .urd-cart-dialog {
