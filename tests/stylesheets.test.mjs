@@ -158,11 +158,11 @@ test('base.css holds no rule that belongs to the preview or to the calendar', ()
   }
 });
 
-/** A selector's specificity as ids, classes (with attributes and states) and types, the functional pseudo-classes but :where counted by their arguments. */
+/** A selector's specificity as ids, classes (with attributes and states) and types, the functional pseudo-classes but :where counted by their arguments, a pseudo-element once, as a type. */
 function specificity(sel) {
   const s = sel.replace(/:where\((?:[^()]|\([^()]*\))*\)/g, '').replace(/:(?:not|is|has)\(((?:[^()]|\([^()]*\))*)\)/g, ' $1 ');
   const ids = (s.match(/#[\w-]+/g) ?? []).length;
-  const cls = (s.match(/\.[\w-]+|\[[^\]]+\]|:(?!:)[\w-]+/g) ?? []).length;
+  const cls = (s.match(/\.[\w-]+|\[[^\]]+\]|(?<!:):(?!:)[\w-]+/g) ?? []).length;
   const types = (s.replace(/\[[^\]]*\]|"[^"]*"/g, '').match(/(?:^|[\s>+~])[a-z][\w-]*/gi) ?? []).length + (s.match(/::[\w-]+/g) ?? []).length;
   return `${ids},${cls},${types}`;
 }
@@ -213,6 +213,217 @@ test('no base rule is the twin of an engine sheet\'s rule: an override under an 
       }
     }
   }
+});
+
+/** A rule's selectors, split at the commas outside parentheses. */
+const splitSelectors = (prelude) => {
+  const parts = [];
+  let cur = '';
+  let level = 0;
+  for (const c of prelude) { if (c === '(') level++; if (c === ')') level--; if (c === ',' && level === 0) { parts.push(cur.trim()); cur = ''; } else cur += c; }
+  parts.push(cur.trim());
+  return parts.filter(Boolean);
+};
+/** Every style rule with the conditional at-rules it stands in (`@media`, `@supports`, `@container`), its selectors, and each property it sets with its value; @keyframes and @font-face hold no rule to pair. */
+function rulesWithin(css) {
+  const text = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const out = [];
+  const walk = (from, to, within) => {
+    let start = from;
+    for (let i = from; i < to; i++) {
+      if (text[i] === '{') {
+        const prelude = text.slice(start, i).trim();
+        let depth = 1;
+        let j = i + 1;
+        for (; j < to && depth; j++) { if (text[j] === '{') depth++; else if (text[j] === '}') depth--; }
+        if (!prelude.startsWith('@')) out.push({ within, sels: splitSelectors(prelude), decls: new Map([...text.slice(i + 1, j - 1).matchAll(/(?:^|;)\s*([-a-z]+)\s*:([^;]*)/g)].map((m) => [m[1], m[2].trim()])) });
+        else if (/^@(media|supports|container)\b/.test(prelude)) walk(i + 1, j - 1, [...within, prelude.replace(/\s+/g, ' ')]);
+        i = j - 1;
+        start = j;
+      } else if (text[i] === '}' || text[i] === ';') start = i + 1;
+    }
+  };
+  walk(0, text.length, []);
+  return out;
+}
+const SIDES = ['top', 'right', 'bottom', 'left'];
+/** What each shorthand the sheets may set covers, a logical side as its physical one in a left-to-right page; a shorthand of shorthands is expanded by `longhands`. */
+const SHORTHANDS = {
+  animation: ['animation-name', 'animation-duration', 'animation-timing-function', 'animation-delay', 'animation-iteration-count', 'animation-direction', 'animation-fill-mode', 'animation-play-state'],
+  transition: ['transition-property', 'transition-duration', 'transition-timing-function', 'transition-delay', 'transition-behavior'],
+  margin: SIDES.map((side) => `margin-${side}`),
+  padding: SIDES.map((side) => `padding-${side}`),
+  inset: SIDES,
+  ...Object.fromEntries(['margin', 'padding'].flatMap((box) => [
+    [`${box}-inline`, [`${box}-left`, `${box}-right`]], [`${box}-block`, [`${box}-top`, `${box}-bottom`]],
+    [`${box}-inline-start`, [`${box}-left`]], [`${box}-inline-end`, [`${box}-right`]], [`${box}-block-start`, [`${box}-top`]], [`${box}-block-end`, [`${box}-bottom`]],
+  ])),
+  'inset-inline': ['left', 'right'], 'inset-block': ['top', 'bottom'],
+  'inset-inline-start': ['left'], 'inset-inline-end': ['right'], 'inset-block-start': ['top'], 'inset-block-end': ['bottom'],
+  border: SIDES.map((side) => `border-${side}`),
+  'border-width': SIDES.map((side) => `border-${side}-width`),
+  'border-style': SIDES.map((side) => `border-${side}-style`),
+  'border-color': SIDES.map((side) => `border-${side}-color`),
+  ...Object.fromEntries(SIDES.map((side) => [`border-${side}`, [`border-${side}-width`, `border-${side}-style`, `border-${side}-color`]])),
+  'border-inline': ['border-left', 'border-right'], 'border-block': ['border-top', 'border-bottom'],
+  'border-inline-start': ['border-left'], 'border-inline-end': ['border-right'], 'border-block-start': ['border-top'], 'border-block-end': ['border-bottom'],
+  'border-radius': ['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'],
+  outline: ['outline-width', 'outline-style', 'outline-color'],
+  background: ['background-color', 'background-image', 'background-position', 'background-size', 'background-repeat', 'background-attachment', 'background-origin', 'background-clip'],
+  font: ['font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'font-variant', 'font-stretch'],
+  gap: ['row-gap', 'column-gap'],
+  overflow: ['overflow-x', 'overflow-y'],
+  flex: ['flex-grow', 'flex-shrink', 'flex-basis'],
+  'flex-flow': ['flex-direction', 'flex-wrap'],
+  'place-content': ['align-content', 'justify-content'],
+  'place-items': ['align-items', 'justify-items'],
+  'place-self': ['align-self', 'justify-self'],
+  'grid-area': ['grid-row', 'grid-column'],
+  'grid-row': ['grid-row-start', 'grid-row-end'],
+  'grid-column': ['grid-column-start', 'grid-column-end'],
+  'grid-template': ['grid-template-rows', 'grid-template-columns', 'grid-template-areas'],
+  'text-decoration': ['text-decoration-line', 'text-decoration-color', 'text-decoration-style', 'text-decoration-thickness'],
+  'list-style': ['list-style-type', 'list-style-position', 'list-style-image'],
+  columns: ['column-width', 'column-count'],
+  'scroll-margin': SIDES.map((side) => `scroll-margin-${side}`),
+  'scroll-padding': SIDES.map((side) => `scroll-padding-${side}`),
+};
+/** A property with every longhand it sets, through shorthands of shorthands. */
+const longhands = (prop, seen = new Set()) => {
+  if (seen.has(prop)) return seen;
+  seen.add(prop);
+  for (const part of SHORTHANDS[prop] ?? []) longhands(part, seen);
+  return seen;
+};
+/** The properties a declaration's effect hangs on: an animation turned off comes back only by a name, the other animation longhands doing nothing without one. */
+const reachOf = (prop, value) => ((prop === 'animation' || prop === 'animation-name') && /^none(?:\s*!important)?$/.test(value) ? new Set(['animation-name']) : longhands(prop));
+/** Whether one specificity (`ids,classes,types`) is at least another: the later sheet then wins by order. */
+const atLeast = (a, b) => {
+  const [x, y] = [a, b].map((v) => v.split(',').map(Number));
+  for (let k = 0; k < 3; k++) if (x[k] !== y[k]) return x[k] > y[k];
+  return true;
+};
+/** A selector's subject: the classes and the type of its last compound and its pseudo-element, with every class it names, those inside :not(), :is(), :where() and :has() left out. */
+const subjectOf = (sel) => {
+  const last = outside(sel).split(/[\s>+~]+/).filter(Boolean).pop() ?? '';
+  const pseudo = last.match(/::([\w-]+)|:(before|after|first-line|first-letter)\b/);
+  return {
+    classes: new Set(last.match(/\.[\w-]+/g)?.map((name) => name.slice(1)) ?? []),
+    type: (last.match(/^[a-z][\w-]*/i) ?? [''])[0].toLowerCase(),
+    pseudo: pseudo ? pseudo[1] ?? pseudo[2] : '',
+    all: new Set(classes(sel)),
+  };
+};
+/**
+ * The classes the engine's modules set on one element: a variable's classes where it is made (`el('div', 'urd-a urd-b')`), given its className, or added to or toggled on its classList.
+ * A class built from a name at run time counts by its prefix (`urd-gallery-${name}` as `urd-gallery-*`).
+ * @returns {Set<string>[]}
+ */
+function elementClasses() {
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? (entry.name === 'locales' ? [] : walk(join(dir, entry.name))) : [join(dir, entry.name)]));
+  const tokens = (list) => list.split(/\s+/).filter(Boolean).map((name) => name.replace(/\$\{[^}]*\}.*$/, '*')).filter((name) => name.startsWith('urd-'));
+  const sets = [];
+  for (const file of walk(engine.replace(/\/$/, '')).filter((f) => f.endsWith('.js'))) {
+    const src = read(file);
+    const byName = new Map();
+    const add = (name, list) => {
+      if (!byName.has(name)) byName.set(name, new Set());
+      for (const token of tokens(list)) byName.get(name).add(token);
+    };
+    for (const m of src.matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*\w*(?:el2|el|h|make)\(\s*['"`][\w-]+['"`]\s*,\s*(['"`])([^'"`]*)\2/g)) add(m[1], m[3]);
+    for (const m of src.matchAll(/(\w+)\.className\s*=\s*(['"`])([^'"`]*)\2/g)) add(m[1], m[3]);
+    for (const m of src.matchAll(/(\w+)\.classList\.(?:add|toggle)\(([^)]*)\)/g)) for (const s of m[2].matchAll(/(['"`])([^'"`]*)\1/g)) add(m[1], s[2]);
+    for (const set of byName.values()) if (set.size > 1) sets.push(set);
+  }
+  return sets;
+}
+const ELEMENTS = elementClasses();
+/** Whether a class stands in one element's set, a prefix counting when it is longer than `urd-` and a word. */
+const onElement = (name, set) => [...set].some((token) => (token.endsWith('*') ? token.length > 7 && name.startsWith(token.slice(0, -1)) : name === token));
+/** Whether two subjects can be one element: the same pseudo-element, and a class in common, or every class of both on one element; a subject without a class meets one of its type under a class they share. */
+const meet = (a, b, elements) => {
+  if (a.pseudo !== b.pseudo) return false;
+  if (!a.classes.size || !b.classes.size) return a.type !== '' && a.type === b.type && [...a.all].some((name) => b.all.has(name));
+  if ([...a.classes].some((name) => b.classes.has(name))) return true;
+  return elements.some((set) => [...a.classes, ...b.classes].every((name) => onElement(name, set)));
+};
+/** The discrete media features a rule's @media rules ask for, by name; a range (a width), a list and a negation are left out, since two values of them can hold at once. */
+const featuresOf = (within) => new Map(within.filter((rule) => /^@media\b/.test(rule) && !/,|\bnot\b/.test(rule))
+  .flatMap((rule) => [...rule.matchAll(/\(\s*([\w-]+)\s*:\s*([^()]+?)\s*\)/g)].filter((m) => !/^(?:min-|max-)|^(?:width|height|aspect-ratio|resolution)$/.test(m[1])).map((m) => [m[1], m[2]])));
+/** Whether two rules' at-rules can never hold at once: one discrete media feature asked for with two values. */
+const exclusive = (a, b) => {
+  const theirs = featuresOf(b);
+  return [...featuresOf(a)].some(([name, value]) => theirs.has(name) && theirs.get(name) !== value);
+};
+const squash = (within) => within.map((rule) => rule.replace(/\s+/g, '')).join(' ');
+/**
+ * The rules under an at-rule that a rule of a sheet loading after theirs outranks on the same element, each sheet against the ones after it.
+ * They meet when their subjects can be one element, set a property in common, longhands counted, and the later rule is at least as specific or `!important` where the first is not.
+ * A rule under the same at-rule in the later sheet is that sheet's own override, and one under a condition that excludes the first never meets it.
+ * @param {Array<{file: string, text: string}>} sheets In the order they load
+ * @param {Set<string>[]} [elements] The classes set on one element
+ * @returns {string[]}
+ */
+function outrankedOverrides(sheets, elements = ELEMENTS) {
+  const found = [];
+  const parsed = sheets.map((sheet) => ({ file: sheet.file, rules: rulesWithin(sheet.text) }));
+  parsed.forEach((first, at) => {
+    for (const b of first.rules) {
+      if (!b.within.length) continue;
+      for (const sheet of parsed.slice(at + 1)) {
+        for (const r of sheet.rules) {
+          if (squash(r.within) === squash(b.within) || exclusive(b.within, r.within)) continue;
+          const shared = [];
+          for (const [bp, bv] of b.decls) {
+            const reach = reachOf(bp, bv);
+            const baseImportant = /!important$/.test(bv);
+            for (const [rp, rv] of r.decls) {
+              const important = /!important$/.test(rv);
+              if (baseImportant && !important) continue;
+              if ([...longhands(rp)].some((prop) => reach.has(prop))) shared.push({ prop: rp, important: important && !baseImportant });
+            }
+          }
+          if (!shared.length) continue;
+          for (const bs of b.sels) {
+            for (const rs of r.sels) {
+              if (!meet(subjectOf(bs), subjectOf(rs), elements)) continue;
+              const props = [...new Set(shared.filter((s) => s.important || atLeast(specificity(rs), specificity(bs))).map((s) => s.prop))];
+              if (props.length) found.push(`«${bs}» under ${b.within.join(' ')} in ${first.file} loses to «${rs}» in ${sheet.file}, which loads after it and sets ${props.join(', ')}`);
+            }
+          }
+        }
+      }
+    }
+  });
+  return found;
+}
+
+test('no rule under an at-rule (reduced motion, a fallback) is outranked on its element by a rule of a sheet that loads after it: such an override stands after its rule, in that rule\'s sheet', () => {
+  assert.ok(ELEMENTS.length > 50, `${ELEMENTS.length} elements' classes read from the modules`);
+  assert.deepEqual(outrankedOverrides([{ file: 'base.css', text: BASE }, ...engineSheets(), ...blockSheets(), ...SHEETS]), []);
+});
+
+test('the check finds such an override for any block and on an element another class styles, and leaves the sheet\'s own override, a weaker rule and an excluded one alone', () => {
+  const base = (text) => ({ file: 'base.css', text });
+  const ribbon = (text) => ({ file: 'blocks/ribbon.css', text });
+  const still = base('@media (prefers-reduced-motion: reduce) {\n  .urd-ribbon-run {\n    animation: none;\n  }\n}\n');
+  const found = outrankedOverrides([still, ribbon('.urd-ribbon .urd-ribbon-run {\n  animation-name: urd-ribbon-roll;\n}\n')]);
+  assert.equal(found.length, 1);
+  assert.match(found[0], /«\.urd-ribbon-run» under @media \(prefers-reduced-motion: reduce\) in base\.css loses to «\.urd-ribbon \.urd-ribbon-run» in blocks\/ribbon\.css, which loads after it and sets animation-name/);
+  assert.deepEqual(outrankedOverrides([still, ribbon('@media (prefers-reduced-motion: reduce) {\n  .urd-ribbon .urd-ribbon-run {\n    animation-name: none;\n  }\n}\n')]), [], 'the sheet\'s own override');
+  assert.deepEqual(outrankedOverrides([base('@media (prefers-reduced-motion: reduce) {\n  .urd-ribbon .urd-ribbon-run {\n    animation: none;\n  }\n}\n'), ribbon('.urd-ribbon-run {\n  animation-name: urd-ribbon-roll;\n}\n')]), [], 'a weaker rule loses to base.css');
+  assert.deepEqual(outrankedOverrides([still, ribbon('.urd-ribbon .urd-ribbon-run {\n  animation-direction: reverse;\n}\n')]), [], 'without a name the other animation longhands do nothing');
+  assert.equal(outrankedOverrides([still, ribbon('.urd-ribbon .urd-ribbon-run {\n  animation-direction: reverse;\n  animation-name: urd-ribbon-sway;\n}\n')]).length, 1, 'a name brings the animation back');
+  // The slideshow sets its motion classes on the frames and skins that gallery.css styles by their own classes.
+  const frames = base('@media (prefers-reduced-motion: reduce) {\n  .urd-gallery-frame,\n  .urd-gallery-skin {\n    animation: none;\n  }\n}\n');
+  assert.ok(outrankedOverrides([frames, ...blockSheets()]).some((line) => /«\.urd-gallery-frame» .* loses to «[^»]*\.urd-gallery-(travel|kenburns|bounce)/.test(line)), 'a motion class on the same element');
+  assert.equal(outrankedOverrides([base('@supports (mask-image: none) {\n  .urd-x::before { padding: 0; }\n}\n'), { file: 'x.css', text: '.urd-x::before { padding-inline-start: 4px; }' }]).length, 1, 'a pseudo-element counted once on each side, a logical side as its physical one');
+  assert.deepEqual(outrankedOverrides([base('@supports (mask-image: none) {\n  .urd-x::before { padding: 0; }\n}\n'), { file: 'x.css', text: '.urd-x { padding-left: 4px; }' }]), [], 'the element is not its pseudo-element');
+  assert.deepEqual(outrankedOverrides([base('@supports (mask-image: none) {\n  .urd-x a { color: red !important; }\n}\n'), { file: 'x.css', text: '.urd-x .urd-y a { color: blue; }' }]), [], 'an !important rule holds against a later one that is not');
+  assert.equal(outrankedOverrides([base('@supports (mask-image: none) {\n  .urd-x .urd-y a { color: red; }\n}\n'), { file: 'x.css', text: '.urd-x a { color: blue !important; }' }]).length, 1, 'a later !important rule wins at any weight, and an element without a class meets one of its type');
+  assert.equal(outrankedOverrides([base('@media (max-width: 600px) {\n  .urd-x { gap: 0; }\n}\n'), { file: 'x.css', text: '@media (max-width: 900px) {\n  .urd-x { row-gap: 4px; }\n}\n' }]).length, 1, 'two widths can hold at once');
+  assert.deepEqual(outrankedOverrides([base('@media (prefers-reduced-motion: reduce) {\n  .urd-x { transition: none; }\n}\n'), { file: 'x.css', text: '@media (prefers-reduced-motion: no-preference) {\n  .urd-x { transition: opacity 1s; }\n}\n' }]), [], 'a condition that excludes the first');
+  assert.equal(outrankedOverrides([base(''), { file: 'nav-cart.css', text: '@media (max-width: 600px) {\n  .urd-x { gap: 0; }\n}\n' }, ribbon('.urd-x { gap: 4px; }')]).length, 1, 'every sheet against the sheets after it');
 });
 
 test('the gallery\'s frames stand still under reduced motion in its own sheet, after the motions that name their animation with classes of equal weight', () => {

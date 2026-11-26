@@ -391,6 +391,11 @@
     animation: none;
   }
 
+  .urd-gallery-slide,
+  .urd-bg-slide {
+    transition: none;
+  }
+
 }
 
 /* The band */

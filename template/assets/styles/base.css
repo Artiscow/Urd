@@ -1059,12 +1059,6 @@ html {
     transition: none;
   }
 
-  /* Gallery and background cross-fades */
-  .urd-gallery-slide,
-  .urd-bg-slide {
-    transition: none;
-  }
-
 }
 
 /* The collection block */

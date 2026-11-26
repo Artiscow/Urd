@@ -236,10 +236,6 @@ Combination: a block with BOTH an entrance animation AND "Lift on hover". Withou
 
 On hover a fast transform applies, so the lift starts immediately even when the entrance delay variable sits on the element (a briefly offset start); the entrance itself rarely hits an element that is already under the pointer.
 
-### `@media (prefers-reduced-motion: reduce) { .urd-gallery-slide, .urd-bg-slide`
-
-Gallery and background cross-fades: the JS refuses to play anything automatically under reduced motion; this also removes the fade itself when paging manually in the slideshow view.
-
 ### `.urd-collection[aria-busy="true"], .urd-product[aria-busy="true"]`
 
 The collection block (ADR-0007): three views over structured entries. The inner layout is flow and grid, never frames per entry.
@@ -1577,6 +1573,10 @@ The bounce: across on the box, up and down on the skin, two periods.
 ### `@media (prefers-reduced-motion: reduce) { .urd-gallery-frame, .urd-gallery-skin, .urd-gallery-face, .urd-gallery-tile`
 
 Under reduced motion the frames, their skins and faces and the tiles stand still. The rule stands after the motions above, which name the animation on the same elements with a class of equal weight, so it has the last word; in base.css, which loads before this sheet, it would lose to them.
+
+### `@media (prefers-reduced-motion: reduce) { .urd-gallery-slide, .urd-bg-slide`
+
+Under reduced motion the slideshow's and the background's cross-fades go: the JS plays nothing by itself then, and this also takes the fade away when the slideshow view is paged by hand. It stands after the slides' own transitions, of equal weight, for the same reason as the frames' rule above.
 
 ### `.urd-gallery-band`
 

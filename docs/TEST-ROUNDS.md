@@ -2,6 +2,10 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.101): the slideshow under reduced motion
+
+- [ ] With reduced motion on in the system, a gallery in its slideshow view and a section with an «Image gallery» background change picture without the cross-fade, also when the slideshow is paged by hand; with it off they fade as before
+
 ### Test batch (0.7.0.100): HSTS
 
 - [ ] After the push and the deploy, a page of the demo answers with `Strict-Transport-Security: max-age=31536000` (the browser's network panel, or `curl -I`)
