@@ -1,12 +1,12 @@
 /**
  * The CSRF protection in the auth prologue (functions/_lib/auth.js):
- * Sec-Fetch-Site is the primary signal, Origin is the fallback, and safe
- * methods always pass. This is security-critical code (ADR-0003): a
+ * Sec-Fetch-Site is the primary signal, Origin is the fallback, and every
+ * method is judged, GET too. This is security-critical code (ADR-0003): a
  * publishing session must never be abusable from a foreign site.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { isCrossOrigin } from '../template/functions/_lib/auth.js';
+import { isCrossOrigin, requirePublisher } from '../template/functions/_lib/auth.js';
 
 const URL_OWN = 'https://minside.pages.dev/api/github/commit';
 /** @param {object} over */
@@ -45,4 +45,31 @@ test('Origin is the fallback when Sec-Fetch-Site is missing', () => {
 
 test('without both headers the call passes (not a browser after 2020)', () => {
   assert.equal(isCrossOrigin(req({})), false);
+});
+
+test('requirePublisher: a call with neither Sec-Fetch-Site nor Origin is let through to the sign-in, a cross-site one is refused before GitHub is asked', async () => {
+  const env = { GITHUB_REPO: 'site/repo', GITHUB_CLIENT_ID: 'id', GITHUB_CLIENT_SECRET: 'secret', ALLOWED_LOGINS: 'owner' };
+  const asked = [];
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    asked.push(new URL(String(url)).pathname);
+    return new Response(JSON.stringify({ login: 'owner' }), { headers: { 'content-type': 'application/json' } });
+  };
+  const call = (headers) => new Request(URL_OWN, { method: 'POST', headers: { cookie: 'urd_gh=tok', 'content-type': 'application/json', ...headers }, body: '{}' });
+  try {
+    const bare = await requirePublisher(call({}), env);
+    assert.equal(bare.response, undefined, 'a client that is no browser passes');
+    assert.equal(bare.user.login, 'owner');
+    assert.equal(bare.token, 'tok');
+    assert.deepEqual(asked, ['/user']);
+    asked.length = 0;
+    for (const headers of [{ 'sec-fetch-site': 'cross-site' }, { 'sec-fetch-site': 'same-site' }, { origin: 'https://ond.no' }]) {
+      const { response } = await requirePublisher(call(headers), env);
+      assert.equal(response.status, 403, JSON.stringify(headers));
+      assert.equal((await response.json()).code, 'wrongOrigin');
+    }
+    assert.deepEqual(asked, [], 'GitHub is never asked for a foreign call');
+  } finally {
+    globalThis.fetch = real;
+  }
 });

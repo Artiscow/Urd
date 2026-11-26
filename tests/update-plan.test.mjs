@@ -1,8 +1,9 @@
 /**
  * The update plan (ADR-0014): pure logic, tree listings in and a change set out.
- * The scenarios mirror the rule table in update-plan.js, including the engine swap (the old versioned folder is deleted, the new one added) which falls out of the generic rules without dedicated code.
+ * The scenarios mirror the rule table in ADR-0014 decision 3, including the engine swap (the old versioned folder is deleted, the new one added) which falls out of the generic rules without dedicated code.
+ * The update function (functions/api/github/update.js) is run against a stand-in GitHub at the end; nothing leaves the machine.
  */
-import { test } from 'node:test';
+import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
@@ -179,4 +180,176 @@ test('travelsAsBlob: only a blob GraphQL calls text and gives whole travels inli
   assert.equal(travelsAsBlob({ isBinary: null, isTruncated: false }), true);
   assert.equal(travelsAsBlob(null), true);
   assert.equal(travelsAsBlob(undefined), true);
+});
+
+/* ---------- The update function itself, against a stand-in GitHub ---------- */
+
+const { onRequestGet: updateCheck, onRequestPost: updateRun } = await import('../template/functions/api/github/update.js');
+
+const UPDATE_ENV = { GITHUB_REPO: 'site/repo', GITHUB_CLIENT_ID: 'id', GITHUB_CLIENT_SECRET: 'secret', ALLOWED_LOGINS: 'owner', URD_TEMPLATE_REPO: 'up/template' };
+const reply = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+const b64 = (text) => Buffer.from(text).toString('base64');
+const realFetch = globalThis.fetch;
+afterEach(() => { globalThis.fetch = realFetch; });
+
+/**
+ * A stand-in GitHub for the updater: the site's repository at HEAD `head` holding `site` (path -> blob sha, urd.json naming `engine`), and the template's trees by tag.
+ * `binary` lists the target paths GraphQL calls binary, `held` the blob shas the site's repository holds, `release` answers the template's release of a tag.
+ */
+function updateRepo({ engine = '0.7.11', site, tags, texts = {}, binary = [], held = [], release = () => reply({ message: 'Not Found' }, 404) }) {
+  const seen = { calls: [], trees: [], commits: [], refs: [], blobPosts: 0 };
+  globalThis.fetch = async (url, init = {}) => {
+    const u = new URL(String(url));
+    const path = u.pathname;
+    const method = init.method ?? 'GET';
+    seen.calls.push(`${method} ${path}`);
+    if (path === '/user') return reply({ login: 'owner' });
+    if (path === '/repos/site/repo/git/ref/heads/main') return reply({ object: { sha: 'head' } });
+    if (path === '/repos/site/repo/git/trees/head') return reply({ truncated: false, tree: Object.entries(site).map(([p, sha]) => ({ path: p, sha, type: 'blob', mode: '100644' })) });
+    if (path === '/repos/site/repo/git/blobs/urd-site') return reply({ content: b64(JSON.stringify({ engine })) });
+    if (path === '/repos/up/template/tags') return reply(Object.keys(tags).map((name) => ({ name })));
+    const tag = path.match(/^\/repos\/up\/template\/git\/trees\/(.+)$/)?.[1];
+    if (tag) return tags[tag] ? reply({ tree: Object.entries(tags[tag]).map(([p, sha]) => ({ path: p, sha, type: 'blob', mode: '100644' })) }) : reply({ message: 'Not Found' }, 404);
+    const released = path.match(/^\/repos\/up\/template\/releases\/tags\/(.+)$/)?.[1];
+    if (released) return release(released);
+    if (path.startsWith('/repos/up/template/git/blobs/')) return reply({ content: b64(`bytes of ${path.split('/').pop()}`) });
+    if (path === '/repos/site/repo/git/blobs' && method === 'POST') { seen.blobPosts++; return reply({ sha: 'posted' }, 201); }
+    if (path === '/graphql') {
+      const query = JSON.parse(init.body).query;
+      if (query.includes('isBinary')) {
+        const template = {};
+        for (const m of query.matchAll(/(f\d+): object\(expression: "[^":]+:([^"]+)"\)/g)) template[m[1]] = { isBinary: binary.includes(m[2]), isTruncated: false };
+        const repo = {};
+        for (const m of query.matchAll(/(h\d+): object\(oid: "([^"]+)"\)/g)) repo[m[1]] = held.includes(m[2]) ? { oid: m[2] } : null;
+        return reply({ data: { template, site: repo } });
+      }
+      const repository = {};
+      for (const m of query.matchAll(/(f\d+): object\(expression: "[^":]+:([^"]+)"\)/g)) repository[m[1]] = { text: texts[m[2]] ?? `text of ${m[2]}` };
+      return reply({ data: { repository } });
+    }
+    if (path === '/repos/site/repo/git/commits/head') return reply({ tree: { sha: 'thead' } });
+    if (path === '/repos/site/repo/git/trees' && method === 'POST') { seen.trees.push(JSON.parse(init.body)); return reply({ sha: `t${seen.trees.length}` }, 201); }
+    if (path === '/repos/site/repo/git/commits' && method === 'POST') { seen.commits.push(JSON.parse(init.body)); return reply({ sha: 'cnew' }, 201); }
+    if (path === '/repos/site/repo/git/refs/heads/main' && method === 'PATCH') { seen.refs.push(JSON.parse(init.body)); return reply({ object: { sha: 'cnew' } }); }
+    return reply({ message: `unexpected ${method} ${path}` }, 404);
+  };
+  return seen;
+}
+
+const updateCall = (method, { body, query = '' } = {}) => new Request(`https://site.pages.dev/api/github/update${query}`, {
+  method,
+  headers: { cookie: 'urd_gh=tok', 'sec-fetch-site': 'same-origin', ...(body ? { 'content-type': 'application/json' } : {}) },
+  ...(body ? { body: JSON.stringify(body) } : {}),
+});
+
+/** The template at the installed v0.7.11 and the offered v0.7.12: an engine swap, a new root index.html, and a page copy the template ships itself. */
+const TAGS = {
+  'v0.7.11': { 'urd.json': 'urd-1', 'index.html': 'idx-1', 'assets/engine/0.7.11/boot.js': 'boot-1', 'personvern/index.html': 'idx-1' },
+  'v0.7.12': { 'urd.json': 'urd-2', 'index.html': 'idx-2', 'assets/engine/0.7.12/boot.js': 'boot-2', 'personvern/index.html': 'idx-2' },
+};
+const SITE = { 'urd.json': 'urd-site', 'index.html': 'idx-1', 'assets/engine/0.7.11/boot.js': 'boot-1', 'personvern/index.html': 'idx-1', 'om-oss/index.html': 'idx-1', 'nyheter/index.html': 'idx-1', 'kaker/index.html': 'idx-2', 'content/site.json': 'c1' };
+
+test('the update writes every page copy in the same commit as the engine swap, each path once, from the target\'s root index.html', async () => {
+  const texts = { 'index.html': '<!doctype html><title>v0.7.12</title>' };
+  for (const [rootDir, site] of [['', SITE], ['template', Object.fromEntries(Object.entries(SITE).map(([p, sha]) => [`template/${p}`, sha]).concat([['README.md', 'r1']]))]]) {
+    const seen = updateRepo({ site, tags: TAGS, texts });
+    const res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: { ...UPDATE_ENV, ...(rootDir ? { GITHUB_ROOT_DIR: rootDir } : {}) } });
+    assert.equal(res.status, 200, rootDir || 'at the root');
+    const prefix = rootDir ? `${rootDir}/` : '';
+    assert.equal(seen.commits.length, 1, 'one commit');
+    assert.equal(seen.refs.length, 1);
+    assert.equal(seen.commits[0].tree, `t${seen.trees.length}`, 'the commit holds the last of the chained trees');
+    const entries = seen.trees.flatMap((t) => t.tree);
+    const paths = entries.map((e) => e.path);
+    assert.equal(new Set(paths).size, paths.length, 'each path once');
+    const at = (p) => entries.find((e) => e.path === `${prefix}${p}`);
+    assert.ok(at('assets/engine/0.7.12/boot.js'), 'the new engine is written');
+    assert.equal(at('assets/engine/0.7.11/boot.js').sha, null, 'the old engine is deleted');
+    for (const copy of ['om-oss/index.html', 'nyheter/index.html', 'index.html']) assert.equal(at(copy).content, texts['index.html'], copy);
+    assert.equal(at('personvern/index.html').content, 'text of personvern/index.html', 'the template\'s own copy is written once, by the plan');
+    assert.equal(at('kaker/index.html'), undefined, 'a copy that is already the target\'s is left');
+    assert.ok(!paths.some((p) => p.includes('content/')), 'the site\'s content is never touched');
+    assert.deepEqual(await res.json(), { sha: 'cnew', current: '0.7.11', target: 'v0.7.12', written: 6, deleted: 1 });
+  }
+
+  // A root index.html the site already holds at the target still gives its text to the copies left behind.
+  const seen = updateRepo({ site: { ...SITE, 'index.html': 'idx-2' }, tags: TAGS, texts });
+  const res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: UPDATE_ENV });
+  assert.equal(res.status, 200);
+  const entries = seen.trees.flatMap((t) => t.tree);
+  assert.equal(entries.find((e) => e.path === 'index.html'), undefined);
+  assert.equal(entries.find((e) => e.path === 'om-oss/index.html').content, texts['index.html']);
+  assert.equal(entries.find((e) => e.path === 'nyheter/index.html').content, texts['index.html']);
+});
+
+test('the update reads the running engine from urd.json in the repository, never from the request', async () => {
+  let seen = updateRepo({ site: SITE, tags: TAGS });
+  let res = await updateCheck({ request: updateCall('GET', { query: '?to=v0.7.12&engine=0.7.10&current=0.7.10' }), env: UPDATE_ENV });
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).current, '0.7.11');
+  assert.ok(seen.calls.includes('GET /repos/up/template/git/trees/v0.7.11'), 'the baseline is the repository\'s version');
+  assert.ok(!seen.calls.includes('GET /repos/up/template/git/trees/v0.7.10'));
+
+  seen = updateRepo({ site: SITE, tags: TAGS });
+  res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', engine: '0.7.10', current: '0.7.10', from: 'v0.7.10' } }), env: UPDATE_ENV });
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).current, '0.7.11');
+  assert.ok(!seen.calls.includes('GET /repos/up/template/git/trees/v0.7.10'));
+
+  // The repository already at the target: nothing is written, whatever the request says it runs.
+  seen = updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS });
+  res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', engine: '0.7.11' } }), env: UPDATE_ENV });
+  assert.deepEqual(await res.json(), { current: '0.7.12', target: 'v0.7.12', upToDate: true });
+  assert.equal(seen.commits.length, 0);
+});
+
+test('an error reading the template\'s release never stops the update check, which still answers with the offer', async () => {
+  const broken = [
+    ['not found', () => reply({ message: 'Not Found' }, 404)],
+    ['unreachable', () => { throw new TypeError('fetch failed'); }],
+    ['not JSON', () => new Response('<html>busy</html>', { status: 200, headers: { 'content-type': 'text/html' } })],
+    ['refused', () => reply({ message: 'API rate limit exceeded' }, 403)],
+  ];
+  for (const [kind, release] of broken) {
+    updateRepo({ site: SITE, tags: TAGS, release });
+    const res = await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV });
+    assert.equal(res.status, 200, kind);
+    const data = await res.json();
+    assert.equal(data.target, 'v0.7.12', kind);
+    assert.equal(data.upToDate, false, kind);
+    assert.ok(data.changes.some((c) => c.path === 'assets/engine/0.7.12/boot.js'), kind);
+    assert.equal(data.notes, null, kind);
+    assert.equal(data.release, null, kind);
+
+    updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, release });
+    const current = await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV });
+    assert.equal(current.status, 200, `${kind}, up to date`);
+    assert.deepEqual(await current.json(), { current: '0.7.12', target: 'v0.7.12', head: 'head', upToDate: true, changes: [], release: null });
+  }
+});
+
+test('an update that must continue answers 429 updateContinue with the files copied and the total, never a 2xx, and commits nothing until the last call', async () => {
+  const designs = Array.from({ length: 25 }, (_, i) => `admin/designs/d${i}.webp`);
+  const tags = {
+    'v0.7.11': TAGS['v0.7.11'],
+    'v0.7.12': { ...TAGS['v0.7.12'], ...Object.fromEntries(designs.map((p, i) => [p, `design-${i}`])) },
+  };
+  let seen = updateRepo({ site: SITE, tags, binary: designs });
+  let res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: UPDATE_ENV });
+  assert.equal(res.status, 429);
+  assert.equal(res.ok, false);
+  const body = await res.json();
+  assert.equal(body.code, 'updateContinue');
+  assert.equal(body.copied, BLOB_BATCH);
+  assert.equal(body.total, designs.length);
+  assert.equal(seen.blobPosts, BLOB_BATCH, 'a batch is copied');
+  assert.deepEqual([seen.trees.length, seen.commits.length, seen.refs.length], [0, 0, 0], 'nothing is committed');
+
+  // The next call finds the batch held and few enough left: it copies those and commits.
+  seen = updateRepo({ site: SITE, tags, binary: designs, held: designs.slice(0, BLOB_BATCH).map((p) => tags['v0.7.12'][p]) });
+  res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: UPDATE_ENV });
+  assert.equal(res.status, 200);
+  assert.equal(seen.blobPosts, designs.length - BLOB_BATCH);
+  assert.equal(seen.commits.length, 1);
+  assert.ok(seen.trees.flatMap((t) => t.tree).some((e) => e.path === 'admin/designs/d0.webp' && e.sha === 'design-0'));
 });

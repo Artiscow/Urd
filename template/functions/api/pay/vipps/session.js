@@ -1,7 +1,5 @@
 /**
- * Optional payment layer (ADR-0020, ADR-0028): whether a payment on the Vipps MobilePay ePayment API is reserved.
- * The checkout page asks here on its return from Vipps, with the reference the return address carries, and empties the basket only for a reserved payment; the buyer's shared contact details and the amount reserved come along for the receipt, for the page that started the payment alone (the buyer key, order.js sessionAnswer).
- * The site stores no order; the answer is read from Vipps each time.
+ * GET and POST /api/pay/vipps/session: whether the reference's Vipps MobilePay payment is reserved, read from Vipps on the buyer's return.
  */
 import { isReference, hasBuyerKey, sessionAnswer, majorAmount, json } from '../../../_lib/order.js';
 import { vippsConfig, paymentSummary } from '../../../_lib/vipps.js';

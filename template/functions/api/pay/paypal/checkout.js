@@ -1,11 +1,5 @@
 /**
- * Optional payment layer (ADR-0028): creates a PayPal order for the cart and
- * answers with the address of PayPal's approval page; the client redirects
- * there and the buyer approves with the PayPal account, or a card where
- * PayPal offers that. The amount is recomputed from the git-owned catalogue
- * in the site's currency (never the client's numbers), and the app's keys
- * live in the Cloudflare environment. Without them the answer is 503, and
- * the checkout block shows a calm unavailable message.
+ * POST /api/pay/paypal/checkout: a PayPal order for the cart, priced from the site's catalogue in its currency, answered with PayPal's approval page.
  */
 import { prepareOrder, makeReference, buyerKey, json } from '../../../_lib/order.js';
 import { paypalConfig, buildOrder, approvalUrl, PAYPAL_CURRENCIES } from '../../../_lib/paypal.js';
@@ -43,7 +37,7 @@ export async function onRequestPost({ request, env }) {
   return json({ url, reference, pid: id, key: await buyerKey(config.clientSecret, reference) });
 }
 
-/** Whether the provider is set up, and on its test keys: the editor's checkout block asks on a click, and the published checkout shows a line while test keys are in use. No secret leaves; the answer is never cached. */
+/** GET: whether the provider is set up, and on its test keys, without a secret and never cached. */
 export function onRequestGet({ env }) {
   const config = paypalConfig(env);
   return new Response(JSON.stringify({ configured: Boolean(config), test: Boolean(config?.test) }), { status: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });

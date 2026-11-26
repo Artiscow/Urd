@@ -1,21 +1,6 @@
 /**
- * The updater (ADR-0014): fetches a new Urd version from the template repo
- * (URD_TEMPLATE_REPO) and writes the Urd-owned files in the user's repo as
- * ONE atomic commit. All GitHub traffic goes through here (the visitor CSP
- * has connect-src 'self', and the token lives in the cookie).
- *
- * GET  /api/github/update[?to=<version tag, e.g. v0.7.7.1>]  check: classifies every file through
- *      blob SHAs (unchanged/hand-edited/new/deleted) without loading content.
- * POST /api/github/update              run: { to, expect, skip? }.
- *      A run with files that must be copied as blobs of their own copies a batch of them and answers 429 `updateContinue` with { copied, total }; the run that finds few enough of them missing copies those and commits.
- *
- * The checksum model: the user's tree is compared with the template's tree
- * at the BASELINE v<engine> (engine is read from the user's urd.json in the
- * repo, never from the client) and at the target version. `_headers` is
- * NEVER written (ADR-0006); the check returns the upstream text so admin can
- * show the diff instructions. The slug copies (<slug>/index.html) are
- * refreshed in the same commit as the engine swap (the copy refresh duty,
- * ADR-0013).
+ * GET and POST /api/github/update: the updater (ADR-0014).
+ * GET ?to= checks a template version against the site; POST { to, expect, skip? } commits it.
  */
 import { gh, ghGraphql, cleanBase64, commitTree, triggerDeploy } from '../../_lib/github.js';
 import { requirePublisher } from '../../_lib/auth.js';
@@ -28,8 +13,9 @@ const json = (body, status = 200) =>
 const decodeBlob = (b64) =>
   new TextDecoder().decode(Uint8Array.from(atob(cleanBase64(b64)), (c) => c.charCodeAt(0)));
 
-/** The user's tree as path -> blob SHA, limited to the site root
- *  (GITHUB_ROOT_DIR stripped, so the paths match the template repo's). */
+/**
+ * The user's tree as path -> blob SHA, limited to the site root (GITHUB_ROOT_DIR stripped, so the paths match the template repo's).
+ */
 function siteTree(tree, rootDir) {
   const prefix = rootDir ? `${rootDir}/` : '';
   const map = {};
@@ -49,9 +35,10 @@ function treeAsMap(tree) {
   return map;
 }
 
-/** Loads the common ground for check and run: the user's HEAD + tree, the
- *  installed version, the target version and the template's two trees.
- *  Throws with .code. */
+/**
+ * Loads the common ground for check and run: the user's HEAD + tree, the installed version, the target version and the template's two trees.
+ * Throws with .code.
+ */
 async function loadState(token, config, toParam) {
   const { repo, branch, rootDir, templateRepo } = config;
 
@@ -59,8 +46,7 @@ async function loadState(token, config, toParam) {
   const head = ref.object.sha;
   const rawTree = await gh(token, `/repos/${repo}/git/trees/${head}?recursive=1`);
   if (rawTree.truncated) {
-    // A truncated tree would misclassify files outside the slice as
-    // "missing locally" and rewrite them without warning: stop safely instead.
+    // A truncated tree would misclassify files outside the slice as "missing locally" and rewrite them without warning: stop safely instead.
     throw Object.assign(
       new Error('The repository tree is too large to compare safely'),
       { code: 'updateFailed', detail: 'the git tree is truncated by GitHub' },
@@ -87,7 +73,7 @@ async function loadState(token, config, toParam) {
     if (target === `v${engine}`) {
       return { head, engine, target, userTree, upToDate: true };
     }
-    // An update only goes forward: a site already ahead of every version the template offers (built ahead of a release) has nothing to update to, and an older version asked for by name is refused.
+    // An update only goes forward: a site ahead of every version offered is up to date, and an older version asked for by name is refused.
     if (isOlderTag(target, `v${engine}`)) {
       if (!toParam) return { head, engine, target: `v${engine}`, userTree, upToDate: true };
       throw Object.assign(new Error(`The version ${target} is older than the installed v${engine}`), { code: 'updateOlder', target });
@@ -110,8 +96,7 @@ async function loadState(token, config, toParam) {
       targetTree = await gh(token, `/repos/${templateRepo}/git/trees/${target}?recursive=1`);
     } catch (err) {
       if (err.status === 404 || err.status === 422) {
-        // A well-formed but nonexistent target tag must be diagnosed as
-        // exactly that, not as "the template repo is unreachable".
+        // A well-formed but nonexistent target tag must be diagnosed as exactly that, not as "the template repo is unreachable".
         throw Object.assign(new Error(`The target version ${target} does not exist in the template repository`), { code: 'updateBadTarget', target });
       }
       throw err;
@@ -135,9 +120,8 @@ async function loadState(token, config, toParam) {
 }
 
 /**
- * The template repo's release of a version: its name, its page on GitHub and its notes, which the release Action copies from the monorepo's release (Markdown, kept to the length the Update panel reads, lib/release-notes.js NOTES_MAX).
- * Null where there is none (404 is normal for older versions) or it cannot be read: an error here must never topple the check.
- * The page is kept only where it is a page on github.com.
+ * The template repository's release of a version: its name, its page where that is on github.com, and its notes.
+ * Null where there is none or it cannot be read.
  * @returns {Promise<{name: string|null, url: string|null, notes: string|null}|null>}
  */
 async function releaseOf(token, templateRepo, tag) {
@@ -177,9 +161,7 @@ export async function onRequestGet({ request, env }) {
     }
     const { changes, upToDate } = planUpdate(state.baselineTree, state.targetTree, state.userTree);
 
-    // The _headers instruction (ADR-0006): never in the write set; the
-    // upstream text is sent along when the user's file differs from the
-    // target, so admin can show exactly what should be added by hand.
+    // _headers is never written (ADR-0006): its upstream text is sent where the site's file differs from the target, for the admin to show.
     const headers = {
       changed: state.baselineTree['_headers'] !== state.targetTree['_headers'],
       edited: state.userTree['_headers'] !== state.baselineTree['_headers'],
@@ -220,8 +202,7 @@ export async function onRequestPost({ request, env }) {
     return json({ error: 'expect must be a commit sha', code: 'badExpect' }, 400);
   }
   if (skip !== undefined && (!Array.isArray(skip) || skip.length > 500 || skip.some((p) => typeof p !== 'string'))) {
-    // api.updateFailed interpolates detail, so the text is right for THIS
-    // caller (api.badFiles describes the commit endpoint).
+    // api.updateFailed interpolates detail, so the text is right for THIS caller (api.badFiles describes the commit endpoint).
     return json({ error: 'skip must be a list of paths', code: 'updateFailed', detail: 'skip must be a list of paths (max 500)' }, 400);
   }
 
@@ -234,8 +215,7 @@ export async function onRequestPost({ request, env }) {
       return json({ current: state.engine, target: state.target, upToDate: true });
     }
 
-    // The plan is recomputed server-side; the client may only opt out of
-    // files OUTSIDE the engine atom group (ADR-0014).
+    // The plan is recomputed server-side; the client may only opt out of files OUTSIDE the engine atom group (ADR-0014).
     const plan = planUpdate(state.baselineTree, state.targetTree, state.userTree);
     const planned = new Map(plan.changes.map((c) => [c.path, c]));
     for (const path of skip ?? []) {
@@ -249,20 +229,13 @@ export async function onRequestPost({ request, env }) {
     const writes = [...planned.values()].filter((c) => c.action === 'write');
     const deletes = [...planned.values()].filter((c) => c.action === 'delete');
 
-    // The copy refresh duty (ADR-0013): every <slug>/index.html in the
-    // user's tree must be byte-identical to the template's root index.html
-    // after the swap. Comparing blob SHAs decides which ones actually need
-    // a write. The template's OWN slug copies are already in the plan (they
-    // exist in the template trees); without the planned filter they would
-    // become duplicate tree entries.
+    // The copy refresh duty (ADR-0013): each <slug>/index.html whose blob differs from the target's root index.html is written, unless the plan already holds it.
     const rootIndexSha = state.targetTree['index.html'];
     const copyPaths = Object.keys(state.userTree)
       .filter((p) => isPageIndexCopy(p) && state.userTree[p] !== rootIndexSha && !planned.has(p));
     const needsRootText = copyPaths.length > 0 && !writes.some((c) => c.path === 'index.html');
 
-    // The target files that cannot travel inline in the tree (binary, or text GraphQL cuts short) are copied as blobs of their own, at most BLOB_BATCH per call, and the call that finds at most BLOB_ROOM of them missing copies those and commits (ADR-0014 decision 6).
-    // A blob is named by its content, so a copied file has the template's SHA in the site's repository, and the tree refers to it by that SHA.
-    // ONE GraphQL call tells which files are such blobs and which of them the site's repository already holds.
+    // Files that cannot travel inline are copied as blobs, BLOB_BATCH per call; the call that finds at most BLOB_ROOM missing copies those and commits (ADR-0014).
     const fetchPaths = [...writes.map((c) => c.path), ...(needsRootText ? ['index.html'] : [])];
     const [owner, name] = config.templateRepo.split('/');
     const [siteOwner, siteName] = config.repo.split('/');
@@ -286,7 +259,7 @@ export async function onRequestPost({ request, env }) {
         });
       }
       if (!commit) {
-        // Not a 2xx: an admin from before this step reads any 2xx as the commit, and shows this text as an error instead.
+        // Not a 2xx, so an admin without the continue step shows this text as an error rather than taking it for the commit.
         return json({
           error: `Copied ${copied} of ${total} files from the template. Start the update again to continue.`,
           code: 'updateContinue',

@@ -484,6 +484,40 @@ test('the byte route: a JSON list picture may not reach a Google host through th
   assert.equal((await res.json()).code, 'photoHostNotAllowed');
 });
 
+test('the routes check the first address against the host list before any fetch: a host off the list is refused and never asked', async () => {
+  const env = { PHOTO_HOSTS: 'bilder.example.org' };
+  const refused = [
+    [listRoute, 'https://site.test/api/photos?p=nextcloud&host=sky.example.org&id=abcDEF123456', 403, 'photoHostNotAllowed'],
+    [listRoute, 'https://site.test/api/photos?p=json&url=https%3A%2F%2Fevil.test%2Flist.json', 403, 'photoHostNotAllowed'],
+    [listRoute, 'https://site.test/api/photos?p=json&url=https%3A%2F%2Fbilder.example.org.evil.test%2Flist.json', 403, 'photoHostNotAllowed'],
+    [listRoute, 'https://site.test/api/photos?p=json&url=http%3A%2F%2Fbilder.example.org%2Flist.json', 403, 'photoHostNotAllowed'],
+    [byteRoute, 'https://site.test/api/photo?p=u&u=https%3A%2F%2Fevil.test%2Fa.jpg', 403, 'photoHostNotAllowed'],
+    [byteRoute, 'https://site.test/api/photo?p=nextcloud&host=sky.example.org&id=abcdefgh1234&file=a.png', 403, 'photoHostNotAllowed'],
+    [byteRoute, 'https://site.test/api/photo?p=g&u=https%3A%2F%2Fbilder.example.org%2Fa', 400, 'photoBadAddress'],
+  ];
+  for (const [route, url, status, code] of refused) {
+    const { result, seen } = await withUpstream(jsonRes({ photos: [] }), () => call(route, url, env));
+    assert.equal(result.status, status, url);
+    assert.equal((await result.json()).code, code, url);
+    assert.deepEqual(seen, [], `fetch is never called: ${url}`);
+  }
+  const { seen } = await withUpstream(jsonRes({ photos: [] }), () =>
+    call(listRoute, 'https://site.test/api/photos?p=json&url=https%3A%2F%2Fbilder.example.org%2Flist.json', env));
+  assert.deepEqual(seen.map((s) => s.url), ['https://bilder.example.org/list.json'], 'a listed host is asked');
+});
+
+test('the byte route: a Drive picture is always fetched as a sized variant on Google\'s picture host, never as the raw original', async () => {
+  const png = () => new Response(new Uint8Array([1]), { status: 200, headers: { 'content-type': 'image/png' } });
+  for (const [w, expected] of [[null, 1600], ['480', 480], ['1', 480], ['99999', 2000], ['abc', 1600], ['', 1600], ['-5', 480]]) {
+    const query = w === null ? '' : `&w=${encodeURIComponent(w)}`;
+    const { result, seen } = await withUpstream(png, () => call(byteRoute, `https://site.test/api/photo?p=drive&id=AAA111bbb222ccc${query}`));
+    assert.equal(result.status, 200, String(w));
+    assert.equal(seen.length, 1);
+    assert.equal(seen[0].url, `https://lh3.googleusercontent.com/d/AAA111bbb222ccc=w${expected}`, String(w));
+    assert.ok(IMAGE_WIDTHS.includes(expected));
+  }
+});
+
 /* ---------- The engine's loader: one call in flight, failures kept briefly ---------- */
 
 test('loadFolderPhotos: renders while a call is out join it, and a failure is not kept for long', async () => {

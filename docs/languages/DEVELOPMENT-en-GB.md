@@ -68,7 +68,7 @@ tests/      node --test tests (for now the migration contract)
 ## Rules that always apply
 
 1. **The four promises in [VISION-en-GB.md](VISION-en-GB.md) are never broken.** If you are in doubt whether a change breaks a promise, raise it before you build.
-2. **The engine stays handwritten, readable, dependency-free ES module JS.** No frameworks, no compilation, no npm dependencies in `template/assets/engine/`. The modules a visitor's page loads keep comments of at most 160 characters of prose, their reasoning in `docs/engine-notes/` (ADR-0002, addendum 23 November 2026).
+2. **The engine stays handwritten, readable, dependency-free ES module JS.** No frameworks, no compilation, no npm dependencies in `template/assets/engine/`. The modules a visitor's page loads keep comments of at most 160 characters of prose, their reasoning in `docs/engine-notes/` (ADR-0002, addendum 23 November 2026). Every comment in the code a site runs, the editor's source and the Pages Functions included, holds the same limit, and says what the code does (ADR-0037).
 3. **If you change the shape of the props for a block/section/background/animation, you SHALL bump `version` and write a migration** (`migrations[n]` lifts v(n) to v(n+1), pure function, with a test in `tests/`). See [ADR-0005](../adr/0005-versioning-and-migration.md).
 4. **Schema changes are made in three places in the same commit:** `docs/SCHEMA.md`, `schema/*.schema.json` and the example data in `template/content/`. The examples shall always validate.
 5. **Editor changes are built before merge:** `npm run build`, and the updated `template/admin/assets/` is committed together with the source.

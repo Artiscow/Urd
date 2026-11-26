@@ -1,7 +1,5 @@
 /**
- * Optional payment layer (ADR-0028): whether a Stripe Checkout Session was paid or its payment held.
- * The checkout page asks here on its return from Stripe with the reference and the session's id it kept when it sent the buyer there, and empties the basket only for a confirmed payment; the name, email and phone Stripe collected and the amount come along for the receipt, for the page that started the payment alone (the buyer key, order.js sessionAnswer).
- * The site stores no order; the answer is read from Stripe each time.
+ * GET and POST /api/pay/stripe/session: whether the reference's Stripe Checkout Session was paid or its payment held, read from Stripe on the buyer's return.
  */
 import { isReference, hasBuyerKey, sessionAnswer, majorAmount, json } from '../../../_lib/order.js';
 import { stripeConfig, isSessionId, sessionSummary } from '../../../_lib/stripe.js';

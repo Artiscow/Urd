@@ -1,15 +1,17 @@
 /**
- * The renewal of a GitHub sign-in that expires (functions/_lib/session.js): the login asks for it (api/github/login.js), the sign-in's answer keeps its refresh token beside it (api/github/callback.js), the sign-in status renews it once it falls due (api/github/me.js), signing out ends both (api/github/logout.js), and the editor asks at the planned moment and before its other calls when it opens late (editor/src/state/shell.svelte.js).
+ * The renewal of a GitHub sign-in that expires (functions/_lib/session.js): the login asks for it (api/github/login.js), the sign-in's answer keeps its refresh token beside it (api/github/callback.js), the sign-in status renews it once it falls due (api/github/me.js), signing out ends both (api/github/logout.js), no other function renews, every cookie of the sign-in is HttpOnly (functions/_lib/cookies.js), and the editor asks at the planned moment and before its other calls when it opens late (editor/src/state/shell.svelte.js).
  * GitHub is a stand-in fetch; nothing leaves the machine.
  */
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { sep } from 'node:path';
 import { onRequestGet as login } from '../template/functions/api/github/login.js';
 import { onRequestGet as callback } from '../template/functions/api/github/callback.js';
 import { onRequestGet as me } from '../template/functions/api/github/me.js';
 import { onRequestPost as logout } from '../template/functions/api/github/logout.js';
 import { readRenewal, renewDue, renewIn, sessionCookies, loginScope, RENEW_BEFORE, RENEW_LEAST, RENEW_SOON } from '../template/functions/_lib/session.js';
+import { serializeCookie, expireCookie } from '../template/functions/_lib/cookies.js';
 
 const ORIGIN = 'https://site.pages.dev';
 const ENV = { GITHUB_REPO: 'site/repo', GITHUB_CLIENT_ID: 'id', GITHUB_CLIENT_SECRET: 'secret', ALLOWED_LOGINS: 'owner' };
@@ -235,4 +237,49 @@ test('the editor asks for the sign-in at the planned moment, before its other ca
   assert.ok(update.indexOf('await ed.renewIfDue();') > 0 && update.indexOf('await ed.renewIfDue();') < update.indexOf("fetch('/api/github/update'"), 'an update renews first');
   const history = readFileSync(new URL('../editor/src/panels/HistoryPanel.svelte', import.meta.url), 'utf8');
   assert.ok(history.indexOf('await ed.renewIfDue();') > 0 && history.indexOf('await ed.renewIfDue();') < history.indexOf("fetch('/api/github/revert'"), 'a revert renews first');
+});
+
+test('every cookie the sign-in writes or ends is HttpOnly, Secure and SameSite=Lax, the token cookie urd_gh first of them', async () => {
+  const attributes = (cookie) => cookie.split(/;\s*/).slice(1);
+  const held = (cookie) => {
+    const kept = attributes(cookie);
+    assert.ok(kept.includes('HttpOnly'), cookie);
+    assert.ok(kept.includes('Secure'), cookie);
+    assert.ok(kept.includes('SameSite=Lax'), cookie);
+  };
+  held(serializeCookie('urd_gh', 'ghu_x'));
+  held(expireCookie('urd_gh'));
+
+  github({ signIn: { access_token: 'ghu_first', expires_in: 28800, refresh_token: REFRESH } });
+  const signedIn = await callback({ request: new Request(`${ORIGIN}/api/github/callback?code=c1&state=s1`, { headers: { cookie: 'urd_state=s1' } }), env: ENV });
+  const written = cookies(signedIn);
+  assert.match(written.find((c) => c.startsWith('urd_gh=')), /^urd_gh=ghu_first;/);
+  written.forEach(held);
+
+  github({ signIn: { access_token: 'gho_lasting' } });
+  const lasting = await callback({ request: new Request(`${ORIGIN}/api/github/callback?code=c1&state=s1`, { headers: { cookie: 'urd_state=s1' } }), env: ENV });
+  cookies(lasting).forEach(held);
+
+  const started = await login({ request: new Request(`${ORIGIN}/api/github/login`), env: ENV });
+  cookies(started).forEach(held);
+
+  github({ live: ['ghu_new'] });
+  const renewed = await status(now() + 60);
+  assert.ok(cookies(renewed).some((c) => c.startsWith('urd_gh=ghu_new;')));
+  cookies(renewed).forEach(held);
+
+  github();
+  const ended = await logout({ request: new Request(`${ORIGIN}/api/github/logout`, { method: 'POST', headers: { cookie: `urd_gh=ghu_old; urd_ghr=${now() + 3600}.${REFRESH}`, 'sec-fetch-site': 'same-origin', 'content-type': 'application/json' }, body: '{}' }), env: ENV });
+  cookies(ended).forEach(held);
+});
+
+test('only the sign-in status and signing out renew a sign-in: no other function imports or calls the renewal', () => {
+  const root = new URL('../template/functions/', import.meta.url);
+  const files = readdirSync(root, { recursive: true }).filter((name) => String(name).endsWith('.js')).map((name) => String(name).split(sep).join('/'));
+  const source = (name) => readFileSync(new URL(name, root), 'utf8');
+  const using = (pattern) => files.filter((name) => pattern.test(source(name))).sort();
+  assert.deepEqual(using(/\brenewToken\b/), ['_lib/session.js', 'api/github/logout.js', 'api/github/me.js']);
+  assert.deepEqual(using(/\breadRenewal\b/), ['_lib/session.js', 'api/github/logout.js', 'api/github/me.js'], 'the renewal cookie is read by those two alone');
+  assert.deepEqual(using(/grant_type:\s*'refresh_token'/), ['_lib/session.js'], 'the refresh grant is asked for in one place');
+  assert.deepEqual(using(/github\.com\/login\/oauth\/access_token/), ['_lib/session.js', 'api/github/callback.js'], 'beside it, only the sign-in trades a code for a token');
 });

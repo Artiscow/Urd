@@ -8,6 +8,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.105 - Short comments: the rule for all code a site runs, and the functions brought within it - 26 November 2026
+
+- Only the modules a visitor's page loads held their comments short; the editing layer, the editor and the functions had no limit, and about 2,250 of their comments ran past 160 characters or told how the code came to be. AGENTS.md and the new ADR-0037 hold every comment in the code a site runs to 160 characters of words, a JSDoc tag's words included, saying what the code does with no history, a constraint held by a test and a decision by an ADR. ADR-0002's clause on tags is rewritten to match (earlier text in `docs/adr/amended/`), and ARCHITECTURE.md, the notes README and both development documents name the rule.
+- `tests/comments.test.mjs` holds the rule for the areas in its SCOPE, the functions first, and requires each area outside it to still have work left; `scripts/verify.mjs` picks it for any changed file of the code a site runs.
+- `scripts/engine-notes.mjs same` takes a script's, a stylesheet's or a page's path from the repository's root, so a cut can be proven to leave the code unchanged outside the engine too.
+- The functions' 137 comments out of bounds are cut in all 45 files, 636 lines down to 152, the code unchanged. The 17 constraints the cut reasons guarded and no test held each have a test now, among them the publisher check and file cap, the 409 answers when the branch has moved, the page copies written in the engine swap, the calendar proxy's streaming limit, the token cookie's flags and the 429 that asks an update to continue.
+- BACKLOG's URGENT section is cleared of its seven delivered items, and the comment item has its «Done when».
+
+The independent review before the commit found these:
+
+1. Known Limitations named `revert.js` for the merge-commit undo, and the update-plan tests' header named the rule table in `update-plan.js`, both texts cut; revert.js says a merge commit is undone against its first parent, and the header names ADR-0014 decision 3.
+2. The shortened revert-plan comments said every changed path goes back to the tree before the publish, where a page's copy takes HEAD's root index.html; both say so now.
+3. The test left out code the site loads: `404.html`, `admin/favicon-boot.js`, the dictionaries and the shipped plugin; they stand in the engine area.
+4. «used to» was refused in present-tense text («are used to merge»), and the release pattern took an address such as 0.0.0.0 for a release; both patterns are narrowed.
+5. The notes README and ARCHITECTURE.md said a tag's words count without naming the test that holds it; they name `tests/comments.test.mjs`.
+6. `verify --quick` did not pick the comments test for a changed function, so a long comment passed at commit; it picks it for every file of the code a site runs.
+7. 27 comments in the functions still wrapped mid-sentence, a rule no test held; the test refuses a line that ends mid-sentence, and the 27 are rewrapped.
+8. `same` named editor paths it cannot read, and a comment cut from between a sheet's tokens read as changed code; its header names what it reads, and the comparison ignores space beside `;`, `{`, `}` and `,`.
+9. The auth tests' header said safe methods always pass, where every method is judged; it says so.
+10. The test read a real comment in SitePanel.svelte to prove it finds Svelte comments, which the editor's round would break; it reads an inline sample.
+
 ### 0.7.0.104 - BACKLOG in English - 26 November 2026
 
 - 55 lines of BACKLOG still stood in Norwegian: the Løpende item and its watch list, the milestones 0.7.10, 0.7.40 and 0.7.41, a run of v0.8 and v0.9 items, the later ones, a section heading and 13 «Ferdig når» lines. They are in English now; the item name «Løpende» and the quoted original suggestions stay as written.

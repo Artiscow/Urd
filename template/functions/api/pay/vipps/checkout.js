@@ -1,13 +1,5 @@
 /**
- * Optional payment layer (ADR-0020, ADR-0028): creates a payment on the
- * Vipps MobilePay ePayment API for the cart, in the app or on Vipps's card
- * page, and answers with the address the buyer is sent to; the client
- * redirects there, and the money is reserved until the seller captures it
- * in the Vipps portal when the goods ship. The amount is recomputed from
- * the git-owned catalogue (never the client's numbers), and the secrets
- * live in the Cloudflare environment. Without configuration the answer is
- * 503, and the checkout block shows a calm unavailable message (the form
- * checkout works unchanged).
+ * POST /api/pay/vipps/checkout: a Vipps MobilePay payment for the cart, in the app or on the card page, priced from the catalogue, answered with its address.
  */
 import { prepareOrder, makeReference, vatRegistered, buyerKey, json } from '../../../_lib/order.js';
 import { vippsConfig, receiptLines, buildPayment } from '../../../_lib/vipps.js';
@@ -21,7 +13,7 @@ export async function onRequestPost({ request, env }) {
   const { clean, origin, site, catalogs, amountMinor, currency } = prepared;
   // The way to pay is one the page's checkout block offers (prepareOrder).
   const method = clean.method;
-  // The receipt in the buyer's app carries the lines without tax, so only a seller outside the VAT register sends one (the VAT lines come with the shop of v1.1, ADR-0027).
+  // Only a seller outside the VAT register sends the receipt, whose lines carry no tax.
   const receipt = vatRegistered(site) ? null : receiptLines(clean.order, catalogs);
 
   const reference = makeReference();
@@ -47,7 +39,7 @@ export async function onRequestPost({ request, env }) {
   return json({ url: answer.data.redirectUrl, reference, key: await buyerKey(config.clientSecret, reference) });
 }
 
-/** Whether the provider is set up, and on its test keys: the editor's checkout block asks on a click, and the published checkout shows a line while test keys are in use. No secret leaves; the answer is never cached. */
+/** GET: whether the provider is set up, and on its test keys, without a secret and never cached. */
 export function onRequestGet({ env }) {
   const config = vippsConfig(env);
   return new Response(JSON.stringify({ configured: Boolean(config), test: Boolean(config?.test) }), { status: 200, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });

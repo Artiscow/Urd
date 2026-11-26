@@ -1,9 +1,6 @@
 /**
- * POST /api/github/logout
- * Signs out: the session cookies are expired, and the sign-in is revoked at GitHub where the site's app can do so, so a copy of the cookies stops working too.
- * A sign-in that can be renewed (_lib/session.js) is renewed once and the new token revoked: the renewal ends the old token and the old refresh token, and the new refresh token is never handed out.
- * Only from the site's own pages, sent as JSON (auth.js), so another site or a planted form cannot sign the owner out.
- * The revocation is best-effort: the cookies are expired whether or not GitHub answers.
+ * POST /api/github/logout: expires the session cookies and revokes the sign-in at GitHub where it can.
+ * A renewable one is renewed once and the new token revoked.
  */
 import { cfg } from '../../_lib/github.js';
 import { isCrossOrigin, isJsonRequest } from '../../_lib/auth.js';

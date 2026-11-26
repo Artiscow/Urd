@@ -1,7 +1,5 @@
 /**
- * The publishing guard's SVG check (guard.js isAllowedContent): why an SVG may not be written to media/, or null where it may.
- * The same function as the editor's svgProblem in the engine's imageTools.js, which checks an SVG at upload and from a CSV file; tests/svg-check.test.mjs holds the two texts equal, since a function cannot import the versioned engine.
- * Pure, node-tested.
+ * The publishing guard's SVG check: why an SVG may not be written to media/, or null where it may; the same text as svgProblem in the engine's imageTools.js.
  * @param {string} text
  * @returns {null|'notSvg'|'declaration'|'element'|'handler'|'animation'|'scriptAddress'|'dataAddress'}
  */

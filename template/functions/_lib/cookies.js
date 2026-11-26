@@ -1,8 +1,5 @@
 /**
- * Cookie helpers for the GitHub sign-in.
- *
- * The token is stored in an httpOnly + Secure + SameSite=Lax cookie ('urd_gh') and NEVER reaches browser JS; the key that renews it ('urd_ghr', session.js) is kept the same way.
- * A short-lived 'urd_state' cookie protects the sign-in flow against CSRF.
+ * Cookie helpers for the GitHub sign-in: the token ('urd_gh'), its renewal ('urd_ghr') and the sign-in's 'urd_state', all HttpOnly, Secure and SameSite=Lax.
  */
 
 /**

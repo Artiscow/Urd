@@ -122,6 +122,8 @@ function select(paths) {
   for (const path of widened) {
     if (path.startsWith('tests/') && path.endsWith('.test.mjs')) { tests.set(path, 'changed'); continue; }
     if (path.startsWith('editor/src/')) build = true;
+    // The code a site runs holds its comments short (ADR-0037), whichever file of it changes.
+    if (/^(template\/(functions|assets|admin|plugins)\/|template\/[^/]+\.html$|editor\/src\/)/.test(path) && /\.(js|css|svelte|html)$/.test(path)) tests.set('tests/comments.test.mjs', `holds the comments of ${basename(path)}`);
     if (path.startsWith(ENGINE_DIR) && bundled.has(path.slice(ENGINE_DIR.length))) build = true;
     if (/^schema\/|^template\/content\/|^editor\/scripts\/validate\.mjs$|page-presets|sections\/presets/.test(path)) validate = true;
     // A test names the file (checkout.js, nb.js, index.html) or, for a new file or an editor source file, one of its two nearest folders (_lib/, functions/, panels/): the editor's tests build file names from the folder.

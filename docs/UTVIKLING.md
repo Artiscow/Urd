@@ -66,7 +66,7 @@ tests/      node --test-tester (foreløpig migreringskontrakten)
 ## Regler som alltid gjelder
 
 1. **De fire løftene i [VISJON.md](VISJON.md) brytes aldri.** Er du i tvil om en endring bryter et løfte, ta det opp før du bygger.
-2. **Motoren forblir håndskrevet, lesbar, avhengighetsfri ES-modul-JS.** Ingen rammeverk, ingen kompilering, ingen npm-avhengigheter i `template/assets/engine/`. Modulene en besøkendes side laster, har kommentarer på høyst 160 tegn prosa, og begrunnelsen står i `docs/engine-notes/` (ADR-0002, tillegg 23. november 2026).
+2. **Motoren forblir håndskrevet, lesbar, avhengighetsfri ES-modul-JS.** Ingen rammeverk, ingen kompilering, ingen npm-avhengigheter i `template/assets/engine/`. Modulene en besøkendes side laster, har kommentarer på høyst 160 tegn prosa, og begrunnelsen står i `docs/engine-notes/` (ADR-0002, tillegg 23. november 2026). Hver kommentar i koden et nettsted kjører, redigererens kildekode og Pages Functions medregnet, holder samme grense, og sier hva koden gjør (ADR-0037).
 3. **Endrer du formen på props for en blokk/seksjon/bakgrunn/animasjon, SKAL du bumpe `version` og skrive en migrering** (`migrations[n]` løfter v(n) til v(n+1), ren funksjon, med test i `tests/`). Se [ADR-0005](adr/0005-versioning-and-migration.md).
 4. **Skjemaendringer gjøres tre steder i samme commit:** `docs/SCHEMA.md`, `schema/*.schema.json` og eksempeldataene i `template/content/`. Eksemplene skal alltid validere.
 5. **Editor-endringer bygges før merge:** `npm run build`, og den oppdaterte `template/admin/assets/` committes sammen med kilden.

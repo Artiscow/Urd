@@ -7,9 +7,10 @@
  *     node scripts/engine-notes.mjs apply <module> <json>    writes the short versions a JSON object gives, by heading, in place of the long notes
  *     node scripts/engine-notes.mjs check <module>...        proves the code unchanged against the committed version and the notes complete
  *     node scripts/engine-notes.mjs pairs <module>...        each long note beside its short version, for a review
- *     node scripts/engine-notes.mjs same <module>...         proves the code unchanged against the committed version, its comments free to move
+ *     node scripts/engine-notes.mjs same <file>...           proves the code unchanged against the committed version, its comments free to move
  *
  * `--base <rev>` names the committed version (HEAD), and `--all` stands for every module a visitor's page loads (visitorModules).
+ * `same` also takes a script's, a stylesheet's or an HTML file's path from the repository's root (`template/functions/...`), a sheet or a page compared without its comments.
  * The parser is acorn, a dev dependency of the editor (editor/package.json), read from editor/node_modules.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, realpathSync } from 'node:fs';
@@ -29,7 +30,7 @@ export const NOTES_DIR = new URL('docs/engine-notes/', ROOT);
 const PARSE = { ecmaVersion: 'latest', sourceType: 'module', preserveParens: true, allowHashBang: true };
 
 /** The words a short version or a note never uses, as a comment describes and never tells what was before. */
-const HISTORY = /\b(no longer|previously|used to|would otherwise)\b/i;
+export const HISTORY = /\b(no longer|previously|would otherwise)\b|(?<!\b(?:is|are|be|been|being|never)\s)\bused to\b/i;
 
 /** The path of a module's notes in the repository, as its header names it. */
 export const notesPath = (module) => `docs/engine-notes/${module.replace(/\.js$/, '.md')}`;
@@ -422,8 +423,12 @@ export function checkModule(module, base, now, md) {
 
 /* ---------- The command ---------- */
 
-const enginePath = (module) => `template/assets/engine/${ENGINE_VERSION}/${module}`;
-const readNow = (module) => readFileSync(new URL(module, ENGINE_DIR), 'utf8');
+/** A path from the repository's root stands for itself; any other is an engine module's. */
+const fromRoot = (module) => /^(template|editor)\//.test(module);
+const enginePath = (module) => (fromRoot(module) ? module : `template/assets/engine/${ENGINE_VERSION}/${module}`);
+const readNow = (module) => readFileSync(fromRoot(module) ? new URL(module, ROOT) : new URL(module, ENGINE_DIR), 'utf8');
+/** A stylesheet's or an HTML file's text without its comments, its whitespace collapsed. */
+const uncommented = (src) => src.replace(/\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->/g, ' ').replace(/\s*([;{},])\s*/g, '$1').replace(/\s+/g, ' ').trim();
 const readBase = (module, rev) => execFileSync('git', ['show', `${rev}:${enginePath(module)}`], { cwd: fileURLToPath(ROOT), encoding: 'utf8', maxBuffer: 64 << 20 });
 const notesFile = (module) => new URL(module.replace(/\.js$/, '.md'), NOTES_DIR);
 
@@ -481,7 +486,7 @@ function run(args) {
     for (const module of modules) {
       const base = readBase(module, rev);
       const now = readNow(module);
-      const same = bare(base) === bare(now) && tokensOf(base).join('\n') === tokensOf(now).join('\n');
+      const same = /\.(css|html)$/.test(module) ? uncommented(base) === uncommented(now) : bare(base) === bare(now) && tokensOf(base).join('\n') === tokensOf(now).join('\n');
       const directives = (src) => (src.match(/\/\* @vite-ignore \*\//g) ?? []).length;
       const kept = directives(base) === directives(now);
       console.log(`${same && kept ? 'OK  ' : 'FAIL'}  ${module}: ${same ? 'the code is unchanged' : 'the code differs'}${kept ? '' : ', a @vite-ignore directive is gone'}`);

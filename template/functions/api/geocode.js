@@ -1,14 +1,5 @@
 /**
- * Address lookup for the map block: turns an ordinary address into coordinates
- * via OpenStreetMap's geocoder (Nominatim). It goes through the site's own
- * function (same origin), so the browser needs no connect-src extension, and we
- * can set an identifying User-Agent the way Nominatim's terms of use require.
- *
- * Used only in the editor (when the owner clicks Use), not on every page load:
- * the coordinates are stored in the block, so visitors load the map straight
- * from OSM.
- *
- * Requires a signed-in publisher from the site's own pages (requirePublisher, as publishing does), since every Urd site shares the User-Agent and abuse through one site can get every site's lookups banned.
+ * GET /api/geocode: the map block's address lookup, which turns an address into coordinates through OpenStreetMap's Nominatim, for a signed-in publisher.
  */
 import { requirePublisher } from '../_lib/auth.js';
 

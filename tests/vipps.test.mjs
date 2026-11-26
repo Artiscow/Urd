@@ -2,10 +2,11 @@
  * Contract tests for the Vipps MobilePay part of the payment layer
  * (functions/_lib/vipps.js, ADR-0020): configuration reading, the payment
  * body for the ePayment API in the app and on the card page, the receipt
- * lines, the reading of a payment's state, the token cache and the webhook
- * signature. The order logic every provider shares is tested in
- * tests/order.test.mjs; the endpoints and the actual payment are tested
- * manually against the test environment (the test rounds).
+ * lines, the reading of a payment's state, the token cache, the providers'
+ * fetch timeout (functions/_lib/net.js) and the webhook signature.
+ * The order logic every provider shares is tested in tests/order.test.mjs;
+ * the endpoints and the actual payment are tested manually against the test
+ * environment (the test rounds).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +16,7 @@ import {
   vippsConfig, receiptLines, buildPayment, PROFILE_SCOPE, VIPPS_METHODS, paymentSummary, OPEN_STATES,
   webhookSignature, signatureOf, verifyWebhook, DATE_TOLERANCE,
 } from '../template/functions/_lib/vipps.js';
-import { tokenFromAnswer, tokenFresh } from '../template/functions/_lib/net.js';
+import { tokenFromAnswer, tokenFresh, fetchWithin, TIMEOUT_MS } from '../template/functions/_lib/net.js';
 
 const ENV = {
   VIPPS_CLIENT_ID: 'id',
@@ -120,6 +121,29 @@ test('tokenFromAnswer and tokenFresh: the token kept until a minute before expir
   assert.equal(tokenFresh(kept, now + 86000), true);
   assert.equal(tokenFresh(kept, now + 86398), false);
   assert.equal(tokenFresh(null, now), false);
+});
+
+test('fetchWithin: a provider that does not answer is given up after TIMEOUT_MS, its call aborted and null returned', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const real = globalThis.fetch;
+  let signal = null;
+  globalThis.fetch = (url, init) => new Promise((resolve, reject) => {
+    signal = init.signal;
+    init.signal.addEventListener('abort', () => reject(init.signal.reason));
+  });
+  try {
+    let settled = false;
+    const pending = fetchWithin('https://api.vipps.no/epayment/v1/payments').then((res) => { settled = true; return res; });
+    t.mock.timers.tick(TIMEOUT_MS - 1);
+    await Promise.resolve();
+    assert.equal(signal.aborted, false, 'still waiting a moment before the limit');
+    assert.equal(settled, false);
+    t.mock.timers.tick(1);
+    assert.equal(signal.aborted, true, 'aborted at the limit');
+    assert.equal(await pending, null);
+  } finally {
+    globalThis.fetch = real;
+  }
 });
 
 /** The signature the way the Webhooks API documents it, computed with node's own crypto. */

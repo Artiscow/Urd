@@ -244,3 +244,36 @@ test('a part named twice in one save is refused', async () => {
   assert.equal(res.status, 400);
   assert.equal((await res.json()).code, 'draftsBadPart');
 });
+
+test('the branch\'s paths are its own, never under GITHUB_ROOT_DIR, when that is set', async () => {
+  const env = { ...ENV, GITHUB_ROOT_DIR: 'template' };
+  /** Records the contents paths and the GraphQL expressions asked for, around the stand-in GitHub. */
+  const record = () => {
+    const asked = { contents: [], expressions: [] };
+    const inner = globalThis.fetch;
+    globalThis.fetch = async (url, init = {}) => {
+      const path = new URL(url).pathname;
+      if (path.includes('/contents/')) asked.contents.push(path);
+      if (path === '/graphql') asked.expressions.push(...[...JSON.parse(init.body).query.matchAll(/expression: "[0-9a-f]+:([^"]+)"/g)].map((m) => m[1]));
+      return inner(url, init);
+    };
+    return asked;
+  };
+  let seen = github();
+  let res = await drafts.onRequestPost({ request: call('POST', { expect: null, writes: [{ name: 'page-hjem', keys: { 'urd-draft-hjem': '{}' } }] }), env });
+  assert.equal(res.status, 200);
+  assert.deepEqual(seen.trees[0].tree.map((e) => e.path).sort(), ['index.json', 'parts/page-hjem.json']);
+
+  seen = github({ head: 'a'.repeat(40), files: { 'index.json': INDEX({ site: { hash: 'h' } }), 'parts/site.json': partText({ 'urd-draft-site': '{}' }) } });
+  let asked = record();
+  res = await drafts.onRequestPost({ request: call('POST', { expect: 'a'.repeat(40), writes: [{ name: 'page-hjem', keys: { 'urd-draft-hjem': '{}' } }], removes: ['site'] }), env });
+  assert.equal(res.status, 200);
+  assert.deepEqual(seen.trees[0].tree.map((e) => [e.path, e.sha === null]).sort(), [['index.json', false], ['parts/page-hjem.json', false], ['parts/site.json', true]]);
+  assert.deepEqual(asked.contents, ['/repos/site/repo/contents/index.json']);
+
+  github({ head: 'a'.repeat(40), files: { 'index.json': INDEX({ site: { hash: 'h' } }), 'parts/site.json': partText({ 'urd-draft-site': '{}' }) } });
+  asked = record();
+  const read = await (await drafts.onRequestGet({ request: call('GET', null, '?parts=site'), env })).json();
+  assert.deepEqual(asked.expressions, ['parts/site.json']);
+  assert.equal(JSON.parse(read.parts.site).keys['urd-draft-site'], '{}');
+});

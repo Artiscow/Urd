@@ -1,10 +1,5 @@
 /**
- * The renewal of a GitHub sign-in that expires.
- * The login asks for `offline_access` (loginScope), so an OAuth App's sign-in lasts eight hours whatever the app's setting for expiring tokens, as a GitHub App's does with «Expire user authorization tokens» (on by default), and GitHub's answer carries a refresh token that renews it for six months.
- * The refresh token and the time the sign-in ends are kept in the httpOnly cookie 'urd_ghr', sent to the site's functions under /api/github alone, never to its pages.
- * The sign-in status (me.js) renews the sign-in once it is within RENEW_BEFORE of its end, or RENEW_SOON earlier where the editor asks before a publish or a save, and tells the editor when to ask again (`renewIn`), so the editor asks at that moment and before its other calls when it opens late.
- * A renewal ends the old sign-in and the old refresh token at GitHub, so only the status call renews: other calls carrying the old sign-in would fail if several renewed at once.
- * A sign-in GitHub gives without a refresh token has no 'urd_ghr' and is never renewed.
+ * The renewal of an expiring GitHub sign-in: its refresh token and end kept in the cookie 'urd_ghr', and the rule for when the sign-in status renews it.
  */
 import { serializeCookie, expireCookie, readCookie } from './cookies.js';
 
@@ -25,8 +20,7 @@ const RENEW_VALUE = /^(\d{9,11})\.([A-Za-z0-9_]{20,255})$/;
 const REFRESH_TOKEN = /^[A-Za-z0-9_]{20,255}$/;
 
 /**
- * The scope the login asks for: the site's own (GITHUB_SCOPE, which a GitHub App does not use) and `offline_access`, which makes GitHub answer an OAuth App's login with an expiring sign-in and a refresh token.
- * The site's scope may be written with spaces or commas; each value is asked for once.
+ * The scope the login asks for: the site's GITHUB_SCOPE, split on spaces or commas, each value once, and `offline_access` for a refresh token.
  * @param {string} scope
  * @returns {string}
  */
@@ -58,7 +52,7 @@ export function renewIn(expiresAt, now) {
 }
 
 /**
- * The Set-Cookie values for GitHub's answer to a sign-in or a renewal: the sign-in, and the renewal where the answer carries one, which is removed where it does not.
+ * The Set-Cookie values for GitHub's answer to a sign-in or a renewal: the sign-in, and the renewal cookie where the answer carries one, else its removal.
  * @param {{access_token: string, expires_in?: number|string, refresh_token?: string}} answer
  * @param {number} now Seconds since 1970
  * @returns {string[]}
@@ -80,8 +74,7 @@ export function endSessionCookies() {
 }
 
 /**
- * Renews a sign-in at GitHub with its refresh token.
- * GitHub answers a refused renewal (a refresh token already used or expired) with an `error` field, so null stands for any answer without a new sign-in.
+ * Renews a sign-in at GitHub with its refresh token: the new sign-in, or null for any answer without one, a refused renewal included.
  * @param {{clientId: string, clientSecret: string}} config
  * @param {string} refreshToken
  * @returns {Promise<{access_token: string, expires_in?: number, refresh_token?: string}|null>}

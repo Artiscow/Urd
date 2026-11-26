@@ -1,12 +1,5 @@
 /**
- * Anonymous read-only feed proxy for the calendar block: browsers cannot fetch
- * iCal feeds directly (feed hosts send no CORS, and the site's CSP allows only
- * connect-src 'self'), so the block fetches everything through this
- * same-origin route.
- *
- * OPEN PROXY GUARD: https only, no sign-in in the URL, and the host must be on the allowlist (calendar.google.com is always included; the owner puts other feed hosts in the ICS_HOSTS environment variable, comma-separated).
- * Every redirect hop is checked against the same list before it is fetched (fetchWithTimeout in _lib/photos.js, which also limits the body's time), so an approved host cannot point the proxy onwards.
- * The route answers the site's own pages only (fromOwnPages).
+ * GET /api/ics?url=: the calendar block's feed proxy for the site's own pages, plain https to calendar.google.com or a host in ICS_HOSTS, each redirect checked.
  */
 import { fetchWithTimeout, RedirectRefused, refuseCrossSite } from '../_lib/photos.js';
 
@@ -47,10 +40,7 @@ export async function onRequestGet({ request, env }) {
 
   const tooLarge = () => json({ error: 'The calendar file is too large', code: 'calendarTooLarge' }, 502);
 
-  // The size is enforced BEFORE the body is buffered: a declared length is
-  // rejected at once, and without one we count bytes while the stream is read
-  // and abort at the limit. (A plain .text() would buffer the whole response
-  // first, and the length of the finished string counts UTF-16 units, not bytes.)
+  // The size is held before the body is buffered: a declared length over MAX_BYTES is refused at once, and the bytes are counted as the stream is read.
   const declared = Number(upstream.headers.get('content-length'));
   if (Number.isFinite(declared) && declared > MAX_BYTES) return tooLarge();
 

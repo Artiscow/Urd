@@ -1,17 +1,9 @@
 /**
- * Shared guards for the picture routes (/api/photos and /api/photo): the
- * shapes an id, a host and a share token may take, the host allowlists, and
- * the size caps.
- *
- * OPEN PROXY GUARD, the same rules as the calendar's feed proxy: https only, no sign-in in the address, and a host on the owner's allowlist (the PHOTO_HOSTS environment variable, comma-separated).
- * Google's own hosts are never on a list: the Drive and album routes fetch fixed addresses of their own, so no caller can steer them.
- * Every id is matched with an anchored regex, and hosts are compared exactly against a parsed URL, never with a substring test.
- * On top of that both routes, and the calendar's, answer only the site's own pages (fromOwnPages), so neither another site nor a link shared anywhere can serve pictures through this one.
+ * Shared guards for the picture routes (/api/photos, /api/photo): the id, host and token shapes, the owner's host allowlist (PHOTO_HOSTS) and the size caps.
  */
 
 /**
- * The most pictures one folder call may answer with: the pool the layers cut
- * their own count from, and draw from at random.
+ * The most pictures one folder call may answer with: the pool the layers cut their own count from, and draw from at random.
  */
 export const MAX_PHOTOS = 200;
 
@@ -51,8 +43,8 @@ export const PUBLIC_HOST = /^(?!\d+(?:\.\d+)*$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?
 export const SHARE_FILE = /^(?!\.{1,2}$)[^/\\?#]{1,200}$/;
 
 /**
- * The picture types the byte route passes on: raster only. SVG is a document
- * that can carry script, and it would run on this site's own origin.
+ * The picture types the byte route passes on: raster only.
+ * SVG is a document that can carry script, and it would run on this site's own origin.
  */
 export const RASTER_TYPE = /^image\/(jpeg|png|webp|gif|avif)\s*(?:;|$)/i;
 
@@ -68,21 +60,13 @@ export function allowedHosts(env) {
     .split(',').map((host) => host.trim().toLowerCase()).filter(Boolean));
 }
 
-/**
- * Whether a host may be reached: on the owner's allowlist, or one of the hosts
- * the route itself chose (`extra`, for the fixed Google addresses and for the
- * end of a redirect chain that stays where it started).
- */
+/** Whether a host may be reached: on the owner's allowlist, or one of the hosts the route itself chose (`extra`). */
 export function hostAllowed(env, host, extra = []) {
   const name = String(host ?? '').toLowerCase();
   return extra.includes(name) || allowedHosts(env).has(name);
 }
 
-/**
- * The picture width to ask upstream for, snapped to the ladder. An absent
- * width means the full one: the list route builds its paths without a width,
- * and a hero background fetched at the smallest step would be a blur.
- */
+/** The picture width to ask upstream for, snapped to the ladder; an absent width means the full one. */
 export function imageWidth(value) {
   if (value === undefined || value === null || value === '') return 1600;
   const n = Number(value);
@@ -98,10 +82,7 @@ export function photoLimit(value) {
 }
 
 /**
- * An https URL on an allowed host, or null. Shared by every provider, so no
- * route ever fetches an address it has not checked. With `only` the address
- * must be on one of THOSE hosts and the allowlist is not consulted; without
- * it, the allowlist decides.
+ * An https URL on an allowed host, or null: on one of the `only` hosts when given, otherwise on the owner's allowlist.
  * @param {unknown} raw
  * @param {object} env
  * @param {string[]} [only]
@@ -122,8 +103,7 @@ export function safeTarget(raw, env, only) {
 }
 
 /**
- * Whether a call comes from the site's own pages, for the anonymous routes that fetch from other sites (pictures, picture lists, calendar feeds): a browser that sends fetch metadata says so (Sec-Fetch-Site same-origin, and for a picture a picture's or a fetch's destination); one that sends none names the site in its Origin or Referer.
- * A typed address or a link opened from a chat (Sec-Fetch-Site none), another site, and a client that names no page are refused, so the routes serve the site and no one else.
+ * Whether a call comes from the site's own pages: by its fetch metadata (same-origin, a picture as an image or a fetch), or else by its Origin or Referer.
  * @param {Request} request
  * @param {{image?: boolean}} [options] `image`: the route answers pictures
  * @returns {boolean}
@@ -179,12 +159,7 @@ export async function readCapped(res, max) {
 }
 
 /**
- * The answer from the platform's edge cache when it holds one, otherwise
- * built and kept there. A Function's answer is not cached on its headers
- * alone: the cache has to be asked and told. Only a good answer that names a
- * shared lifetime is kept, under the address alone, and the caller has done
- * its own-site check before coming here. Without an edge cache (local
- * development, tests) the answer is simply built.
+ * The answer from the platform's edge cache when it holds one, otherwise built and kept there when it is a 200 with an s-maxage, under the address alone.
  * @param {{request: Request, waitUntil?: (p: Promise<unknown>) => void}} context
  * @param {() => Promise<Response>} build
  * @returns {Promise<Response>}
@@ -216,12 +191,7 @@ const MAX_REDIRECTS = 4;
 const BODY_MS = 20000;
 
 /**
- * One fetch with a timeout, so a slow folder host never holds the route. The
- * redirects are followed by hand: each hop has to be a plain https address on
- * a host `allow` accepts (the host it came from, when no `allow` is given)
- * BEFORE the request goes out, and the credentials stay with the host they
- * were meant for. After the headers the same abort covers the body, with its
- * own deadline.
+ * One fetch with deadlines for the headers and the body; a redirect is followed by hand, only to plain https on its own host or one `allow` accepts.
  * @param {string|URL} target
  * @param {RequestInit} [init]
  * @param {number} [ms] The deadline for the headers

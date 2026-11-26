@@ -33,7 +33,7 @@ Two worlds, one repo:
 
 ## The engine (`template/assets/engine/`)
 
-Hand-written, readable, dependency-free ES module JavaScript - never compiled ([ADR-0002](adr/0002-svelte-for-editor-readable-js-for-engine.md)). A module a visitor's page loads keeps short comments, at most 160 characters of prose on what the code does with its JSDoc tags whole, and the reasoning stands in its notes, [docs/engine-notes/](engine-notes/README.md)`<module>.md`, under the name each note explains, which the module's header names (`scripts/engine-notes.mjs`, `tests/engine-notes.test.mjs`). The ownership promise applies to what the visitor loads, and the editor's preview iframe loads exactly these files - preview fidelity is therefore structural, not something that has to be maintained.
+Hand-written, readable, dependency-free ES module JavaScript - never compiled ([ADR-0002](adr/0002-svelte-for-editor-readable-js-for-engine.md)). A module a visitor's page loads keeps short comments, at most 160 characters of prose on what the code does, a JSDoc tag's words counted and its type apart, and the reasoning stands in its notes, [docs/engine-notes/](engine-notes/README.md)`<module>.md`, under the name each note explains, which the module's header names (`scripts/engine-notes.mjs`, `tests/engine-notes.test.mjs`, the tags' words `tests/comments.test.mjs`). Every other comment in the code a site runs holds the same limit, its reasoning not kept ([ADR-0037](adr/0037-short-comments.md), `tests/comments.test.mjs`). The ownership promise applies to what the visitor loads, and the editor's preview iframe loads exactly these files - preview fidelity is therefore structural, not something that has to be maintained.
 
 Core parts:
 

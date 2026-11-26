@@ -1,10 +1,5 @@
 /**
- * Optional payment layer (ADR-0028): completes and reads a PayPal order on the buyer's return.
- * The checkout page posts here with the reference and the order's id it kept when it sent the buyer to PayPal; an order the buyer approved is captured now (PayPal takes the money at the order, ADR-0028 decision 4), and the page empties the basket only for a completed capture.
- * The order must be the one made for the reference, so another order's id confirms nothing.
- * A POST only, since it may capture; the reference as PayPal's request id makes a repeated ask capture nothing twice.
- * The buyer's name, email and phone and the amount come along for the receipt, for the page that started the payment alone (the buyer key, order.js sessionAnswer).
- * The site stores no order; the answer is read from PayPal each time.
+ * POST /api/pay/paypal/session: reads the reference's PayPal order on the buyer's return, and captures an approved one with the reference as request id.
  */
 import { isReference, hasBuyerKey, sessionAnswer, json } from '../../../_lib/order.js';
 import { paypalConfig, isOrderId, orderSummary } from '../../../_lib/paypal.js';

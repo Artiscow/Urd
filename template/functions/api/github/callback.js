@@ -1,9 +1,5 @@
 /**
- * GET /api/github/callback
- * OAuth return: validates state against the cookie, exchanges code for a
- * token SERVER-SIDE (with client_secret), stores the token in the httpOnly
- * cookie 'urd_gh' and redirects to /admin/. The token never reaches browser JS.
- * A sign-in that expires keeps its refresh token beside it (_lib/session.js).
+ * GET /api/github/callback: checks the OAuth state against its cookie, trades the code for a token on the server and keeps it in the httpOnly cookie urd_gh.
  */
 import { cfg } from '../../_lib/github.js';
 import { expireCookie, readCookie } from '../../_lib/cookies.js';
@@ -33,9 +29,7 @@ export async function onRequestGet({ request, env }) {
       code,
     }),
   });
-  // GitHub can answer with an error status or an HTML error page instead of
-  // JSON (service disruptions): the sign-in is then rejected gracefully rather
-  // than throwing a 500.
+  // An error status or an HTML page from GitHub refuses the sign-in.
   let answer;
   try {
     if (tokenRes.ok) answer = await tokenRes.json();

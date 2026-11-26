@@ -1,11 +1,5 @@
 /**
- * GET /api/github/me
- * Sign-in status for the editor: { loggedIn, login?, allowed?, renewIn?, renewFailed? }.
- * `allowed` is the ALLOWED_LOGINS check; it is enforced again in commit.js
- * REGARDLESS (defence in depth), this response is only for the UI.
- * A sign-in that expires is renewed here once it falls due, or a little earlier with `?soon=1` (before a publish or a save), and `renewIn` tells the editor in how many seconds to ask again (_lib/session.js).
- * `renewFailed` says a renewal was refused, as when another tab renewed the sign-in a moment before with the same refresh token; the editor then asks once more with the cookies that tab was given.
- * Only a request from the site itself renews (its Sec-Fetch-Site same-origin, or none where a browser sends none): a link from another site, which the lax cookies come with, reads the sign-in as it stands, so it can never end a sign-in under a publish.
+ * GET /api/github/me: the sign-in status { loggedIn, login?, allowed?, renewIn?, renewFailed? }, renewing a sign-in that falls due, or soon with ?soon=1.
  */
 import { cfg, currentUser } from '../../_lib/github.js';
 import { readCookie } from '../../_lib/cookies.js';
@@ -53,8 +47,8 @@ export async function onRequestGet({ request, env }) {
       ...(expiresAt ? { renewIn: renewIn(expiresAt, now) } : {}),
     }, 200, cookies);
   } catch (err) {
-    // ONLY GitHub's 401 means signed out (invalid/expired token). Anything
-    // else is GitHub trouble and must not be shown as a sign-out in the editor.
+    // ONLY GitHub's 401 means signed out (invalid/expired token).
+    // Anything else is GitHub trouble and must not be shown as a sign-out in the editor.
     if (err.status === 401) return json({ loggedIn: false, ...(renewFailed ? { renewFailed } : {}) }, 200, cookies);
     return json({ error: 'GitHub is unavailable right now', code: 'githubUnavailable' }, 503, cookies);
   }

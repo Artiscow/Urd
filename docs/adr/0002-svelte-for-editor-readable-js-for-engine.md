@@ -1,6 +1,6 @@
 # ADR-0002: Svelte for the editor, hand-written readable JS for the engine
 
-**Status:** accepted (July 2026)
+**Status:** accepted (July 2026); the addendum's comment limit amended 26 November 2026 (a JSDoc tag's words count toward it, its type apart, [ADR-0037](0037-short-comments.md)), earlier text in [amended/](amended/0002-svelte-for-editor-readable-js-for-engine-until-2026-11-26.md)
 
 ## Context
 
@@ -24,4 +24,4 @@ Svelte over Preact/React: compiled fine-grained reactivity without VDOM diffing 
 
 ## Addendum, 23 November 2026: the reasoning beside the code
 
-The engine modules a visitor's page loads say what their code does in comments of at most 160 characters of prose, their JSDoc tags whole, and the reasoning behind them stands in `docs/engine-notes/<module>.md` under the name it explains; base.css's stands in `docs/STYLES.md`. The files served are still the files written, never compiled, minified or stripped, and a module's header names its notes. Comments were 49 % of the 217 KB of compressed JavaScript every page loaded (23 November 2026). The notes live in the Urd repository and are not synced to the template repository, as the editor's readable source is not.
+The engine modules a visitor's page loads say what their code does in comments of at most 160 characters of prose, a JSDoc tag's words counted and its type apart ([ADR-0037](0037-short-comments.md)), and the reasoning behind them stands in `docs/engine-notes/<module>.md` under the name it explains; base.css's stands in `docs/STYLES.md`. The files served are still the files written, never compiled, minified or stripped, and a module's header names its notes. Comments were 49 % of the 217 KB of compressed JavaScript every page loaded (23 November 2026). The notes live in the Urd repository and are not synced to the template repository, as the editor's readable source is not.

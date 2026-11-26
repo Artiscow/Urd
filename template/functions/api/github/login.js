@@ -1,8 +1,5 @@
 /**
- * GET /api/github/login
- * Starts GitHub OAuth: sets a random state cookie (CSRF protection) and
- * redirects to GitHub's authorization page.
- * The scope asks for `offline_access` beside the site's own, so an OAuth App's sign-in renews itself too (_lib/session.js).
+ * GET /api/github/login: starts GitHub's OAuth with a random state cookie, asking for offline_access beside the site's own scope.
  */
 import { cfg } from '../../_lib/github.js';
 import { serializeCookie } from '../../_lib/cookies.js';

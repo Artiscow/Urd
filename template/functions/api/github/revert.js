@@ -1,18 +1,5 @@
 /**
- * POST /api/github/revert
- * "Undo the last publish" as a FORWARD revert (ADR-0003): a new commit with
- * the current HEAD as its parent - history is never deleted, and the undo
- * can itself be undone.
- *
- * The undo applies to what that publish changed, nothing else: the new commit takes HEAD's tree and sets back each path the publish changed (_lib/revert-plan.js), so an Urd update, a change by hand or any other commit made since stays as it is.
- * Only paths publishing may write or delete are touched, inside the site's folder (GITHUB_ROOT_DIR).
- *
- * Body {expect: <sha>}: the publish to undo. It must still be the LAST
- * content commit (same filter as history.js), otherwise 409 - two editors
- * never undo each other's work.
- *
- * Known limitation: if the publish is a merge commit, the first parent's
- * content state is restored.
+ * POST /api/github/revert: undoes the publish named by { expect }, the latest one, as a new commit on HEAD that sets back only the paths it changed.
  */
 import { gh, triggerDeploy } from '../../_lib/github.js';
 import { requirePublisher } from '../../_lib/auth.js';
@@ -24,7 +11,7 @@ const json = (body, status = 200) =>
 /** The most pages of a commit's changed files read, a hundred files each. */
 const MAX_FILE_PAGES = 10;
 
-/** The files a commit changed, as GitHub lists them a page at a time; a commit with more than MAX_FILE_PAGES full pages throws, so a publish is never undone in part. */
+/** The files a commit changed, a page at a time; more than MAX_FILE_PAGES full pages throws, so a publish is never undone in part. */
 async function changedFiles(token, repo, sha) {
   const files = [];
   for (let page = 1; page <= MAX_FILE_PAGES; page += 1) {
@@ -65,6 +52,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     const target = await gh(token, `/repos/${repo}/git/commits/${body.expect}`);
+    // A merge commit is undone against its first parent.
     const targetParentSha = target.parents?.[0]?.sha;
     if (!targetParentSha) return json({ error: 'Nothing to revert: this is the first publish', code: 'nothingToRevert' }, 400);
     const targetParent = await gh(token, `/repos/${repo}/git/commits/${targetParentSha}`);

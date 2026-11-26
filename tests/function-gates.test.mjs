@@ -1,15 +1,17 @@
 /**
- * The gates in front of the site's functions: the policy every function's answer carries (functions/api/_middleware.js), publishing's JSON rule and its page copies (api/github/commit.js), signing out (api/github/logout.js), the calendar route answering the site's own pages only (api/ics.js) and the address lookup for a signed-in publisher only (api/geocode.js).
+ * The gates in front of the site's functions: the policy every function's answer carries (functions/api/_middleware.js), publishing's JSON rule, publisher, file cap, head check, deploy hook and page copies (api/github/commit.js), the undo's latest-publish check (api/github/revert.js), the conflict check's cut-off list (api/github/latest.js), signing out (api/github/logout.js), the calendar route's own pages, host list and size limit (api/ics.js) and the address lookup for a signed-in publisher only (api/geocode.js).
  * GitHub is a stand-in fetch; nothing leaves the machine.
  */
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { onRequest as middleware } from '../template/functions/api/_middleware.js';
 import { onRequestPost as commit } from '../template/functions/api/github/commit.js';
 import { onRequestPost as logout } from '../template/functions/api/github/logout.js';
 import { onRequestGet as ics } from '../template/functions/api/ics.js';
 import { onRequestGet as geocode } from '../template/functions/api/geocode.js';
 import { onRequestPost as revert } from '../template/functions/api/github/revert.js';
+import { onRequestGet as latest } from '../template/functions/api/github/latest.js';
 
 const ORIGIN = 'https://site.pages.dev';
 const ENV = { GITHUB_REPO: 'site/repo', GITHUB_CLIENT_ID: 'id', GITHUB_CLIENT_SECRET: 'secret', ALLOWED_LOGINS: 'owner' };
@@ -265,4 +267,142 @@ test('publishing refuses a feed that declares the XHTML namespace, and a sitemap
     assert.equal((await res.json()).code, 'xmlNotAllowed');
     assert.deepEqual(seen.calls.map((c) => new URL(c.url).pathname), ['/user']);
   }
+});
+
+test('publishing: a signed-in login not in ALLOWED_LOGINS, and a publish of more than 200 files, are refused before anything is written', async () => {
+  let seen = github(['index.html']);
+  let res = await commit({ request: request('/api/github/commit', { body: { message: 'Publish', files: [{ path: 'content/site.json', content: '{}' }] } }), env: { ...ENV, ALLOWED_LOGINS: 'someone-else' } });
+  assert.equal(res.status, 403);
+  assert.equal((await res.json()).code, 'notAllowed');
+  assert.deepEqual(seen.calls.map((c) => new URL(c.url).pathname), ['/user'], 'only the publisher is asked for');
+
+  const files = (n) => Array.from({ length: n }, (_, i) => ({ path: `content/pages/p${i}.json`, content: '{}' }));
+  seen = github(['index.html']);
+  res = await commit({ request: request('/api/github/commit', { body: { message: 'Publish', files: files(201) } }), env: ENV });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).code, 'badFiles');
+  assert.deepEqual(seen.calls.map((c) => new URL(c.url).pathname), ['/user']);
+  assert.equal(seen.blobs.length, 0);
+  assert.equal(seen.tree, null);
+
+  seen = github(['index.html']);
+  res = await commit({ request: request('/api/github/commit', { body: { message: 'Publish', files: files(200) } }), env: ENV });
+  assert.equal(res.status, 200, 'the cap itself is let through');
+  assert.equal(seen.blobs.length, 200);
+});
+
+test('publishing: an expect that is no longer the branch head answers 409 and makes no commit; the head it names publishes', async () => {
+  let seen = github(['index.html']);
+  let res = await commit({ request: request('/api/github/commit', { body: { message: 'Publish', expect: 'c-old', files: [{ path: 'content/site.json', content: '{}' }] } }), env: ENV });
+  assert.equal(res.status, 409);
+  assert.equal((await res.json()).code, 'publishRace');
+  assert.deepEqual(seen.calls.map((c) => `${c.method} ${new URL(c.url).pathname}`), ['GET /user', 'GET /repos/site/repo/git/ref/heads/main']);
+  assert.equal(seen.blobs.length, 0);
+  assert.equal(seen.tree, null);
+
+  seen = github(['index.html']);
+  res = await commit({ request: request('/api/github/commit', { body: { message: 'Publish', expect: 'c0', files: [{ path: 'content/site.json', content: '{}' }] } }), env: ENV });
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { sha: 'c1' });
+});
+
+test('publishing: a deploy hook that fails or throws never fails the publish, which still answers with its commit', async (t) => {
+  t.mock.method(console, 'warn', () => {});
+  const env = { ...ENV, DEPLOY_HOOK_URL: 'https://hooks.example/deploy' };
+  const send = () => commit({ request: request('/api/github/commit', { body: { message: 'Publish', files: [{ path: 'content/site.json', content: '{}' }] } }), env });
+  let seen = github(['index.html']);
+  let res = await send();
+  assert.equal(res.status, 200, 'a hook answering an error');
+  assert.deepEqual(await res.json(), { sha: 'c1' });
+  assert.ok(seen.calls.some((c) => c.url === 'https://hooks.example/deploy' && c.method === 'POST'), 'the hook is called');
+
+  seen = github(['index.html']);
+  const toGitHub = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (new URL(String(url)).hostname === 'hooks.example') throw new TypeError('the hook cannot be reached');
+    return toGitHub(url, init);
+  };
+  res = await send();
+  assert.equal(res.status, 200, 'a hook that throws');
+  assert.deepEqual(await res.json(), { sha: 'c1' });
+  assert.ok(seen.calls.some((c) => c.method === 'PATCH'), 'the branch was moved');
+});
+
+test('the undo endpoint: a publish that is no longer the latest content commit answers 409 and writes nothing', async () => {
+  const seen = revertRepo({ trees: { tbase: { 'content/a.json': 'a1' }, thead: { 'content/a.json': 'a2' } }, files: [{ filename: 'content/a.json', status: 'modified' }] });
+  const res = await revert({ request: request('/api/github/revert', { body: { expect: 'def5678' } }), env: ENV });
+  assert.equal(res.status, 409);
+  assert.equal((await res.json()).code, 'revertRace');
+  assert.ok(seen.calls.includes('GET /repos/site/repo/commits?sha=main&per_page=1&path=content'), 'the latest content commit is asked for');
+  assert.equal(seen.tree, null);
+  assert.equal(seen.commit, null);
+  assert.ok(seen.calls.every((c) => c.startsWith('GET ')), 'no write of any kind');
+});
+
+test('the calendar route checks the first address against the host list before any fetch: a host off the list is refused and never asked', async () => {
+  const calls = [];
+  globalThis.fetch = async (url) => { calls.push(String(url)); return new Response('BEGIN:VCALENDAR\nEND:VCALENDAR\n'); };
+  const ask = (address, env = {}) => ics({ request: new Request(`${ORIGIN}/api/ics?url=${encodeURIComponent(address)}`, { headers: { 'sec-fetch-site': 'same-origin' } }), env });
+  for (const [address, env] of [['https://evil.example/x.ics', {}], ['https://evil.example/x.ics', { ICS_HOSTS: 'feeds.example.no' }], ['https://calendar.google.com.evil.example/x.ics', {}]]) {
+    const res = await ask(address, env);
+    assert.equal(res.status, 403, address);
+    assert.equal((await res.json()).code, 'calendarHostNotAllowed', address);
+  }
+  assert.deepEqual(calls, [], 'fetch is never called');
+  const listed = await ask('https://feeds.example.no/x.ics', { ICS_HOSTS: 'feeds.example.no' });
+  assert.equal(listed.status, 200, 'a host on the list is fetched');
+  assert.deepEqual(calls, ['https://feeds.example.no/x.ics']);
+});
+
+test('the calendar route holds its size limit while the body is read: a feed that keeps giving is cut off at the limit, one within it passes whole', async () => {
+  const src = readFileSync(new URL('../template/functions/api/ics.js', import.meta.url), 'utf8');
+  const MAX_BYTES = Number(src.match(/const MAX_BYTES = ([\d_]+);/)[1].replaceAll('_', ''));
+  const CHUNK = 64 * 1024;
+  /** A feed of `size` bytes, given a chunk at a time as it is read, with no declared length. */
+  const feed = (size) => {
+    const state = { given: 0, cancelled: false };
+    const body = new ReadableStream({
+      pull(controller) {
+        if (state.given >= size) { controller.close(); return; }
+        const chunk = new Uint8Array(Math.min(CHUNK, size - state.given)).fill(0x41);
+        if (state.given === 0) chunk.set(new TextEncoder().encode('BEGIN:VCALENDAR\n'));
+        state.given += chunk.byteLength;
+        controller.enqueue(chunk);
+      },
+      cancel() { state.cancelled = true; },
+    });
+    return { state, res: new Response(body, { headers: { 'content-type': 'text/calendar' } }) };
+  };
+  const ask = () => ics({ request: new Request(`${ORIGIN}/api/ics?url=${encodeURIComponent('https://calendar.google.com/x.ics')}`, { headers: { 'sec-fetch-site': 'same-origin' } }), env: {} });
+
+  const endless = feed(MAX_BYTES * 20);
+  globalThis.fetch = async () => endless.res;
+  let res = await ask();
+  assert.equal(res.status, 502);
+  assert.equal((await res.json()).code, 'calendarTooLarge');
+  assert.ok(endless.state.given <= MAX_BYTES + 2 * CHUNK, `read ${endless.state.given} bytes, the limit is ${MAX_BYTES}`);
+  assert.equal(endless.state.cancelled, true, 'the rest of the stream is cancelled');
+
+  const within = feed(MAX_BYTES);
+  globalThis.fetch = async () => within.res;
+  res = await ask();
+  assert.equal(res.status, 200);
+  assert.equal((await res.text()).length, MAX_BYTES);
+});
+
+test('the conflict check reads truncated from the whole diff before the site\'s folder filters it, so a cut-off list counts as may overlap', async () => {
+  const ask = (count) => {
+    globalThis.fetch = async (url) => {
+      const path = new URL(String(url)).pathname;
+      if (path === '/repos/site/repo/git/ref/heads/main') return reply({ object: { sha: 'h1' } });
+      if (path === '/repos/site/repo/compare/abc1234...h1') return reply({ files: Array.from({ length: count }, (_, i) => ({ filename: i === 0 ? 'template/content/site.json' : `docs/n${i}.md` })) });
+      return reply({ message: 'unexpected' }, 404);
+    };
+    return latest({ request: new Request(`${ORIGIN}/api/github/latest?base=abc1234`, { headers: { cookie: 'urd_gh=tok' } }), env: { ...ENV, GITHUB_ROOT_DIR: 'template' } });
+  };
+  let data = await (await ask(300)).json();
+  assert.deepEqual(data, { head: 'h1', changedFiles: ['content/site.json'], truncated: true }, 'three hundred files in the diff, one of them the site\'s');
+  data = await (await ask(299)).json();
+  assert.equal(data.truncated, false);
+  assert.deepEqual(data.changedFiles, ['content/site.json']);
 });
