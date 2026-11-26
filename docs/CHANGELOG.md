@@ -8,6 +8,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.100 - HSTS in the security headers - 26 November 2026
+
+- A published site sent no `Strict-Transport-Security` header, so a browser could still reach a site on its own domain over plain HTTP first ([comparison/CODE.md](comparison/CODE.md#open) T40). `_headers` sends it with a year's `max-age`, `includeSubDomains` and `preload` left to the site owner, and the release's pinned `_headers` changes with it, so the Updates panel shows existing sites the «change by hand» note.
+
+The independent review before the commit found these:
+
+1. The new comment in `_headers` broke a sentence across two lines; it stands one sentence to a line now, before any site copies the file by hand.
+2. The pinned SHA's comment read as if the CSP's `media-src` change were still unreleased; it names the file as released in v0.7.11, with the new header.
+3. The comment left `includeSubDomains` and `preload` to the owner without saying where; it says on this same line, so a site never sends the header twice, where a browser keeps only the first.
+
 ### 0.7.0.99 - acorn declared, and Node 26 pinned in one file for CI and local work - 26 November 2026
 
 - The engine notes' test parsed with acorn borrowed from Svelte's and Vite's dependencies, so an upgrade that dropped it would fail every test run. editor/package.json declares it as a dev dependency at 8.18.0, the version the tests and the build use.

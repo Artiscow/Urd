@@ -2,6 +2,11 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.100): HSTS
+
+- [ ] After the push and the deploy, a page of the demo answers with `Strict-Transport-Security: max-age=31536000` (the browser's network panel, or `curl -I`)
+- [ ] A site on the earlier `_headers` shows the «Security headers» note in Updates, the file it shows holding the new line
+
 ### Test batch (0.7.9.4): the image looks, the phone canvas, the crop and the menus
 
 - [ ] An image block set to «Multiply» under Blend in its Appearance blends with the section's background on the published page; «Strength» under it fades the blend, and in the editor the block's bar and handles are never blended
