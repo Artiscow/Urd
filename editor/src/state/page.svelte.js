@@ -638,7 +638,9 @@ const RIBBON_MOTIONS = () => [['roll', ta('opt.ribbonMotion.roll')], ['sway', ta
 function openImageEditor() {
   if (!selectedBlock) return;
   const kind = selectedBlock.type === 'video' ? 'cover' : selectedBlock.type === 'quote' ? 'portrait' : 'image';
-  pictureEditorState.openPicture({ kind, sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId });
+  // An image block's picture and a video's cover open through the preview, as a press on them does, measured as drawn and in the view they are drawn in.
+  if (kind !== 'portrait' && previewState.bridge) previewState.bridge.sendAskPicture(selectedBlock.sectionId, selectedBlock.blockId, kind);
+  else pictureEditorState.openPicture({ kind, sectionId: selectedBlock.sectionId, blockId: selectedBlock.blockId });
   blockMenu = null;
 }
 
@@ -1308,15 +1310,25 @@ function setSectionMobileGap(value) {
 function setSectionPhoneRoom(side, value, { sectionId = activeSectionId, own = false } = {}) {
   const section = store?.data.sections.find((s) => s.id === sectionId);
   if (!section || (side !== 'top' && side !== 'bottom')) return;
-  const key = side === 'top' ? 'mobilePadTop' : 'mobilePadBottom';
   historyState.pushHistory(own ? 'section-phone-room' : `edit:section-phone-room-${side}:${sectionId}`);
+  writePhoneRoom(section, side, value);
+  store.save();
+  historyState.updateDirty();
+  previewState.bridge?.sendSection(pageId, section);
+}
+
+/**
+ * Writes a section's room on the phone into the draft, in the undo step at work: the standard, or none given, takes the field away.
+ * @param {object} section
+ * @param {'top'|'bottom'} side
+ * @param {number|null} value
+ */
+function writePhoneRoom(section, side, value) {
+  const key = side === 'top' ? 'mobilePadTop' : 'mobilePadBottom';
   const size = { ...(section.size ?? {}) };
   const px = Number.isFinite(value) ? Math.max(0, Math.round(value)) : null;
   if (px === null || px === MOBILE_ROOM) delete size[key]; else size[key] = px;
   section.size = size;
-  store.save();
-  historyState.updateDirty();
-  previewState.bridge?.sendSection(pageId, section);
   if (section.id === activeSectionId) syncSectionMirrors(section);
 }
 
@@ -1350,10 +1362,10 @@ function setSectionPhoneFollows(on) {
 }
 
 /**
- * A change to a section's phone order, cells, heights and layers (phone-moves.js: a move in the Phone panel's list, a drag, the arrows, the handles or the set bar on the canvas; phone-layouts.js: a preset; layer-order.js: to the front or back on the phone): the blocks' exceptions, the stacks, the custom order, the cells, the blocks' own heights on the phone and the pinned blocks' own layers there, written as one undo step under `key`.
+ * A change to a section's phone order, cells, heights, rooms and layers (phone-moves.js: a move in the Phone panel's list, a drag, the arrows, the handles or the set bar on the canvas; phone-layouts.js: a preset; layer-order.js: to the front or back on the phone): the blocks' exceptions, the stacks, the custom order, the cells, the blocks' own heights on the phone, the flowing blocks' own rooms above them there and the pinned blocks' own layers, written as one undo step under `key`.
  * Only ids the section holds are written, and a stack of fewer than two blocks is left out.
  * @param {string} sectionId
- * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>, layers?: Record<string, number>}} change
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>, spaces?: Record<string, number|null>, layers?: Record<string, number>}} change
  * @param {string} [key] The history key: a burst of keys joins under one
  * @returns {boolean} Whether the section took the change
  */
@@ -1400,6 +1412,15 @@ function changeSectionPhone(sectionId, change, key = 'phone-order') {
     const place = { ...(block.frames.mobile ?? {}) };
     delete place.height;
     if (Number.isFinite(height) && height > 0) place.height = Math.round(height);
+    block.frames.mobile = Object.keys(place).length ? place : null;
+  }
+  // A flowing block's own room above it on the phone (a drag over its own place), or null to take it away; a block pinned to rows keeps its rows.
+  for (const [id, space] of Object.entries(change.spaces ?? {})) {
+    const block = section.blocks.find((b) => b.id === id);
+    if (!block || Number.isFinite(block.frames.mobile?.row)) continue;
+    const place = { ...(block.frames.mobile ?? {}) };
+    delete place.space;
+    if (Number.isFinite(space) && Math.round(space) !== 0) place.space = Math.round(space);
     block.frames.mobile = Object.keys(place).length ? place : null;
   }
   // A pinned block's own layer on the phone (layer-order.js phoneLayerChanges); a flowing block takes none.
@@ -1898,6 +1919,7 @@ export const pageState = {
   setSectionPhoneFollows,
   changeSectionPhone,
   setSectionMobileGap,
+  writePhoneRoom,
   setSectionPhoneRoom,
   get sectionPhoneRoom() { return sectionPhoneRoom; },
   setSectionPhoneOrder,

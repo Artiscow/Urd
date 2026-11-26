@@ -17,7 +17,7 @@ globalThis.localStorage = {
   setItem: (key, value) => local.set(key, String(value)),
   removeItem: (key) => local.delete(key),
 };
-const { PARTS, ADMIN_DESIGNS, DEFAULT_DESIGN, DESIGN_ROW_KEY, DESIGN_CHANGED_KEY, partDefault, readParts, designState, designWrites, restoreWrites, earlierDefaultWrites, EARLIER_READ_KEY } = await import('../editor/src/lib/admin-designs.js');
+const { PARTS, ADMIN_DESIGNS, DEFAULT_DESIGN, DESIGN_ROW_KEY, DESIGN_CHANGED_KEY, partDefault, readParts, designState, designWrites, restoreWrites, earlierDefaultWrites, EARLIER_READ_KEYS, EARLIER_READ_KEY } = await import('../editor/src/lib/admin-designs.js');
 const { CAP_ADD_FORMS, SHORTCUTS_MODES } = await import('../editor/src/menu/forms.js');
 const { SETTINGS_GROUPS } = await import('../editor/src/lib/settings-model.js');
 const { settingPicture } = await import('../editor/src/lib/settings-pictures.js');
@@ -223,46 +223,63 @@ test('a part changed by hand names the design\'s value on its row, and goes back
   assert.equal(c.ed.linkEditorPref, 'dialog');
 });
 
-test('a design chosen before «A line of names» and the search field became the defaults keeps the parts it had, read once', () => {
-  const EARLIER = { capAdd: 'head', shortcuts: 'pinned' };
-  const MARK = { key: EARLIER_READ_KEY, value: '1' };
-  /** What choosing a design stored while «From the menu's head» and the Pinned rows were the defaults: nothing for a part at its default then. */
-  const writtenThen = (id) => {
-    const parts = id === DEFAULT_DESIGN ? EARLIER : ADMIN_DESIGNS.find((d) => d.id === id).parts;
+test('a design chosen before a default changed keeps the parts it had, read once for each change', () => {
+  // The rounds: «Adding extras» and «Top of the menu» until 11 November 2026, «Settings in a group» until 25 November 2026.
+  const ROUNDS = [{ capAdd: 'head', shortcuts: 'pinned' }, { extra: 'shown' }];
+  const MARKS = EARLIER_READ_KEYS.map((key) => ({ key, value: '1' }));
+  assert.equal(MARKS.length, ROUNDS.length);
+  assert.equal(EARLIER_READ_KEY, EARLIER_READ_KEYS[0]);
+  /** What choosing a design stored before the rounds from `from` on: nothing for a part at its default then. */
+  const writtenThen = (id, from = 0) => {
+    const earlier = Object.assign({}, ...ROUNDS.slice(from));
+    const parts = id === DEFAULT_DESIGN ? { ...ADMIN_DESIGNS.find((d) => d.id === id).parts, ...earlier } : ADMIN_DESIGNS.find((d) => d.id === id).parts;
     const map = new Map();
     for (const w of designWrites(id)) if (w.value != null) map.set(w.key, w.value);
-    for (const part of PARTS.filter((p) => p.id in EARLIER)) {
-      const value = parts[part.id] ?? EARLIER[part.id];
-      if (value === EARLIER[part.id]) map.delete(part.key);
+    for (const part of PARTS.filter((p) => p.id in earlier)) {
+      const value = parts[part.id] ?? earlier[part.id];
+      if (value === earlier[part.id]) map.delete(part.key);
       else map.set(part.key, value);
     }
+    for (const mark of MARKS.slice(0, from)) map.set(mark.key, mark.value);
     return map;
   };
   const getOf = (map) => (key) => map.get(key) ?? null;
   const apply = (map, writes) => { for (const { key, value } of writes) map.set(key, value); return map; };
-  assert.deepEqual(earlierDefaultWrites(() => null), [MARK], 'nothing stored: the new defaults stand, and the reading is marked');
-  assert.deepEqual(earlierDefaultWrites(getOf(writtenThen(DEFAULT_DESIGN))), [MARK], 'the default design takes the new defaults');
-  for (const design of ADMIN_DESIGNS.filter((d) => d.id !== DEFAULT_DESIGN)) {
-    const map = writtenThen(design.id);
-    apply(map, earlierDefaultWrites(getOf(map)));
-    assert.deepEqual(designState(readParts(getOf(map))), { design: design.id, changed: [] }, `${design.id} reads as it did`);
-    assert.deepEqual(earlierDefaultWrites(getOf(map)), [], `${design.id}: once read, never again`);
+  assert.deepEqual(earlierDefaultWrites(() => null), MARKS, 'nothing stored: the new defaults stand, and every reading is marked');
+  for (const from of [0, 1]) {
+    assert.deepEqual(earlierDefaultWrites(getOf(writtenThen(DEFAULT_DESIGN, from))), MARKS.slice(from), `the default design takes the new defaults (from round ${from + 1})`);
+    for (const design of ADMIN_DESIGNS.filter((d) => d.id !== DEFAULT_DESIGN)) {
+      const map = writtenThen(design.id, from);
+      apply(map, earlierDefaultWrites(getOf(map)));
+      assert.deepEqual(designState(readParts(getOf(map))), { design: design.id, changed: [] }, `${design.id} reads as it did (from round ${from + 1})`);
+      assert.deepEqual(earlierDefaultWrites(getOf(map)), [], `${design.id}: once read, never again`);
+    }
   }
-  // A design chosen after the reading stores nothing for a part at its new default, and keeps it so on the next load.
+  // A design chosen after the readings stores nothing for a part at its new default, and keeps it so on the next load.
   for (const design of ADMIN_DESIGNS) {
     const map = apply(new Map(), earlierDefaultWrites(() => null));
     for (const w of designWrites(design.id)) if (w.value != null) map.set(w.key, w.value);
-    assert.deepEqual(earlierDefaultWrites(getOf(map)), [], `${design.id} chosen after the reading`);
+    assert.deepEqual(earlierDefaultWrites(getOf(map)), [], `${design.id} chosen after the readings`);
     assert.deepEqual(designState(readParts(getOf(map))), { design: design.id, changed: [] });
   }
-  // A design chosen under the new defaults before the mark existed: a stored earlier default tells it, and only the mark is written.
+  // A design chosen under the first round's new defaults before its mark existed: a stored earlier default tells it, and that round writes only its mark.
   for (const design of ADMIN_DESIGNS.filter((d) => d.parts.capAdd === 'head')) {
-    const map = new Map();
-    for (const w of designWrites(design.id)) if (w.value != null) map.set(w.key, w.value);
-    assert.deepEqual(earlierDefaultWrites(getOf(map)), [MARK], `${design.id} chosen under the new defaults, unmarked`);
+    const map = writtenThen(design.id, 1);
+    map.delete(MARKS[0].key);
+    assert.deepEqual(earlierDefaultWrites(getOf(map))[0], MARKS[0], `${design.id} chosen under the new defaults, unmarked`);
   }
-  const side = ADMIN_DESIGNS.find((d) => d.parts.shortcuts === 'pinned' && d.id !== DEFAULT_DESIGN);
-  assert.equal(earlierDefaultWrites(getOf(writtenThen(side.id))).length, 3, 'a design with the head and the Pinned rows gets both back, and the mark');
+  const side = ADMIN_DESIGNS.find((d) => d.parts.capAdd === 'head' && d.parts.shortcuts === 'pinned' && d.id !== DEFAULT_DESIGN);
+  const sideBack = earlierDefaultWrites(getOf(writtenThen(side.id))).filter((w) => !EARLIER_READ_KEYS.includes(w.key));
+  assert.deepEqual(sideBack, [{ key: 'urd-add-capability', value: 'head' }, { key: 'urd-menu-shortcuts', value: 'pinned' }], 'a design with the head and the Pinned rows gets both back');
+  // «Settings in a group»: the default design moves to «Added as needed»; a design chosen with «All shown» keeps it.
+  assert.equal(ADMIN_DESIGNS.find((d) => d.id === DEFAULT_DESIGN).parts.extra, 'menu');
+  assert.equal(partDefault(PARTS.find((p) => p.id === 'extra')), 'menu');
+  for (const design of ADMIN_DESIGNS.filter((d) => d.id !== DEFAULT_DESIGN && d.parts.extra === 'shown')) {
+    const map = writtenThen(design.id, 1);
+    assert.equal(map.get('urd-extra-settings'), undefined, `${design.id}: «All shown» was stored as nothing while it was the default`);
+    apply(map, earlierDefaultWrites(getOf(map)));
+    assert.equal(map.get('urd-extra-settings'), 'shown', `${design.id} keeps «All shown»`);
+  }
 });
 
 test('the parts a preset no longer matches are named in the order the settings window lists their rows', () => {

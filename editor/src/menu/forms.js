@@ -9,8 +9,8 @@ export const MENU_FORMS = ['wide', 'narrow', 'docked', 'docked-tabs', 'tabs'];
 /** As the owner left them, one open at a time in an area, or all open. */
 export const FOLDS_MODES = ['left', 'one', 'all'];
 
-/** Every setting shown, or the first and the changed ones with the rest added from a menu. */
-export const EXTRA_MODES = ['shown', 'menu'];
+/** The first setting and the changed ones with the rest added from a menu, or every setting shown. */
+export const EXTRA_MODES = ['menu', 'shown'];
 
 /** How a look is chosen in the menus and the panels (lib/rows/LookChoice.svelte): a row naming the design that opens the design picker, or the designs' pictures in place. */
 export const DESIGN_CHOICES = ['row', 'inline'];

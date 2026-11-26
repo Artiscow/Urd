@@ -174,8 +174,13 @@ function onPointerdownWindow(e) {
   pageState.blockMenu = null;
 }
 
+/** Whether a dropdown's list or a colour picker stands open inside the floating menu. */
+const openInMenu = () => Boolean(document.querySelector('.block-menu :is(.dd-pop, .cp-pop):popover-open, .block-menu :is(.dd-pop, .cp-pop):not([popover])'));
+
 function onKeydown(e) {
   if (e.key === 'Escape' && pageState.blockMenu && !(e.target instanceof Element && e.target.closest('dialog'))) {
+    // Escape closes what stands open inside the menu first (a list that stays open after a choice, a colour picker); the menu itself goes at the next one.
+    if (openInMenu()) return;
     pageState.blockMenu = null;
     return;
   }

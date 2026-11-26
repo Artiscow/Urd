@@ -338,6 +338,16 @@ test('the dropdown draws a face\'s name in its typeface, and a decorative face\'
   assert.match(odd, /class="dd-value[^"]*">(?:<!--[^>]*-->)*Plain(?:<!--[^>]*-->)*<\/span>/);
 });
 
+test('the dropdown\'s list opens with the chosen option in its middle, takes no tooltip from the row around it, and stays open after a choice where asked', () => {
+  const source = readFileSync(new URL('../editor/src/lib/Dropdown.svelte', import.meta.url), 'utf8');
+  assert.match(source, /function centred\(node\) \{\s*if \(node\.dataset\.value !== untrack\(\(\) => `\$\{value \?\? ''\}`\)\) return;\s*const list = node\.parentElement;\s*list\.scrollTop = node\.offsetTop - \(list\.clientHeight - node\.offsetHeight\) \/ 2;/, 'read as the option is drawn, so a choice in an open list moves nothing');
+  assert.equal((source.match(/data-value=\{`\$\{v \?\? ''\}`\} \{@attach centred\}/g) ?? []).length, 2, 'every option in both branches');
+  assert.equal((source.match(/<div class="dd-pop[^"]*"[^>]* title=""/g) ?? []).length, 2, 'an empty title on the list in both branches: the row\'s tooltip names the setting, not each choice');
+  assert.match(source, /function pick\(v\) \{\s*if \(!stay\) \{\s*if \(native\) popEl\?\.hidePopover\(\);\s*open = false;\s*\}\s*onchange\?\.\(v\);/);
+  const image = readFileSync(new URL('../editor/src/menu/families/Image.svelte', import.meta.url), 'utf8');
+  assert.match(image, /<SelectRow stay label=\{ta\('lbl\.blend'\)\}/, 'the blends are tried one after another against the canvas');
+});
+
 test('the section Properties draws its link name, with a suggestion from its first heading while it has none', () => {
   const sections = [{ id: 'sec-1', blocks: [{ id: 'blk-1', type: 'text', props: { html: '<h2>Våre priser</h2>' }, frames: { desktop: { y: 0 } } }] }];
   let body = draw(panels.Properties, 'properties', structuredClone(site), { sections, sectionAnchor: '' });
@@ -387,3 +397,26 @@ test('the Collections, Plugins, History and Update panels render with content', 
   body = draw(panels.Blocks, 'blocks', draft, { templateIds: ['t1'], templateStores: { t1: { data: { mal: { name: 'T', kind: 'section' } } } } });
   assert.match(body, /panel-body/);
 });
+
+test('a background\'s layer rows are kept by their place, so a change to a layer keeps its row, and the colour picker open in it, standing', () => {
+  // A section's layers reach the editor as a fresh copy at every change (syncSectionMirrors in state/page.svelte.js), so a row kept by its layer's own object would be made anew at each one.
+  const source = readFileSync(new URL('../editor/src/section/BackgroundEditor.svelte', import.meta.url), 'utf8');
+  assert.match(source, /<CardList items=\{layers\} label=\{ta\('lbl\.background'\)\} key=\{\(layer, i\) => i\}/);
+  assert.match(readFileSync(new URL('../editor/src/state/page.svelte.js', import.meta.url), 'utf8'), /sectionBg = copyJSON\(section\?\.background\?\.layers \?\? \[\]\);/);
+});
+
+test('Escape closes a list or a colour picker open inside the floating menu first, and the menu at the next one', () => {
+  const shell = readFileSync(new URL('../editor/src/state/shell.svelte.js', import.meta.url), 'utf8');
+  assert.match(shell, /const openInMenu = \(\) => Boolean\(document\.querySelector\('\.block-menu :is\(\.dd-pop, \.cp-pop\):popover-open, \.block-menu :is\(\.dd-pop, \.cp-pop\):not\(\[popover\]\)'\)\);/);
+  assert.match(shell, /if \(openInMenu\(\)\) return;\s*pageState\.blockMenu = null;/);
+});
+
+test('the element menu\'s rule for a label\'s parts leaves the colour picker\'s own fields alone, and the live phone\'s toggle shows when it is on', () => {
+  const css = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8');
+  assert.match(css, /\.panel-body :is\(\.emenu-col, \.emenu-pinned\) label:not\(\.gridmenu-snap\):not\(:where\(\.dd \*, \.cp \*, \.gp \*, \.mp \*, \.dp-overlay \*, \.choice \*, \.step-field \*\)\) > \* \{\s*flex: none;/, 'a number field in the picker shrinks beside its unit, so the per cent sign stays in its box');
+  assert.doesNotMatch(css, /label:not\(\.gridmenu-snap\) > \* \{/);
+  const phone = readFileSync(new URL('../editor/src/shell/LivePhone.svelte', import.meta.url), 'utf8');
+  assert.match(phone, /\.lp-bar :global\(\.icon-btn\[aria-pressed='true'\]\) \{\s*color: var\(--urd-color-accent, #2bbfa5\);\s*background: color-mix\(in srgb, var\(--urd-color-accent, #2bbfa5\) 22%, transparent\);\s*opacity: 1;/);
+  assert.equal((phone.match(/label=\{ta\('ui\.livePhoneFollow'\)\} pressed=\{look\.follow\}/g) ?? []).length, 2, 'the toggle in the column\'s bar and in the floating one');
+});
+

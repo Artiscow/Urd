@@ -67,7 +67,7 @@ export const ADMIN_DESIGNS = [
     id: 'floating',
     labelKey: 'adminDesign.floating',
     parts: {
-      menu: 'wide', folds: 'left', toolbar: 'groups', toolbarLook: 'glass-accent', toolbarGear: 'on', toolbarPhone: 'on', toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'small', designs: 'row', extra: 'shown', capAdd: 'folded', capList: null, shortcuts: 'search',
+      menu: 'wide', folds: 'left', toolbar: 'groups', toolbarLook: 'glass-accent', toolbarGear: 'on', toolbarPhone: 'on', toolbarSize: 'regular', toolbarPhonePlace: 'canvas', toolbarDesign: 'small', designs: 'row', extra: 'menu', capAdd: 'folded', capList: null, shortcuts: 'search',
       layout: 'top-tabs', sidebarFolds: null, panelTabMenus: null, tabMenus: 'groups', tabMenuStay: 'stay', place: 'dialog',
       addBlockMenu: 'side', layoutPicker: 'strip', linkEditor: 'dialog', pageSettings: 'dialog', collectionsLayout: 'drill', csvPreview: 'dialog', phonePanel: 'dock', phoneColumn: 'table',
     },
@@ -162,28 +162,54 @@ export function restoreWrites(values) {
   });
 }
 
-/** The defaults «Adding extras» and «Top of the menu» had until 11 November 2026, when «A line of names» and the search field took their place: a part whose key holds nothing was read as these until then. */
-const EARLIER_DEFAULTS = { capAdd: 'head', shortcuts: 'pinned' };
+/**
+ * The defaults that changed, each round with its own mark, read once in a browser: «Adding extras» and «Top of the menu» until 11 November 2026, when «A line of names» and the search field took their place, and «Settings in a group» until 25 November 2026, when «Added as needed» took its place.
+ * A part whose key holds nothing was read as its earlier default until its round.
+ */
+const EARLIER_ROUNDS = [
+  { mark: 'urd-earlier-defaults-read', defaults: { capAdd: 'head', shortcuts: 'pinned' } },
+  { mark: 'urd-earlier-defaults-read-2', defaults: { extra: 'shown' } },
+];
 
-/** The key that marks the earlier defaults as read, so they are read once: after it, a key that holds nothing is the new default. */
-export const EARLIER_READ_KEY = 'urd-earlier-defaults-read';
+/** The key that marks the first round's earlier defaults as read, so they are read once: after it, a key that holds nothing is the new default. */
+export const EARLIER_READ_KEY = EARLIER_ROUNDS[0].mark;
+
+/** The marks of every round. */
+export const EARLIER_READ_KEYS = EARLIER_ROUNDS.map((round) => round.mark);
 
 /**
- * What keeps a design chosen before 11 November 2026 as it stood, read once in a browser: the parts whose keys hold nothing are read as their earlier defaults, and where that makes a design other than the default, the earlier defaults are written, so the design reads as it did.
+ * What keeps a design chosen before a default changed as it stood, read once in a browser for each round: the parts of the round whose keys hold nothing are read as their earlier defaults, and where that makes a design other than the default, the earlier defaults are written, so the design and its parts read as they did.
+ * A round reads the parts as they stood before it, the later rounds' parts at their earlier defaults too, and sees the writes of the rounds before it.
  * With nothing stored, or with the default design, only the mark is written and the new defaults stand.
  * @param {(key: string) => string|null} get Reads a stored value (localStorage.getItem)
  * @returns {Array<{ key: string, value: string }>}
  */
 export function earlierDefaultWrites(get) {
-  if (get(EARLIER_READ_KEY) != null) return [];
-  const mark = { key: EARLIER_READ_KEY, value: '1' };
-  // An earlier default was never stored while it was the default, so one that is stored was written under the new defaults.
-  if (PARTS.some((part) => part.id in EARLIER_DEFAULTS && get(part.key) === EARLIER_DEFAULTS[part.id])) return [mark];
-  const absent = PARTS.filter((part) => part.id in EARLIER_DEFAULTS && get(part.key) == null);
-  if (!absent.length) return [mark];
-  const values = readParts(get);
-  for (const part of absent) values[part.id] = EARLIER_DEFAULTS[part.id];
-  const earlier = ADMIN_DESIGNS.map((d) => (d.id === DEFAULT_DESIGN ? { ...d, parts: { ...d.parts, ...EARLIER_DEFAULTS } } : d));
-  if (designState(values, earlier).design === DEFAULT_DESIGN) return [mark];
-  return [...absent.map((part) => ({ key: part.key, value: EARLIER_DEFAULTS[part.id] })), mark];
+  const writes = [];
+  const written = new Map();
+  const now = (key) => (written.has(key) ? written.get(key) : get(key));
+  EARLIER_ROUNDS.forEach((round, i) => {
+    if (now(round.mark) != null) return;
+    const mark = { key: round.mark, value: '1' };
+    const write = (w) => { writes.push(w); written.set(w.key, w.value); };
+    const partsOf = (defaults) => PARTS.filter((part) => part.id in defaults);
+    // An earlier default was never stored while it was the default, so one that is stored was written under the new defaults.
+    if (partsOf(round.defaults).some((part) => now(part.key) === round.defaults[part.id])) {
+      write(mark);
+      return;
+    }
+    const absent = partsOf(round.defaults).filter((part) => now(part.key) == null);
+    if (!absent.length) {
+      write(mark);
+      return;
+    }
+    // The defaults as they stood before this round: its own and every later round's earlier ones.
+    const then = Object.assign({}, ...EARLIER_ROUNDS.slice(i).map((r) => r.defaults));
+    const values = readParts(now);
+    for (const part of partsOf(then)) if (now(part.key) == null) values[part.id] = then[part.id];
+    const earlier = ADMIN_DESIGNS.map((d) => (d.id === DEFAULT_DESIGN ? { ...d, parts: { ...d.parts, ...then } } : d));
+    if (designState(values, earlier).design !== DEFAULT_DESIGN) for (const part of absent) write({ key: part.key, value: round.defaults[part.id] });
+    write(mark);
+  });
+  return writes;
 }

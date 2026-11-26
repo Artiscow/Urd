@@ -99,6 +99,13 @@ CAPABILITIES.push(
     clear: (ed) => ed.setBlockProps('video-play', { loop: false, muted: false, autoplay: false }),
   },
   {
+    id: 'video-overlay', area: 'style', icon: 'palette', pins: [], types: ['video'],
+    // A colour laid over an uploaded film; an embed's cover takes its overlay in the image editor, as every picture does.
+    available: (block) => block.props?.source === 'file',
+    inUse: (block) => Boolean(block.props?.overlay),
+    clear: (ed) => ed.setBlockProps('video-overlay', { overlay: undefined }),
+  },
+  {
     id: 'cal-switcher', area: 'content', icon: 'views', pins: [], types: ['calendar'],
     // Only the views that list what is coming can turn to the week or the month.
     available: (block) => CAL_SWITCH_VIEWS.includes(calView(block.props ?? {})),

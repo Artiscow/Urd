@@ -2,7 +2,7 @@
  * The render loop: sections, their background layers and their blocks, on either viewport; bad data never crashes the page.
  * Notes: docs/engine-notes/render.md (Urd repository).
  */
-import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, phoneRoomOf, PHONE_COLUMNS, phoneCells, phoneHeight } from './migrate.js';
+import { lift, liftPhoneWords, MOBILE_ROW, MOBILE_GAP, mobileGapOf, phoneRoomOf, PHONE_COLUMNS, phoneCells, phoneHeight, phoneSpace } from './migrate.js';
 import { forcesReadable, phoneHandoff, pushLayout, clampFitMin, fitFloorPx, phoneFitZoom, shrinksOnPhone, followsContent, followsWidth, heightAlign, FIT_BY_WIDTH, PUSH_SECTION_PAD, drawnScale, phoneSized, phoneFrame, mobileLoadingHeight, hasPhoneDesign, propsForWidth, propsForViewport, drawnBlock, NARROW_PX } from './push-model.js';
 import { applySectionTheme, resolveColor } from './theme.js';
 import { stackOrder, phoneSetupOf, phoneParts } from './phone-order.js';
@@ -353,7 +353,7 @@ function watchStuck(target) {
 }
 
 /** The parts of a block's place in the row grid its slot takes over while the block is pinned on the phone (stickOnPhone). */
-const SLOT_PLACE = ['gridRow', 'gridColumn', 'width', 'marginLeft', 'marginRight', 'justifySelf'];
+const SLOT_PLACE = ['gridRow', 'gridColumn', 'width', 'marginTop', 'marginLeft', 'marginRight', 'justifySelf'];
 
 /**
  * Brings the blocks pinned on the phone in a holder to their slots (stuckBox in sticky-model.js); exported for the editing layer.
@@ -465,7 +465,7 @@ const phoneFitWatch = typeof ResizeObserver === 'function' ? new ResizeObserver(
 
 /** The editing chrome inside a block never counts as content, and neither
  *  does a dialog, which is drawn over the page and never in the block. */
-const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-phone-words, .urd-hint-chip, .urd-hint-card, .urd-phone-num, .urd-block-ruler, dialog';
+export const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-phone-words, .urd-hint-chip, .urd-hint-card, .urd-phone-num, .urd-block-ruler, dialog';
 
 /**
  * The height the block's content needs, in the block's own px, measured on the content children.
@@ -820,7 +820,7 @@ export function phoneCellCss({ col, cols }) {
 
 /**
  * Translates a mobile placement (frames.mobile) to CSS for the row grid (ADR-0019): followed, overridden, pinned to rows or in cells.
- * @param {{x?: number, w?: number, row?: number, rows?: number, col?: number, cols?: number, height?: number, z?: number, rot?: number}|null} placement
+ * @param {{x?: number, w?: number, row?: number, rows?: number, col?: number, cols?: number, height?: number, space?: number, z?: number, rot?: number}|null} placement
  * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} desktop The block's desktop frame
  * @param {{autoGrow?: boolean, gap?: number, byWidth?: boolean, designWidth?: number}} [opts] autoGrow: text and data blocks with natural height; gap: the space under a flowing block in px (mobileGapOf), MOBILE_GAP without it; byWidth: a block whose size is its frame (FIT_BY_WIDTH), with designWidth the width its desktop frame's percent is of
  * @returns {object} Style map for Object.assign(el.style, ...)
@@ -849,6 +849,10 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
   }
 
   // Flowing: auto-placed, partial overrides applying only to the fields present.
+  // Its own room above it, taking no more than the gap.
+  const gap = Number.isFinite(opts.gap) ? opts.gap : MOBILE_GAP;
+  const space = Math.max(phoneSpace(placement), -gap);
+  if (space) css.marginTop = `${space}px`;
   if (cells) {
     css.width = '100%';
   } else {
@@ -872,11 +876,10 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
     // In a cell the block is no grid item: its height, the cell growing to its blocks.
     css.height = `${own ?? desktop.h}px`;
   } else {
-    // A fixed height: the span holds the block and the gap under it, at most the standard gap.
-    const gap = Math.min(Number.isFinite(opts.gap) ? opts.gap : MOBILE_GAP, MOBILE_GAP);
+    // A fixed height: the span holds the block, its room above it and the gap under it, at most the standard gap.
     const height = own ?? desktop.h;
     css.height = `${height}px`;
-    css.gridRow = `auto / span ${Math.max(1, Math.ceil((height + gap) / MOBILE_ROW))}`;
+    css.gridRow = `auto / span ${Math.max(1, Math.ceil((height + Math.min(gap, MOBILE_GAP) + space) / MOBILE_ROW))}`;
   }
   return css;
 }
@@ -1125,6 +1128,7 @@ export function renderSection(section, site, host, opts = {}) {
         el.style.gridRow = '';
         el.style.gridColumn = '';
         el.style.justifySelf = '';
+        el.style.marginTop = '';
         // A block placed by hand stretches to its rows in the grid; in the holder it takes their height itself (placeStuck).
         if (pinned && !el.style.height) {
           const rows = Number.isFinite(block.frames.mobile.rows) ? block.frames.mobile.rows : Math.max(1, Math.ceil(phoneFrame(block).h / MOBILE_ROW));
@@ -1343,9 +1347,9 @@ function redrawForWidth(el) {
     // A block pinned on the phone gives its place in the grid to its slot (stickOnPhone).
     const slot = el._urdStickSlot;
     if (slot?.isConnected) {
-      const { gridRow, gridColumn, justifySelf, ...own } = css;
-      Object.assign(slot.style, { gridRow: gridRow ?? '', gridColumn: gridColumn ?? '', justifySelf: justifySelf ?? '', width: css.width ?? '', marginLeft: css.marginLeft ?? '', marginRight: css.marginRight ?? '' });
-      Object.assign(el.style, own);
+      const { gridRow, gridColumn, justifySelf, marginTop, ...own } = css;
+      Object.assign(slot.style, { gridRow: gridRow ?? '', gridColumn: gridColumn ?? '', justifySelf: justifySelf ?? '', width: css.width ?? '', marginTop: marginTop ?? '', marginLeft: css.marginLeft ?? '', marginRight: css.marginRight ?? '' });
+      Object.assign(el.style, { ...own, marginTop: '' });
     } else {
       Object.assign(el.style, css);
     }

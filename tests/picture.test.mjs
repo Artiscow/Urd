@@ -1,9 +1,10 @@
 // The one drawing every picture shares (picture.js): its settings read within their bounds, the filter, the turn, and the looks held equal to the slideshow's tones.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { engineImport, readStyles } from './_engine.mjs';
+import { readFileSync } from 'node:fs';
+import { engineImport, readStyles, ENGINE_DIR } from './_engine.mjs';
 
-const { pictureStyle, pictureFilter, pictureTurn, straightenScale, LOOK_FILTERS, PICTURE_LOOKS, parseColor, duotoneTables } = await engineImport('picture.js');
+const { pictureStyle, pictureFilter, pictureTurn, straightenScale, LOOK_FILTERS, PICTURE_LOOKS, parseColor, duotoneTables, PICTURE_BLENDS, pictureBlend, blendStrength } = await engineImport('picture.js');
 const { COVER_DIM } = await engineImport('embed-cover.js');
 
 test('pictureStyle: a picture stored before the new settings reads as it always drew, and every value stays within its bounds', () => {
@@ -105,4 +106,51 @@ test('an image background layer with only a blur draws the filter it always had'
   assert.equal(pictureFilter(pictureStyle({ blur: 4 })), 'blur(4px)');
   assert.equal(pictureFilter(pictureStyle({})), '');
   assert.equal(pictureFilter(pictureStyle({ look: 'sepia', brightness: 1.1, blur: 2 })).endsWith('brightness(1.1) blur(2px)'), true);
+});
+
+/** An engine file's text. */
+const engineText = (path) => readFileSync(new URL(path, ENGINE_DIR), 'utf8');
+
+test('pictureBlend: a blend on the list is drawn as it is, and normal, an unknown one or none draws no blend', () => {
+  assert.equal(PICTURE_BLENDS[0], 'normal');
+  assert.equal(PICTURE_BLENDS.length, 16, 'the CSS blend modes for an element');
+  assert.equal(pictureBlend('multiply'), 'multiply');
+  assert.equal(pictureBlend('soft-light'), 'soft-light');
+  for (const none of ['normal', undefined, null, '', 'plus-lighter', 'multiply; position: fixed', 3]) assert.equal(pictureBlend(none), '', String(none));
+});
+
+test('blendStrength: whole where none is stored, and within 0..1; the block draws it as its picture\'s opacity', () => {
+  for (const whole of [undefined, null, '', 'x', 1, 4]) assert.equal(blendStrength(whole), 1, String(whole));
+  assert.equal(blendStrength(0.4), 0.4);
+  assert.equal(blendStrength(-2), 0);
+  const image = engineText('blocks/image.js');
+  assert.match(image, /const strength = blend \? blendStrength\(props\.blendStrength\) : 1;/, 'a picture without a blend has no strength');
+  assert.match(image, /if \(strength < 1\) el\.style\.setProperty\('--urd-blend-strength', String\(strength\)\);\s*else el\.style\.removeProperty\('--urd-blend-strength'\);/);
+  assert.match(engineText('blocks/image.css'), /\.urd-image-blend > :is\(\.urd-image-frame, a\) \{\s*opacity: var\(--urd-blend-strength, 1\);\s*\}/);
+  assert.match(engineText('preview-blend.js'), /opacity:\$\{block\.style\.getPropertyValue\('--urd-blend-strength'\) \|\| '1'\};/, 'the editor\'s stand-in carries the strength');
+});
+
+test('the image block blends on the block itself, and in the editor a stand-in under the block draws the picture and its blend, so the block\'s tools are never blended', () => {
+  const image = engineText('blocks/image.js');
+  assert.match(image, /const blend = props\.src \? pictureBlend\(props\.blend\) : '';/, 'an empty block has none');
+  assert.match(image, /el\.classList\.toggle\('urd-image-blend', Boolean\(blend\)\);\s*if \(blend\) el\.style\.setProperty\('--urd-blend', blend\);\s*else el\.style\.removeProperty\('--urd-blend'\);/, 'set and taken away at every draw');
+  assert.match(engineText('blocks/image.css'), /\.urd-image-blend \{\s*mix-blend-mode: var\(--urd-blend\);\s*\}/);
+  const css = engineText('preview.css');
+  assert.match(css, /\.urd-preview \.urd-blend-ghost \{\s*position: absolute;\s*pointer-events: none;\s*\}/, 'the stand-in takes no presses: the block under the pointer is the block itself');
+  assert.match(css, /\.urd-preview \.urd-block\.urd-blend-ghosted \{\s*mix-blend-mode: normal;\s*\}/);
+  assert.match(css, /\.urd-preview \.urd-block\.urd-blend-ghosted > :is\(\.urd-image-frame, a\) \{\s*opacity: 0;\s*\}/, 'the block keeps its picture, unseen, for measuring and dragging');
+  assert.doesNotMatch(css, /urd-image-blend:hover/, 'the blend is never set aside under the pointer');
+  const blend = engineText('preview-blend.js');
+  assert.match(blend, /const on = !document\.body\.classList\.contains\('urd-chrome-off'\);\s*const blocks = on \? \[\.\.\.document\.querySelectorAll\(BLENDED\)\] : \[\];/, 'the clean view draws the blocks\' own blend, as a visitor\'s page does');
+  assert.match(blend, /if \(ghost\.node\.nextElementSibling !== block\) block\.before\(ghost\.node\);/, 'under the block, in its layer');
+  assert.match(blend, /if \(target\?\.closest\('\.urd-blend-ghost, \.urd-guide-layer'\)\) continue;/, 'its own writes, and a drag\'s guide lines, call for no new round');
+  assert.match(engineText('preview-edit.js'), /initTextToolbar\(\);\s*watchBlends\(\);/);
+});
+
+test('a film with an overlay stands in a frame that carries it, and one without keeps its markup', () => {
+  const video = engineText('blocks/video.js');
+  assert.match(video, /const overlay = pictureStyle\(\{ overlay: props\.overlay \}\)\.overlay;\s*if \(overlay\) \{\s*const film = document\.createElement\('div'\);\s*film\.className = 'urd-video-film';\s*drawOverlay\(film, overlay\);\s*film\.appendChild\(video\);\s*box\.appendChild\(film\);\s*\} else \{\s*box\.appendChild\(video\);/);
+  assert.match(engineText('blocks/video.css'), /\.urd-video-film \{\s*display: block;\s*width: 100%;\s*height: 100%;\s*\}/);
+  assert.match(engineText('picture.js'), /export function drawOverlay\(frame, overlay\) \{\s*frame\.classList\.toggle\('urd-pic-overlaid', Boolean\(overlay\)\);/);
+  assert.match(readStyles(), /\.urd-pic-overlaid::after \{[^}]*pointer-events: none;/, 'the film\'s controls work under the overlay');
 });

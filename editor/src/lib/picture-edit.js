@@ -4,6 +4,7 @@
  */
 import { pictureStyle, PICTURE_BOUNDS, PICTURE_LOOKS, DUOTONE_DEFAULT, straightenScale } from '$engine/picture.js';
 import { aspectRatio } from '$engine/push-model.js';
+import { phoneCells, MOBILE_ROW } from '$engine/migrate.js';
 
 /** The settings the editor writes beside the picture, in the order its sections show them. */
 export const STYLE_KEYS = ['x', 'y', 'zoom', 'rotate', 'flipX', 'flipY', 'straighten', 'look', 'duotone', 'brightness', 'contrast', 'saturate', 'blur', 'overlay'];
@@ -51,7 +52,7 @@ export const KIND_TOOLS = {
   image: { ratios: IMAGE_RATIOS, fit: true, corners: true, overlay: true, alt: true },
   gallery: { ratios: null, fit: true, corners: false, overlay: true, alt: true },
   entry: { ratios: ENTRY_SHAPES, fit: true, corners: true, overlay: true, alt: true },
-  cover: { ratios: null, fit: false, corners: false, overlay: false, alt: false },
+  cover: { ratios: null, fit: false, corners: false, overlay: true, alt: false },
   icon: { ratios: null, fit: false, corners: false, overlay: true, alt: false, bake: { width: 128, height: 128 } },
   share: { ratios: null, fit: false, corners: false, overlay: true, alt: false, bake: { width: 1200, height: 630 } },
   portrait: { ratios: null, fit: false, corners: false, overlay: true, alt: false, round: true, frame: { width: 48, height: 48 } },
@@ -60,6 +61,18 @@ export const KIND_TOOLS = {
   layer: { ratios: null, fit: false, corners: false, overlay: false, alt: false, frameless: true, turn: false, looks: FILTER_LOOKS, budget: 'background', removable: false },
   slide: { ratios: null, fit: false, corners: false, overlay: false, alt: false, turn: false, look: false, adjust: false, zoom: false, budget: 'background', removable: false },
 };
+
+/**
+ * A colour from the picker as a picture or a film keeps it: a theme colour's name, or a hex colour without its transparency (a duotone or an overlay has no use for one); null for anything else.
+ * @param {unknown} value
+ * @returns {string|null}
+ */
+export function pickedColour(value) {
+  const v = String(value ?? '').trim().toLowerCase();
+  if (/^[a-z][a-z0-9-]*$/.test(v)) return v;
+  const hex = /^#[0-9a-f]{6}/.exec(v);
+  return hex ? hex[0] : null;
+}
 
 /** The settings an image background layer takes from the editor, beside its own placement: its look and adjustments (the blur is the layer's own). */
 export const LAYER_KEYS = ['look', 'brightness', 'contrast', 'saturate', 'blur'];
@@ -231,17 +244,105 @@ export function pointOnPicture({ clientX, clientY, centerX, centerY, width, heig
   return { x: clamp(ux / width + 0.5), y: clamp(uy / height + 0.5) };
 }
 
+/** The crop window's least size: its longer side at what the largest zoom shows, each side a little of the picture at least. */
+const LEAST_SHARE = 1 / PICTURE_BOUNDS.zoom.max;
+const LEAST_SIDE = 0.02;
+
+const clamped = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const fourth = (v) => Math.round(v * 10000) / 10000;
+
 /**
- * The zoom a corner handle gives when it is dragged to a point, the opposite corner held: the crop window keeps its shape and spans from that corner to the point.
- * @param {{anchorX: number, anchorY: number, pointX: number, pointY: number, full: {width: number, height: number}}} p
- *   the corner held and the pointer as fractions of the picture; full is the window at zoom 1
- * @returns {number}
+ * The crop window with one of its eight handles dragged to a point, as crop tools do it: the edges the handle stands on follow the pointer and the opposite ones hold, the window staying inside the picture and never smaller than the largest zoom shows.
+ * With a shape kept (`keep`, the window's width over its height in fractions of the picture), a corner follows the pointer on the axis it moves most and an edge grows the window across it around the window's middle, so the shape holds.
+ * @param {{win: {left: number, top: number, width: number, height: number}, edge: {x: -1|0|1, y: -1|0|1}, point: {x: number, y: number}, keep?: number|null}} p
+ *   win is the window where the drag began; edge the handle (-1 the left or top edge, 1 the right or bottom, 0 neither); point the pointer on the picture (0..1)
+ * @returns {{left: number, top: number, width: number, height: number}}
  */
-export function zoomFromCorner({ anchorX, anchorY, pointX, pointY, full }) {
-  const across = Math.abs(pointX - anchorX) / full.width;
-  const down = Math.abs(pointY - anchorY) / full.height;
-  const share = Math.max(across, down, 1 / PICTURE_BOUNDS.zoom.max);
-  return Math.round(Math.min(PICTURE_BOUNDS.zoom.max, Math.max(1, 1 / share)) * 100) / 100;
+export function croppedWindow({ win, edge, point, keep = null }) {
+  const right = win.left + win.width;
+  const bottom = win.top + win.height;
+  let w = win.width;
+  let h = win.height;
+  if (edge.x < 0) w = right - clamped(point.x, 0, right);
+  if (edge.x > 0) w = clamped(point.x, win.left, 1) - win.left;
+  if (edge.y < 0) h = bottom - clamped(point.y, 0, bottom);
+  if (edge.y > 0) h = clamped(point.y, win.top, 1) - win.top;
+  if (keep > 0) {
+    if (edge.x && edge.y) {
+      if (w / keep >= h) h = w / keep;
+      else w = h * keep;
+    } else if (edge.x) h = w / keep;
+    else w = h * keep;
+    const fit = Math.min(1, 1 / w, 1 / h);
+    w *= fit;
+    h *= fit;
+  } else {
+    w = Math.max(LEAST_SIDE, w);
+    h = Math.max(LEAST_SIDE, h);
+  }
+  const longer = Math.max(w, h);
+  if (longer < LEAST_SHARE) {
+    w *= LEAST_SHARE / longer;
+    h *= LEAST_SHARE / longer;
+  }
+  // The handle's opposite edge holds; an axis the handle does not move keeps the window's middle.
+  const left = edge.x < 0 ? right - w : edge.x > 0 ? win.left : win.left + (win.width - w) / 2;
+  const top = edge.y < 0 ? bottom - h : edge.y > 0 ? win.top : win.top + (win.height - h) / 2;
+  return { left: fourth(clamped(left, 0, 1 - w)), top: fourth(clamped(top, 0, 1 - h)), width: fourth(w), height: fourth(h) };
+}
+
+/**
+ * The zoom and the focus point that draw a crop window: the window fills its frame at a zoom of one over its longer side, placed by where it stands in the room the picture leaves it.
+ * The zoom keeps four decimals, so the side it is not read from stands where it was cropped. An axis the window fills from edge to edge keeps the point it had.
+ * @param {{left: number, top: number, width: number, height: number}} win
+ * @param {{x: number, y: number}} point The focus point now
+ * @returns {{zoom: number, x: number, y: number}}
+ */
+export function styleForWindow(win, point) {
+  const along = (start, size, keep) => (1 - size > 0.0001 ? Math.round(clamped(start / (1 - size), 0, 1) * 1000) / 1000 : keep);
+  return {
+    zoom: fourth(clamped(1 / Math.max(win.width, win.height), 1, PICTURE_BOUNDS.zoom.max)),
+    x: along(win.left, win.width, point.x),
+    y: along(win.top, win.height, point.y),
+  };
+}
+
+/**
+ * An image block's frame after a free crop, as crop tools leave a picture on the page: the picture keeps its size and its place, and the frame follows the window's edges over it.
+ * A frame wider than its section is brought back to the section's width with its height, so the shape holds; the height keeps two decimals, so the window's other side stands where it was cropped.
+ * @param {{x: number, y: number, w: number, h: number}} frame The frame where the crop began (x and w in per cent of the section, y and h in px)
+ * @param {{left: number, top: number, width: number, height: number}} from The window where the crop began
+ * @param {{left: number, top: number, width: number, height: number}} to The window now
+ * @returns {{x: number, y: number, w: number, h: number}}
+ */
+export function frameForCrop(frame, from, to) {
+  const r2 = (v) => Math.round(v * 100) / 100;
+  let w = frame.w * (to.width / from.width);
+  let h = frame.h * (to.height / from.height);
+  if (w > 100) {
+    h *= 100 / w;
+    w = 100;
+  }
+  w = Math.max(1, r2(w));
+  const x = clamped(r2(frame.x + ((to.left - from.left) / from.width) * frame.w), 0, r2(100 - w));
+  const y = Math.max(0, Math.round(frame.y + ((to.top - from.top) / from.height) * frame.h));
+  return { ...frame, x, y, w, h: Math.max(1, r2(h)) };
+}
+
+/**
+ * An image block's placement on the phone after its frame is cropped in the phone view, so the phone draws the crop's shape too.
+ * A block pinned there takes the rows its width needs at that shape, a flowing block across the row or with a height of its own takes that height, and a block in cells with none already keeps its desktop frame's shape.
+ * @param {object|null} placement The block's `frames.mobile` as the editor opened
+ * @param {number} width The block's width on the phone in px, as drawn
+ * @param {number} ratio The cropped frame's width over its height
+ * @returns {object|null}
+ */
+export function phoneForCrop(placement, width, ratio) {
+  if (!(width > 0 && ratio > 0)) return placement;
+  const height = width / ratio;
+  if (Number.isFinite(placement?.row)) return { ...placement, rows: Math.max(1, Math.round(height / MOBILE_ROW)) };
+  if (phoneCells(placement) && !(placement?.height > 0)) return placement;
+  return { ...(placement ?? {}), height: Math.max(MOBILE_ROW, Math.round(height)) };
 }
 
 /**
@@ -298,17 +399,6 @@ export function movedFrame(win, dx, dy, point) {
     return Math.round((Math.min(room, Math.max(0, start + delta)) / room) * 1000) / 1000;
   };
   return { x: along(win.left, win.width, dx, point.x), y: along(win.top, win.height, dy, point.y) };
-}
-
-/**
- * The frame centred on a point of the picture, as near as it can stand: what a click beside the frame does.
- * @param {{left: number, top: number, width: number, height: number}} win
- * @param {{x: number, y: number}} at The point on the picture (0..1)
- * @param {{x: number, y: number}} point The focus point now
- * @returns {{x: number, y: number}}
- */
-export function frameAt(win, at, point) {
-  return movedFrame(win, at.x - (win.left + win.width / 2), at.y - (win.top + win.height / 2), point);
 }
 
 /** How far past its own size a picture may be drawn and still count as sharp: a few per cent do not show. */

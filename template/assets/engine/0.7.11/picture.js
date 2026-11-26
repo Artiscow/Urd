@@ -11,7 +11,9 @@
  * (degrees, -15..15); the `look`, one of the slideshow layer's tones;
  * `brightness`, `contrast` and `saturate` (0..2) and `blur` (px, 0..20); and
  * an `overlay` in a site colour (`{ color, strength }`); and with the duotone
- * look, its two colours (`duotone: { dark, light }`).
+ * look, its two colours (`duotone: { dark, light }`). A block's picture can
+ * also blend with what lies behind the block (`blend`, pictureBlend), at a
+ * strength (`blendStrength`).
  */
 import { resolveColor } from './theme.js';
 
@@ -80,6 +82,31 @@ export const PICTURE_BOUNDS = {
   saturate: { min: 0, max: 2 },
   blur: { min: 0, max: 20 },
 };
+
+/** The ways a block's picture blends with what lies behind it, the CSS `mix-blend-mode` values; `normal` is none. */
+export const PICTURE_BLENDS = [
+  'normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn',
+  'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity',
+];
+
+/**
+ * A stored blend as the CSS value to draw, '' for none or one that is not on the list. Pure.
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function pictureBlend(value) {
+  return value !== 'normal' && PICTURE_BLENDS.includes(value) ? value : '';
+}
+
+/**
+ * How strongly a blend is drawn, 0..1: the blended picture's opacity, whole where none is stored. Pure.
+ * @param {unknown} value
+ * @returns {number}
+ */
+export function blendStrength(value) {
+  const n = Number(value);
+  return value != null && value !== '' && Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
+}
 
 /** A site colour token or a hex colour: what an overlay may be drawn in. */
 const OVERLAY_COLOR_RE = /^(?:[a-z][a-z0-9-]*|#[0-9a-f]{3}|#[0-9a-f]{6})$/i;
@@ -369,10 +396,19 @@ export function drawPicture(frame, img, raw, { dim = 1, ratioFromPicture = false
   }
 
   for (const look of LAYERED_LOOKS) frame.classList.toggle(`urd-pic-look-${look}`, style.look === look);
-  frame.classList.toggle('urd-pic-overlaid', Boolean(style.overlay));
-  if (style.overlay) {
-    frame.style.setProperty('--urd-pic-overlay', resolveColor(style.overlay.color));
-    frame.style.setProperty('--urd-pic-overlay-strength', String(style.overlay.strength));
+  drawOverlay(frame, style.overlay);
+}
+
+/**
+ * Lays an overlay over a frame, or takes it away: a picture's frame, or the frame around a film.
+ * @param {HTMLElement} frame
+ * @param {{color: string, strength: number}|null} overlay As pictureStyle gives it
+ */
+export function drawOverlay(frame, overlay) {
+  frame.classList.toggle('urd-pic-overlaid', Boolean(overlay));
+  if (overlay) {
+    frame.style.setProperty('--urd-pic-overlay', resolveColor(overlay.color));
+    frame.style.setProperty('--urd-pic-overlay-strength', String(overlay.strength));
   } else {
     frame.style.removeProperty('--urd-pic-overlay');
     frame.style.removeProperty('--urd-pic-overlay-strength');

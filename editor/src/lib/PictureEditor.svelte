@@ -1,13 +1,13 @@
 <script>
   /* The image editor (0.7.29.2, layout A): a modal dialog over the admin with the picture large at its true shape in the middle, the crop window and the focus point on it, the shapes, the fit, the zoom and the focus point's numbers under it, and the tools in a column at the right (Look, Turn, Adjust, Corners, Overlay, Text, Size), each section with its own Reset.
      Size (0.7.29.3) weighs the file against its use's budget, with «Make smaller» over it, and says whether the picture is sharp in its frame on the page.
-     The head holds the dialog's own undo and redo, Compare (held, the picture as it was opened) and «Reset all»; the foot removes the picture, gives a gallery's other pictures this one's look («Apply to all»), takes another, or closes with «Done». Escape cancels.
+     The head holds the dialog's own undo and redo, Compare (held, the picture as it was opened) and «Reset all»; the foot removes the picture, gives a gallery's other pictures this one's look («Apply to all»), takes another, or closes with «Done», as Enter does. Escape cancels.
      Every change is written at once through state/picture-editor.svelte.js, so the canvas behind shows it, and the rules (the crop window, a pointer on the turned picture, the zoom a corner gives) are lib/picture-edit.js. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { pictureFilter, pictureStyle, PICTURE_LOOKS, PICTURE_BOUNDS, LOOK_FILTERS, straightenScale, parseColor, duotoneFilterUrl } from '$engine/picture.js';
-  import { cropWindow, pointOnPicture, zoomFromCorner, turned, sectionChanged, KIND_TOOLS, ratioValue, movedFrame, frameAt, sharpness, dataUrlBytes, isDrawing, isBaked } from './picture-edit.js';
+  import { cropWindow, pointOnPicture, croppedWindow, styleForWindow, frameForCrop, turned, sectionChanged, KIND_TOOLS, ratioValue, movedFrame, sharpness, dataUrlBytes, isDrawing, isBaked, pickedColour } from './picture-edit.js';
   import { ICONS } from './icons.js';
   import StepField from './StepField.svelte';
   import ColorPicker from './ColorPicker.svelte';
@@ -38,6 +38,8 @@
       if (!live || !dialogEl || dialogEl.open) return;
       live = false;
       dialogEl.showModal();
+      // The picture takes the focus, so Enter is «Done» and the arrow keys move the frame from the start.
+      stageEl?.focus({ preventScroll: true });
     };
     if (!at) {
       show();
@@ -83,9 +85,12 @@
   });
   const angle = $derived(style ? style.rotate + style.straighten : 0);
   const boxTransform = $derived(style ? `translate(-50%, -50%) rotate(${angle}deg) scale(${style.flipX ? -1 : 1}, ${style.flipY ? -1 : 1})` : '');
+  /** The window a handle is dragging, drawn as it is dragged rather than read back from the stored zoom and focus point. */
+  let cropping = $state(null);
   /** The crop window as fractions of the picture, the straightening's growth taken off around its centre. */
   const win = $derived.by(() => {
     if (!style || !shown) return null;
+    if (cropping) return cropping;
     const w = cropWindow({ pictureRatio, frameRatio: ed.pictureFrameRatio, x: style.x, y: style.y, zoom: style.zoom, fit: shown.fit, quarter });
     const grow = straightenScale(style.straighten);
     if (grow === 1) return w;
@@ -100,24 +105,18 @@
     return pointOnPicture({ clientX: event.clientX, clientY: event.clientY, centerX: r.left + r.width / 2, centerY: r.top + r.height / 2, width: box.w, height: box.h, angle, flipX: style.flipX, flipY: style.flipY });
   }
 
-  /** The frame moved over the picture: dragged from where it is pressed, or, pressed beside it, first put where the press is; one step when it is let go. */
+  /** The frame moved over the picture, from wherever it is pressed, by as much as the pointer moves; one step, and one write to the page, when it is let go. */
   function startMove(event) {
     if (event.button !== 0 || !boxEl || !win || !style || tools.frameless) return;
     event.preventDefault();
     stageEl.focus({ preventScroll: true });
-    let from = pointAt(event);
-    let startWin = win;
-    let startPoint = { x: style.x, y: style.y };
-    const inside = from.x >= win.left && from.x <= win.left + win.width && from.y >= win.top && from.y <= win.top + win.height;
-    if (!inside) {
-      startPoint = frameAt(win, from, startPoint);
-      ed.changePicture({ style: startPoint }, { gesture: true });
-      startWin = cropWindow({ pictureRatio, frameRatio: ed.pictureFrameRatio, ...startPoint, zoom: style.zoom, fit: pic.fit, quarter });
-    }
+    const from = pointAt(event);
+    const startWin = win;
+    const startPoint = { x: style.x, y: style.y };
     const move = (e) => {
       if (!boxEl || !style) return up();
       const p = pointAt(e);
-      ed.changePicture({ style: movedFrame(startWin, p.x - from.x, p.y - from.y, startPoint) }, { gesture: true });
+      ed.changePicture({ style: movedFrame(startWin, p.x - from.x, p.y - from.y, startPoint) }, { gesture: true, live: false });
     };
     const up = () => {
       window.removeEventListener('pointermove', move);
@@ -128,31 +127,53 @@
     window.addEventListener('pointerup', up);
   }
 
-  /** A corner of the crop window dragged: the opposite corner holds, and the zoom and the focus point follow so the window spans to the pointer. */
-  function startCorner(event, corner) {
-    if (event.button !== 0 || !win) return;
+  /** The crop window's eight handles: its corners and the middles of its edges, each with the edges it moves (-1 the left or top, 1 the right or bottom). */
+  const CROP_HANDLES = [
+    { id: 'tl', x: -1, y: -1 }, { id: 't', x: 0, y: -1 }, { id: 'tr', x: 1, y: -1 }, { id: 'r', x: 1, y: 0 },
+    { id: 'br', x: 1, y: 1 }, { id: 'b', x: 0, y: 1 }, { id: 'bl', x: -1, y: 1 }, { id: 'l', x: -1, y: 0 },
+  ];
+  /** Whether a crop gives the image block the window's shape: an image block on «Free», its picture filling the frame. Any other picture keeps its frame's shape. */
+  const freeCrop = $derived(target?.kind === 'image' && pic?.ratio === 'free' && shown?.fit !== 'contain' && Boolean(pic?.frame));
+
+  /** The window as the page draws it, the straightening's growth put back around its middle and held inside the picture. */
+  function baseWindow(shownWin, grow) {
+    if (grow === 1) return shownWin;
+    let w = shownWin.width * grow;
+    let h = shownWin.height * grow;
+    const fit = Math.min(1, 1 / w, 1 / h);
+    w *= fit;
+    h *= fit;
+    const cx = shownWin.left + shownWin.width / 2;
+    const cy = shownWin.top + shownWin.height / 2;
+    return { left: Math.min(1 - w, Math.max(0, cx - w / 2)), top: Math.min(1 - h, Math.max(0, cy - h / 2)), width: w, height: h };
+  }
+
+  /**
+   * A handle of the crop window dragged, as crop tools do it: the edges it stands on follow the pointer and the opposite ones hold (croppedWindow).
+   * On «Free» the window takes any shape, Shift at a corner keeping the one it had, and the image block takes it with the picture left where it is on the page (frameForCrop); any other shape is kept.
+   * The page takes the crop once, as it is let go, since the dialog covers it.
+   */
+  function startCrop(event, handle) {
+    if (event.button !== 0 || !win || !style) return;
     event.preventDefault();
     event.stopPropagation();
-    const right = corner.includes('r');
-    const bottom = corner.includes('b');
-    const anchorX = right ? win.left : win.left + win.width;
-    const anchorY = bottom ? win.top : win.top + win.height;
-    const full = cropWindow({ pictureRatio, frameRatio: ed.pictureFrameRatio, x: 0.5, y: 0.5, zoom: 1, fit: pic.fit, quarter });
+    const from = win;
+    const point = { x: style.x, y: style.y };
+    const grow = straightenScale(style.straighten);
+    const free = freeCrop;
+    const frame = free ? pic.frame : null;
     const move = (e) => {
       if (!boxEl || !style) return up();
-      const p = pointAt(e);
-      const zoom = zoomFromCorner({ anchorX, anchorY, pointX: p.x, pointY: p.y, full });
-      const w = full.width / zoom;
-      const h = full.height / zoom;
-      const left = right ? anchorX : anchorX - w;
-      const top = bottom ? anchorY : anchorY - h;
-      const x = w < 1 ? Math.min(1, Math.max(0, left / (1 - w))) : style.x;
-      const y = h < 1 ? Math.min(1, Math.max(0, top / (1 - h))) : style.y;
-      ed.changePicture({ style: { zoom, x: Math.round(x * 1000) / 1000, y: Math.round(y * 1000) / 1000 } }, { gesture: true });
+      const keep = !free || (e.shiftKey && handle.x && handle.y) ? from.width / from.height : null;
+      const to = croppedWindow({ win: from, edge: handle, point: pointAt(e), keep });
+      const next = styleForWindow(baseWindow(to, grow), point);
+      cropping = to;
+      ed.changePicture(frame ? { style: next, frame: frameForCrop(frame, from, to) } : { style: next }, { gesture: true, live: false });
     };
     const up = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      cropping = null;
       ed.endPictureGesture();
     };
     window.addEventListener('pointermove', move);
@@ -189,7 +210,25 @@
     }
   }
 
-  /** The dialog's own keys: its undo and redo; Escape is the dialog's cancel. */
+  /** Whether the control with the focus was pressed with the pointer, rather than reached with the keys. */
+  let pressed = false;
+
+  /**
+   * Enter is «Done», heard before the control with the focus hears it.
+   * A field keeps its Enter (the description, a number taking what was typed), and so does a button reached with the keys; a button that is only focused because it was clicked does not.
+   */
+  function onEnter(event) {
+    if (event.key === 'Tab') pressed = false;
+    if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || event.isComposing || ed.pictureBaking) return;
+    const at = event.target;
+    if (at.closest?.('textarea, select, input:not([type="range"])')) return;
+    if (!pressed && at.closest?.('button, a[href], summary')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    ed.donePicture();
+  }
+
+  /** The dialog's own keys: its undo and redo; Enter is «Done» (onEnter), and Escape the dialog's cancel. */
   function onDialogKey(event) {
     if (!(event.ctrlKey || event.metaKey)) return;
     const key = event.key.toLowerCase();
@@ -213,13 +252,6 @@
 
   const ratioLabel = (r) => ({ free: ta('pic.ratio.free'), original: ta('pic.ratio.original'), auto: ta('opt.auto'), wide: ta('pic.shape.wide'), square: '1:1', portrait: ta('pic.shape.portrait'), circle: ta('pic.shape.circle') }[r] ?? r);
   const OVERLAY_COLORS = ['text', 'accent', 'bg', 'surface'];
-  /** A colour from the picker as the picture keeps it: a theme colour's name, or a hex colour without its transparency (a duotone or an overlay has no use for one); null for anything else. */
-  function pickedColour(value) {
-    const v = String(value ?? '').trim().toLowerCase();
-    if (/^[a-z][a-z0-9-]*$/.test(v)) return v;
-    const hex = /^#[0-9a-f]{6}/.exec(v);
-    return hex ? hex[0] : null;
-  }
 
   /** A duotone's gradient map for a pair of colours as the site's theme gives them, '' where a colour cannot be read. */
   function duotoneUrl(pair) {
@@ -280,7 +312,7 @@
 </script>
 
 {#if pic}
-  <dialog class="pe dx dx-large" bind:this={dialogEl} use:fadingDialog out:dialogOut|global oncancel={onCancel} onkeydown={onDialogKey} aria-labelledby="pe-title">
+  <dialog class="pe dx dx-large" bind:this={dialogEl} use:fadingDialog out:dialogOut|global oncancel={onCancel} onkeydowncapture={onEnter} onpointerdowncapture={() => (pressed = true)} onkeydown={onDialogKey} aria-labelledby="pe-title">
     <div class="pe-card">
       <header class="pe-head">
         <b id="pe-title">{ta(`pic.title.${target.kind}`)}</b>
@@ -310,9 +342,9 @@
             {#if style.overlay}<span class="pe-overlay" style:background={siteColor(style.overlay.color)} style:opacity={style.overlay.strength}></span>{/if}
             {#if win && !tools.frameless}
               <span class="pe-window" class:pe-round={tools.round || pic.ratio === 'circle'} style:left="{win.left * 100}%" style:top="{win.top * 100}%" style:width="{win.width * 100}%" style:height="{win.height * 100}%">
-                {#each tools.zoom === false ? [] : ['tl', 'tr', 'bl', 'br'] as corner (corner)}
+                {#each tools.zoom === false ? [] : CROP_HANDLES as handle (handle.id)}
                   <!-- svelte-ignore a11y_no_static_element_interactions -->
-                  <span class="pe-handle pe-{corner}" title={ta('tip.pic.zoom')} onpointerdown={(e) => startCorner(e, corner)}></span>
+                  <span class="pe-handle pe-{handle.id}" class:pe-edge={!handle.x || !handle.y} title={ta(freeCrop ? 'tip.pic.crop' : 'tip.pic.zoom')} onpointerdown={(e) => startCrop(e, handle)}></span>
                 {/each}
               </span>
             {/if}
@@ -652,6 +684,31 @@
   .pe-br { right: -8px; bottom: -8px; cursor: nwse-resize; }
   .pe-tr { right: -8px; top: -8px; cursor: nesw-resize; }
   .pe-bl { left: -8px; bottom: -8px; cursor: nesw-resize; }
+
+  /* The middles of the edges: a bar along its edge, moving that edge alone */
+  .pe-handle.pe-edge {
+    border-radius: 3px;
+  }
+
+  .pe-t, .pe-b {
+    left: calc(50% - 12px);
+    width: 24px;
+    height: 8px;
+    cursor: ns-resize;
+  }
+
+  .pe-t { top: -5px; }
+  .pe-b { bottom: -5px; }
+
+  .pe-l, .pe-r {
+    top: calc(50% - 12px);
+    width: 8px;
+    height: 24px;
+    cursor: ew-resize;
+  }
+
+  .pe-l { left: -5px; }
+  .pe-r { right: -5px; }
 
   .pe-under {
     grid-column: 1;

@@ -6,7 +6,7 @@
  */
 import { ta } from '$engine/i18n.js';
 import { compressToWebp } from '$engine/imageTools.js';
-import { readPicture, writePicture, ratioValue, resetStyle, withShared, sourceOf, isBaked, isDrawing, sectionChanged, logoBakeSize, KIND_TOOLS } from '../lib/picture-edit.js';
+import { readPicture, writePicture, ratioValue, resetStyle, withShared, sourceOf, isBaked, isDrawing, sectionChanged, logoBakeSize, KIND_TOOLS, phoneForCrop } from '../lib/picture-edit.js';
 import { bakePicture } from '../lib/picture-bake.js';
 import { pageState } from './page.svelte.js';
 import { siteState } from './site.svelte.js';
@@ -109,7 +109,7 @@ function readSource(t) {
 
 /**
  * Opens the editor on a picture.
- * @param {{kind: 'image'|'gallery'|'entry'|'cover'|'icon'|'share'|'portrait'|'glyph'|'logo'|'layer'|'slide', sectionId?: string, blockId?: string, index?: number, collection?: string, entryId?: string, pageId?: string, place?: 'nav'|'footer'|{read: () => object|null, mutate: (key: string, fn: (place: object) => void) => void}, fresh?: boolean, source?: object, onbaked?: (dataUrl: string) => void, frameRatio?: number}} t
+ * @param {{kind: 'image'|'gallery'|'entry'|'cover'|'icon'|'share'|'portrait'|'glyph'|'logo'|'layer'|'slide', sectionId?: string, blockId?: string, index?: number, collection?: string, entryId?: string, pageId?: string, place?: 'nav'|'footer'|{read: () => object|null, mutate: (key: string, fn: (place: object) => void) => void}, fresh?: boolean, source?: object, onbaked?: (dataUrl: string) => void, frameRatio?: number, frameWidth?: number, phone?: boolean}} t
  *   source is a baked picture's kept original (its file and settings), or for a new one only its file; onbaked takes a handed picture's baked file (a glyph);
  *   place is a logo's ('nav' or 'footer'), or for a background's picture the panel's reader and writer ({read, mutate(key, fn)}); fresh marks a baked picture opened on a new upload, not yet stored
  */
@@ -121,10 +121,11 @@ function open(t) {
   const source = readSource(t);
   if (!source) return;
   const read = readPicture(t.kind, source);
-  // An image block's frame is part of its picture here: a shape changes it, and Cancel and the dialog's undo put it back.
+  // An image block's frame is part of its picture here: a shape changes it, and Cancel and the dialog's undo put it back; opened in the phone view, so is its place on the phone.
   if (t.kind === 'image') {
     const { block } = pageState.readBlock(t.sectionId, t.blockId);
     if (block?.frames?.desktop) read.frame = clone(block.frames.desktop);
+    if (t.phone && block?.frames) read.phone = clone(block.frames.mobile ?? null);
   }
   const size = (v) => (Number(v) > 0 ? Number(v) : 0);
   target = { ...t, frameRatio: size(t.frameRatio), frameWidth: size(t.frameWidth), frameHeight: size(t.frameHeight) };
@@ -147,23 +148,28 @@ function ownTurned(ratio, value) {
   return value && ratio === 'original' && quarter ? 1 / value : value;
 }
 
-/** The frame's width over its height the crop window is drawn with: the chosen shape's, else an image block's frame as a shape left it, else the frame as the preview drew it, else the block's frame at the design width. */
+/** An image block's desktop frame as its width over its height at the section's design width; 0 where it cannot be read. */
+function frameShape(frame) {
+  const w = frame ? pageState.designWidth(target.sectionId) * (frame.w / 100) : 0;
+  return w > 0 && frame.h > 0 ? w / frame.h : 0;
+}
+
+/**
+ * The frame's width over its height the crop window is drawn with: the chosen shape's, else an image block's desktop frame at the design width, in either view, since that is the frame a crop changes, else the frame as the preview drew it, else a cover's block frame at the design width.
+ */
 function frameRatio() {
   if (!target || !pic) return 1;
   const fixed = KIND_TOOLS[target.kind].bake ?? KIND_TOOLS[target.kind].frame;
   if (fixed?.width && fixed.height) return fixed.width / fixed.height;
   const chosen = ownTurned(pic.ratio, ratioValue(pic.ratio, natural));
   if (chosen) return chosen;
-  if (target.kind === 'image' && pic.frame && opened?.frame && !sameStep(pic.frame, opened.frame)) {
-    const w = pageState.designWidth(target.sectionId) * (pic.frame.w / 100);
-    if (w > 0 && pic.frame.h > 0) return w / pic.frame.h;
-  }
+  const shape = target.kind === 'image' ? frameShape(pic.frame) : 0;
+  if (shape) return shape;
   if (target.frameRatio) return target.frameRatio;
   if (target.kind === 'image' || target.kind === 'cover') {
     const { block } = pageState.readBlock(target.sectionId, target.blockId);
-    const f = block?.frames?.desktop;
-    const w = f ? pageState.designWidth(target.sectionId) * (f.w / 100) : 0;
-    if (w > 0 && f.h > 0) return w / f.h;
+    const shown = frameShape(block?.frames?.desktop);
+    if (shown) return shown;
   }
   return 16 / 9;
 }
@@ -218,6 +224,7 @@ function write(next) {
     }
     writePicture(t.kind, block.props, value);
     if (t.kind === 'image' && value.frame && block.frames?.desktop) block.frames.desktop = { ...block.frames.desktop, ...value.frame };
+    if (t.kind === 'image' && 'phone' in value && block.frames) block.frames.mobile = value.phone ?? null;
   });
 }
 
@@ -236,16 +243,21 @@ function frameForRatio(frame, ratio) {
 
 /**
  * A change in the dialog: written at once, and kept as one of the dialog's own steps.
- * A slider's moves are one step together (`gesture`), kept when it is let go (endGesture).
+ * A slider's moves are one step together (`gesture`), kept when it is let go (endGesture), and written to the page at most once a frame while it goes on; a drag on the stage (`live` false) writes once, as it is let go, since the dialog covers the page.
  * @param {object} patch Top-level fields of the picture, with `style` merged into its settings
- * @param {{gesture?: boolean}} [options]
+ * @param {{gesture?: boolean, live?: boolean}} [options]
  */
-function change(patch, { gesture = false } = {}) {
+function change(patch, { gesture = false, live = true } = {}) {
   if (baking) return;
   if (!pic) return;
   const before = clone(pic);
   const next = { ...before, ...patch, style: patch.style ? { ...before.style, ...patch.style } : before.style };
   if (target.kind === 'image' && patch.ratio && patch.ratio !== before.ratio) next.frame = frameForRatio(before.frame, patch.ratio) ?? before.frame;
+  // Opened in the phone view, a free crop gives the block's place on the phone the desktop frame's new shape where the phone draws one of its own, so both show the same part of the picture; a chosen shape draws itself there.
+  if (target.kind === 'image' && 'phone' in opened && next.frame) {
+    const free = (next.ratio ?? 'free') === 'free';
+    next.phone = !free || sameStep(next.frame, opened.frame) ? clone(opened.phone) : phoneForCrop(opened.phone, target.frameWidth, frameShape(next.frame));
+  }
   if (sameJSON(next, before)) return;
   if (gesture) gestureBefore ??= snapshot();
   else {
@@ -257,7 +269,7 @@ function change(patch, { gesture = false } = {}) {
   pic = next;
   if (gesture) {
     queued = next;
-    queuedFrame ||= requestAnimationFrame(writeQueued);
+    if (live) queuedFrame ||= requestAnimationFrame(writeQueued);
   } else {
     write(next);
   }

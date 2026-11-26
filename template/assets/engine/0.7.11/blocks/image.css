@@ -43,3 +43,13 @@
 .urd-image-frame.urd-image-own:not(.urd-pic-turned) img {
   height: auto;
 }
+
+/* A picture that blends with what lies behind its block */
+.urd-image-blend {
+  mix-blend-mode: var(--urd-blend);
+}
+
+/* The blend's strength */
+.urd-image-blend > :is(.urd-image-frame, a) {
+  opacity: var(--urd-blend-strength, 1);
+}

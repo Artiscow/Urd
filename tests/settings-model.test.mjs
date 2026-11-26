@@ -3,6 +3,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { SETTINGS_BANDS, SETTINGS_GROUPS, SETTINGS_PLACES, settingsPlace, settingsPictures, pictured, settingMatches, visibleGroups, inBands } from '../editor/src/lib/settings-model.js';
 import { settingPicture, picturedIds, THEME_SWATCHES } from '../editor/src/lib/settings-pictures.js';
 import { engineImport } from './_engine.mjs';
@@ -160,3 +161,17 @@ test('the sections stand in three groups: the admin design with every part, Loca
   // A search that leaves one section keeps its group alone.
   assert.deepEqual(inBands(visibleGroups('spellcheck', null, c)).map((b) => b.id), ['local']);
 });
+
+test('the element menu\'s «Folds» and «Settings in a group» say what each choice does in a tooltip of its own, and a choice without one shows none of its row\'s', () => {
+  const c = ctx();
+  for (const id of ['folds', 'extra']) {
+    for (const [value, word, tip] of row(id).options(c)) {
+      assert.ok(tip && tip !== word, `${id}: ${value} has a tooltip of its own`);
+      assert.ok(dict[tip], `${id}: ${tip} in the admin base`);
+      assert.notEqual(tip, row(id).tipKey, `${id}: ${value} is not the row\'s tooltip`);
+    }
+  }
+  const choice = readFileSync(new URL('../editor/src/lib/Choice.svelte', import.meta.url), 'utf8');
+  assert.match(choice, /aria-pressed=\{key\(v\) === key\(value\)\} title=\{tip \?\? ''\}/, 'an empty title stops the row\'s tooltip from showing over the option');
+});
+

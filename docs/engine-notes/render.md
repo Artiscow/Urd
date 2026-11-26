@@ -364,6 +364,8 @@ following its width.
 A flowing block's own height on the phone (`height`) takes the desktop
 height's place: a least height for a block that grows with its content,
 and the whole height for any other, a picture or a film then filling it.
+A flowing block's own room above it (`space`) is its top margin, added to
+the space between blocks; a pinned block has none.
 
 ## `mobilePlacementToCss › const rows`
 
@@ -390,7 +392,12 @@ Its content's height, or at least its own height on the phone, the content growi
 
 ## `mobilePlacementToCss › const gap`
 
-A fixed height, the span holding the block and the gap under it (margin-bottom, `--urd-mobile-gap` in base.css).
+A flowing block's own room above it on the phone (`space`, migrate.js phoneSpace) is drawn as its top margin, added to the space between blocks under the block before it.
+A negative room takes from that space and never more than all of it, so a block never overlaps the one above; the room is set by dragging the block over its own place in the phone view (preview-edit.js flowDrag).
+
+## `mobilePlacementToCss › const height`
+
+A fixed height, the span holding the block, its room above it and the gap under it (margin-bottom, `--urd-mobile-gap` in base.css).
 The span holds the standard gap at most: a larger gap grows the row tracks, as a text block's margin does, so a block placed by hand below keeps its distance and no flowing block jumps past it.
 
 ## `anchorTargets`

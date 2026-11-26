@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import { register } from 'node:module';
 register('./_svelte-loader.mjs', import.meta.url);
 const {
-  readPicture, writePicture, storedStyle, cropWindow, pointOnPicture, zoomFromCorner, turned, resetStyle, sectionChanged, ratioValue, movedFrame, frameAt, NEUTRAL,
-  sharpness, dataUrlBytes, isDrawing, withShared, SHARED_KEYS, sourceOf, bakeLayout, isBaked, KIND_TOOLS, logoBakeSize, LOGO_LONGEST, FILTER_LOOKS, LAYER_KEYS,
+  readPicture, writePicture, storedStyle, cropWindow, pointOnPicture, croppedWindow, styleForWindow, frameForCrop, turned, resetStyle, sectionChanged, ratioValue, movedFrame, NEUTRAL,
+  sharpness, dataUrlBytes, isDrawing, withShared, phoneForCrop, SHARED_KEYS, sourceOf, bakeLayout, isBaked, KIND_TOOLS, logoBakeSize, LOGO_LONGEST, FILTER_LOOKS, LAYER_KEYS, pickedColour,
 } = await import('../editor/src/lib/picture-edit.js');
 
 test('readPicture: each kind read from where it keeps its picture, an old picture with every new setting at none', () => {
@@ -86,11 +86,116 @@ test('pointOnPicture: a pointer taken back through the turn and the mirrors to a
   assert.deepEqual(at(-500, 999), { x: 0, y: 1 }, 'clamped to the picture');
 });
 
-test('zoomFromCorner: the window spans from the held corner to the pointer, within the zoom\'s bounds', () => {
-  const full = { width: 0.5, height: 1 };
-  assert.equal(zoomFromCorner({ anchorX: 0.25, anchorY: 0, pointX: 0.75, pointY: 1, full }), 1);
-  assert.equal(zoomFromCorner({ anchorX: 0.25, anchorY: 0, pointX: 0.5, pointY: 0.5, full }), 2);
-  assert.equal(zoomFromCorner({ anchorX: 0.25, anchorY: 0, pointX: 0.25, pointY: 0, full }), 4, 'no smaller than the largest zoom allows');
+test('croppedWindow: an edge moves its own side, a corner both, the opposite ones hold, inside the picture', () => {
+  const win = { left: 0.2, top: 0.1, width: 0.6, height: 0.8 };
+  assert.deepEqual(croppedWindow({ win, edge: { x: 1, y: 0 }, point: { x: 0.5, y: 0.9 } }), { left: 0.2, top: 0.1, width: 0.3, height: 0.8 }, 'the right edge alone');
+  assert.deepEqual(croppedWindow({ win, edge: { x: 0, y: -1 }, point: { x: 0, y: 0.5 } }), { left: 0.2, top: 0.5, width: 0.6, height: 0.4 }, 'the top edge alone');
+  assert.deepEqual(croppedWindow({ win, edge: { x: -1, y: 1 }, point: { x: 0.4, y: 0.7 } }), { left: 0.4, top: 0.1, width: 0.4, height: 0.6 }, 'a corner moves its two sides');
+  assert.deepEqual(croppedWindow({ win, edge: { x: 1, y: 1 }, point: { x: 3, y: 3 } }), { left: 0.2, top: 0.1, width: 0.8, height: 0.9 }, 'never past the picture');
+  assert.equal(croppedWindow({ win, edge: { x: 1, y: 0 }, point: { x: 0, y: 0 } }).width, 0.02, 'a side keeps a little of the picture; the longer side, here the height, holds the zoom\'s bound');
+  const tiny = croppedWindow({ win: { left: 0, top: 0, width: 0.2, height: 0.2 }, edge: { x: 1, y: 1 }, point: { x: 0, y: 0 } });
+  assert.equal(Math.max(tiny.width, tiny.height), 0.25);
+});
+
+test('croppedWindow with a shape kept: the window holds its shape, a corner led by the axis it moves most, an edge around the middle', () => {
+  const win = { left: 0.25, top: 0.25, width: 0.5, height: 0.5 };
+  const corner = croppedWindow({ win, edge: { x: 1, y: 1 }, point: { x: 0.95, y: 0.8 }, keep: 1 });
+  assert.deepEqual(corner, { left: 0.25, top: 0.25, width: 0.7, height: 0.7 });
+  const edge = croppedWindow({ win, edge: { x: 1, y: 0 }, point: { x: 0.55, y: 0 }, keep: 1 });
+  assert.deepEqual(edge, { left: 0.25, top: 0.35, width: 0.3, height: 0.3 }, 'grown or shrunk across it around the middle');
+  const big = croppedWindow({ win, edge: { x: 1, y: 0 }, point: { x: 1, y: 0 }, keep: 2 });
+  assert.ok(big.width <= 1 && big.height <= 1 && Math.abs(big.width / big.height - 2) < 0.01, 'held inside the picture in its shape');
+});
+
+test('styleForWindow and cropWindow agree: the zoom and the focus point a window gives draw that window again', () => {
+  const pictureRatio = 1.5;
+  for (const frameRatio of [1, 16 / 9, 0.75]) {
+    const start = cropWindow({ pictureRatio, frameRatio, x: 0.5, y: 0.5, zoom: 1 });
+    const to = croppedWindow({ win: start, edge: { x: 1, y: 1 }, point: { x: start.left + start.width * 0.6, y: 1 }, keep: start.width / start.height });
+    const style = styleForWindow(to, { x: 0.5, y: 0.5 });
+    const again = cropWindow({ pictureRatio, frameRatio, ...style });
+    for (const k of ['left', 'top', 'width', 'height']) assert.ok(Math.abs(again[k] - to[k]) < 0.01, `${frameRatio}: ${k}`);
+  }
+  assert.deepEqual(styleForWindow({ left: 0, top: 0.2, width: 1, height: 0.5 }, { x: 0.3, y: 0.5 }), { zoom: 1, x: 0.3, y: 0.4 }, 'an axis filled edge to edge keeps its point');
+});
+
+test('frameForCrop: a free crop leaves the picture where it is on the page, its frame following the window over it', () => {
+  const frame = { x: 10, y: 100, w: 40, h: 300, z: 2 };
+  const from = { left: 0.2, top: 0, width: 0.6, height: 1 };
+  const narrower = frameForCrop(frame, from, { left: 0.35, top: 0, width: 0.45, height: 1 });
+  assert.deepEqual(narrower, { x: 20, y: 100, w: 30, h: 300, z: 2 }, 'the left edge in: the frame narrower and its left edge with it');
+  assert.deepEqual(frameForCrop(frame, from, { left: 0.2, top: 0.5, width: 0.6, height: 0.5 }), { x: 10, y: 250, w: 40, h: 150, z: 2 }, 'the top edge down: shorter, lower');
+  const wide = frameForCrop({ x: 0, y: 0, w: 80, h: 200 }, { left: 0.4, top: 0, width: 0.2, height: 1 }, { left: 0, top: 0, width: 1, height: 1 });
+  assert.equal(wide.w, 100, 'never wider than the section');
+  assert.equal(wide.h, 50, 'its shape kept as it is brought back');
+  // The frame's shape is the window's, so the window the page draws in it is the one cropped.
+  const designPx = 1000;
+  const pictureRatio = 1.5;
+  const start = { x: 10, y: 0, w: 45, h: 300 };
+  const win0 = cropWindow({ pictureRatio, frameRatio: (designPx * start.w / 100) / start.h, x: 0.5, y: 0.5, zoom: 1 });
+  const to = croppedWindow({ win: win0, edge: { x: 1, y: 0 }, point: { x: win0.left + win0.width * 0.5, y: 0 } });
+  const after = frameForCrop(start, win0, to);
+  const drawn = cropWindow({ pictureRatio, frameRatio: (designPx * after.w / 100) / after.h, ...styleForWindow(to, { x: 0.5, y: 0.5 }) });
+  for (const k of ['left', 'top', 'width', 'height']) assert.ok(Math.abs(drawn[k] - to[k]) < 0.01, k);
+});
+
+test('a free crop on one axis leaves the other where it was: the window the page draws after the top edge moves keeps its width, its height its longer side or not', () => {
+  const designPx = 1000;
+  const pictureRatio = 2.25;
+  // A window about as tall as it is wide, in fractions of the picture: the zoom is read from one side or the other as the top edge moves.
+  const start = { x: 20, y: 0, w: 58, h: 260 };
+  const win0 = cropWindow({ pictureRatio, frameRatio: (designPx * start.w / 100) / start.h, x: 0.5, y: 0.5, zoom: 1.72 });
+  for (let k = 0; k <= 40; k += 1) {
+    const to = croppedWindow({ win: win0, edge: { x: 0, y: -1 }, point: { x: 0, y: win0.top + k * 0.004 } });
+    const after = frameForCrop(start, win0, to);
+    const drawn = cropWindow({ pictureRatio, frameRatio: (designPx * after.w / 100) / after.h, ...styleForWindow(to, { x: 0.5, y: 0.5 }) });
+    assert.ok(Math.abs(drawn.width - win0.width) < 0.0005, `step ${k}: the width holds (${drawn.width} against ${win0.width})`);
+    assert.ok(Math.abs(drawn.left - win0.left) < 0.0005, `step ${k}: the left edge holds`);
+  }
+  // A window taller than wide, its zoom read from its height: the top edge moved, the width holds.
+  const tall = { x: 20, y: 0, w: 30, h: 300 };
+  const win1 = cropWindow({ pictureRatio, frameRatio: (designPx * tall.w / 100) / tall.h, x: 0.5, y: 0.5, zoom: 1.3 });
+  assert.ok(win1.height > win1.width, 'the height is the longer side');
+  for (let k = 1; k <= 20; k += 1) {
+    const to = croppedWindow({ win: win1, edge: { x: 0, y: -1 }, point: { x: 0, y: win1.top + k * 0.007 } });
+    const after = frameForCrop(tall, win1, to);
+    const drawn = cropWindow({ pictureRatio, frameRatio: (designPx * after.w / 100) / after.h, ...styleForWindow(to, { x: 0.5, y: 0.5 }) });
+    assert.ok(Math.abs(drawn.width - win1.width) < 0.0005, `tall, step ${k}: the width holds (${drawn.width} against ${win1.width})`);
+  }
+});
+
+test('Enter closes the image editor with «Done», heard before the focused control: only a field and a button reached with the keys keep their own Enter', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../editor/src/lib/PictureEditor.svelte', import.meta.url), 'utf8');
+  assert.match(src, /onkeydowncapture=\{onEnter\} onpointerdowncapture=\{\(\) => \(pressed = true\)\}/, 'heard before the control, with how the focus got there');
+  const enter = src.slice(src.indexOf('  function onEnter('), src.indexOf('  function onDialogKey('));
+  assert.match(enter, /if \(event\.key === 'Tab'\) pressed = false;/, 'a control reached with the keys');
+  assert.match(enter, /if \(at\.closest\?\.\('textarea, select, input:not\(\[type="range"\]\)'\)\) return;/, 'the description and a number field keep theirs');
+  assert.match(enter, /if \(!pressed && at\.closest\?\.\('button, a\[href\], summary'\)\) return;\s*event\.preventDefault\(\);\s*event\.stopPropagation\(\);\s*ed\.donePicture\(\);/, 'a clicked button, as Compare or a look, leaves Enter to «Done»');
+  assert.match(src, /dialogEl\.showModal\(\);\s*\/\/[^\n]*\n\s*stageEl\?\.focus\(\{ preventScroll: true \}\);/, 'the picture takes the focus as the dialog opens, not its first button');
+});
+
+test('phoneForCrop: a crop made in the phone view gives the phone the crop\'s shape where it draws one of its own', () => {
+  // Pinned on the phone, 354 px wide: a crop of 3:1 is 118 px tall, 15 rows of 8.
+  assert.deepEqual(phoneForCrop({ x: 5, w: 90, row: 20, rows: 20 }, 354, 3), { x: 5, w: 90, row: 20, rows: 15 });
+  // Flowing across the row, or with a height of its own: that height.
+  assert.deepEqual(phoneForCrop(null, 354, 3), { height: 118 });
+  assert.deepEqual(phoneForCrop({ col: 1, cols: 4, height: 90 }, 169, 2), { col: 1, cols: 4, height: 85 });
+  // In cells with no height of its own it keeps the desktop frame's shape already.
+  const cells = { col: 1, cols: 4 };
+  assert.equal(phoneForCrop(cells, 169, 2), cells);
+  assert.equal(phoneForCrop(null, 0, 2), null, 'nothing to go by');
+});
+
+test('the image editor opened in the phone view shapes the phone only for a free crop, and the block\'s menu opens it as a press on the picture does', async () => {
+  const { readFileSync } = await import('node:fs');
+  const state = readFileSync(new URL('../editor/src/state/picture-editor.svelte.js', import.meta.url), 'utf8');
+  assert.match(state, /const free = \(next\.ratio \?\? 'free'\) === 'free';\s*next\.phone = !free \|\| sameStep\(next\.frame, opened\.frame\) \? clone\(opened\.phone\) : phoneForCrop\(/, 'a chosen shape draws itself on the phone');
+  const page = readFileSync(new URL('../editor/src/state/page.svelte.js', import.meta.url), 'utf8');
+  assert.match(page, /if \(kind !== 'portrait' && previewState\.bridge\) previewState\.bridge\.sendAskPicture\(selectedBlock\.sectionId, selectedBlock\.blockId, kind\);/, 'the menu asks the preview');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  assert.match(edit, /el\._urdAskPicture = askPictureEditor;/, 'the block answers as a press on its picture does');
 });
 
 test('turned, the resets and what has changed', () => {
@@ -122,12 +227,11 @@ test('the duotone\'s colours are kept only with the duotone look, and the defaul
   assert.deepEqual(resetStyle({ ...NEUTRAL, look: 'duotone', duotone: { dark: 'text', light: 'bg' } }, 'look').duotone, { dark: '#000000', light: 'accent' });
 });
 
-test('movedFrame and frameAt: the frame moved over the picture, held inside it, as the focus point it stands at', () => {
+test('movedFrame: the frame moved over the picture, held inside it, as the focus point it stands at', () => {
   // A frame half the picture wide, from the left edge: moved a quarter right it stands in the middle.
   const win = { left: 0, top: 0, width: 0.5, height: 1 };
   assert.deepEqual(movedFrame(win, 0.25, 0, { x: 0, y: 0.3 }), { x: 0.5, y: 0.3 }, 'the axis it fills keeps its point');
   assert.deepEqual(movedFrame(win, 2, 0, { x: 0, y: 0.5 }), { x: 1, y: 0.5 }, 'held inside the picture');
-  assert.deepEqual(frameAt(win, { x: 0.75, y: 0.5 }, { x: 0, y: 0.5 }), { x: 1, y: 0.5 }, 'a click on the right puts the frame there');
 });
 
 test('sharpness: a 600 px picture in a 1000 px frame is not sharp, a 1600 px one is, and the zoom, the turn and the fit count', () => {
@@ -250,4 +354,16 @@ test('a background\'s pictures: an image layer takes only its finish and keeps i
   writePicture('slide', slide, { ...readPicture('slide', slide), style: { ...NEUTRAL, x: 0.2, y: 0.9, look: 'noir' } });
   assert.deepEqual(slide, { src: '/media/images/s.webp', x: 0.2, y: 0.9 }, 'the layer\'s tone is its look');
   assert.deepEqual([KIND_TOOLS.slide.look, KIND_TOOLS.slide.adjust, KIND_TOOLS.slide.zoom, KIND_TOOLS.slide.budget], [false, false, false, 'background']);
+});
+
+test('the video\'s cover takes an overlay as every picture in a frame does, and a picked colour is kept as a site colour or a hex colour without transparency', () => {
+  assert.equal(KIND_TOOLS.cover.overlay, true);
+  const cover = { poster: '/media/c.webp', coverStyle: {} };
+  const pic = readPicture('cover', cover);
+  writePicture('cover', cover, { ...pic, style: { ...pic.style, overlay: { color: 'accent', strength: 0.5 } } });
+  assert.deepEqual(cover.coverStyle.overlay, { color: 'accent', strength: 0.5 });
+  assert.equal(pickedColour('accent'), 'accent');
+  assert.equal(pickedColour('#0B1716'), '#0b1716');
+  assert.equal(pickedColour('#0b171680'), '#0b1716');
+  assert.equal(pickedColour('rgb(0, 0, 0)'), null);
 });

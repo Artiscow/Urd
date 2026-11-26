@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
-const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup, unpinned, phoneAdded, phoneAfterLine, phoneGroup, phoneUngroupAll, phoneSideCells, phoneHasMiddle, phoneAlignCells } = await engineImport('phone-moves.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup, unpinned, phoneAdded, phoneAfterLine, phoneGroup, phoneUngroupAll, phoneSideCells, phoneHasMiddle, phoneAlignCells, phoneSetDropChange, phoneChangeBetween, phoneSpaceDragged, phoneHomeSpan } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -816,6 +816,87 @@ const treeAfter = (section, change) => {
   return shape(phoneTree(next.blocks, phoneSetupOf(next)));
 };
 
+test('phoneSpaceDragged: a flowing block dragged over its own place takes the move as room above it, in steps of 4 px, down to no gap; a click\'s jitter and a pinned block change nothing', () => {
+  assert.equal(phoneSpaceDragged(null, 30, 16), 32);
+  assert.equal(phoneSpaceDragged({ space: 32 }, -12, 16), 20);
+  assert.equal(phoneSpaceDragged({ space: 32 }, -10, 16), 24, 'to the nearest step');
+  assert.equal(phoneSpaceDragged({ space: 8 }, -60, 16), -16, 'never more than the whole gap');
+  assert.equal(phoneSpaceDragged(null, 4, 16), null, 'a click\'s jitter');
+  assert.equal(phoneSpaceDragged({ space: 32 }, 6, 16, 16), null, 'a move that rounds back to the room it had');
+  assert.equal(phoneSpaceDragged({ space: 32, row: 4 }, 30, 16), 32, 'a pinned block\'s room is none, so the drag starts from none');
+});
+
+test('phoneHomeSpan: the span a block keeps its place in reaches from the block above it to the block below it in its columns, open at the section\'s ends', () => {
+  const own = { left: 20, top: 100, right: 340, bottom: 134 };
+  const others = [
+    { left: 20, top: 0, right: 340, bottom: 80 },
+    { left: 20, top: 150, right: 170, bottom: 250 },
+    { left: 190, top: 160, right: 340, bottom: 250 },
+    { left: 20, top: 300, right: 340, bottom: 400 },
+  ];
+  assert.deepEqual(phoneHomeSpan(others, own), { top: 80, bottom: 150 });
+  assert.deepEqual(phoneHomeSpan([], own), { top: -Infinity, bottom: Infinity });
+  // A block beside it on its line is no neighbour above or below.
+  assert.deepEqual(phoneHomeSpan([{ left: 190, top: 100, right: 340, bottom: 134 }], { left: 20, top: 100, right: 170, bottom: 134 }), { top: -Infinity, bottom: Infinity });
+});
+
+test('phoneChangeApplied: a room above a flowing block is written into its placement, and null or 0 takes it away; a pinned block keeps its rows', () => {
+  const section = setSection([blk('a', 0, 0), blk('b', 20, 0, { mobile: { space: 16, col: 1, cols: 4 } }), blk('c', 40, 0, { mobile: { row: 3, rows: 2 } })]);
+  const next = phoneChangeApplied(section, { spaces: { a: 24, b: null, c: 40 } });
+  assert.deepEqual(next.blocks[0].frames.mobile, { space: 24 });
+  assert.deepEqual(next.blocks[1].frames.mobile, { col: 1, cols: 4 });
+  assert.deepEqual(next.blocks[2].frames.mobile, { row: 3, rows: 2 });
+  assert.equal(phoneChangeApplied(setSection([blk('a', 0, 0, { mobile: { space: 8 } })]), { spaces: { a: 0 } }).blocks[0].frames.mobile, null, 'nothing of its own left');
+});
+
+test('a flowing block dragged over its own place on the phone keeps its place and its group, the drag setting its room above it, written by the editor in the same step', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  const flow = edit.slice(edit.indexOf('  function flowDrag('), edit.indexOf('  function moveToDrag('));
+  assert.match(flow, /home = phoneHomeSpan\(neighbours, own\);/, 'the span is read on the blocks as the drag began');
+  assert.match(flow, /const spacing = !pinning && !set\.length && x >= own\.left && x <= own\.right && y > home\.top && y < home\.bottom && !neighbours\.some\(within\);/, 'over its own place or the gaps beside it, never over another block or the room where it pins');
+  assert.match(flow, /change = space === null \? null : \{ places: \{\}, spaces: \{ \[block\.id\]: space \} \};/, 'its place in the order stays as it is');
+  assert.match(flow, /showSpace\(spacing && Boolean\(change\)\);/, 'the band shows the gap while it is held there');
+  assert.match(flow, /phoneSpaceDragged\(block\.frames\.mobile, blockTop - own\.top, Number\.isFinite\(home\.top\) \? mobileGapOf\(section, siteNow\) : 0\)/, 'a block with none above it takes nothing below none');
+  // The room is a top margin, which a lifted or pinned block lets go of, so it is drawn where it stood and measured as it will stand.
+  assert.match(edit, /width: `\$\{at\.w\}px`, height: `\$\{at\.h\}px`, gridColumn: '', marginTop: '0px', marginLeft: '0px'/, 'the lifted block');
+  assert.match(edit, /gridColumn: '', gridRow: '', marginTop: '0px', marginLeft: '0px'/, 'a lifted block of a set');
+  assert.match(edit, /\['position', 'left', 'top', 'width', 'height', 'minHeight', 'marginTop', 'marginLeft'/, 'a block of a set pinned');
+  assert.match(edit.slice(edit.indexOf('  function pinOnPhone(')), /el\.style\.marginTop = '';\s*Object\.assign\(el\.style, mobilePlacementToCss\(/, 'a block pinned from its bar');
+  const render = readFileSync(new URL('render.js', ENGINE_DIR), 'utf8');
+  assert.match(render, /const \{ gridRow, gridColumn, justifySelf, marginTop, \.\.\.own \} = css;[\s\S]*?marginTop: marginTop \?\? ''[\s\S]*?Object\.assign\(el\.style, \{ \.\.\.own, marginTop: '' \}\);/, 'a block stuck on the phone gives its room to its slot when a phone design draws it again');
+  const page = readFileSync(new URL('../editor/src/state/page.svelte.js', import.meta.url), 'utf8');
+  assert.match(page, /for \(const \[id, space\] of Object\.entries\(change\.spaces \?\? \{\}\)\) \{[\s\S]*?if \(Number\.isFinite\(space\) && Math\.round\(space\) !== 0\) place\.space = Math\.round\(space\);/, 'the editor writes it in the change\'s own step');
+});
+
+test('phoneSetDropChange: a selected set lands together, the dragged block where it is dropped and the set\'s other flowing blocks right after it, in their reading order', () => {
+  const section = setSection([blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0), blk('e', 80, 0)]);
+  // b dragged after d, with e: e follows b; a and c keep their order.
+  assert.equal(treeAfter(section, phoneSetDropChange(section, 'b', { pos: 'after', of: 'd' }, ['e'])), 'a c d b e');
+  // Dragged before a, with d and e: they follow in their reading order.
+  assert.equal(treeAfter(section, phoneSetDropChange(section, 'c', { pos: 'before', of: 'a' }, ['d', 'e'])), 'c d e a b');
+  // Joining a stack, the followers join it below the dragged block.
+  assert.equal(treeAfter(section, phoneSetDropChange(section, 'd', { pos: 'below', of: 'a' }, ['e'])), 'stack[a,d,e] b c');
+  // Dropped beside a unit, the followers come after that unit, so the line it shares stays whole.
+  const beside = treeAfter(section, phoneSetDropChange(section, 'd', { pos: 'left', of: 'b' }, ['e']));
+  assert.equal(beside, 'a d b e c');
+  // A follower already right after the dragged block, and a drop with no followers, land as phoneDropChange lands.
+  assert.deepEqual(phoneSetDropChange(section, 'b', { pos: 'after', of: 'd' }, []), phoneDropChange(section.blocks, phoneSetupOf(section), 'b', { pos: 'after', of: 'd' }));
+  assert.equal(phoneSetDropChange(section, 'b', null, ['e']), null);
+});
+
+test('phoneChangeBetween: the places, stacks, order and cells that differ between two states of a section, and null where they stand alike', () => {
+  const section = setSection([blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0, { mobile: { col: 1, cols: 4 } })]);
+  assert.equal(phoneChangeBetween(section, section), null);
+  const moved = phoneChangeApplied(section, { places: { a: { after: 'c' } }, stacks: [['b', 'c']], cells: { c: null } });
+  const change = phoneChangeBetween(section, moved);
+  assert.deepEqual(change.places, { a: { after: 'c' } });
+  assert.deepEqual(change.stacks, [['b', 'c']]);
+  assert.deepEqual(change.cells, { c: null });
+  assert.equal(treeAfter(section, change), shape(phoneTree(moved.blocks, phoneSetupOf(moved))));
+});
+
 test('phoneGroup: the set\'s blocks become one stack in their reading order, at the first one\'s place', () => {
   const section = setSection([blk('a', 0, 0), blk('b', 20, 0), blk('c', 40, 0), blk('d', 60, 0)]);
   const change = phoneGroup(section.blocks, phoneSetupOf(section), ['d', 'b']);
@@ -910,3 +991,111 @@ test('the canvas\'s right-click «Hide on phones» lifts «Only on phones», and
   assert.match(bridge, /if \(msg\.hideMobile === true \|\| msg\.hideDesktop === false\) delete block\.hideDesktop;/);
   assert.match(bridge, /block\.frames\.mobile = null;\s*delete block\.phonePlace;\s*to\.blocks\.push\(block\);/);
 });
+
+test('a block dragged on the phone stays under the pointer and lands, by its surface or the grip on its bar, pinned on the phone or flowing', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  const lift = edit.slice(edit.indexOf('  function liftOnPhone('), edit.indexOf('  function phonePreview('));
+  assert.match(lift, /flowEl\.appendChild\(el\);\s*try \{\s*el\.setPointerCapture\(event\.pointerId\);/, 'the lifted block takes the pointer');
+  const flow = edit.slice(edit.indexOf('  function flowDrag('), edit.indexOf('  function moveToDrag('));
+  const pinnedAt = edit.indexOf('  function mobileDrag(');
+  const pinned = edit.slice(pinnedAt, edit.indexOf('\n  function ', pinnedAt + 10));
+  for (const [name, drag] of [['flowDrag', flow], ['mobileDrag', pinned]]) {
+    assert.match(drag, /document\.addEventListener\('pointermove', onMove, true\);\s*document\.addEventListener\('pointerup', onUp, true\);\s*document\.addEventListener\('pointercancel', cancel, true\);/, `${name} hears the pointer on the whole page`);
+    assert.match(drag, /document\.removeEventListener\('pointermove', onMove, true\);\s*document\.removeEventListener\('pointerup', onUp, true\);\s*document\.removeEventListener\('pointercancel', cancel, true\);/, `${name} lets it go at the end`);
+    assert.doesNotMatch(drag, /(?:handle|el)\.addEventListener\('pointer(?:move|up|cancel)', (?:onMove|onUp|cancel)\)/, `${name}: the release is never heard on an element the pointer can leave`);
+  }
+  assert.match(pinned, /if \(el\.style\.gridRow\) restick = true;\s*el\.style\.gridRow = '';\s*el\.style\.position = 'absolute';/, 'a pinned block lets go of its row as it is lifted, so it is placed over the whole flow, where it was seen');
+  assert.match(pinned, /Object\.assign\(flowEl\.style, \{ minHeight: `\$\{flowBefore\}px`, alignContent: 'start' \}\);/, 'the section keeps its height while the block is out of the grid, the tracks at their own heights');
+  assert.match(pinned, /if \(flowHeld\) Object\.assign\(flowEl\.style, flowHeld\);/, 'and lets it go as the drag ends, before the block lands');
+});
+
+test('a block let go over the section\'s room on the phone is pinned there, and a block placed inside the section leaves it as tall as it stood', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  assert.match(edit, /function roomKeeping\(flowEl, before\) \{\s*const room = phoneRoomOf\(section\)\.bottom;\s*const kept = Math\.max\(0, Math\.round\(room - \(flowEl\.offsetHeight - before\)\)\);\s*return kept === room \? null : kept;/, 'the room takes up what the blocks grow, down to none, and gives back what they shrink');
+  const flow = edit.slice(edit.indexOf('  function flowDrag('), edit.indexOf('  function moveToDrag('));
+  assert.match(flow, /const between = boxes\.some\(\(b\) => b\.bottom <= y\) && boxes\.some\(\(b\) => b\.top >= y\);\s*pinning = !units\.some\(within\) && \(y < first \|\| y > last \|\| \(!between && \(blockTop < first \|\| blockTop \+ at\.h > last\)\)\);/, 'the pointer, or the dragged block\'s own edge, past the blocks by more than a landing\'s reach: a tall block pins as soon as its edge leaves them, unless the pointer stands in a gap between two blocks, a place in the order');
+  assert.match(flow, /if \(pinning\) \{\s*pinWhereDropped\(\);\s*return;\s*\}/);
+  assert.match(flow, /const room = roomKeeping\(flowEl, flowBefore\);\s*const step = [^\n]*;\s*post\(\{ type: 'urd-move', sectionId: section\.id, blockId: block\.id, frame: placement, frameKey: 'mobile', [^\n]*\.\.\.\(room === null \? \{\} : \{ room: \{ bottom: room \} \}\) \}\);/);
+  const pinnedAt = edit.indexOf('  function mobileDrag(');
+  const pinned = edit.slice(pinnedAt, edit.indexOf('\n  function ', pinnedAt + 10));
+  assert.match(pinned, /const room = kind === 'move' \? roomKeeping\(flowEl, flowBefore\) : null;/, 'a pinned block moved keeps the section\'s height');
+  const bridge = readFileSync(new URL('../editor/src/state/bridge.svelte.js', import.meta.url), 'utf8');
+  assert.match(bridge, /if \(key === 'mobile' && Number\.isInteger\(msg\.room\?\.bottom\) && msg\.room\.bottom >= 0\) pageState\.writePhoneRoom\(section, 'bottom', msg\.room\.bottom\);/, 'the room is written in the move\'s own undo step');
+});
+
+test('the other blocks pinned on the phone stay where they stood when a block is pinned or moved, their rows written in the same step', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  const keep = edit.slice(edit.indexOf('  function keepPinned('), edit.indexOf('  function pinOnPhone('));
+  assert.match(keep, /node\.style\.display = 'none';\s*const tracks = getComputedStyle\(flowEl\)\.gridTemplateRows[^;]*;\s*node\.style\.display = '';\s*const row = rowNearOffset\(tracks, top - padTop\);\s*if \(row === place\.row\) continue;/, 'read on the grid without it, weighed against the row stored');
+  const pin = edit.slice(edit.indexOf('  function pinOnPhone('), edit.indexOf('  function mobileDrag('));
+  const flow = edit.slice(edit.indexOf('  function flowDrag('), edit.indexOf('  function moveToDrag('));
+  const pinnedAt = edit.indexOf('  function mobileDrag(');
+  const pinned = edit.slice(pinnedAt, edit.indexOf('\n  function ', pinnedAt + 10));
+  for (const [name, code] of [['the pin', pin], ['the flow drag', flow], ['the pinned drag', pinned]]) {
+    assert.match(code, /keepPinned\(flowEl, (?:tops|otherTops)\)/, `${name} keeps the others`);
+    assert.match(code, /\.\.\.\(others\.length \? \{ others \} : \{\}\)/, `${name} tells their rows with the move`);
+  }
+  assert.match(pinned, /keepPinned\(flowEl, otherTops\);\s*guides = phoneGuides\(flowEl, setIds\);\s*rowTracks = /, 'they stand still while the dragged block is out of the grid, and the guides are read on them there');
+  const bridge = readFileSync(new URL('../editor/src/state/bridge.svelte.js', import.meta.url), 'utf8');
+  assert.match(bridge, /if \(key === 'mobile' && Array\.isArray\(msg\.others\)\) \{[\s\S]*?pinned\.frames\.mobile = \{ \.\.\.pinned\.frames\.mobile, row: other\.frame\.row \};/, 'only their rows change, in the move\'s own step');
+});
+
+test('a block pressed as one of a set selected on the phone carries the set: the flowing blocks land with it in the order, every block is pinned where it stands over the room, and a pinned set moves on its rows, one undo step', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  assert.match(edit, /function phoneSet\(\) \{\s*if \(!\(multiIds\.size > 1 && multiIds\.has\(block\.id\)\)\) return \[\];/, 'only a block pressed as one of a set carries one');
+  const flow = edit.slice(edit.indexOf('  function flowDrag('), edit.indexOf('  function moveToDrag('));
+  assert.match(flow, /const set = phoneSet\(\);/);
+  assert.match(flow, /Object\.assign\(m, liftSetMember\(flowEl, m\.node, true\)\);/, 'each flowing block of the set leaves a hold, so the order keeps its layout');
+  assert.match(flow, /boxes = unitBoxes\(flowEl, null, setIds\);/, 'the set is never a drop target');
+  assert.match(flow, /const units = placed \? unitBoxes\(flowEl, placed, setIds\) : boxes;/, 'not where the preview shows the blocks either');
+  for (const [name, code] of [['the flow drag', flow], ['the pinned drag', edit.slice(edit.indexOf('  function mobileDrag('), edit.indexOf('  function wireDrag('))]]) {
+    assert.match(code, /const other = \(ev\) => ev\?\.pointerId !== undefined && ev\.pointerId !== event\.pointerId;/, `${name}: the pointer that began it`);
+    assert.match(code, /const onMove = \(ev\) => \{\s*\/\/[^\n]*\n\s*if \(other\(ev\)\) return;/, `${name}: a second finger moves nothing`);
+    assert.match(code, /const onUp = \(ev\) => \{\s*if \(other\(ev\)\) return;/, `${name}: and lands nothing`);
+  }
+  assert.match(flow, /change = drop \? phoneSetDropChange\(section, block\.id, drop, followers\) : null;/, 'the set\'s flowing blocks follow it in the order');
+  assert.match(flow, /const moves = pinning \|\| !m\.pinned;/, 'its pinned blocks move only where the set is placed freely');
+  const pinnedAt = edit.indexOf('  function mobileDrag(');
+  const pinned = edit.slice(pinnedAt, edit.indexOf('\n  function ', pinnedAt + 10));
+  assert.match(pinned, /const set = kind === 'move' \? phoneSet\(\) : \[\];/, 'a move carries the set, a resize never');
+  assert.match(pinned, /const moved = setDelta\(at\.left - orig\.left, at\.top - orig\.top, \[orig, \.\.\.set\], canvas\.clientWidth\);/, 'held so all of it stays on the canvas');
+  for (const [name, code] of [['the flow drag', flow], ['the pinned drag', pinned]]) {
+    assert.match(code, /const step = set\.length \? \{ coalesce: true, groupKey: makeId\('phone-set'\) \} : \{\};/, `${name}: one undo step`);
+    assert.match(code, /for \(const \{ m, placement: p \} of placed\) post\(\{ type: 'urd-move', sectionId: section\.id, blockId: m\.block\.id, frame: p, frameKey: 'mobile', \.\.\.step \}\);/, `${name}: each block of the set on its own rows`);
+  }
+  assert.match(edit, /const skip = without instanceof Set \? without : new Set\(without \? \[without\] : \[\]\);/, 'the unit boxes leave the whole set out');
+  assert.match(edit, /if \(\(lifted && node === el\) \|\| carried\.has\(node\) \|\| !node\.offsetParent\) continue;/, 'the preview leaves the carried set where the drag holds it');
+});
+
+test('a block dragged freely on the phone has the desktop\'s smart guides: the other blocks\' lines and gaps and the content\'s, snapped onto within reach', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR } = await import('./_engine.mjs');
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  const guides = edit.slice(edit.indexOf('  function phoneGuides('), edit.indexOf('  function pinOnPhone('));
+  assert.match(guides, /const ex = edgeSnap\(box\.left, box\.w, xs, tol\);\s*const gx = ex \? null : gapSnap\(box\.left, box\.w, besideX, tol\);\s*const ey = edgeSnap\(box\.top, box\.h, ys, tol\);\s*const gy = ey \? null : gapSnap\(box\.top, box\.h, besideY, tol\);/, 'the snap model the desktop drag uses');
+  assert.match(guides, /\[0\.05, 0\.5, 0\.95\]\.map\(\(share\) => \(\{ at: fw \* share, from: 0, to: fh, surface: true, share, prefer: share === 0\.5 \}\)\)/, 'the content\'s edges and middle, the middle preferred');
+  assert.match(guides, /if \(free\) \{\s*settle\(\);\s*return \{ left: box\.left, top: box\.top \};/);
+  // The lines stand in one layer put in once, and are kept and moved from one move to the next, never put in the grid on a move.
+  assert.match(guides, /layer\.className = 'urd-guide-layer';[\s\S]*?flowEl\.appendChild\(layer\);/, 'one layer over the flow, put in as the drag begins');
+  assert.doesNotMatch(guides.slice(guides.indexOf('const draw = ')), /flowEl\.appendChild/, 'a line drawn on a move goes into the layer, never into the grid');
+  assert.match(guides, /if \(item\.css !== css\) item\.node\.style\.cssText = item\.css = css;/, 'a line is written only where it moved');
+  assert.match(guides, /const done = \(\) => layer\.remove\(\);/);
+  const pinnedAt = edit.indexOf('  function mobileDrag(');
+  const pinned = edit.slice(pinnedAt, edit.indexOf('\n  function ', pinnedAt + 10));
+  assert.match(pinned, /guides = phoneGuides\(flowEl, setIds\);/);
+  assert.match(pinned, /guides\?\.snap\(\{ left: orig\.left \+ dx, top: orig\.top \+ dy, w: orig\.w, h: el\.offsetHeight \}, grid\?\.snap === false \|\| ev\.ctrlKey \|\| ev\.metaKey\)/, 'Ctrl or Cmd, or the section\'s snapping off, leave the block free');
+  assert.match(pinned, /guides\?\.done\(\);/, 'gone at the end');
+  const flow = edit.slice(edit.indexOf('  function flowDrag('), edit.indexOf('  function moveToDrag('));
+  assert.match(flow, /if \(pinning\) \{\s*const snapped = guides\.snap\(/, 'a flowing block held over the room, where it is placed freely, snaps too');
+  assert.match(flow, /\} else guides\?\.clear\(\);/, 'and has none while it lands by the order');
+  assert.match(flow, /guides\?\.done\(\);/, 'and none once it is let go');
+});
+

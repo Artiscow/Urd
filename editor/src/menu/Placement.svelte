@@ -125,8 +125,8 @@
   <Setting pin="fit" own={selectedBlock.fit === 'shrink' || selectedBlock.fit === 'both'} reset={() => setBlockFit('wrap')}>
     <Choice stack label={ta('lbl.fit')} title={ta('tip.fit')} value={selectedBlock.fit === 'shrink' || selectedBlock.fit === 'both' ? selectedBlock.fit : 'wrap'}
       options={FIT_BY_WIDTH.has(selectedBlock.type)
-        ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
-        : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || selectedBlock.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]]}
+        ? [['wrap', ta('quick.fit.fluid'), ta('tip.fit.fluid')], ['shrink', ta('quick.fit.floor'), ta('tip.fit.floor')]]
+        : [['wrap', ta('quick.fit.wrap'), ta('tip.fit.wrap')], ...(designWidth() || selectedBlock.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink'), ta('tip.fit.shrink')]] : []), ['both', ta('quick.fit.both'), ta('tip.fit.both')]]}
       onchange={(v) => setBlockFit(v)} />
     {#snippet more()}<FitMin />{/snippet}
   </Setting>

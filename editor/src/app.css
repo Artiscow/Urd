@@ -2051,7 +2051,7 @@
     gap: 0.25rem;
   }
 
-  .panel-body :is(.emenu-col, .emenu-pinned) label:not(.gridmenu-snap) > * {
+  .panel-body :is(.emenu-col, .emenu-pinned) label:not(.gridmenu-snap):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) > * {
     flex: none;
   }
 

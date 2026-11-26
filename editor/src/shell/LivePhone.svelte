@@ -670,6 +670,13 @@
     background: color-mix(in srgb, var(--urd-color-accent, #2bbfa5) 22%, transparent);
   }
 
+  /* A toggle of the bar that is on (the two scrolling together), marked as the size chosen is */
+  .lp-bar :global(.icon-btn[aria-pressed='true']) {
+    color: var(--urd-color-accent, #2bbfa5);
+    background: color-mix(in srgb, var(--urd-color-accent, #2bbfa5) 22%, transparent);
+    opacity: 1;
+  }
+
   /* The phone in its bezel, as the phone view draws it, the page scaled into it from its top left corner */
   .lp-phone {
     --phone-bezel: color-mix(in srgb, var(--urd-color-surface, #151a23) 85%, black);

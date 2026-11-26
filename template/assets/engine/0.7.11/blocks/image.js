@@ -11,7 +11,7 @@
 
 import { resolveLink, linkAttrs } from '../nav-model.js';
 import { ta, t } from '../i18n.js';
-import { drawPicture } from '../picture.js';
+import { drawPicture, pictureBlend, blendStrength } from '../picture.js';
 import { aspectRatio, IMAGE_ASPECTS } from '../push-model.js';
 
 /**
@@ -47,10 +47,19 @@ export const imageBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{src: string, alt: string, fit: 'cover'|'contain', radius: string|null, href: string|null, aspect?: string}} props
-   *   aspect: one of IMAGE_ASPECTS (push-model.js) from the image editor, the frame's shape with its height following its width
+   *   aspect: one of IMAGE_ASPECTS (push-model.js) from the image editor, the frame's shape with its height following its width;
+   *   blend: one of PICTURE_BLENDS (picture.js), how the block blends with what lies behind it; blendStrength: 0..1, how strongly (absent = whole)
    * @param {object} ctx
    */
   render(el, props, ctx) {
+    // The blend stands on the block itself, which is what meets the section's background and the blocks under it.
+    const blend = props.src ? pictureBlend(props.blend) : '';
+    const strength = blend ? blendStrength(props.blendStrength) : 1;
+    el.classList.toggle('urd-image-blend', Boolean(blend));
+    if (blend) el.style.setProperty('--urd-blend', blend);
+    else el.style.removeProperty('--urd-blend');
+    if (strength < 1) el.style.setProperty('--urd-blend-strength', String(strength));
+    else el.style.removeProperty('--urd-blend-strength');
     // With no image: a quiet placeholder in the editor; visitors see nothing.
     if (!props.src) {
       if (ctx.preview) {

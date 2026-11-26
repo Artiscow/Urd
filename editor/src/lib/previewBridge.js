@@ -56,7 +56,7 @@
  *                  { type: 'urd-shown', round }               (what the editor's start sent is drawn and painted; answers urd-startup-done with its round)
  *                  { type: 'urd-plugin-blocks', blocks }      (the plugin blocks: type/label/defaults for the Blocks panel)
  *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
- *                  { type: 'urd-picture-edit', kind, sectionId?, blockId?, index?, collection?, entryId?, frameRatio, frameWidth, frameHeight } (a picture on the canvas asks the image editor to open: an image block's, a video's cover, a gallery picture, a collection entry's or a quote's portrait, with its frame's width over its height and its size in pixels as drawn)
+ *                  { type: 'urd-picture-edit', kind, sectionId?, blockId?, index?, collection?, entryId?, frameRatio, frameWidth, frameHeight, phone? } (a picture on the canvas asks the image editor to open: an image block's, a video's cover, a gallery picture, a collection entry's or a quote's portrait, with its frame's width over its height and its size in pixels as drawn, and phone where it is drawn in the phone view)
  *                  { type: 'urd-link-edit', value, text }     (the text toolbar's link or Ctrl+K: the link at the caret in the link shape, or null, and the selected words)
  *                  { type: 'urd-add-block', sectionId, block, fit?, phone? } (block placed from the palette, or a plugin block from «+ New block»: fit, a new block whose box is fitted to what it draws; a duplicate has none; phone = {drop}, added in the phone view and standing on the phone only, landing where drop asks, phone-moves.js phoneAdded)
  *                  { type: 'urd-new-fitted', sectionId, blockId, w, h } (a new block's box fitted to what it draws, the answer to urd-fit-new, sent once as the preview shows the block fitted, add-fit.js)
@@ -87,6 +87,7 @@
  *                  { type: 'urd-select', blockId, picked? }   (select a block the editor just built, e.g. + New block; `picked` in the editor's lists, brought into view with the focus left in the list)
  *                  { type: 'urd-light', ids }                 (light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away)
  *                  { type: 'urd-phone-pin', blockId }         (pin the block on the phone where it stands now: the Phone panel's row menu)
+ *                  { type: 'urd-ask-picture', sectionId, blockId, kind } (open the image editor on an image block's picture or a video's cover as a press on it does, the preview answering with urd-picture-edit: «Open the image editor» in the block's menu)
  *                  { type: 'urd-block-words', sectionId, blockId, props, phoneProps } (a block's words written on the page, the desktop's and the phone's own, as the editor keeps them, put in the page's copy of the section without drawing it again, ADR-0033)
  *                  { type: 'urd-deselect' }                   (a press on the stage around the canvas: no block, set or section stays selected)
  *                  { type: 'urd-text-cmd', cmd, value, focus } (a command of the text bar on the text being written; focus hands the focus back to the text)
@@ -315,6 +316,10 @@ export function createPreviewBridge(iframe, handlers = {}) {
     /** Pins the block on the phone where it stands now (the Phone panel's row menu). */
     sendPhonePin(blockId) {
       post({ type: 'urd-phone-pin', blockId });
+    },
+    /** Opens the image editor on a block's picture as a press on it does, so it is measured as drawn and knows the view it is drawn in («Open the image editor» in the block's menu). */
+    sendAskPicture(sectionId, blockId, kind) {
+      post({ type: 'urd-ask-picture', sectionId, blockId, kind });
     },
     /** Nothing selected on the canvas: no block, no set of blocks and no section at work. */
     sendDeselect() {

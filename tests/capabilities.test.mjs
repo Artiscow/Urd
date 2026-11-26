@@ -57,6 +57,7 @@ const IN_USE = {
   'cal-buttons': (b) => { b.props.showRecurring = true; },
   'cal-notice': (b) => { b.props.design = 'noticeboard'; b.props.notice = { show: true, noticeTitle: 'Ny dato' }; },
   'video-play': (b) => { b.props.source = 'file'; b.props.loop = true; b.props.muted = true; },
+  'video-overlay': (b) => { b.props.source = 'file'; b.props.overlay = { color: 'accent', strength: 0.4 }; },
   'cal-filter': (b) => { b.props.showCategories = true; b.props.showSearch = true; b.props.showEarlier = true; },
   'cal-signup': (b) => { b.props.showSignup = true; },
   'cal-colors': (b) => { b.props.colors = { bg: '#000000' }; b.props.stripe = { color: '#111111' }; },

@@ -122,8 +122,8 @@
       const byWidth = FIT_BY_WIDTH.has(b.type);
       items.push({ id: 'fit', label: ta('lbl.fit'), tip: ta('tip.fit'), more: FitMin, kind: 'choice', value: b.fit === 'shrink' || b.fit === 'both' ? b.fit : 'wrap',
         own: b.fit === 'shrink' || b.fit === 'both', reset: () => setBlockFit('wrap'),
-        options: byWidth ? [['wrap', ta('quick.fit.fluid')], ['shrink', ta('quick.fit.floor')]]
-          : [['wrap', ta('quick.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink')]] : []), ['both', ta('quick.fit.both')]],
+        options: byWidth ? [['wrap', ta('quick.fit.fluid'), ta('tip.fit.fluid')], ['shrink', ta('quick.fit.floor'), ta('tip.fit.floor')]]
+          : [['wrap', ta('quick.fit.wrap'), ta('tip.fit.wrap')], ...(designWidth() || b.fit === 'shrink' ? [['shrink', ta('quick.fit.shrink'), ta('tip.fit.shrink')]] : []), ['both', ta('quick.fit.both'), ta('tip.fit.both')]],
         set: (v) => setBlockFit(v) });
     }
     const hidden0 = ed.blockStarts(b.type, 'hideMobile');

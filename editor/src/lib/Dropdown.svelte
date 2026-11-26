@@ -6,6 +6,8 @@
    * compared as strings, so '' and null can be used as "none".
    * An option may carry a third entry, a note drawn as a smaller line under its label in the list.
    * With `fit` the button is as wide as the chosen option and takes no more of its row than that.
+   * With `stay` the list stays open after a choice, for a setting whose choices are tried one after another against the canvas (an image's blend); it closes at a press outside it or Escape.
+   * The list opens with the chosen option in its middle, and carries no tooltip: the one on the row around it (`title` on a setting's row) names the setting, not each choice.
    * A fourth entry is a face `{ font, sample? }`: the label is drawn in that font, or with `sample` in the UI's font with the sample beside it in that font, in the list and in the closed field alike (fontChoices in the engine's fonts.js); a fourth entry without a font name is no face.
    *
    * Two branches (ADR-0011 addendum, anchored.js decides): with the Popover
@@ -19,10 +21,11 @@
    * instant, and a close-on-scroll rule would slam the popup shut before
    * anything could be picked.
    */
+  import { untrack } from 'svelte';
   import { lingering, menuMotion } from './motion.svelte.js';
   import { nativeAnchoring, anchorName } from '$engine/anchored.js';
 
-  let { value = null, options = [], onchange, title = null, disabled = false, filled = false, compact = false, labelledby = null, fit = false } = $props();
+  let { value = null, options = [], onchange, title = null, disabled = false, filled = false, compact = false, labelledby = null, fit = false, stay = false } = $props();
 
   const native = nativeAnchoring();
   const anchor = anchorName('urd-dd');
@@ -61,9 +64,19 @@
     open = true;
   }
 
+  /** Scrolls the list so the chosen option stands in its middle as it opens; a list that shows all its options does not move.
+      Every option carries it and the choice is read as the option is drawn, so a choice made in a list that stays open moves nothing. */
+  function centred(node) {
+    if (node.dataset.value !== untrack(() => `${value ?? ''}`)) return;
+    const list = node.parentElement;
+    list.scrollTop = node.offsetTop - (list.clientHeight - node.offsetHeight) / 2;
+  }
+
   function pick(v) {
-    if (native) popEl?.hidePopover();
-    open = false;
+    if (!stay) {
+      if (native) popEl?.hidePopover();
+      open = false;
+    }
     onchange?.(v);
   }
 
@@ -116,11 +129,11 @@
       <span class="dd-value">{@render named(current()?.[1] ?? '', current()?.[3])}</span>
       {@render caret()}
     </button>
-    <div class="dd-pop dd-anchored" id={popId} popover="auto" bind:this={popEl}
+    <div class="dd-pop dd-anchored" id={popId} popover="auto" title="" bind:this={popEl}
       style="position-anchor: {anchor}" ontoggle={(e) => { open = e.newState === 'open'; }}>
       {#if drawn.shown}
         {#each options as [v, label, note, face] (`${v ?? ''}`)}
-          <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
+          <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`} data-value={`${v ?? ''}`} {@attach centred}
             onclick={() => pick(v)}>{@render named(label, face)}{#if note}<span class="dd-note">{note}</span>{/if}</button>
         {/each}
       {/if}
@@ -131,9 +144,9 @@
       {@render caret()}
     </button>
     {#if open}
-      <div class="dd-pop" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px" transition:menuMotion>
+      <div class="dd-pop" title="" style="top: {pos.top}px; left: {pos.left}px; min-width: {pos.width}px" transition:menuMotion>
         {#each options as [v, label, note, face] (`${v ?? ''}`)}
-          <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`}
+          <button type="button" class="dd-opt" class:selected={`${v ?? ''}` === `${value ?? ''}`} data-value={`${v ?? ''}`} {@attach centred}
             onclick={() => pick(v)}>{@render named(label, face)}{#if note}<span class="dd-note">{note}</span>{/if}</button>
         {/each}
       </div>

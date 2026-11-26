@@ -42,7 +42,7 @@
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX, DRAWS_NOTHING, READABLE_PX } from './push-model.js';
-import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight, phoneRoomOf } from './migrate.js';
+import { MOBILE_ROW, PHONE_COLUMNS, phoneCells, phoneHeight, phoneRoomOf, phoneSpace, mobileGapOf } from './migrate.js';
 import { makeId } from './sections/presets.js';
 import { cloneSectionForInsert, cloneBlocksForInsert } from './templates-model.js';
 import { blocksClipboard, sectionClipboard, readClipboard, pastedSection } from './clipboard-model.js';
@@ -53,10 +53,11 @@ import { presetThumb } from './preset-thumb.js';
 import { embedUrl } from './embed-cover.js';
 import { calendarExamples, toggleCalendarExamples } from './blocks/calendar-edit.js';
 import { stackOrder, phoneSetupOf } from './phone-order.js';
-import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneAfterLine, phoneDropChange, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup, phoneGroup, phoneUngroupAll, phoneAlignCells } from './phone-moves.js';
+import { phoneStep, hasPhonePlace, phoneTree, phoneDropAt, phoneAfterLine, phoneDropChange, phoneSetDropChange, phoneSpaceDragged, phoneHomeSpan, phoneStackOf, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, phoneUngroup, phoneGroup, phoneUngroupAll, phoneAlignCells } from './phone-moves.js';
 import { closeColorPicker } from './color-picker.js';
 import { attachHint } from './hint.js';
 import { closeDropdowns } from './dropdown.js';
+import { watchBlends } from './preview-blend.js';
 import { clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from './text-typo.js';
 import { TEXT_BLOCKS, unwrap, stripDescendantProp, applyWholeStyle } from './text-whole.js';
 import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
@@ -1759,6 +1760,8 @@ export function enhanceSection(host, section, grid) {
  */
 function phoneUnitBoxes(host, section, flowEl, without = null, placed = null) {
   const out = [];
+  /** The blocks left out: the dragged block, or every block of a set dragged together. */
+  const skip = without instanceof Set ? without : new Set(without ? [without] : []);
   /** A block's box: where the preview shows it, else where it stands. */
   const boxOf = (ids) => {
     if (!placed) return phoneBoxOf(host, flowEl, ids);
@@ -1767,7 +1770,7 @@ function phoneUnitBoxes(host, section, flowEl, without = null, placed = null) {
     return { left: Math.min(...rects.map((r) => r.left)), top: Math.min(...rects.map((r) => r.top)), right: Math.max(...rects.map((r) => r.left + r.width)), bottom: Math.max(...rects.map((r) => r.top + r.height)) };
   };
   for (const node of phoneTree(section.blocks, phoneSetupOf(section))) {
-    const ids = (node.children ? node.children.map((c) => c.id) : [node.id]).filter((id) => id !== without);
+    const ids = (node.children ? node.children.map((c) => c.id) : [node.id]).filter((id) => !skip.has(id));
     const box = boxOf(ids);
     if (!box) continue;
     const members = ids.length > 1 ? ids.map((id) => ({ id, ...boxOf([id]) })).filter((m) => Number.isFinite(m.top)) : null;
@@ -2874,6 +2877,7 @@ let siteNow = null;
 export function enhancePage(root, page, site) {
   siteNow = site;
   initTextToolbar();
+  watchBlends();
   root.querySelectorAll('.urd-add-section').forEach((el) => el.remove());
   const hosts = [...root.querySelectorAll(':scope > .urd-section')];
   // The phone view builds no structure: its seams carry only the grip of the room above and below the sections' blocks (phoneSeam).
@@ -5791,6 +5795,19 @@ export function pinOnPhoneAt(blockId) {
   if (typeof blockId === 'string') document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"]`)?._urdPinOnPhone?.();
 }
 
+/**
+ * Opens the image editor on a block's picture as a press on it does, measured as the canvas draws it and in the view it is drawn in (the urd-ask-picture message: «Open the image editor» in the block's menu).
+ * A block not drawn in this view asks without its measures.
+ * @param {string} sectionId
+ * @param {string} blockId
+ * @param {'image'|'cover'} kind
+ */
+export function askPictureAt(sectionId, blockId, kind) {
+  const el = typeof blockId === 'string' ? document.querySelector(`.urd-block[data-block-id="${CSS.escape(blockId)}"]`) : null;
+  if (el?._urdAskPicture) el._urdAskPicture(kind);
+  else if (typeof sectionId === 'string' && typeof blockId === 'string') post({ type: 'urd-picture-edit', kind, sectionId, blockId });
+}
+
 /** Nothing selected (the urd-deselect message: a press on the editor's stage around the canvas): no block, no set of blocks and no section at work. */
 export function deselectAll() {
   selectBlock(null);
@@ -5920,11 +5937,13 @@ function enhanceBlock(el, block, section, grid, host) {
   updateToolbarSide();
   el.addEventListener('pointerenter', updateToolbarSide);
 
-  // The image editor is the admin's (PictureEditor.svelte): the block asks it to open, with its frame's shape as drawn here, so the editor's crop window has the frame's real proportions.
+  // The image editor is the admin's (PictureEditor.svelte): the block asks it to open, with its frame's shape as drawn here, so the editor's crop window has the frame's real proportions, and whether it is drawn on the phone.
   const askPictureEditor = (kind) => {
     const box = (kind === 'cover' ? el.querySelector('.urd-cover') : el.querySelector('.urd-image-frame')) ?? el;
-    post({ type: 'urd-picture-edit', kind, sectionId: section.id, blockId: block.id, frameRatio: box.offsetHeight ? box.offsetWidth / box.offsetHeight : 0, frameWidth: box.offsetWidth, frameHeight: box.offsetHeight });
+    post({ type: 'urd-picture-edit', kind, sectionId: section.id, blockId: block.id, frameRatio: box.offsetHeight ? box.offsetWidth / box.offsetHeight : 0, frameWidth: box.offsetWidth, frameHeight: box.offsetHeight, phone: mobile });
   };
+  // The block's menu opens the image editor the same way (askPictureAt).
+  el._urdAskPicture = askPictureEditor;
   // Only where a cover is drawn: an embed with a link the video block can play, asked about before it loads.
   const coverEditable = block.type === 'video' && block.props.source !== 'file' && block.props.askFirst !== false && Boolean(embedUrl(block.props.url));
   if (block.type === 'image') {
@@ -6274,8 +6293,8 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /** The other units on the phone, without the dragged block: where a drag can land (phoneUnitBoxes). */
-  function unitBoxes(flowEl, placed = null) {
-    return phoneUnitBoxes(host, section, flowEl, block.id, placed);
+  function unitBoxes(flowEl, placed = null, without = block.id) {
+    return phoneUnitBoxes(host, section, flowEl, without, placed);
   }
 
   /** The box that blocks stand in on the phone together (phoneBoxOf). */
@@ -6296,6 +6315,113 @@ function enhanceBlock(el, block, section, grid, host) {
     return { cells, land, remove: () => { cells.remove(); land.remove(); } };
   }
 
+  /** The hold a block lifted out of the row grid leaves where it stood: its grid place, size and margins, so the grid keeps its layout while the block is dragged. */
+  function phoneHold(node, from) {
+    const cs = getComputedStyle(node);
+    const hold = document.createElement('div');
+    hold.className = 'urd-phone-hold';
+    hold.setAttribute('aria-hidden', 'true');
+    Object.assign(hold.style, {
+      gridColumnStart: cs.gridColumnStart,
+      gridColumnEnd: cs.gridColumnEnd,
+      gridRowStart: cs.gridRowStart,
+      gridRowEnd: cs.gridRowEnd,
+      justifySelf: cs.justifySelf,
+      width: `${from.width}px`,
+      height: `${from.height}px`,
+      marginTop: cs.marginTop,
+      marginRight: cs.marginRight,
+      marginBottom: cs.marginBottom,
+      marginLeft: cs.marginLeft,
+    });
+    return hold;
+  }
+
+  /**
+   * The selection's other blocks on this section's phone, dragged with this one when it is pressed as one of a set selected together: each with its block, its element and whether it is pinned to rows.
+   * @returns {Array<{block: object, node: HTMLElement, pinned: boolean}>}
+   */
+  function phoneSet() {
+    if (!(multiIds.size > 1 && multiIds.has(block.id))) return [];
+    return section.blocks.filter((b) => b.id !== block.id && multiIds.has(b.id)).map((b) => {
+      const node = host.querySelector(`.urd-block[data-block-id="${CSS.escape(b.id)}"]`);
+      const shown = node && (node._urdStickSlot?.isConnected ? node._urdStickSlot : node).getBoundingClientRect().height > 0;
+      return shown ? { block: b, node, pinned: Number.isFinite(b.frames.mobile?.row) } : null;
+    }).filter(Boolean);
+  }
+
+  /**
+   * A block of a set dragged on the phone lifted out of the row grid as the dragged one is, at its place: with `keep`, a hold of its size where it stood (its slot, where it is pinned while the page scrolls), so the grid keeps its layout; without, its rows let go, and the grid reflows.
+   * @returns {{left: number, top: number, w: number, h: number, hold: HTMLElement|null}}
+   */
+  function liftSetMember(flowEl, node, keep) {
+    const slot = node._urdStickSlot?.isConnected ? node._urdStickSlot : null;
+    const from = (slot ?? node).getBoundingClientRect();
+    let hold = keep ? slot : null;
+    if (!keep) {
+      slot?.remove();
+      node._urdStickSlot = null;
+    }
+    const cell = node.parentElement?.classList.contains('urd-cell') ? node.parentElement : null;
+    if (keep && !hold) {
+      hold = phoneHold(node, from);
+      node.replaceWith(hold);
+    }
+    flowEl.appendChild(node);
+    if (cell && !cell.children.length) cell.remove();
+    const fr = flowEl.getBoundingClientRect();
+    const at = { left: from.left - fr.left, top: from.top - fr.top, w: from.width, h: from.height };
+    Object.assign(node.style, { position: 'absolute', left: `${at.left}px`, top: `${at.top}px`, width: `${at.w}px`, height: `${at.h}px`, gridColumn: '', gridRow: '', marginTop: '0px', marginLeft: '0px', marginRight: '0px', zIndex: '100001' });
+    return { ...at, hold };
+  }
+
+  /**
+   * How far a set dragged on the phone moves, the dragged block's own move held so every block of the set stays inside the flow's width and below its top.
+   * @param {number} dx
+   * @param {number} dy
+   * @param {Array<{left: number, top: number, w: number}>} parts Each block's place as the drag began
+   * @param {number} width The flow's width
+   */
+  function setDelta(dx, dy, parts, width) {
+    const least = Math.max(...parts.map((p) => -p.left));
+    const most = Math.min(...parts.map((p) => width - p.w - p.left));
+    return { dx: clamp(dx, least, Math.max(least, most)), dy: Math.max(dy, ...parts.map((p) => -p.top)) };
+  }
+
+  /** A block of the set put on rows of its own in the grid with its new placement, as the dragged block is when it lands. */
+  function pinSetMember(node, b, placement) {
+    for (const prop of ['position', 'left', 'top', 'width', 'height', 'minHeight', 'marginTop', 'marginLeft', 'marginRight', 'zIndex', 'opacity']) node.style[prop] = '';
+    node.classList.remove('urd-block-flow');
+    node.classList.add('urd-block-pinned');
+    Object.assign(node.style, mobilePlacementToCss(placement, b.frames.desktop, { autoGrow: autoGrows(b, window.Urd.blocks.get(b.type)) }));
+  }
+
+  /**
+   * A placement on the phone's rows for a block lifted out of the grid, from where it stands: its left edge and width in percent of the canvas, its first row read on the grid's tracks as they are, and its rows; its layer and turn kept.
+   * @param {HTMLElement} flowEl
+   * @param {HTMLElement} node
+   * @param {object} b The block
+   * @param {number[]} tracks The grid's row tracks
+   * @param {number} padTop The flow's room above its first block
+   */
+  function placementOnRows(flowEl, node, b, tracks, padTop) {
+    const canvas = canvasOf(host);
+    const fr = flowEl.getBoundingClientRect();
+    const rect = node.getBoundingClientRect();
+    const r2 = (v) => Math.round(v * 100) / 100;
+    const w = r2((rect.width / canvas.clientWidth) * 100);
+    const old = b.frames.mobile;
+    const placement = {
+      x: clamp(r2(((rect.left - fr.left) / canvas.clientWidth) * 100), 0, r2(100 - w)),
+      w,
+      row: rowNearOffset(tracks, rect.top - fr.top - padTop),
+      rows: Math.max(1, Math.round(rect.height / MOBILE_ROW)),
+    };
+    if (Number.isFinite(old?.z)) placement.z = old.z;
+    if (old?.rot) placement.rot = old.rot;
+    return placement;
+  }
+
   /**
    * The block out of the row grid into free positioning at its place on the screen, a hold of its size left where it stood (its slot, where it is pinned while the page scrolls), so the grid keeps its layout while the block is dragged and the place it left reads as its own.
    * @returns {{at: {left: number, top: number, w: number, h: number}, hold: HTMLElement}}
@@ -6304,33 +6430,22 @@ function enhanceBlock(el, block, section, grid, host) {
     const slot = el._urdStickSlot?.isConnected ? el._urdStickSlot : null;
     const from = (slot ?? el).getBoundingClientRect();
     let hold = slot;
+    // The block itself holds the pointer while it is dragged, whatever was pressed (its surface, or the grip on its bar): a capture the grip took is let go first.
+    try {
+      if (handle !== el && handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+    } catch { /* the pointer is gone: the drag ends as it would */ }
     if (!hold) {
-      const cs = getComputedStyle(el);
-      hold = document.createElement('div');
-      hold.className = 'urd-phone-hold';
-      hold.setAttribute('aria-hidden', 'true');
-      Object.assign(hold.style, {
-        gridColumnStart: cs.gridColumnStart,
-        gridColumnEnd: cs.gridColumnEnd,
-        gridRowStart: cs.gridRowStart,
-        gridRowEnd: cs.gridRowEnd,
-        justifySelf: cs.justifySelf,
-        width: `${from.width}px`,
-        height: `${from.height}px`,
-        marginTop: cs.marginTop,
-        marginRight: cs.marginRight,
-        marginBottom: cs.marginBottom,
-        marginLeft: cs.marginLeft,
-      });
+      hold = phoneHold(el, from);
       el.replaceWith(hold);
     }
     flowEl.appendChild(el);
     try {
-      handle.setPointerCapture(event.pointerId);
+      el.setPointerCapture(event.pointerId);
     } catch { /* the pointer is gone: the drag ends as it would */ }
     const fr = flowEl.getBoundingClientRect();
     const at = { left: from.left - fr.left, top: from.top - fr.top, w: from.width, h: from.height };
-    Object.assign(el.style, { position: 'absolute', left: `${at.left}px`, top: `${at.top}px`, width: `${at.w}px`, height: `${at.h}px`, gridColumn: '', marginLeft: '0px', marginRight: '0px', zIndex: '100001', opacity: '0.85' });
+    // The block's own room above it stays with its hold, so the block is drawn where it stood.
+    Object.assign(el.style, { position: 'absolute', left: `${at.left}px`, top: `${at.top}px`, width: `${at.w}px`, height: `${at.h}px`, gridColumn: '', marginTop: '0px', marginLeft: '0px', marginRight: '0px', zIndex: '100001', opacity: '0.85' });
     return { at, hold };
   }
 
@@ -6338,9 +6453,14 @@ function enhanceBlock(el, block, section, grid, host) {
    * The section shown as a drop on the phone would leave it, while the dragged block is held over a place (flowDrag): the section drawn out of sight with the change written in (phoneChangeApplied), each block's place there measured, and the shown blocks gliding to those places by transform, the dragged block's place a dashed box; the place the block left keeps its room unmarked.
    * A change of none puts every block back where it stood; the end takes the box away, the section then drawn again from the draft.
    * A block sized in place (`lifted` false, its handles) glides to its own new size and place with the others, and has no dashed box.
+   * The other blocks of a set dragged with it (`set`) are carried with it, and each flowing one has a dashed box of its own where it lands.
    * @returns {{show: (change: object|null) => void, placed: () => Map<string, object>|null, mine: () => object|null, end: () => void}}
    */
-  function phonePreview(flowEl, hold, { lifted = true } = {}) {
+  function phonePreview(flowEl, hold, { lifted = true, set = [] } = {}) {
+    /** The set's blocks carried with the dragged one, which the preview leaves where the drag holds them. */
+    const carried = new Set(set.map((m) => m.node));
+    /** The dashed boxes of the set's flowing blocks, by id. */
+    const setLandings = new Map();
     const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
     // The blocks glide to their places; a width is taken at once, so a block's place is measured at the width it will have.
     const ease = motion ? 'transform 180ms ease' : 'none';
@@ -6377,9 +6497,12 @@ function enhanceBlock(el, block, section, grid, host) {
       if (flowMin !== null) Object.assign(flowEl.style, flowMin);
       landing?.remove();
       landing = null;
+      for (const box of setLandings.values()) box.remove();
+      setLandings.clear();
       stackMark?.remove();
       stackMark = null;
       hold?.classList.remove('urd-phone-hold-quiet');
+      for (const m of set) m.hold?.classList.remove('urd-phone-hold-quiet');
     };
     const show = (change) => {
       const key = change ? JSON.stringify(change) : '';
@@ -6411,7 +6534,7 @@ function enhanceBlock(el, block, section, grid, host) {
         const plan = [];
         placed = new Map();
         for (const node of flowEl.querySelectorAll('.urd-block')) {
-          if ((lifted && node === el) || !node.offsetParent) continue;
+          if ((lifted && node === el) || carried.has(node) || !node.offsetParent) continue;
           const t = target(node.dataset.blockId);
           if (!t) continue;
           placed.set(node.dataset.blockId, t);
@@ -6439,6 +6562,24 @@ function enhanceBlock(el, block, section, grid, host) {
         }
         Object.assign(landing.style, { left: `${mine.left}px`, top: `${mine.top}px`, width: `${mine.width}px`, height: `${mine.height}px` });
         hold?.classList.add('urd-phone-hold-quiet');
+        for (const m of set) {
+          const t = m.pinned ? null : target(m.block.id);
+          let box = setLandings.get(m.block.id);
+          if (!t) {
+            box?.remove();
+            setLandings.delete(m.block.id);
+            continue;
+          }
+          if (!box) {
+            box = document.createElement('div');
+            box.className = 'urd-phone-landing';
+            box.setAttribute('aria-hidden', 'true');
+            flowEl.appendChild(box);
+            setLandings.set(m.block.id, box);
+          }
+          Object.assign(box.style, { left: `${t.left}px`, top: `${t.top}px`, width: `${t.width}px`, height: `${t.height}px` });
+          m.hold?.classList.add('urd-phone-hold-quiet');
+        }
         // A stack the block joins is outlined round its blocks and the landing, since a stack across the row looks as blocks one after another.
         const stackIds = (change.stacks ?? []).find((ids) => ids.includes(block.id));
         const parts = stackIds ? [mine, ...stackIds.filter((id) => id !== block.id).map((id) => placed.get(id)).filter(Boolean)] : [];
@@ -6469,6 +6610,8 @@ function enhanceBlock(el, block, section, grid, host) {
       end: () => {
         landing?.remove();
         landing = null;
+        for (const box of setLandings.values()) box.remove();
+        setLandings.clear();
         stackMark?.remove();
         stackMark = null;
         // The blocks take their own transitions back once they have glided home, so a hover's own transition is theirs again.
@@ -6563,7 +6706,15 @@ function enhanceBlock(el, block, section, grid, host) {
   function flowDrag(handle, event, opts = {}) {
     const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
     if (!flowEl) return;
+    const flowBefore = flowEl.offsetHeight;
+    // A block pressed as one of a set selected together carries the set: its flowing blocks land with it in the order, and the whole set is pinned where it stands over the room.
+    const set = phoneSet();
+    const setIds = new Set([block.id, ...set.map((m) => m.block.id)]);
+    const followers = phoneTree(section.blocks, phoneSetupOf(section)).flatMap((n) => (n.children ? n.children.map((c) => c.id) : [n.id])).filter((id) => set.some((m) => !m.pinned && m.block.id === id));
+    const otherTops = pinnedTops(flowEl, setIds);
     const start = { x: event.clientX, y: event.clientY };
+    /** Whether a pointer event is another pointer's than the one that began the drag. */
+    const other = (ev) => ev?.pointerId !== undefined && ev.pointerId !== event.pointerId;
     const threshold = opts.surface ? 4 : 0;
     let started = false;
     let at = null;
@@ -6576,20 +6727,71 @@ function enhanceBlock(el, block, section, grid, host) {
     let change = null;
     /** The block's own place as the drag began, in the flow's px. */
     let own = null;
+    /** Whether the block is held over the section's room above or below its blocks, where it is pinned as it is let go. */
+    let pinning = false;
+    /** The smart guides of the block while it is held over the room, where it is placed freely (phoneGuides). */
+    let guides = null;
+    /** The other blocks one by one as the drag began, the span the block keeps its place in among them (phoneHomeSpan), and the band that shows its room above it while it is held there. */
+    let neighbours = [];
+    let home = null;
+    let band = null;
     const begin = () => {
       started = true;
       const lifted = liftOnPhone(flowEl, handle, event);
       at = lifted.at;
       hold = lifted.hold;
+      for (const m of set) {
+        Object.assign(m, liftSetMember(flowEl, m.node, true));
+        m.node.style.opacity = '0.85';
+      }
       marks = phoneDragMarks(flowEl);
-      boxes = unitBoxes(flowEl);
+      boxes = unitBoxes(flowEl, null, setIds);
       const fr = flowEl.getBoundingClientRect();
       const r = hold.getBoundingClientRect();
       own = { left: r.left - fr.left, top: r.top - fr.top, right: r.right - fr.left, bottom: r.bottom - fr.top };
-      view = phonePreview(flowEl, hold);
+      view = phonePreview(flowEl, hold, { set });
+      guides = phoneGuides(flowEl, setIds);
+      neighbours = boxes.flatMap((b) => b.members ?? [b]);
+      home = phoneHomeSpan(neighbours, own);
+    };
+    /** The gap above the block as it will stand, striped, with its size, while a release over its own place sets its room above it; none otherwise. */
+    const showSpace = (on) => {
+      const mine = on ? view?.mine() : null;
+      if (!mine) {
+        band?.remove();
+        band = null;
+        return;
+      }
+      const gap = mobileGapOf(section, siteNow);
+      const top = Number.isFinite(home.top) ? home.top : Math.max(0, own.top - gap - phoneSpace(block.frames.mobile));
+      if (!band) {
+        band = document.createElement('div');
+        band.className = 'urd-phone-space';
+        band.setAttribute('aria-hidden', 'true');
+        band.appendChild(document.createElement('span'));
+        flowEl.appendChild(band);
+      }
+      Object.assign(band.style, { top: `${top}px`, height: `${Math.max(0, mine.top - top)}px` });
+      band.firstChild.textContent = `${Math.round(Math.max(0, mine.top - top))} px`;
+    };
+    /** The set's other blocks carried by the dragged block's move: the flowing ones always, the pinned ones over the room, where the set is placed freely, and back in their places elsewhere. */
+    const carry = () => {
+      if (!set.length) return;
+      const dx = (parseFloat(el.style.left) || 0) - at.left;
+      const dy = (parseFloat(el.style.top) || 0) - at.top;
+      for (const m of set) {
+        const moves = pinning || !m.pinned;
+        m.node.style.left = `${m.left + (moves ? dx : 0)}px`;
+        m.node.style.top = `${m.top + (moves ? dy : 0)}px`;
+      }
     };
     if (threshold === 0) begin();
     const showLand = () => {
+      // Over the room the block is pinned where it stands, so it is its own mark.
+      if (pinning) {
+        marks.land.hidden = true;
+        return;
+      }
       // While the section shows the drop's outcome, its dashed box says where the block lands.
       if (change) {
         marks.land.hidden = true;
@@ -6623,28 +6825,61 @@ function enhanceBlock(el, block, section, grid, host) {
       Object.assign(marks.land.style, { left: `${place.left}px`, top: `${place.top}px`, width: `${place.width}px`, height: `${place.height}px` });
     };
     const onMove = (ev) => {
+      // Only the pointer that began the drag moves it: a second finger on a touch screen does nothing.
+      if (other(ev)) return;
       if (!started) {
         if (Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y) < threshold) return;
         begin();
       }
-      el.style.left = `${clamp(at.left + ev.clientX - start.x, 0, Math.max(0, flowEl.clientWidth - at.w))}px`;
-      el.style.top = `${Math.max(0, at.top + ev.clientY - start.y)}px`;
+      const moved = setDelta(ev.clientX - start.x, ev.clientY - start.y, [at, ...set], flowEl.clientWidth);
+      el.style.left = `${at.left + moved.dx}px`;
+      el.style.top = `${at.top + moved.dy}px`;
       const fr = flowEl.getBoundingClientRect();
       // The drop is read on the units where the preview shows them, so what is seen is what is aimed at; over the box where the block will land, and the gaps the preview opens right above and below it, the result stands as it is. Any other gap is read on the units as the drag began, since the preview opens gaps of its own as the blocks make room, and a reading in one of those would move the blocks again.
       const x = ev.clientX - fr.left;
       const y = ev.clientY - fr.top;
       const within = (b) => b && x >= b.left && x <= b.right && y >= b.top && y <= b.bottom;
       const placed = view?.placed() ?? null;
-      const units = placed ? unitBoxes(flowEl, placed) : boxes;
+      const units = placed ? unitBoxes(flowEl, placed, setIds) : boxes;
       const mine = view?.mine() ?? null;
       const near = mine && { ...mine, top: mine.top - LANDING_NEAR_PX, bottom: mine.bottom + LANDING_NEAR_PX };
-      if (within(near) && !units.some(within)) drop = null;
+      // Over the section's room: the pointer, or the dragged block's own edge, past the section's flowing blocks by more than a landing's reach.
+      const reach = [...boxes, own];
+      const first = Math.min(...reach.map((b) => b.top)) - LANDING_NEAR_PX;
+      const last = Math.max(...reach.map((b) => b.bottom)) + LANDING_NEAR_PX;
+      const blockTop = parseFloat(el.style.top) || 0;
+      // The block's own edge counts only where the pointer has no block both above and below it: a gap between two blocks is a place in the order.
+      const between = boxes.some((b) => b.bottom <= y) && boxes.some((b) => b.top >= y);
+      pinning = !units.some(within) && (y < first || y > last || (!between && (blockTop < first || blockTop + at.h > last)));
+      // Over the room the block is placed freely, so the guides snap it there; anywhere else it lands by the order, and they stand aside.
+      if (pinning) {
+        const snapped = guides.snap({ left: parseFloat(el.style.left) || 0, top: blockTop, w: at.w, h: at.h }, grid?.snap === false || ev.ctrlKey || ev.metaKey);
+        const held = setDelta(snapped.left - at.left, snapped.top - at.top, [at, ...set], flowEl.clientWidth);
+        el.style.left = `${at.left + held.dx}px`;
+        el.style.top = `${at.top + held.dy}px`;
+      } else guides?.clear();
+      carry();
+      // Over its own place, or the gaps right above and below it, a block dragged alone keeps its place, and the drag sets its room above it (phoneSpaceDragged).
+      const spacing = !pinning && !set.length && x >= own.left && x <= own.right && y > home.top && y < home.bottom && !neighbours.some(within);
+      if (pinning) {
+        drop = null;
+        change = null;
+        showTooNarrow([]);
+        view?.show(null);
+      } else if (spacing) {
+        drop = null;
+        // A block with none above it has no gap to take from, so its room goes no lower than none.
+        const space = phoneSpaceDragged(block.frames.mobile, blockTop - own.top, Number.isFinite(home.top) ? mobileGapOf(section, siteNow) : 0);
+        change = space === null ? null : { places: {}, spaces: { [block.id]: space } };
+        showTooNarrow([]);
+        view?.show(change);
+      } else if (within(near) && !units.some(within)) drop = null;
       else {
         drop = units.some(within) ? phoneDropAt(units, x, y, null) : phoneDropAt(boxes, x, y, own);
         // Where the pointer stands across the row, in columns from its left edge, for a block placed at it (phoneDropChange), and whether Alt asks for any column.
         if (drop) Object.assign(drop, { x: (x - fr.width * 0.05) / ((fr.width * 0.9) / PHONE_COLUMNS), fine: ev.altKey });
         // Back over its own place, or nearer to it than to any block, the section stands as it is and a release moves nothing.
-        change = drop ? phoneDropChange(section.blocks, phoneSetupOf(section), block.id, drop) : null;
+        change = drop ? phoneSetDropChange(section, block.id, drop, followers) : null;
         // A drop that would squeeze words under «Force readable text» (ADR-0034) greys the dragged block, shows no result and moves nothing.
         const blocked = Boolean(change) && squeezes(change);
         showTooNarrow(blocked ? [el] : []);
@@ -6654,20 +6889,24 @@ function enhanceBlock(el, block, section, grid, host) {
         }
         view?.show(change);
       }
+      showSpace(spacing && Boolean(change));
       showLand();
     };
     const finish = () => {
-      handle.removeEventListener('pointermove', onMove);
-      handle.removeEventListener('pointerup', onUp);
-      handle.removeEventListener('pointercancel', cancel);
+      document.removeEventListener('pointermove', onMove, true);
+      document.removeEventListener('pointerup', onUp, true);
+      document.removeEventListener('pointercancel', cancel, true);
       document.removeEventListener('keydown', onEscape, true);
       marks?.remove();
+      guides?.done();
+      band?.remove();
       showTooNarrow([]);
       view?.end();
       el.classList.remove('urd-hold-drag');
     };
     // A cancelled drag, or Escape in the middle of it, posts nothing: the section is drawn again as it stands.
-    const cancel = () => {
+    const cancel = (ev) => {
+      if (other(ev)) return;
       finish();
       if (started) post({ type: 'urd-redraw-section', sectionId: section.id });
     };
@@ -6677,16 +6916,40 @@ function enhanceBlock(el, block, section, grid, host) {
       ev.stopPropagation();
       cancel();
     };
-    // The release lands the block as the section shows it.
-    const onUp = () => {
+    /** The block pinned on the phone where it was let go over the section's room, and the set dragged with it each where it stands, read on the grid without them, the room below the blocks keeping the section's height; one undo step. */
+    const pinWhereDropped = () => {
+      hold?.remove();
+      for (const m of set) m.hold?.remove();
+      const padTop = parseFloat(getComputedStyle(flowEl).paddingTop) || 0;
+      const tracks = getComputedStyle(flowEl).gridTemplateRows.split(' ').map(parseFloat).filter(Number.isFinite);
+      const placement = placementOnRows(flowEl, el, block, tracks, padTop);
+      const placed = set.map((m) => ({ m, placement: placementOnRows(flowEl, m.node, m.block, tracks, padTop) }));
+      // Placed in the grid as they will be drawn, so the room is measured on the section as it will stand.
+      pinSetMember(el, block, placement);
+      for (const { m, placement: p } of placed) pinSetMember(m.node, m.block, p);
+      const others = keepPinned(flowEl, otherTops);
+      const room = roomKeeping(flowEl, flowBefore);
+      const step = set.length ? { coalesce: true, groupKey: makeId('phone-set') } : {};
+      post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile', ...step, ...(others.length ? { others } : {}), ...(room === null ? {} : { room: { bottom: room } }) });
+      for (const { m, placement: p } of placed) post({ type: 'urd-move', sectionId: section.id, blockId: m.block.id, frame: p, frameKey: 'mobile', ...step });
+      post({ type: 'urd-redraw-section', sectionId: section.id });
+    };
+    // The release lands the block as the section shows it, or pins it over the section's room.
+    const onUp = (ev) => {
+      if (other(ev)) return;
       finish();
       if (!started) return;
+      if (pinning) {
+        pinWhereDropped();
+        return;
+      }
       if (change) post({ type: 'urd-phone-order', sectionId: section.id, blockId: block.id, change });
       else post({ type: 'urd-redraw-section', sectionId: section.id });
     };
-    handle.addEventListener('pointermove', onMove);
-    handle.addEventListener('pointerup', onUp);
-    handle.addEventListener('pointercancel', cancel);
+    // The drag hears the pointer on the whole page, so it goes on wherever the pointer is over the page, held by the block or not.
+    document.addEventListener('pointermove', onMove, true);
+    document.addEventListener('pointerup', onUp, true);
+    document.addEventListener('pointercancel', cancel, true);
     document.addEventListener('keydown', onEscape, true);
   }
 
@@ -6874,6 +7137,154 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
+   * The room below the section's blocks on the phone that keeps the section as tall as it stood before a block was placed in it, or null where the room stays as it is.
+   * The room takes up what the blocks grow, down to none, and gives back what they shrink, so a block placed inside the section never moves its end.
+   * @param {HTMLElement} flowEl
+   * @param {number} before The flow's height before the block was placed
+   * @returns {number|null}
+   */
+  function roomKeeping(flowEl, before) {
+    const room = phoneRoomOf(section).bottom;
+    const kept = Math.max(0, Math.round(room - (flowEl.offsetHeight - before)));
+    return kept === room ? null : kept;
+  }
+
+  /**
+   * The section's other blocks pinned on the phone, top first, each with its top in the flow as drawn now, so a change to the grid can keep them where they stand (keepPinned).
+   * @param {HTMLElement} flowEl
+   * @param {Set<string>|null} [skip] The blocks of a set dragged with it, which move themselves
+   * @returns {Array<{node: HTMLElement, top: number}>}
+   */
+  function pinnedTops(flowEl, skip = null) {
+    const fr = flowEl.getBoundingClientRect();
+    return [...flowEl.querySelectorAll(':scope > .urd-block.urd-block-pinned')]
+      .filter((node) => node !== el && !skip?.has(node.dataset.blockId))
+      .map((node) => ({ node, top: node.getBoundingClientRect().top - fr.top }))
+      .sort((a, b) => a.top - b.top);
+  }
+
+  /**
+   * Puts the other blocks pinned on the phone back where they stood after the grid changed under them, top first: a row is a track of the grid, and the tracks change as a block is pinned, moved or let go.
+   * Each is read on the grid without it, so its new row starts where its top stood, and is drawn there at once; the row is weighed against the one stored, so a block already put back during a drag is still told.
+   * @param {HTMLElement} flowEl
+   * @param {Array<{node: HTMLElement, top: number}>} tops As pinnedTops read them before the change
+   * @returns {Array<{blockId: string, frame: object}>} The frames that changed
+   */
+  function keepPinned(flowEl, tops) {
+    const changed = [];
+    const padTop = parseFloat(getComputedStyle(flowEl).paddingTop) || 0;
+    for (const { node, top } of tops) {
+      const other = section.blocks.find((b) => b.id === node.dataset.blockId);
+      const place = other?.frames.mobile;
+      if (!node.isConnected || !Number.isFinite(place?.row)) continue;
+      node.style.display = 'none';
+      const tracks = getComputedStyle(flowEl).gridTemplateRows.split(' ').map(parseFloat).filter(Number.isFinite);
+      node.style.display = '';
+      const row = rowNearOffset(tracks, top - padTop);
+      if (row === place.row) continue;
+      const frame = { ...place, row };
+      Object.assign(node.style, mobilePlacementToCss(frame, other.frames.desktop, { autoGrow: autoGrows(other, window.Urd.blocks.get(other.type)) }));
+      changed.push({ blockId: other.id, frame });
+    }
+    return changed;
+  }
+
+  /**
+   * The smart guides of a block dragged freely on the phone (snap-model.js), as on the desktop canvas: the other blocks' edges and middles, the content's edges and middle, and the gaps the blocks keep between them.
+   * They are read once as the drag begins, in the flow's px; within reach the block snaps onto the nearest, and every line it then stands on is drawn in a layer over the flow and the dragged block, a line of the content only a little past the block.
+   * @param {HTMLElement} flowEl
+   * @param {Set<string>|null} [skip] The blocks of a set dragged with it, which give no lines
+   * @returns {{snap: (box: {left: number, top: number, w: number, h: number}, free: boolean) => {left: number, top: number}, clear: () => void, done: () => void}}
+   */
+  function phoneGuides(flowEl, skip = null) {
+    const tol = snapTolerance(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale'));
+    const fr = flowEl.getBoundingClientRect();
+    const fw = flowEl.clientWidth;
+    const fh = flowEl.scrollHeight;
+    const xs = [0.05, 0.5, 0.95].map((share) => ({ at: fw * share, from: 0, to: fh, surface: true, share, prefer: share === 0.5 }));
+    /** How far a line of the content reaches past the block, in the page's px: the chrome's 16 screen px at every zoom. */
+    const reach = 16 * (Number(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale')) || 1);
+    const ys = [];
+    const boxes = [];
+    for (const other of flowEl.querySelectorAll('.urd-block')) {
+      if (other === el || el.contains(other) || skip?.has(other.dataset.blockId)) continue;
+      const r = other.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      const left = r.left - fr.left;
+      const top = r.top - fr.top;
+      for (const at of [left, left + r.width / 2, left + r.width]) xs.push({ at, from: top, to: top + r.height });
+      for (const at of [top, top + r.height / 2, top + r.height]) ys.push({ at, from: left, to: left + r.width });
+      boxes.push({ left, top, right: left + r.width, bottom: top + r.height });
+    }
+    // The lines stand in one layer over the flow, put in as the drag begins: a line drawn, moved or hidden changes only the layer, never the grid's own items.
+    const layer = document.createElement('div');
+    layer.className = 'urd-guide-layer';
+    layer.style.cssText = 'position:absolute;inset:0;z-index:100002;pointer-events:none;contain:layout style;';
+    flowEl.appendChild(layer);
+    /** The layer's lines and gaps, each kept for the next move, with the class, place and size it shows. */
+    const pools = { line: [], gap: [] };
+    const used = { line: 0, gap: 0 };
+    const HIDDEN = 'display:none;';
+    /** Shows the next line or gap of its pool, written only where it differs from what it shows. */
+    const draw = (kind, className, css, text) => {
+      let item = pools[kind][used[kind]];
+      if (!item) {
+        const node = document.createElement('div');
+        if (kind === 'gap') node.appendChild(document.createElement('span'));
+        item = { node, className: '', css: '', text: '' };
+        layer.appendChild(node);
+        pools[kind].push(item);
+      }
+      used[kind] += 1;
+      if (item.className !== className) item.node.className = item.className = className;
+      if (item.css !== css) item.node.style.cssText = item.css = css;
+      if (text !== undefined && item.text !== text) item.node.firstChild.textContent = item.text = text;
+    };
+    /** Hides every line and gap the last drawing left unused. */
+    const settle = () => {
+      for (const kind of ['line', 'gap']) {
+        for (const item of pools[kind].slice(used[kind])) if (item.css !== HIDDEN) item.node.style.cssText = item.css = HIDDEN;
+        used[kind] = 0;
+      }
+    };
+    /** A line from `from` to `to` at `at`, upright ('v') or across ('h'). */
+    const line = (axis, at, from, to) => draw('line', `urd-smart-guide urd-smart-guide-${axis}`, axis === 'v'
+      ? `left:${at}px;top:${from}px;height:${to - from}px;`
+      : `top:${at}px;left:${from}px;width:${to - from}px;`);
+    /** An equal gap from `from` to `to` on its axis, as a band across the dragged block's span, with its size. */
+    const gap = (axis, from, to, across) => draw('gap', `urd-smart-gap urd-smart-gap-${axis}`, axis === 'v'
+      ? `left:${from}px;width:${to - from}px;top:${across.from}px;height:${across.to - across.from}px;`
+      : `top:${from}px;height:${to - from}px;left:${across.from}px;width:${across.to - across.from}px;`, String(Math.round(to - from)));
+    /** Hides every line. */
+    const clear = settle;
+    /** Takes the layer away as the drag ends. */
+    const done = () => layer.remove();
+    /** The box moved onto the nearest line or equal gap within reach, with the lines it then stands on drawn; Ctrl or Cmd, or the section's snapping off, leave it free. */
+    const snap = (box, free) => {
+      if (free) {
+        settle();
+        return { left: box.left, top: box.top };
+      }
+      const besideX = boxes.filter((b) => b.bottom > box.top && b.top < box.top + box.h).map((b) => ({ start: b.left, end: b.right }));
+      const besideY = boxes.filter((b) => b.right > box.left && b.left < box.left + box.w).map((b) => ({ start: b.top, end: b.bottom }));
+      const ex = edgeSnap(box.left, box.w, xs, tol);
+      const gx = ex ? null : gapSnap(box.left, box.w, besideX, tol);
+      const ey = edgeSnap(box.top, box.h, ys, tol);
+      const gy = ey ? null : gapSnap(box.top, box.h, besideY, tol);
+      const left = box.left + (ex?.d ?? gx?.d ?? 0);
+      const top = box.top + (ey?.d ?? gy?.d ?? 0);
+      // A line between the block and another spans the two; a line of the content reaches a little past the block.
+      if (ex) for (const l of alignedLines(left, box.w, xs)) line('v', l.at, l.share !== undefined ? top - reach : Math.min(top, l.from), l.share !== undefined ? top + box.h + reach : Math.max(top + box.h, l.to));
+      if (gx) for (const g of gx.gaps) gap('v', g.from, g.to, { from: top, to: top + box.h });
+      if (ey) for (const l of alignedLines(top, box.h, ys)) line('h', l.at, Math.min(left, l.from), Math.max(left + box.w, l.to));
+      if (gy) for (const g of gy.gaps) gap('h', g.from, g.to, { from: left, to: left + box.w });
+      settle();
+      return { left, top };
+    };
+    return { snap, clear, done };
+  }
+
+  /**
    * The block pinned to rows of its own on the phone where it stands now, as a drag on its rows would pin it: from its row in the grid's tracks, in its cells where it stands in some (ADR-0019 decision 2), else at its width and left edge in percent.
    * A block that follows its words spans the tracks that hold it, its own line among them; any other spans its height in rows, since a pinned block is as tall as its rows.
    */
@@ -6904,7 +7315,17 @@ function enhanceBlock(el, block, section, grid, host) {
       : { x: clamp(r2(((rect.left - fr.left) / canvas.clientWidth) * 100), 0, r2(100 - w)), w, row, rows };
     if (Number.isFinite(old?.z)) placement.z = old.z;
     if (old?.rot) placement.rot = old.rot;
-    post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile' });
+    // Pinned in place on the grid, so the other pinned blocks and the room are measured on the section as it will stand.
+    const before = flowEl.offsetHeight;
+    const tops = pinnedTops(flowEl);
+    el.classList.remove('urd-block-flow');
+    el.classList.add('urd-block-pinned');
+    // A pinned block has no room above it of its own, so the room it flowed with goes.
+    el.style.marginTop = '';
+    Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { autoGrow: autoGrows(block, window.Urd.blocks.get(block.type)) }));
+    const others = keepPinned(flowEl, tops);
+    const room = roomKeeping(flowEl, before);
+    post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile', ...(others.length ? { others } : {}), ...(room === null ? {} : { room: { bottom: room } }) });
     // A move is written without drawing the section again, so the section is sent again from the draft: the block then stands pinned, and drags on its rows.
     post({ type: 'urd-redraw-section', sectionId: section.id });
   }
@@ -6922,12 +7343,19 @@ function enhanceBlock(el, block, section, grid, host) {
     const canvas = canvasOf(host);
     const flowEl = canvas.querySelector(':scope > .urd-flow');
     if (!flowEl) return;
+    const flowBefore = flowEl.offsetHeight;
+    // A block pressed as one of a set selected together moves the set with it, each block landing on rows of its own.
+    const set = kind === 'move' ? phoneSet() : [];
+    const setIds = new Set([block.id, ...set.map((m) => m.block.id)]);
+    const otherTops = kind === 'move' ? pinnedTops(flowEl, setIds) : [];
     const flowRect = flowEl.getBoundingClientRect();
     const padTop = parseFloat(getComputedStyle(flowEl).paddingTop) || 0;
     // A block pinned on the phone is measured at its slot, its own place in the grid, wherever it stands pinned.
     const startRect = (el._urdStickSlot?.isConnected ? el._urdStickSlot : el).getBoundingClientRect();
 
     const start = { x: event.clientX, y: event.clientY };
+    /** Whether a pointer event is another pointer's than the one that began the drag. */
+    const other = (ev) => ev?.pointerId !== undefined && ev.pointerId !== event.pointerId;
     const orig = {
       left: startRect.left - flowRect.left,
       top: startRect.top - flowRect.top,
@@ -6949,17 +7377,27 @@ function enhanceBlock(el, block, section, grid, host) {
     let readout = null;
     /** Whether the block was pinned on the phone, so it is drawn back over the grid from its new place once the drag ends. */
     let restick = false;
-    /** The line across the flow at the row the block will be pinned into, drawn while it is moved; the tracks are read once the block is out of the grid. */
-    let rowLine = null;
+    /** The block's landing, a dashed frame of its size behind it at the row it will be pinned into, as a drag in the phone's order shows where a block lands; the tracks are read once the block is out of the grid. */
+    let landing = null;
+    /** The landings of the set's other blocks, in the set's order. */
+    const setLandings = [];
     let rowTracks = [];
-    const rowLineTop = (row) => {
+    /** The smart guides of a move (phoneGuides). */
+    let guides = null;
+    const rowTop = (row) => {
       let top = padTop;
       for (let i = 0; i < row - 1; i++) top += i < rowTracks.length ? rowTracks[i] : MOBILE_ROW;
       return top;
     };
 
+    /** The flow's own least height and track alignment, given back as the drag ends. */
+    let flowHeld = null;
+
     const begin = () => {
       started = true;
+      // The section keeps its height while the block is out of the grid, the grid's tracks at their own heights from its top.
+      flowHeld = { minHeight: flowEl.style.minHeight, alignContent: flowEl.style.alignContent };
+      Object.assign(flowEl.style, { minHeight: `${flowBefore}px`, alignContent: 'start' });
       // A block pinned on the phone comes back from over the grid (render.js stickOnPhone), and its slot leaves, so the grid shows the layout it is placed into.
       // Moving the block lets go of the pointer its handle held, so the handle takes it again.
       // A block standing in a cell with others (render.js, phoneCellCss) comes out of the cell the same way, and the section is drawn again as it lands.
@@ -6979,7 +7417,9 @@ function enhanceBlock(el, block, section, grid, host) {
           handle.setPointerCapture(event.pointerId);
         } catch { /* the pointer is gone: the drag ends as it would */ }
       }
-      // Out of the grid and into free positioning; the grid reflows.
+      // Out of the grid and into free positioning, its row let go so it is placed over the whole flow; the grid reflows.
+      if (el.style.gridRow) restick = true;
+      el.style.gridRow = '';
       el.style.position = 'absolute';
       el.style.left = `${orig.left}px`;
       el.style.top = `${orig.top}px`;
@@ -6991,11 +7431,26 @@ function enhanceBlock(el, block, section, grid, host) {
       el.style.marginLeft = '0';
       el.style.zIndex = '100001';
       if (kind === 'move') {
+        // The set's other blocks come out of the grid as the dragged one does.
+        for (const m of set) Object.assign(m, liftSetMember(flowEl, m.node, false));
+        if (set.length) restick = true;
+        // The other pinned blocks stand where they stood while the dragged one is out of the grid, and the guides are read on them.
+        keepPinned(flowEl, otherTops);
+        guides = phoneGuides(flowEl, setIds);
         rowTracks = getComputedStyle(flowEl).gridTemplateRows.split(' ').map(parseFloat).filter(Number.isFinite);
-        rowLine = document.createElement('div');
-        rowLine.className = 'urd-row-line';
-        rowLine.style.top = `${rowLineTop(rowNearOffset(rowTracks, orig.top - padTop))}px`;
-        flowEl.appendChild(rowLine);
+        landing = document.createElement('div');
+        landing.className = 'urd-phone-landing';
+        landing.setAttribute('aria-hidden', 'true');
+        Object.assign(landing.style, { left: `${orig.left}px`, top: `${rowTop(rowNearOffset(rowTracks, orig.top - padTop))}px`, width: `${orig.w}px`, height: `${el.offsetHeight}px` });
+        flowEl.appendChild(landing);
+        for (const m of set) {
+          const box = document.createElement('div');
+          box.className = 'urd-phone-landing';
+          box.setAttribute('aria-hidden', 'true');
+          Object.assign(box.style, { left: `${m.left}px`, top: `${rowTop(rowNearOffset(rowTracks, m.top - padTop))}px`, width: `${m.w}px`, height: `${m.h}px` });
+          flowEl.appendChild(box);
+          setLandings.push(box);
+        }
       }
       if (kind === 'resize') {
         readout = sizeReadout(el);
@@ -7013,6 +7468,8 @@ function enhanceBlock(el, block, section, grid, host) {
     if (threshold === 0) begin();
 
     const onMove = (ev) => {
+      // Only the pointer that began the drag moves it: a second finger on a touch screen does nothing.
+      if (other(ev)) return;
       if (!started) {
         if (Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y) < threshold) return;
         begin();
@@ -7020,14 +7477,19 @@ function enhanceBlock(el, block, section, grid, host) {
       const dx = ev.clientX - start.x;
       const dy = ev.clientY - start.y;
       if (kind === 'move') {
-        current = {
-          ...orig,
-          left: clamp(orig.left + dx, 0, Math.max(0, canvas.clientWidth - orig.w)),
-          top: Math.max(0, orig.top + dy),
-        };
+        // The guides snap the block where they reach, unless Ctrl or Cmd, or the section's own snapping, leaves it free.
+        const at = guides?.snap({ left: orig.left + dx, top: orig.top + dy, w: orig.w, h: el.offsetHeight }, grid?.snap === false || ev.ctrlKey || ev.metaKey) ?? { left: orig.left + dx, top: orig.top + dy };
+        // The set moves as far as the dragged block, held so all of it stays on the canvas.
+        const moved = setDelta(at.left - orig.left, at.top - orig.top, [orig, ...set], canvas.clientWidth);
+        current = { ...orig, left: orig.left + moved.dx, top: orig.top + moved.dy };
         el.style.left = `${current.left}px`;
         el.style.top = `${current.top}px`;
-        if (rowLine) rowLine.style.top = `${rowLineTop(rowNearOffset(rowTracks, current.top - padTop))}px`;
+        if (landing) Object.assign(landing.style, { left: `${current.left}px`, top: `${rowTop(rowNearOffset(rowTracks, current.top - padTop))}px` });
+        set.forEach((m, i) => {
+          m.node.style.left = `${m.left + moved.dx}px`;
+          m.node.style.top = `${m.top + moved.dy}px`;
+          Object.assign(setLandings[i].style, { left: `${m.left + moved.dx}px`, top: `${rowTop(rowNearOffset(rowTracks, m.top + moved.dy - padTop))}px` });
+        });
       } else {
         const w = edge.x === 0 ? orig.w : clamp(orig.w + edge.x * dx, 24, edge.x < 0 ? orig.left + orig.w : canvas.clientWidth - orig.left);
         const left = edge.x < 0 ? orig.left + orig.w - w : orig.left;
@@ -7047,20 +7509,25 @@ function enhanceBlock(el, block, section, grid, host) {
     };
 
     const finish = () => {
-      handle.removeEventListener('pointermove', onMove);
-      handle.removeEventListener('pointerup', onUp);
-      handle.removeEventListener('pointercancel', cancel);
+      document.removeEventListener('pointermove', onMove, true);
+      document.removeEventListener('pointerup', onUp, true);
+      document.removeEventListener('pointercancel', cancel, true);
       stop?.remove();
       readout?.remove();
-      rowLine?.remove();
+      landing?.remove();
+      for (const box of setLandings) box.remove();
+      guides?.done();
+      if (flowHeld) Object.assign(flowEl.style, flowHeld);
     };
     // A cancelled drag of a block on its rows draws the section again, which puts the block back in its place, over the grid with its slot where it is pinned while the page scrolls.
-    const cancel = () => {
+    const cancel = (ev) => {
+      if (other(ev)) return;
       finish();
       if (restick || started) post({ type: 'urd-redraw-section', sectionId: section.id });
     };
 
-    const onUp = () => {
+    const onUp = (ev) => {
+      if (other(ev)) return;
       finish();
       if (!started) return;
 
@@ -7082,6 +7549,8 @@ function enhanceBlock(el, block, section, grid, host) {
       if (Number.isFinite(old?.z)) placement.z = old.z;
       if (old?.rot) placement.rot = old.rot;
       block.frames.mobile = placement;
+      // The set's other blocks are placed on the same grid, each on its own rows.
+      const placed = set.map((m) => ({ m, placement: placementOnRows(flowEl, m.node, m.block, tracks, padTop) }));
 
       // Convert the DOM back into the grid with the new placement.
       el.style.position = '';
@@ -7096,14 +7565,22 @@ function enhanceBlock(el, block, section, grid, host) {
       el.classList.add('urd-block-pinned');
       const autoGrow = autoGrows(block, window.Urd.blocks.get(block.type));
       Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { autoGrow }));
+      for (const { m, placement: p } of placed) pinSetMember(m.node, m.block, p);
+      // The other pinned blocks stay where they stood, and a block moved inside the section leaves it as tall as it was: the room below its blocks makes up the difference.
+      const others = kind === 'move' ? keepPinned(flowEl, otherTops) : [];
+      const room = kind === 'move' ? roomKeeping(flowEl, flowBefore) : null;
 
-      post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile' });
-      if (restick) post({ type: 'urd-redraw-section', sectionId: section.id });
+      // A set's moves are one undo step.
+      const step = set.length ? { coalesce: true, groupKey: makeId('phone-set') } : {};
+      post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile', ...step, ...(others.length ? { others } : {}), ...(room === null ? {} : { room: { bottom: room } }) });
+      for (const { m, placement: p } of placed) post({ type: 'urd-move', sectionId: section.id, blockId: m.block.id, frame: p, frameKey: 'mobile', ...step });
+      if (restick || room !== null || others.length) post({ type: 'urd-redraw-section', sectionId: section.id });
     };
 
-    handle.addEventListener('pointermove', onMove);
-    handle.addEventListener('pointerup', onUp);
-    handle.addEventListener('pointercancel', cancel);
+    // The drag hears the pointer on the whole page, so it goes on wherever the pointer is over the page, held by the handle or not.
+    document.addEventListener('pointermove', onMove, true);
+    document.addEventListener('pointerup', onUp, true);
+    document.addEventListener('pointercancel', cancel, true);
   }
 
   /**

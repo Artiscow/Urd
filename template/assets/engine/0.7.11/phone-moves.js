@@ -4,7 +4,7 @@
  * A move is a new order of that tree, settled into the section's data (settle): the stacks as they stand, and either the custom order as listed, or the exception that puts the moved block or stack there, the other blocks keeping their order.
  */
 import { phoneParts, phoneSetupOf } from './phone-order.js';
-import { phoneCells, PHONE_COLUMNS } from './migrate.js';
+import { phoneCells, phoneSpace, PHONE_COLUMNS } from './migrate.js';
 
 /** Whether a block flows in the row grid, rather than standing on rows placed by hand. */
 export const flowing = (block) => !Number.isFinite(block.frames?.mobile?.row);
@@ -687,11 +687,89 @@ export function phoneDropChange(blocks, rawSetup, blockId, drop) {
   return unchanged && !leaves && !Object.keys(order.places ?? {}).length && !order.stacks && !order.list ? null : change;
 }
 
+/** How far a flowing block is dragged over its own place before its room above it changes, in px: a click's jitter changes nothing. */
+const SPACE_STILL_PX = 6;
+
 /**
- * A section with a phone change written in, as the editor writes it (changeSectionPhone): the places, the stacks, the custom order, the cells, the heights and the pinned blocks' layers; the section given is left as it is.
+ * A flowing block's own room above it on the phone after it is dragged `moved` px down (up where negative) over its own place: the room it had and the move, in steps of `step` px, never taking more than the space between blocks.
+ * @param {{space?: number, row?: number}|null} placement The block's `frames.mobile`
+ * @param {number} moved
+ * @param {number} gap The section's space between blocks on the phone (mobileGapOf)
+ * @param {number} [step]
+ * @returns {number|null} The new room, or null where it stays as it is
+ */
+export function phoneSpaceDragged(placement, moved, gap, step = 4) {
+  if (!Number.isFinite(moved) || Math.abs(moved) < SPACE_STILL_PX) return null;
+  const was = phoneSpace(placement);
+  const next = Math.max(-gap, Math.round((was + moved) / step) * step);
+  return next === was ? null : next;
+}
+
+/**
+ * The span a flowing block dragged on the phone keeps its place in, where a release sets its room above it (phoneSpaceDragged) rather than moving it: from the bottom of the nearest block above it to the top of the nearest block below it, of the blocks that share its columns.
+ * @param {Array<{left: number, top: number, right: number, bottom: number}>} others The other blocks' boxes as the drag began
+ * @param {{left: number, top: number, right: number, bottom: number}} own The block's own box as the drag began
+ * @returns {{top: number, bottom: number}}
+ */
+export function phoneHomeSpan(others, own) {
+  const over = others.filter((b) => b.right > own.left + 1 && b.left < own.right - 1);
+  const above = over.filter((b) => b.bottom <= own.top + 1).map((b) => b.bottom);
+  const below = over.filter((b) => b.top >= own.bottom - 1).map((b) => b.top);
+  return { top: above.length ? Math.max(...above) : -Infinity, bottom: below.length ? Math.min(...below) : Infinity };
+}
+
+/**
+ * The change a drop of a selected set on the phone canvas makes: the dragged block lands as phoneDropChange lands it, and the set's other flowing blocks follow it one by one, each right after the one before it, or below it in the stack the dragged block joins, keeping its own cells.
+ * Dropped beside a unit, they follow after that unit, so the line the dragged block shares with it stays whole; moved along its own line (`here`), the dragged block moves alone.
+ * @param {object} section
+ * @param {string} blockId The dragged block
+ * @param {object|null} drop As phoneDropChange takes it
+ * @param {string[]} followers The set's other flowing blocks, in the phone's reading order
+ * @returns {object|null} The change, as phoneDropChange gives it, or null where the drop changes nothing
+ */
+export function phoneSetDropChange(section, blockId, drop, followers) {
+  const lead = phoneDropChange(section.blocks, phoneSetupOf(section), blockId, drop);
+  if (!drop || !followers.length || drop.pos === 'here') return lead;
+  const stacked = drop.pos === 'above' || drop.pos === 'below' || drop.pos === 'into';
+  let now = lead ? phoneChangeApplied(section, lead) : section;
+  let prev = drop.pos === 'left' ? drop.of : blockId;
+  for (const id of followers) {
+    const step = phoneDropChange(now.blocks, phoneSetupOf(now), id, stacked ? { pos: 'below', of: prev, member: prev } : { pos: 'after', of: prev });
+    if (step) now = phoneChangeApplied(now, step);
+    prev = id;
+  }
+  return phoneChangeBetween(section, now);
+}
+
+/**
+ * The change that takes a section to another state of its phone order: the places, the stacks, the custom order, the blocks let go of the rule's columns and the flowing blocks' cells that differ.
+ * @param {object} before
+ * @param {object} after The same section with phone changes written in (phoneChangeApplied)
+ * @returns {{places: Record<string, object|null>, cells: Record<string, {col: number, cols: number}|null>, stacks?: string[][], list?: string[], loose?: string[]}|null} Null where the two stand alike
+ */
+export function phoneChangeBetween(before, after) {
+  const was = new Map(before.blocks.map((b) => [b.id, b]));
+  const json = (value) => JSON.stringify(value ?? null);
+  const change = { places: {}, cells: {} };
+  for (const block of after.blocks) {
+    const old = was.get(block.id);
+    if (!old) continue;
+    if (json(old.phonePlace) !== json(block.phonePlace)) change.places[block.id] = block.phonePlace ?? null;
+    const cells = phoneCells(block.frames?.mobile) ?? null;
+    if (flowing(block) && json(phoneCells(old.frames?.mobile)) !== json(cells)) change.cells[block.id] = cells;
+  }
+  if (json(before.phoneStacks ?? []) !== json(after.phoneStacks ?? [])) change.stacks = after.phoneStacks ?? [];
+  if (json(before.phoneList) !== json(after.phoneList)) change.list = after.phoneList ?? [];
+  if (json(before.phoneLoose ?? []) !== json(after.phoneLoose ?? [])) change.loose = after.phoneLoose ?? [];
+  const empty = !Object.keys(change.places).length && !Object.keys(change.cells).length && !change.stacks && !change.list && !change.loose;
+  return empty ? null : change;
+}
+
+/**
+ * A section with a phone change written in, as the editor writes it (changeSectionPhone): the places, the stacks, the custom order, the cells, the heights, the rooms above the flowing blocks and the pinned blocks' layers; the section given is left as it is.
  * The cells take the place of a width and a left edge set by hand, a height is the block's own on the phone (null takes it away), and a block pinned to rows of its own keeps its place; a layer is a pinned block's own z on the phone (layer-order.js phoneLayerChanges), and a flowing block takes none.
  * @param {object} section
- * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>, layers?: Record<string, number>}} change
+ * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>, spaces?: Record<string, number|null>, layers?: Record<string, number>}} change
  * @returns {object}
  */
 export function phoneChangeApplied(section, change) {
@@ -723,6 +801,13 @@ export function phoneChangeApplied(section, change) {
       const place = { ...(next.frames?.mobile ?? {}) };
       delete place.height;
       if (Number.isFinite(height) && height > 0) place.height = Math.round(height);
+      own().frames.mobile = Object.keys(place).length ? place : null;
+    }
+    if (change?.spaces && b.id in change.spaces && !Number.isFinite(b.frames?.mobile?.row)) {
+      const space = change.spaces[b.id];
+      const place = { ...(next.frames?.mobile ?? {}) };
+      delete place.space;
+      if (Number.isFinite(space) && Math.round(space) !== 0) place.space = Math.round(space);
       own().frames.mobile = Object.keys(place).length ? place : null;
     }
     if (change?.layers && b.id in change.layers && Number.isFinite(b.frames?.mobile?.row) && Number.isInteger(change.layers[b.id]) && change.layers[b.id] >= 1) {

@@ -79,10 +79,10 @@ export const SETTINGS_GROUPS = [
           .map((id) => [id, c.ta(`opt.shortcuts.${id}`)]),
         get: (c) => c.menu.shortcutsPref, set: (c, v) => c.setShortcutsPref(v) },
       { id: 'folds', part: true, labelKey: 'adminPart.folds', tipKey: 'tip.adminPart.folds', kind: 'seg',
-        options: (c) => FOLDS_MODES.map((id) => [id, c.ta(`opt.folds.${id}`)]),
+        options: (c) => FOLDS_MODES.map((id) => [id, c.ta(`opt.folds.${id}`), c.ta(`tip.opt.folds.${id}`)]),
         get: (c) => c.menu.foldsPref, set: (c, v) => c.setFoldsPref(v) },
       { id: 'extra', part: true, labelKey: 'adminPart.extra', tipKey: 'tip.adminPart.extra', kind: 'seg',
-        options: (c) => EXTRA_MODES.map((id) => [id, c.ta(`opt.extraSettings.${id}`)]),
+        options: (c) => EXTRA_MODES.map((id) => [id, c.ta(`opt.extraSettings.${id}`), c.ta(`tip.opt.extraSettings.${id}`)]),
         get: (c) => c.menu.extraPref, set: (c, v) => c.setExtraPref(v) },
       // The way to add a capability (ADR-0031), and under it how the list it opens is drawn, for the ways that open one.
       { id: 'capAdd', part: true, labelKey: 'adminPart.capAdd', tipKey: 'tip.adminPart.capAdd', kind: 'choice', look: 'capAdd',

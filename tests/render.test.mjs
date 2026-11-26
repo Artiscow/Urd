@@ -58,6 +58,16 @@ test('mobilePlacementToCss: a partial override touches only the fields present',
   assert.equal(css.marginLeft, undefined);
 });
 
+test('mobilePlacementToCss: a flowing block\'s own room above it on the phone is its top margin, never taking more than the space between blocks, and a pinned block has none', () => {
+  assert.equal(mobilePlacementToCss({ space: 24 }, desktop, { autoGrow: true, gap: 16 }).marginTop, '24px');
+  assert.equal(mobilePlacementToCss({ space: -40 }, desktop, { autoGrow: true, gap: 16 }).marginTop, '-16px', 'down to no gap at all');
+  assert.equal(mobilePlacementToCss({ space: 0 }, desktop, { autoGrow: true }).marginTop, undefined);
+  assert.equal(mobilePlacementToCss({ space: 24, col: 1, cols: 4 }, desktop, { gap: 16 }).marginTop, '24px', 'in cells too');
+  // A fixed height spans the room too, so the row tracks hold it.
+  assert.equal(mobilePlacementToCss({ space: 24 }, desktop, { gap: 16 }).gridRow, `auto / span ${Math.ceil((120 + MOBILE_GAP + 24) / MOBILE_ROW)}`);
+  assert.equal(mobilePlacementToCss({ space: 24, row: 3, rows: 10 }, desktop, {}).marginTop, undefined);
+});
+
 test('mobilePlacementToCss: pinned gives explicit row tracks and stretch (no height)', () => {
   const css = mobilePlacementToCss({ x: 5, w: 50, row: 3, rows: 10 }, desktop, {});
   assert.equal(css.gridRow, '3 / span 10');

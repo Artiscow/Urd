@@ -2,6 +2,24 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.9.4): the image looks, the phone canvas, the crop and the menus
+
+- [ ] An image block set to «Multiply» under Blend in its Appearance blends with the section's background on the published page; «Strength» under it fades the blend, and in the editor the block's bar and handles are never blended
+- [ ] The Blend list opens with the chosen mode in its middle, stays open after a choice so the next can be tried, and closes at a press outside it or Escape; no option shows the Blend row's tooltip
+- [ ] A video block playing its own file takes an overlay with a colour and a strength in its menu, shown on the published page; the image editor on a video's cover offers an overlay too
+- [ ] In Urd settings each option of «Folds» and «Settings in a group» shows a tooltip of its own, and in a browser that never chose, «Settings in a group» stands on «Added as needed»
+- [ ] In a section background's layer card, a colour picker stays open while the mouse drags in it, the colour changing live; Escape in the element menu closes an open list or colour picker first and the menu at the next
+- [ ] The live phone beside the canvas shows «Scroll together» as pressed while it is on
+- [ ] On the phone canvas, a flowing block let go in the empty room below the blocks is pinned there with the section as tall as before, the other pinned blocks stay where they stood, and a tall calendar pins as soon as its edge leaves the other blocks
+- [ ] A block dragged freely on the phone shows the snap lines, which follow it without lagging behind; Ctrl or Cmd lets it move freely
+- [ ] Dragging a pinned block on the phone shows a dashed frame behind it on the row it will land on, and the section keeps its height during the drag
+- [ ] Two blocks selected on the phone with Shift and a click move together when one is dragged: flowing blocks land together in the order, pinned ones the same distance, and one undo puts all of them back
+- [ ] A flowing block dragged a little down over its own place on the phone shows a striped band with the gap's size, and let go it keeps its place and its group with more room above it; dragged up the room shrinks to none, each drag one undo step, and the published page on a phone shows the same space
+- [ ] In the image editor, an edge handle moves its own side and a corner both; on «Free» the image block takes the crop's shape with the picture staying where it is on the page, and Shift at a corner keeps the shape
+- [ ] Cropping one edge leaves the other axis exactly where it was, during the drag, after it and after «Done»; a corner drag follows the mouse smoothly; a click beside the frame moves nothing, and a drag from beside it moves the frame by as much as the mouse
+- [ ] In the phone view, cropping an image pinned on the phone shows no jump as the handle is let go, and after «Done» the block on the phone shows the same part of the picture as the dialog did
+- [ ] Enter closes the image editor with «Done» right after it opens, after a crop, and after a look or Compare was clicked; in a number field Enter takes the number and the editor stays; Compare reached with Tab compares while Enter is held
+
 ### Test batch (0.7.37.5.2-0.7.0.96p): the push preparation's fixes
 
 - [ ] Before the next release is tagged: sign in once through an OAuth App (a throwaway one with the local server, or a site still on one) and check the login, which now asks GitHub for `offline_access`, goes through and the editor opens signed in

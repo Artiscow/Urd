@@ -96,6 +96,17 @@ export function phoneHeight(placement) {
   return height;
 }
 
+/**
+ * A flowing block's own room above it on the phone (`space`), in px, added to the space between blocks; 0 where it has none, and for a block pinned to rows.
+ * @param {{space?: number, row?: number}|null} placement
+ * @returns {number}
+ */
+export function phoneSpace(placement) {
+  const space = placement?.space;
+  if (Number.isFinite(placement?.row) || !Number.isFinite(space)) return 0;
+  return Math.round(space);
+}
+
 /** Vertical spacing between flow blocks in the mobile row grid, in px: the standard, which the site's `layout.mobileGap` and a section's `size.mobileGap` replace. */
 export const MOBILE_GAP = 16;
 

@@ -583,6 +583,9 @@ function enablePreview(state, opts, queue) {
     } else if (msg?.type === 'urd-phone-pin' && typeof msg.blockId === 'string') {
       // The Phone panel's row menu: the block pinned on the phone where it stands now.
       window.UrdPreviewEdit?.pinOnPhoneAt?.(msg.blockId);
+    } else if (msg?.type === 'urd-ask-picture' && typeof msg.blockId === 'string') {
+      // «Open the image editor» in the block's menu: the editor opens as a press on the picture opens it, measured as drawn.
+      window.UrdPreviewEdit?.askPictureAt?.(msg.sectionId, msg.blockId, msg.kind === 'cover' ? 'cover' : 'image');
     } else if (msg?.type === 'urd-light' && Array.isArray(msg.ids)) {
       // A row under the pointer in the editor's lists (the Phone panel's order) lights its block, or its stack's blocks.
       window.UrdPreviewEdit?.lightBlocks?.(msg.ids, msg.sectionId);

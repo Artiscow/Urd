@@ -1037,19 +1037,6 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
 }
 
-/* The row a block dragged in the phone view will be pinned into: a line across
-   the flow at that row's top, in the guides' magenta, moving with the drag */
-.urd-preview .urd-row-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 100000;
-  height: calc(2px * var(--urd-chrome-scale, 1));
-  background: #ff2d87;
-  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 70%, transparent);
-  pointer-events: none;
-}
-
 /* The phone's eight cell columns, drawn faintly over the row grid while a flowing block is dragged or sized on the phone (preview-edit.js flowDrag, cellResize): the 90 % between the two outer tracks of 5 %, cut in eighths */
 .urd-preview .urd-phone-cells {
   position: absolute;
@@ -1079,15 +1066,42 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   cursor: grabbing;
 }
 
-/* Where the dragged block will stand as the section shows the drop's outcome: a dashed box in the guides' magenta, lightly filled */
+/* Where the dragged block will stand, as the section shows the drop's outcome or on the row a pinned block lands on: a dashed box in the guides' magenta, lightly filled, behind the block */
 .urd-preview .urd-phone-landing {
   position: absolute;
-  z-index: 99999;
+  /* Under the lifted block (99999) */
+  z-index: 99998;
   box-sizing: border-box;
   pointer-events: none;
   border: calc(2px * var(--urd-chrome-scale, 1)) dashed #ff2d87;
   border-radius: 6px;
   background: color-mix(in srgb, #ff2d87 12%, transparent);
+}
+
+/* A flowing block's room above it while a drag over its own place sets it (preview-edit.js flowDrag): the gap above where it will stand, striped in the guides' magenta, with its size */
+.urd-preview .urd-phone-space {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Under the landing (99998) and the lifted block (99999) */
+  z-index: 99997;
+  display: grid;
+  /* The size at the right end, clear of the block's bar at its left */
+  place-items: center end;
+  padding-inline-end: calc(32px * var(--urd-chrome-scale, 1));
+  pointer-events: none;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, #ff2d87 26%, transparent) 0 6px, color-mix(in srgb, #ff2d87 12%, transparent) 6px 12px);
+  border-block: calc(1px * var(--urd-chrome-scale, 1)) solid #ff2d87;
+}
+
+.urd-preview .urd-phone-space > span {
+  padding: calc(2px * var(--urd-chrome-scale, 1)) calc(8px * var(--urd-chrome-scale, 1));
+  border-radius: calc(10px * var(--urd-chrome-scale, 1));
+  background: #ff2d87;
+  color: #fff;
+  font: 700 calc(12px * var(--urd-chrome-scale, 1)) / 1.2 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 60%, transparent);
 }
 
 /* The block a drag or a handle would squeeze under «Force readable text» (ADR-0034, preview-edit.js showTooNarrow): greyed and faded for as long as the pointer asks for it, the editor's notice line saying why; faded by the filter, so it adds to the lifted block's own opacity */
@@ -1664,6 +1678,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   font-size: 12px;
   font-weight: 600;
   padding: 0 9px;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -2087,6 +2102,32 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
 
 .urd-preview .urd-block.urd-selected:focus {
   outline: calc(2px * var(--urd-chrome-scale, 1)) solid var(--urd-admin-accent, #5f6a75);
+}
+
+/* A blended picture's stand-in (preview-blend.js): a blend covers everything
+   a block draws, its bar, handles and outline too, so while the tools are on
+   the stand-in draws the picture and its blend under the block, in the
+   block's own place and layer, and the block draws its tools alone. The
+   block keeps its picture, unseen, for everything that measures or drags it. */
+.urd-preview .urd-blend-ghost {
+  position: absolute;
+  pointer-events: none;
+}
+
+.urd-preview .urd-blend-ghost > :is(.urd-image-frame, a),
+.urd-preview .urd-blend-ghost > a > .urd-image-frame {
+  display: block;
+  width: 100%;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+}
+
+.urd-preview .urd-block.urd-blend-ghosted {
+  mix-blend-mode: normal;
+}
+
+.urd-preview .urd-block.urd-blend-ghosted > :is(.urd-image-frame, a) {
+  opacity: 0;
 }
 
 /* The whole block surface can be dragged directly; editable text keeps the

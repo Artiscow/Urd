@@ -140,6 +140,15 @@ function handleMove(msg) {
   const phoneWidth = block.frames.mobile?.w;
   const before = key === 'desktop' ? pageState.pinnedKey(section) : null;
   block.frames[key] = msg.frame;
+  // A block placed on the phone inside its section takes or gives back the room below the section's blocks, in the same step, so the section keeps its height (preview-edit.js roomKeeping).
+  if (key === 'mobile' && Number.isInteger(msg.room?.bottom) && msg.room.bottom >= 0) pageState.writePhoneRoom(section, 'bottom', msg.room.bottom);
+  // The section's other blocks pinned on the phone, given the rows that keep them where they stood as the grid changed under them, in the same step.
+  if (key === 'mobile' && Array.isArray(msg.others)) {
+    for (const other of msg.others) {
+      const pinned = section.blocks.find((b) => b.id === other?.blockId && b.id !== block.id);
+      if (pinned && Number.isInteger(other.frame?.row) && other.frame.row > 0 && Number.isFinite(pinned.frames.mobile?.row)) pinned.frames.mobile = { ...pinned.frames.mobile, row: other.frame.row };
+    }
+  }
   // A desktop move that reshaped the phone around a pinned block flags it for the phone's review; a move on the phone is seen as it is made (the phone check).
   if (key === 'desktop') pageState.markPinnedMoved(section, before);
   else pageState.phoneSeen([section.id]);

@@ -1428,6 +1428,10 @@ A video given a shape: that shape at the block's width, and the block's height f
 
 The self-hosted film: it fills the block's frame and keeps its own format inside it.
 
+### `.urd-video-film`
+
+The frame around a film that lies under an overlay: it fills the block's box as the film does, and carries the overlay the way a picture's frame does (`.urd-pic-overlaid` in base.css, drawn by `drawOverlay` in picture.js). The overlay takes no presses, so the film's controls work under it. A film without an overlay has no frame.
+
 ### `.urd-video-shield`
 
 In the editor's desktop view a press on the video selects the block: the shield stands above the player and above the cover's button, which is lifted over its own picture
@@ -1459,6 +1463,14 @@ A picture or a film with a shape given a height of its own on the phone (frames.
 ### `.urd-image-frame.urd-image-own:not(.urd-pic-turned) img`
 
 The picture's own shape: the picture gives the frame its height (a turned one gives it its ratio, picture.js)
+
+### `.urd-image-blend`
+
+A picture that blends (`blend`, one of PICTURE_BLENDS in picture.js): the blend stands on the block itself, not on the picture's frame. A block is a stacking context of its own (its `z-index`), so a blend on anything inside it would have only the block's own content to blend with; on the block it meets the section's background layers and the blocks under it. The value comes through `--urd-blend`, which image.js sets beside the class. In the editor the block's tools are drawn by the block and would blend with it, so while they are on a stand-in under the block draws the picture and its blend instead (preview-blend.js, `.urd-blend-ghost` in preview.css); the published page and the clean view draw this rule alone.
+
+### `.urd-image-blend > :is(.urd-image-frame, a)`
+
+The blend's strength (`blendStrength`, 0..1): the picture's opacity inside the blending block, which draws the blend that much and leaves what lies behind as it is for the rest. It stands on the picture, not on the block, so an entrance animation that ends the block at full opacity leaves it alone. The editor's stand-in carries the strength itself.
 
 # blocks/gallery.css, rule by rule
 

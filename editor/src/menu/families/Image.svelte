@@ -5,12 +5,15 @@
      What a press on the picture does is a capability (ADR-0031): a card while the picture links somewhere or opens in the lightbox, or was given one this session. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
+  import SelectRow from '../../lib/rows/SelectRow.svelte';
+  import SliderRow from '../../lib/rows/SliderRow.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Capability from '../../lib/rows/Capability.svelte';
   import { pinnedNow } from '../pinned.js';
   import Setting from '../../lib/rows/Setting.svelte';
   import { slugify } from '$engine/imageTools.js';
+  import { PICTURE_BLENDS, pictureBlend, blendStrength } from '$engine/picture.js';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -26,6 +29,11 @@
   /** Whether the picture links somewhere (a page, a spot or an address). */
   const imageLinked = $derived(Object.keys(linkOf(selectedBlock.props)).some((key) => key !== 'newTab' && key !== 'rel'));
   let { area } = $props();
+  /** How the block blends with what lies behind it, `normal` for none. */
+  const blend = $derived(pictureBlend(selectedBlock.props.blend) || 'normal');
+  const blendOptions = $derived(PICTURE_BLENDS.map((mode) => [mode, ta(`opt.blend.${mode}`)]));
+  /** How strongly the blend is drawn, in per cent. */
+  const strength = $derived(Math.round(blendStrength(selectedBlock.props.blendStrength) * 100));
 
   /** Replace the image in an image block (same webp flow as + Image). */
   async function replaceImage(event) {
@@ -74,7 +82,7 @@
   <Fold id="img-image" title={ta('blocks.image')} value={selectedBlock.props.alt || ta('menu.noAlt')}>{@render imgImage()}</Fold>
   <Capability id="img-link" group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</Capability>
 {:else if area === 'style'}
-  <!-- The two one-press choices beside the editor, each with its pin for Pinned; the rest of the picture's settings are the editor's -->
+  <!-- The two one-press choices beside the editor, each with its pin for Pinned, and how the block blends with what lies behind it; the rest of the picture's settings are the editor's -->
   {#snippet imgLook()}
     <Setting key="fit" pin="imgFit">
       <Choice stack label={ta('lbl.imageFit')} title={ta('tip.image.fit')} value={selectedBlock.props.fit ?? 'cover'}
@@ -86,9 +94,20 @@
         options={[['', ta('common.none')], ['sm', ta('opt.size.sm')], ['md', ta('opt.radius.md')]]}
         onchange={(v) => setBlockProp('radius', v || null)} />
     </Setting>
+    <!-- The blend, with its strength under it while there is one; the way back takes both -->
+    {#snippet blendStrengthRow()}
+      {#if blend !== 'normal'}
+        <SliderRow label={ta('lbl.strength')} title={ta('tip.image.blendStrength')} value={strength} min={5} max={100} step={1} shown={`${strength} %`}
+          oninput={(v) => setBlockProp('blendStrength', v >= 100 ? undefined : v / 100)} />
+      {/if}
+    {/snippet}
+    <Setting key="blend" more={blendStrengthRow} reset={() => setBlockProps('blend', { blend: undefined, blendStrength: undefined })}>
+      <SelectRow stay label={ta('lbl.blend')} title={ta('tip.image.blend')} value={blend} options={blendOptions}
+        onchange={(v) => (v === 'normal' ? setBlockProps('blend', { blend: undefined, blendStrength: undefined }) : setBlockProp('blend', v))} />
+    </Setting>
   {/snippet}
-  <Fold id="img-look" title={ta('group.appearance')} value={`${selectedBlock.props.fit === 'contain' ? ta('opt.fitFrame.contain') : ta('opt.fitFrame.cover')} · ${{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']}`}
-    rows={pinned.left('imgFit', 'radius')} group={groupOf('img-look', { fit: 'cover', radius: 'md' })}>{@render imgLook()}</Fold>
+  <Fold id="img-look" title={ta('group.appearance')} value={`${selectedBlock.props.fit === 'contain' ? ta('opt.fitFrame.contain') : ta('opt.fitFrame.cover')} · ${{ '': ta('common.none'), sm: ta('opt.size.sm'), md: ta('opt.radius.md') }[selectedBlock.props.radius ?? '']}${blend === 'normal' ? '' : ` · ${ta(`opt.blend.${blend}`)}`}`}
+    rows={1 + pinned.left('imgFit', 'radius')} group={groupOf('img-look', { fit: 'cover', radius: 'md', blend: undefined, blendStrength: undefined })}>{@render imgLook()}</Fold>
 {/if}
 
 <style>

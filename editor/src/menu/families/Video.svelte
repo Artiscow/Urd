@@ -9,6 +9,10 @@
   import Fold from '../../lib/rows/Fold.svelte';
   import Capability from '../../lib/rows/Capability.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
+  import ColourRow from '../../lib/rows/ColourRow.svelte';
+  import SliderRow from '../../lib/rows/SliderRow.svelte';
+  import { pictureStyle } from '$engine/picture.js';
+  import { pickedColour } from '../../lib/picture-edit.js';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../state.svelte.js';
   import { makeGroupHelpers } from '../groups.js';
@@ -16,9 +20,16 @@
   import { VIDEO_ASPECTS, aspectRatio, shapeHeight } from '$engine/push-model.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
-  const { setBlockProp, setBlockProps, setBlockVideoFile, setBlockVideoPoster, openImageEditor } = ed;
+  const { setBlockProp, setBlockProps, setBlockVideoFile, setBlockVideoPoster, openImageEditor, themeSwatches } = ed;
   const { groupOf } = makeGroupHelpers(() => selectedBlock.props, setBlockProps);
   let { area } = $props();
+  /** The overlay over an uploaded film, as the page draws it; null for none. */
+  const overlay = $derived(pictureStyle({ overlay: selectedBlock.props.overlay }).overlay);
+  /** A colour picked for the overlay keeps the strength it has, and a first one starts at the strength a picture's overlay does. */
+  function setOverlayColour(value) {
+    const color = pickedColour(value);
+    setBlockProp('overlay', color ? { color, strength: overlay?.strength ?? 0.35 } : undefined);
+  }
 
   const aspectOptions = $derived([['free', ta('opt.videoAspect.free')], ...VIDEO_ASPECTS.map((a) => [a, ta(`opt.videoAspect.${a.replace(':', 'x')}`)])]);
   const aspectValue = $derived(VIDEO_ASPECTS.includes(selectedBlock.props.aspect) ? selectedBlock.props.aspect : 'free');
@@ -127,4 +138,17 @@
   <Setting own={aspectValue !== 'free'} reset={() => setAspect('free')}>
     <SelectRow label={ta('lbl.videoAspect')} title={ta('tip.video.aspect')} value={aspectValue} options={aspectOptions} onchange={setAspect} />
   </Setting>
+  <!-- A colour over an uploaded film, with its strength under it once a colour is chosen; an embed's cover takes its overlay in the image editor -->
+  {#snippet filmOverlayStrength()}
+    {#if overlay}
+      <SliderRow label={ta('lbl.strength')} value={overlay.strength} min={0.05} max={1} step={0.01} shown={`${Math.round(overlay.strength * 100)} %`}
+        oninput={(v) => setBlockProp('overlay', { color: overlay.color, strength: v })} />
+    {/if}
+  {/snippet}
+  {#snippet filmOverlay()}
+    <Setting key="overlay" more={filmOverlayStrength}>
+      <ColourRow label={ta('lbl.color')} value={overlay?.color ?? ''} tokens={themeSwatches()} onchange={setOverlayColour} />
+    </Setting>
+  {/snippet}
+  <Capability id="video-overlay" group={groupOf('video-overlay', { overlay: undefined })}>{@render filmOverlay()}</Capability>
 {/if}
