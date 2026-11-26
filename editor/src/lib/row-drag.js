@@ -1,14 +1,10 @@
 /**
- * Reordering a flat list by dragging a row, as every flat list of the row kit's drag (lib/rows/row-drag.svelte.js) is reordered: where the dragged row lands from the pointer, and the list in its new order.
- * The Nav panel's tree reckons its own landing place (lib/nav-drop.js), since its rows nest.
- * Pure, so it is node-tested (tests/row-drag.test.mjs).
+ * Reordering a flat list by dragging a row (lib/rows/row-drag.svelte.js): where the dragged row lands, and the list in its new order.
  */
 
 /**
- * Where a dragged row lands, from the dragged row's box held at the pointer.
- * The box lands beside the first row it touches at all: before that row while the box is pulled upward from where the row stands, after it while pulled downward.
- * Above every row it lands first, below every row last.
- * A position that would change nothing gives null, so the clone never stands where the row already is.
+ * Where a dragged row lands, from its box at the pointer: beside the first row it touches, before it moving up, after it moving down.
+ * No change gives null.
  * @param {Array<{ id: string, top: number, bottom: number }>} rows The rows' ids and their boxes on the screen, in list order, the dragged row among them
  * @param {string} dragId The dragged row
  * @param {number} y The pointer's height on the screen
@@ -41,8 +37,8 @@ export function rowDropAt(rows, dragId, y) {
 }
 
 /**
- * Where a row lands in a flat list, as rowDropAt reckons it but with one name for one place: after a row is before the row under it, so the mark is never torn down and regrown where it already stands.
- * Only after the last row is a place named «after».
+ * Where a row lands in a flat list, with one name for each place: after a row is before the row under it.
+ * Only after the last row is a place «after».
  * @param {Array<{ id: string, top: number, bottom: number }>} rows As rowDropAt takes them
  * @param {string} dragId
  * @param {number} y

@@ -1,5 +1,5 @@
 /**
- * The sign and the words of each kind of part the drafts are kept in (lib/saved-model.js names them): a page and a collection go by their own names, the others by the words here.
+ * The icon and words of each kind of draft part (lib/saved-model.js): a page and a collection go by their own names, the others by the words here.
  */
 import { ICONS } from './icons.js';
 

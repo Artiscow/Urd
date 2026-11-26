@@ -1,15 +1,14 @@
 /**
- * The Legal panel's state (panels/LegalPanel.svelte): what each of its three groups holds and lacks, the state each fold's heading shows, and whether the panel's tab carries the amber dot.
- * Pure, node-tested (tests/legal-model.test.mjs); the privacy facts it reads are privacy-model.js's, gathered from every page by state/legal.svelte.js.
+ * The Legal panel's state: what each of its three groups holds and lacks, what each fold's heading shows, and whether the tab carries the amber dot.
  */
 
-/** The panel's groups, in their order: who the association is, its privacy page, and its terms of sale. */
+/** The panel's groups, in their order: who runs the site, its privacy page, and its terms of sale. */
 export const LEGAL_GROUPS = ['who', 'privacy', 'terms'];
 
 const filled = (value) => typeof value === 'string' && value.trim() !== '';
 
 /**
- * The contact details a site must give that are still empty, one per field, so the count on the group's heading is the number of fields marked: the legal name, an email address, and the street address and its town (GDPR article 13(1)(a), ehandelsloven § 8).
+ * The contact details a site must give that are still empty, one per field: the legal name, an email address, and the street address and its town.
  * @param {object|undefined} contact site.contact
  * @returns {Array<'legalName'|'email'|'street'|'city'>}
  */
@@ -35,10 +34,7 @@ export function shownPage(pages, id) {
 }
 
 /**
- * The panel's state.
- * The tab carries the dot while something the law asks for is missing: the legal name or the email while the site has a form or sells, a privacy page while it has a form, and parts of the terms page to fill while it sells.
- * The Terms of sale group shows while the site sells, the shop's blocks are shown, or a terms page is set.
- * The Privacy group sets how long each kind the site has is kept (form messages with a form on a page, the newsletter list with the footer's sign-up, orders with a checkout), and counts those not decided; it names Cloudflare's own counting of visits where Cloudflare puts its beacon on the published pages without the site switching counting on (`cloudflare`).
+ * The panel's state: what each group lacks, whether Terms of sale shows, and the reasons for the tab's dot while something the law asks for is missing.
  * @param {object} input
  * @param {object} input.site The site as drafted (site.json with its pages)
  * @param {{forms?: Array<{footer?: boolean}>, checkout?: object|null, browser?: {shop?: boolean}, retention?: {forms?: object|null, newsletter?: object|null}}} input.facts privacyModel's facts for the whole site

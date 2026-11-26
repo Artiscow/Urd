@@ -1,8 +1,5 @@
 /**
- * Urd's own settings as data (the Urd settings, the gear): the groups, the sections in each group, and in each section the settings with their keys, their kind and the editor fields they read and write.
- * The three windows the settings open in (settings/SettingsDialog.svelte for the dialog and the sheet, panels/SettingsPanel.svelte for the panel) draw the same rows from this list, so a setting is declared once.
- * A setting's `options`, `get` and `set` take the context the window passes: `{ ed, ta, menu, setMenuFormPref, setFoldsPref, setExtraPref, setShortcutsPref, designs }`, where `designs` holds the admin designs' options, the design that stands and the way to apply one (state/admin-design.svelte.js).
- * Pure, node-tested (tests/settings-model.test.mjs).
+ * The Urd settings as data, drawn by each window they open in: the groups, their sections, and each setting's kind and the fields it reads and writes.
  */
 import { panelsPrefIn } from './panels-start.js';
 import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, TOOLBAR_FORMS, TOOLBAR_LOOKS, AREA_LOOKS, TOOL_FORMS, TOOLBAR_SIZES, TOOLBAR_DESIGNS, TOOLBAR_PHONE_PLACES, CAP_LISTS, CAP_ADD_FORMS, CAP_ADD_LISTS } from '../menu/forms.js';
@@ -13,7 +10,7 @@ const MENU_FORM_ORDER = ['wide', 'narrow', 'tabs', 'docked', 'docked-tabs'].filt
 /** The bar's looks as the settings show them, by kind: glass, dark, white, the filled and large ones, the ones set apart by area, and the captions. */
 const TOOLBAR_LOOK_ORDER = ['glass-accent', 'glass', 'glass-capsule', 'strip', 'capsule', 'white', 'squares', 'large', 'large-capsule', 'soft', 'areas', 'capsule-areas', 'captions'].filter((id) => TOOLBAR_LOOKS.includes(id));
 
-/** Where the settings open: a dialog with the groups as sections down its left, a panel in the panel column, or a sheet with the look choices at the left and the rest as rows at the right. */
+/** Where the settings open: a dialog with the groups down its left, a panel in the panel column, or a sheet with the look choices left and the rest right. */
 export const SETTINGS_PLACES = ['dialog', 'panel', 'sheet'];
 
 /** The stored place, the dialog for anything else. */
@@ -27,7 +24,7 @@ export function settingsPictures(raw) {
 }
 
 /**
- * The window's three groups, in the order the list shows them: the admin layout, its presets first and the parts they set under them (ADR-0030), the settings kept in this browser that no preset sets, and the site's own, shared by everyone who edits it.
+ * The window's three groups, in the list's order: the admin layout (ADR-0030), the settings kept in this browser, and the site's own, shared by everyone.
  */
 export const SETTINGS_BANDS = [
   { id: 'design', labelKey: 'settings.band.design', tipKey: 'tip.settings.band.design' },
@@ -35,16 +32,6 @@ export const SETTINGS_BANDS = [
   { id: 'site', labelKey: 'settings.group.site', tipKey: 'tip.settings.shared', shared: true },
 ];
 
-/**
- * The sections, each in its group (`band`), and in each section the settings.
- * `kind`: `choice` (one of the options; a picture per option when `look` names a picture set and the pictures are on), `seg` (a few words side by side), `range` (a number from `min` to `max` in steps of `step`, shown in `unit`) and `text` (a text field).
- * `design` on a setting: it is the admin design, read and chosen through the context's `designs`, with the parts that differ and the ways back beside it.
- * `tipKey` on a section: what its settings act on, shown on its heading.
- * `shared` on a section: its values live in the site and are shared by everyone who edits it.
- * `when` on a section or a setting: whether it is shown at all.
- * `parent` on a setting: the setting it belongs to, drawn directly under it and shown with it.
- * `part` on a setting: it is a part of the admin designs (lib/admin-designs.js), which a design sets with every other part.
- */
 /** Whether the layout opens menus of folds, so their look and «After a pick» have something to set. */
 const menusShown = (c) => {
   if (c.ed.adminLayout === 'panel-tabs') return c.ed.panelTabMenus === true;
@@ -52,6 +39,7 @@ const menusShown = (c) => {
   return true;
 };
 
+/** The sections, each in its group (`band`): `kind` is choice, seg, range or text, `parent` draws a setting under its own, `part` marks an admin design's part. */
 export const SETTINGS_GROUPS = [
   {
     id: 'design',
@@ -114,7 +102,7 @@ export const SETTINGS_GROUPS = [
         when: (c) => c.ed.adminLayout === 'panel-tabs',
         options: (c) => [['on', c.ta('common.on')], ['off', c.ta('common.off')]],
         get: (c) => (c.ed.panelTabMenus ? 'on' : 'off'), set: (c, v) => c.ed.setPanelTabMenus(v) },
-      // The menus of folds stand under the strip's tabs, beside the Site menu's rows and the rail's icons, beside the sidebar's words where they open there, and under the panel's own tabs where those are switched on.
+      // The menus of folds, wherever the layout opens them (menusShown).
       { id: 'tabMenus', part: true, labelKey: 'settings.tabMenus', tipKey: 'tip.settings.tabMenus', kind: 'choice', look: 'tabMenus',
         when: menusShown,
         options: (c) => c.ed.TAB_MENU_OPTIONS, get: (c) => c.ed.tabMenus, set: (c, v) => c.ed.setTabMenus(v) },
@@ -266,7 +254,7 @@ export function pictured(setting, pictures) {
   return setting.kind === 'choice' && !!setting.look && pictures === 'pictures';
 }
 
-/** Whether a setting answers to a search: the query in its name or in one of its options, through `c.match(text, query)` where the context has it (the search in every language), else as typed. */
+/** Whether a setting answers to a search: the query in its name or one of its options, through `c.match` where the context has it, else as typed. */
 export function settingMatches(setting, query, c) {
   const q = (query ?? '').trim().toLowerCase();
   if (!q) return true;
@@ -275,8 +263,8 @@ export function settingMatches(setting, query, c) {
 }
 
 /**
- * The sections with the settings that answer the search and the side of the sheet asked for (`only`: 'look' for the pictured choices, 'plain' for the rest, null for all); a section with nothing left is dropped.
- * A setting whose `when` fails is left out; a setting with a `parent` stands and falls with its parent, so a search that finds either shows both.
+ * The sections whose settings answer the search, on the side `only` asks for ('look', 'plain' or null).
+ * A setting stands and falls with its parent.
  */
 export function visibleGroups(query, only, c) {
   const out = [];

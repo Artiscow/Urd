@@ -1,6 +1,5 @@
 /**
- * The words a page made from a template starts with, in the site's language: a page visitors read in the site's language takes its seed texts from the admin dictionary of that language, so an English admin makes a bokmål site's terms of sale in bokmål. The dictionaries are the admin's own (`/assets/urd/locales/admin/<code>.js`, never bundled), and the standard withdrawal form comes from the visitor texts the engine loads for the site's language.
- * A site in a language pack's language takes the pack's admin words where it has them, over the bokmål base, as its visitor texts do.
+ * A template page's seed words in the site's language: its admin dictionary or language pack over bokmål, and the withdrawal form from its visitor texts.
  */
 import { requestedLang, isBuiltinLang, ta, t } from '$engine/i18n.js';
 import { siteContact, sellerDetailsText } from '$engine/contact-model.js';
@@ -65,7 +64,7 @@ export async function visitorTextFor(siteLang) {
 export const hasSellerDetails = (site) => Boolean(sellerDetailsText(site, t));
 
 /**
- * What a terms of sale page is seeded with: the words in the site's language, the withdrawal form, and the site's facts (the seller from the contact details, with its numbers, address, email and phone, and the privacy page).
+ * A terms of sale page's seed: words in the site's language, the withdrawal form's words, and the seller, its details and the privacy page from the site.
  * @param {object} site site.json as the draft holds it
  * @returns {Promise<{text: Function, formText: Function|null, facts: {seller: string, details: string, privacy: {href: string, page: string, title: string}|null}}>}
  */

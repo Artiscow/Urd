@@ -1,8 +1,5 @@
 /**
- * The phone check before publishing: the sections whose phone layout changed since they last stood in the phone view, so publishing can remind the owner to look at them on the phone.
- * A section's phone layout is what the phone draws it from: its blocks in the phone's reading order, each block's own settings for the phone, the desktop's size where the phone takes it (the height of a block that does not grow with its content, and the frame's shape), and the section's phone settings. Words, other settings and a desktop place that leaves the reading order as it was are no change.
- * Each page keeps a baseline in this browser, the layout of each section as it was last seen in the phone view, first taken from the page as published; a section whose layout differs from its baseline, or that has none, is not checked yet.
- * Pure, node-tested (tests/phone-check.test.mjs); the editor keeps the baselines in localStorage under `urd-phone-check` (page.svelte.js).
+ * The phone check before publishing: the sections whose phone layout changed since last seen in the phone view, against a baseline per page kept in this browser.
  */
 import { followsContent } from '$engine/push-model.js';
 import { stackOrder, phoneSetupOf } from '$engine/phone-order.js';
@@ -57,7 +54,7 @@ export function uncheckedSections(sections, base) {
 }
 
 /**
- * The baseline with the sections seen in the phone view taken as they stand now; the same object where none of them changed it, so the caller writes only a change.
+ * The baseline with the sections seen in the phone view taken as they stand; the same object where none changed, so the caller writes only a change.
  * @param {Record<string, string>|null|undefined} base
  * @param {Array<{id: string, blocks?: Array<object>}>} sections
  * @param {string[]} seen

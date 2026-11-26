@@ -1,7 +1,5 @@
 /**
- * The pages not live yet whose entry has gone out without them (ADR-0032 decision 2): a page kept back while the site settings went out stands hidden in the published site, which alone would take it for live.
- * Their ids are kept per browser in `urd-not-live`, an admin key, from the publish that left them behind until the one that sends their own file.
- * A collection kept back needs no such mark: the collections' list goes out without it, and its file stays missing.
+ * The pages not live yet whose entry went out without them (ADR-0032): their ids, kept per browser in `urd-not-live` until the publish that sends their file.
  */
 const KEY = 'urd-not-live';
 
@@ -16,7 +14,7 @@ export function readNotLive() {
 }
 
 /**
- * The marked pages still not live: those the live site lists hidden, or does not list yet (the live site read before the deploy that lists them). One listed shown there went out with its file from another browser, so its mark is dropped at the next publish.
+ * The marked pages still not live: those the live site lists hidden or does not list yet.
  * @param {Set<string>} marked
  * @param {Array<{id: string, hidden?: boolean}>} livePages
  */

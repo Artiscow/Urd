@@ -1,10 +1,10 @@
 /**
- * The phone view's bars and menus, drawn by the editor beside the phone (lib/CanvasBar.svelte): the selected block's bar (0.7.3.19.2) and the section's (0.7.3.23), each with its box in the canvas and its tools, a menu's rows, and where the site's menu stands while its size bar is drawn (0.7.3.25), as the preview tells them (urd-block-bar, urd-section-bar, urd-ctx-menu, urd-nav-bar).
- * The tools and the rows stay the page's own (preview-edit.js pressPhoneBar, runPhoneMenu): a press here is sent back and acts there, so every tool and row does what it does on the page.
+ * The phone view's bars and menus, drawn beside the phone (lib/CanvasBar.svelte) as the preview tells them.
+ * A press is sent back and acts on the page.
  */
 import { previewState } from './preview.svelte.js';
 
-/** A bar as the preview tells it: its block's or section's id, its box in the canvas's own px, its tools in the bar's order ({html, text, label, tip, pressed, danger, more, help, opensMenu, pagePop, tag, disabled}), and whether it is a set's bar, its box the set's (0.7.36.3). */
+/** A bar as the preview tells it: its block's or section's id, its box in the canvas's own px, its tools in the bar's order, and whether it is a set's bar. */
 const none = () => ({ id: null, rect: null, tools: [], set: false });
 
 /** The selected block's bar, and the section's. */

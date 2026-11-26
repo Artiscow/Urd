@@ -1,12 +1,5 @@
 /**
- * The Screen device of the editing canvas (ADR-0018, Consequences): its width is
- * the owner's own browser window in CSS px, the same window the published
- * page is compared in, one of the common screen sizes with its height, or an
- * own size, chosen in the Screen button's fold-out and kept per browser as the
- * Phone's size is. A size with a height pins both axes and shows the fold; the
- * own window fills the panel. A common aspect ratio keeps the width the Screen
- * stood at when it was chosen and takes its height from the ratio
- * (lib/aspect.js). Pure functions, node-tested.
+ * The Screen device of the editing canvas (ADR-0018): the owner's window width, a common screen size with its height, an own size or a ratio, kept per browser.
  */
 
 import { SCREEN_RATIOS, ratioHeight } from './aspect.js';
@@ -27,11 +20,7 @@ export const SCREEN_SIZES = [
 ];
 
 /**
- * The own window width in whole CSS px: the viewport width, which every
- * engine reports in zoomed CSS px and which is exactly what the published
- * page lays out in when opened in the same window (a maximised window is
- * the screen). The screen width is the fallback where no viewport is
- * measured, never below 1.
+ * The own window width in whole CSS px: the viewport's, which the published page lays out in, else the screen's; never below 1.
  * @param {{innerWidth?: number, screenWidth?: number}} win
  * @returns {number}
  */
@@ -47,10 +36,7 @@ export function ownWindowWidthOf(win) {
 }
 
 /**
- * Normalises a stored Screen preference: `window` for the own window, a common size's id, `own` with a width and an optional height, or `ratio` with a common ratio and the width it stands at.
- * A preference stored before the sizes came reads as it did: its `custom` mode is the own size, anything else the own window.
- * The width falls to the own window's (so the own-size field starts at what the owner has), and a missing height fills the panel.
- * The ratio's width is its own, so choosing a ratio leaves the own size's fields as they were.
+ * Normalises a stored Screen preference: `window`, a common size's id, `own` with a width and optional height, or `ratio` with its ratio and its own width.
  * @param {unknown} raw The stored object, or anything else
  * @param {number} ownWidth The own window width
  * @returns {{size: string, width: number, height: number, ratio?: string, ratioWidth?: number}}
@@ -72,10 +58,7 @@ export function screenSetting(raw, ownWidth) {
 }
 
 /**
- * The canvas viewport the preference gives: the measured own width with no
- * height for the own window, a common size with its height, the own size, or
- * a ratio's width with the height the ratio gives it.
- * A height of 0 means the canvas fills the panel.
+ * The canvas viewport a preference gives: the own width, a common size, the own size, or a ratio's width and its height; a height of 0 fills the panel.
  * @param {{size: string, width: number, height: number}} pref
  * @param {number} ownWidth
  * @returns {{width: number, height: number}}

@@ -1,8 +1,6 @@
 /**
- * What waits to be published, as the History panel's «Not published yet» lists it and the count beside Publish counts it: one part for each thing a publish would write.
- * The editor has unpublished work exactly when the list holds a part (state/history.svelte.js updateDirty), so the count and the dirty flag never disagree.
- * The steps of the undo history that belong to a part since the last publish (stepsForPart) are what a part's row shows when it is opened.
- * Pure, node-tested (tests/unpublished.test.mjs).
+ * What waits to be published, one part for each thing a publish would write, as the History panel's «Not published yet» lists it.
+ * Pure, node-tested.
  */
 import { stepKind } from './history-model.js';
 
@@ -40,13 +38,13 @@ export function unpublishedParts(state) {
   return parts;
 }
 
-/** The step kinds of the site file: the pages' list, the menu, the footer, the theme, the legal settings and the site's own; a page's settings are the page file's, except its search visibility, which the site file holds. */
+/** The step kinds of the site file; a page's search visibility is the site file's too. */
 const SITE_KINDS = new Set(['pages', 'nav', 'footer', 'theme', 'legal', 'site']);
 const siteStep = (step, name) => SITE_KINDS.has(name) || step.key === 'edit:page-noindex';
 
 /**
- * The steps made on a part since the last publish, newest first, as the row shows them when opened: a page's are the steps made on that page (the open page, or a page the step names in `pages` when it was made from a panel), the site's are the steps of the site file, and the rest go by their kind.
- * A collection's steps cannot be told from another's, so each collection shows every collection step.
+ * The steps made on a part since the last publish, newest first: a page's own, the site file's, or by kind.
+ * Each collection shows every collection step.
  * @param {UnpublishedPart} part
  * @param {Array<{ key: string, at: number, pageId: string|null, pages?: string[], typed: boolean }>} steps The undo steps, newest first (historyState.steps.undo)
  * @param {number} publishedAt When the last publish was made, in ms; 0 for none known

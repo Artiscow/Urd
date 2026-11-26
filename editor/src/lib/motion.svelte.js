@@ -1,6 +1,6 @@
 /**
- * The admin's motion for what opens and closes (AGENTS.md, «Folds and menus open and close smoothly»): a menu or a pop-up slides and fades in and out, and a row that opens in a list grows from nothing and shrinks back; under reduced motion each opens and closes at once.
- * The folds (`details.group`) and the pop-ups in the top layer move by app.css; these are the Svelte transitions for what a block of markup draws and takes away, the helper that keeps a top-layer pop-up's content drawn while it fades out, and the dialogs' fade out.
+ * The admin's motion for what a block of markup opens and closes, a pop-up kept drawn through its fade, and the dialogs' fade.
+ * Reduced motion makes each instant.
  */
 import { fly, slide } from 'svelte/transition';
 import { cubicOut } from 'svelte/easing';
@@ -10,7 +10,7 @@ export const POP_OUT_MS = 150;
 
 const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** A card's fold in a list (lib/rows/CardList.svelte, the Nav panel's items): its height grows from nothing to the height it is drawn at and shrinks back, its content clipped to it, so the cards under it move with what it shows. */
+/** A card's fold in a list (lib/rows/CardList.svelte): its height grows from nothing and shrinks back, its content clipped, so the cards under it move with it. */
 export function cardFold(node) {
   const height = node.offsetHeight;
   return { duration: still() ? 0 : 160, easing: cubicOut, css: (t) => `height: ${t * height}px; overflow: clip;` };
@@ -33,7 +33,7 @@ export function rowMotion(node, params = {}) {
 }
 
 /**
- * A top-layer pop-up's content, kept drawn through its closing fade: `shown` turns true as soon as the pop-up opens, and false POP_OUT_MS after it closes, so the pop-up never fades out empty.
+ * A top-layer pop-up's content, kept drawn through its fade: `shown` is true while it is open and for POP_OUT_MS after.
  * Called while a component is set up.
  * @param {() => boolean} isOpen
  * @returns {{readonly shown: boolean}}
@@ -61,9 +61,7 @@ function fadeMs(node) {
 }
 
 /**
- * An admin dialog (`class="dx"`, `dx-large` for a large one) that fades out before it closes: its own close() first fades it and its backdrop (app.css), then closes it, so every way out that closes the dialog (its buttons, a press on the backdrop) fades, and what follows a close (the focus given back, a command run, the picker's choice applied) waits in the dialog's `close` event.
- * Escape takes the same way where the dialog's own `cancel` handler has not taken it; its listener is added after the component's own, so a handler that takes Escape is asked first. Where the browser lets no page hold Escape (a close request without a user's press since the dialog opened, as close watchers specify), the dialog closes at once.
- * The opening fades by app.css (`@starting-style`). An action: `use:fadingDialog`, with `out:dialogOut|global` beside it for a dialog taken away while it is open.
+ * An admin dialog (`class="dx"`) whose close(), and Escape, fade it and its backdrop out first; what follows waits in its `close` event.
  * @param {HTMLDialogElement} node
  */
 export function fadingDialog(node) {
@@ -98,8 +96,7 @@ export function fadingDialog(node) {
 }
 
 /**
- * A dialog a block takes away while it is open (its state cleared, or a dialog closed by another opening): it fades out with its backdrop before it leaves, as its close() does.
- * The block waits two frames longer than the fade, so a close() running beside it closes the dialog first and the browser gives the focus back; a block drawn again during the fade takes the class off (Svelte's reset ticks 1).
+ * A dialog a block takes away while it is open: it fades out with its backdrop, as its close() does, two frames longer.
  */
 export function dialogOut(node) {
   if (!node.open) return { duration: 0 };

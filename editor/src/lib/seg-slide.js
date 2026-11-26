@@ -1,9 +1,5 @@
 /**
- * The segment controls' slide (0.7.10.9): when a click moves the choice of a segment control (`.seg`, and Choice's `.choice-seg`), the pill of the newly chosen button starts where the old pill stood and slides into place.
- * The pill is the `::before` layer of the button marked `on` (app.css, Choice.svelte), so only the pill moves and the words stay put.
- * The slide moves the pill's edges, not a transform, so the browser paints it in place and the panel scrolling around it never gets a layer of its own.
- * One listener on the document serves every segment control in the editor; under reduced motion the pill moves at once.
- * The geometry is pure (slideFrom) and node-tested; the listener needs a DOM.
+ * The segment controls' slide: the chosen button's pill (`::before`) starts where the old one stood and slides its edges into place; at once with reduced motion.
  */
 
 const round = (n) => Math.round(n * 10) / 10;

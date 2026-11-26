@@ -1,19 +1,11 @@
 /**
  * The uploads: the SVG trim, the image compression, the video reading and the upload report, shared by every file the editor takes in.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { svgToDataUrl, svgViewBox, tightSvgViewBox, compressToWebp, ANIMATED_MAX_BYTES, VIDEO_MAX_BYTES, VIDEO_WARN_BYTES, PICTURE_BUDGETS, slugify } from '$engine/imageTools.js';
 import { ta } from '$engine/i18n.js';
 import { shellState } from './shell.svelte.js';
 
-/* The background editor itself is section/BackgroundEditor.svelte; what
-   stays here is shared by every upload in the editor: the SVG trim, the
-   image compression and the video reading. */
-
-/* Measures the subject's extent in an SVG via canvas pixels (the SVG is
-   rendered as an IMAGE, not live DOM - safe: no script execution, and
-   svgToDataUrl has already rejected script SVGs). Returns the bounding
-   box in the SVG's user coordinates. */
+/* The subject's bounding box in an SVG's user coordinates, measured on its pixels as drawn as an image. */
 async function svgContentBBox(dataUrl, vb) {
   try {
     const img = new Image();
@@ -40,10 +32,7 @@ async function svgContentBBox(dataUrl, vb) {
   } catch { return null; }
 }
 
-/* Uploaded SVG: validate + auto-trim (tighten the viewBox to the
-   subject, remove dead space) so Cover/scale/position behave around the
-   logo itself. Falls back gracefully to the untrimmed SVG if something
-   cannot be measured. */
+/* An uploaded SVG checked and its viewBox trimmed to its subject, or untrimmed where it cannot be measured. */
 async function svgAutoTrim(file) {
   const text = await file.text();
   const first = svgToDataUrl(text); // validates (throws on script SVG) + encodes
@@ -89,7 +78,7 @@ class PictureLeftOut extends Error {
 }
 
 /**
- * The shared entry for every picture the editor takes in: SVGs auto-trimmed (viewBox tightened to the subject) so a logo or icon fills its space, anything else compressed to webp into its use's budget, and a picture still over it asked about before it is kept.
+ * Every picture the editor takes in: an SVG trimmed to its subject, anything else compressed to WebP in its use's budget, and one still over it asked about.
  * @param {File} file
  * @param {keyof typeof PICTURE_BUDGETS} [use]
  */
@@ -100,7 +89,7 @@ async function compressOrTrim(file, use = 'image') {
 }
 
 /**
- * What to say when a picture was not taken: a too-large animation names its size and the limit, a picture left out over its budget says so, an SVG holding something that can run says so, and anything else is the read error (`fallback`, a key).
+ * What to say when a picture was not taken: a too-large animation, a picture left out over its budget, an unsafe SVG, else the read error (`fallback`, a key).
  * @param {unknown} err
  * @param {string} [fallback]
  */
@@ -113,8 +102,7 @@ function imageErrorText(err, fallback = 'status.imageReadError') {
   return ta(fallback);
 }
 
-/** A video file as a data URL for the draft, inside the media limits from imageTools (the
-    hard cap and the warning); publishing writes it to media/ like the images. */
+/** A video file as a data URL for the draft, within imageTools' hard cap and warning; publishing writes it to media/. */
 function readVideoFile(file, formatKey, done) {
   if (!['video/mp4', 'video/webm'].includes(file.type)) {
     shellState.setStatus(ta(formatKey), 'error');
@@ -139,7 +127,7 @@ function readVideoFile(file, formatKey, done) {
 const newSeed = () => 1 + Math.floor(Math.random() * 1000000);
 
 /**
- * Several pictures in one upload (the galleries): each compressed into the use's budget, one unreadable picture not stopping the rest, and those still over the budget asked about once, together; `unsafe` counts the SVGs refused for what they hold.
+ * Several pictures in one upload: each compressed to the use's budget, an unreadable one skipped, those over it asked about at once; `unsafe` counts refused SVGs.
  * @param {Iterable<File>} fileList
  * @param {keyof typeof PICTURE_BUDGETS} [use]
  * @returns {Promise<{images: {src: string, alt: string, href: null, style: object}[], failed: number, unsafe: number}>}
@@ -165,7 +153,7 @@ async function compressMany(fileList, use = 'gallery') {
 }
 
 /**
- * One picture for a new image block, as the Blocks panel and the canvas menu both add it: compressed (compressOrTrim), with its alt text made from the file name, and the status line telling of the work or of a picture that could not be read.
+ * One picture for a new image block: compressed (compressOrTrim), its alt text from the file name, and the status line telling of the work or a read failure.
  * @param {File} file
  * @returns {Promise<{ src: string, alt: string, width: number, height: number, bytes: number }|null>} null when the picture could not be read
  */
@@ -180,7 +168,7 @@ async function imageForBlock(file) {
   }
 }
 
-/** The status line once several pictures are in: the SVGs refused for what they hold where all that failed were such, the ones that could not be read, nothing added, or clear. */
+/** The status line once several pictures are in: refused SVGs where all failures were such, the count not read, nothing added, or clear. */
 function reportUpload(ok, failed, unsafe = 0) {
   if (failed && unsafe === failed) shellState.setStatus(ta('status.svgUnsafe'), 'error');
   else if (failed) shellState.setStatus(ta('status.imagesReadFailed', { n: failed }), 'error');

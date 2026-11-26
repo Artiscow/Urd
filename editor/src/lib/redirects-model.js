@@ -1,7 +1,5 @@
 /**
- * Redirects (content/redirects.json, ADR-0015): an old address sent to a new one, permanently (301) or for now (302).
- * The rules are read and checked here, written in the host's format at publishing (Cloudflare Pages' `_redirects`), and read back from a list, a CSV file or a `_redirects` written by hand.
- * Pure, node-tested (tests/redirects-model.test.mjs).
+ * Redirects (content/redirects.json, ADR-0015): each rule checked, written as the host's `_redirects` at publishing, and read from a list, CSV or `_redirects`.
  */
 import { parseCsvRows, detectSeparator } from '$engine/collections-csv.js';
 
@@ -24,7 +22,7 @@ const FROM_RE = new RegExp(`^/(?:${SEGMENT}/)*(?:${SEGMENT}|\\*)?$`);
 const TO_PATH_RE = /^\/\S*$/;
 
 /**
- * An old address as a rule holds it: a path from the site's root, without a trailing slash, its last segment a * where the rule covers everything under a folder; a whole address pasted gives its path.
+ * An old address as a rule holds it: a path from the site's root with no trailing slash, its last segment a * for a whole folder; a pasted address gives its path.
  * @param {unknown} raw
  * @returns {string|null} null where it cannot be an old address
  */
@@ -94,8 +92,7 @@ function takes(from, path) {
 }
 
 /**
- * What is wrong with each rule, as the list marks it: an error (dark red) where the rule cannot do what it says, a warning (amber) where it may not, null where it is sound.
- * Errors: an old address that is not one, a target that is not one, one of Urd's own addresses, an old address a shown page has (a redirect wins over the page), a * in the target without one in the old address, a circle. Warnings: an old address a rule above already takes, and a target on the site that is no page, no rule's old address and no file.
+ * What is wrong with each rule: an error where it cannot do what it says, a warning where it may not, null where it is sound.
  * @param {Array<{from: string, to: string, status: number}>} rules
  * @param {Array<{id: string, title: string, path: string, hidden?: boolean}>} pages
  * @returns {Array<{level: 'error'|'warn', key: string, field: 'from'|'to', page?: string}|null>}
@@ -152,7 +149,7 @@ function writable(rules) {
 }
 
 /**
- * The lines of the host's file: the static rules first, each old address twice, with and without its slash (the host does not document whether they are one), then the rules with a *, the kind always written (the host reads a missing one as 302).
+ * The host file's lines: the static rules first, each old address with and without its slash, then the rules with a *, the kind always written.
  * @param {Array<{from: string, to: string, status: number}>} rules
  * @returns {{static: string[], dynamic: string[]}}
  */
@@ -180,7 +177,7 @@ export function isUrdHostFile(text) {
   return String(text ?? '').startsWith(HOST_FILE_HEAD);
 }
 
-/** A kind as a list or a file may give it: 301, 308, «permanent» and the like are permanent; 302, 303, 307, «temporary» are temporary; anything else (or nothing) is the fallback. */
+/** A kind as a list or a file gives it: 301, 308 and «permanent» are permanent, 302, 303, 307 and «temporary» temporary, anything else the fallback. */
 function readKind(raw, fallback) {
   const word = String(raw ?? '').trim().toLowerCase();
   if (['301', '308', 'permanent', 'permanently', 'perm'].includes(word)) return 301;
@@ -196,7 +193,7 @@ function ruleOf(from, to, kind) {
 }
 
 /**
- * The rules of a `_redirects` file written by hand, before Urd writes its own: each line an old address, a target and a kind (302 where it is left out, as the host reads it); a twin with a trailing slash is one rule, and lines Urd cannot hold (a proxy with 200, a placeholder) are left out.
+ * The rules of a `_redirects` written by hand: old address, target and kind (302 where left out, as the host reads it); a slash twin is one rule, a proxy skipped.
  * @param {string} text
  * @returns {{rules: Array<{from: string, to: string, status: number}>, skipped: number}}
  */
@@ -218,7 +215,7 @@ export function parseHostFile(text) {
 }
 
 /**
- * The rules of a pasted list: a rule a line, the old address (from a slash, or a whole address) and the target apart by spaces, an arrow, a comma or a semicolon, and the kind last where it is given (permanent where it is not).
+ * The rules of a pasted list, one a line: the old address and the target apart by spaces, an arrow, a comma or a semicolon, then the kind (permanent if none).
  * @param {string} text
  * @returns {{rules: Array<{from: string, to: string, status: number}>, skipped: number}}
  */
@@ -246,7 +243,7 @@ export function rulesToCsv(rules) {
 }
 
 /**
- * The rules of a CSV file: the old address, the target and the kind in the first three columns, a header row recognised and passed, the separator read from the file.
+ * The rules of a CSV file: the old address, target and kind in the first three columns, a header row passed, the separator read from the file.
  * @param {string} text
  * @returns {{rules: Array<{from: string, to: string, status: number}>, skipped: number}}
  */
@@ -296,7 +293,7 @@ export function withoutFrom(rules, from) {
 }
 
 /**
- * A page moved from one address to another: the rules that led to the old address, or to a spot on it, lead to the new one, so no chain grows, and a rule from the new address goes, since it would hide the page.
+ * A page moved: the rules that led to its old address, or a spot on it, lead to the new one, and a rule from the new address goes, as it would hide the page.
  * @param {Array<{from: string, to: string, status: number}>} rules
  * @param {string} oldPath
  * @param {string} newPath

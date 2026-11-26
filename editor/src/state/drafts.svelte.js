@@ -1,10 +1,5 @@
 /**
- * The Drafts window (ADR-0032): the System section's Drafts tab opens it over the canvas, beside the work, with three tabs for where each change stands (this browser, saved, live).
- * A mouse resting on the tab opens it, and it closes a moment after the mouse has left the tab and the window, unless a press on the tab or in the window, the pin or the focus inside it keeps it; a press on the tab opens it as well.
- * It is dragged by its head to any place; where it stands, by its tab or where it was dragged, is kept for the browser tab's session in `urd-drafts-place` (sessionStorage), so a reload brings it back there. Pinned, it stays open while the owner edits, and at the next load; folded, it is a pill in the canvas's corner.
- * In This browser each part has a tick, and an unticked part is kept for later: a save writes the ticked ones, with the owner's note and this browser's name, and a publish sends them and saves the unticked ones quietly for the owner's other devices (state/publish.svelte.js).
- * Ctrl+S saves the ticked parts without opening anything, and «Autosave» does so every five minutes while it is on; neither writes over a part saved elsewhere since, which waits for the owner.
- * What is kept per browser, all admin keys: `urd-drafts-pinned`, `urd-drafts-pill`, `urd-drafts-later` (the unticked parts), `urd-browser-name` and `urd-drafts-autosave`.
+ * The Drafts window (ADR-0032), opened from the Drafts tab over the canvas, with a tab for each place a change stands: This browser, Saved and Live.
  */
 import { ta } from '$engine/i18n.js';
 import { tickedNames, firstTab } from '../lib/saved-model.js';
@@ -77,7 +72,7 @@ let anchor = $state.raw(keptPlace.anchor);
 let later = $state.raw(readLater());
 let browserName = $state((read(NAME_KEY) ?? '').slice(0, NAME_MAX));
 let autoSave = $state(read(AUTO_KEY) === '1');
-/** When the Saved tab began to be shown, so leaving it after a second or more marks what it showed as no longer new. */
+/** When the Saved tab began to be shown. */
 let savedShownAt = 0;
 /** Opened by a mouse resting on the tab, and not yet kept by a press, the pin or the focus; with what the mouse stands on now. */
 let byRest = false;
@@ -92,7 +87,7 @@ const waiting = $derived(savedState.saveCount);
 const savedCount = $derived(savedState.savedList.length);
 const fresh = $derived(savedState.savedFresh);
 
-/** What the Saved tab showed is no longer new once it has stood a second or more. */
+/** What the Saved tab showed counts as noticed once it has stood a second or more. */
 function leaveSaved() {
   if (savedShownAt && Date.now() - savedShownAt >= 1000) savedState.markSavedNoticed();
   savedShownAt = 0;
@@ -116,8 +111,7 @@ function unfold() {
 }
 
 /**
- * Opens the window at a tab (by default the one with something new, lib/saved-model.js firstTab), under or beside the tab it was opened from.
- * Opened by a press or a key, the window takes the focus and its pill goes; opened by a rest (`rest`), it leaves both, and the menu the tab stood in.
+ * Opens the window at a tab, firstTab's by default, by the tab it opened from; a press or a key gives it the focus and ends the pill, a rest neither.
  * @param {{tab?: 'browser'|'saved'|'live', from?: Element|null, beside?: boolean, rest?: boolean}} [opts]
  */
 function openDrafts({ tab: at, from = null, beside = false, rest = false } = {}) {
@@ -265,7 +259,7 @@ function saveTicked(note = '') {
 }
 
 /**
- * Ctrl+S: the ticked parts saved without a window or a question; one saved elsewhere since stays for the owner in Drafts, and the status line says why nothing was saved: a part saved elsewhere since, every part kept for later, or nothing standing here alone.
+ * Ctrl+S: the ticked parts saved without a window or a question, none saved elsewhere since; with nothing to save, the status line says why.
  */
 function saveKey() {
   if (savedState.savedAvailable === false) {

@@ -1,8 +1,5 @@
 /**
- * The element menu's Pinned rows (0.7.20.3, drawn as rows since 0.7.30.3): the settings a block type shows at the top of its menu.
- * Each type has default rows; the owner pins more with the pin beside a setting and takes any row out, a default too, with the same pin.
- * The choice is kept per block type in the browser, as a working preference rather than site data.
- * Pure functions, node-tested.
+ * The element menu's Pinned rows: a block type's default settings at the top of its menu, with the owner's pins and removals kept per type in the browser.
  */
 
 /** The browser key the choices are kept under: one object, block type to its choice. */
@@ -47,7 +44,7 @@ export function quickDefaults(type) {
   return [...(OWN[type] ?? []), ...SHARED];
 }
 
-/** The ids a block's design was kept under before every design took the one id `design`; a stored choice reads them as it. */
+/** The older ids of a block's design, which a stored choice reads as `design`. */
 const DESIGN_IDS = new Set(['btnStyle', 'galleryView', 'variant', 'collectionView', 'cartView', 'privacyDesign', 'textDesign']);
 
 /** An empty choice: the defaults alone. */
@@ -66,10 +63,8 @@ export function cleanChoice(value) {
 }
 
 /**
- * The rows a block shows in Pinned, in order: its defaults that are not taken out,
- * then the settings pinned, in the order they were pinned. Only settings the
- * block has right now are shown (a calendar's count, for one, only on the
- * views that have it).
+ * The rows a block shows in Pinned, in order: its defaults not taken out, then the settings pinned, in pin order.
+ * Only settings the block has right now are shown.
  * @param {string} type
  * @param {{pinned: string[], removed: string[]}} choice
  * @param {Set<string>} available The settings the block can show in the row now
@@ -94,9 +89,7 @@ export function isInRow(type, choice, id) {
 }
 
 /**
- * The choice after the pin beside a setting, in its area or in Pinned, is pressed: a
- * setting in the row leaves it, one out of it joins it at the end. A
- * default taken out and pinned again returns to its own place.
+ * The choice after a setting's pin is pressed: a setting in the row leaves it, one out of it joins at the end, and a default pinned again returns to its place.
  * @param {string} type
  * @param {{pinned: string[], removed: string[]}} choice
  * @param {string} id
@@ -139,8 +132,8 @@ export function readChoices(storage) {
 }
 
 /**
- * Keeps every block type's choice in the browser; a type back at its
- * defaults is left out. A full or blocked store keeps the choice for the session.
+ * Keeps every block type's choice in the browser; a type back at its defaults is left out.
+ * A full or blocked store keeps the choice for the session.
  * @param {{setItem(key: string, value: string): void}} storage
  * @param {Record<string, {pinned: string[], removed: string[]}>} choices
  */

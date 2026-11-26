@@ -1,6 +1,6 @@
 /**
  * The owner's templates in content/maler/: their draft stores and the saving and deleting.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
+ * The other parts reach it through the handle below.
  */
 import { createDraftStore, dropDraft } from '../lib/draftStore.js';
 import { TEMPLATE_SCHEMA_VERSION, TEMPLATE_KINDS, templateId } from '$engine/templates-model.js';
@@ -10,8 +10,7 @@ import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
 
-// Same pattern as collections: an index store + one store per template
-// file, with a "does not exist" baseline (null) until the first publish.
+// An index store and one store per template file, whose baseline is null until the first publish.
 let templatesIndexStore = null;
 
 let templateStores = {};
@@ -53,8 +52,7 @@ function pushTemplatesToPreview() {
   previewState.bridge?.sendTemplates(list);
 }
 
-/** "Save as template" from the preview (section/block group); page
- *  templates come editor-internally from the Pages panel via the same core. */
+/** «Save as template» from the preview, for a section or a block group. */
 function handleSaveTemplate(msg) {
   const kind = TEMPLATE_KINDS.includes(msg.kind) ? msg.kind : 'section';
   return saveTemplate(kind, msg[kind]);

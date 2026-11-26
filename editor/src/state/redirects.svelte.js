@@ -1,6 +1,5 @@
 /**
- * The site's redirects (content/redirects.json, ADR-0015): the list as a draft of its own beside the site's, the Redirects dialog's open flag, and the writes, each an undo step or a part of the step its caller made.
- * A site without the file starts from an empty list, or from a `_redirects` written by hand, read through the publishing layer, so publishing never writes over rules it did not know (`hostFileKnown`).
+ * The site's redirects (content/redirects.json, ADR-0015): the list as a draft of its own, the Redirects dialog's open flag, and the writes.
  */
 import { ta } from '$engine/i18n.js';
 import { createDraftStore } from '../lib/draftStore.js';
@@ -18,13 +17,13 @@ let redirectsStore = null;
 /** The list as the editor shows and writes it; the store holds the same proxy (linkRedirects). */
 let redirectsDraft = $state(null);
 
-/** Whether publishing may write `_redirects`: the site has content/redirects.json, or the repository's `_redirects` has been looked at, and read in where it was written by hand. */
+/** Whether publishing may write `_redirects`: the site has content/redirects.json, or the repository's `_redirects` has been read in. */
 let hostFileKnown = $state(false);
 
 /** Whether the Redirects dialog is open. */
 let redirectsOpen = $state(false);
 
-/** Lines of a `_redirects` written by hand that the list cannot hold (a proxy, a placeholder): they go when publishing first writes the file, so «Before you publish» names them. */
+/** Lines of a `_redirects` written by hand that the list cannot hold, which «Before you publish» names. */
 let unkeptLines = $state(0);
 
 /** Links the draft and the store to the same object, through the Svelte proxy. */
@@ -34,7 +33,7 @@ function linkRedirects() {
   redirectsStore.replace(redirectsDraft);
 }
 
-/** The repository's `_redirects`, through the publishing layer: its text, null where there is none, undefined where it could not be read (a local server, signed out). */
+/** The repository's `_redirects`, through the publishing layer: its text, null where there is none, undefined where it could not be read. */
 async function readHostFile() {
   try {
     const res = await fetch('/api/github/redirects');
@@ -80,7 +79,7 @@ async function initRedirects() {
 }
 
 /**
- * Makes sure publishing may write `_redirects`: where the repository's file was not looked at when the admin opened, it is now, and its rules join the list ahead of the draft's own (a rule in the draft wins for its old address).
+ * Makes sure publishing may write `_redirects`: the repository's file is read if it was not, its rules joining the list, the draft's own winning.
  * @returns {Promise<boolean>} false where the file still cannot be read
  */
 async function ensureHostFileKnown() {
@@ -99,7 +98,7 @@ async function ensureHostFileKnown() {
 }
 
 /**
- * A change to the list: `fn` takes the rules and gives the new ones (lib/redirects-model.js), as one undo step or, with `push: false`, as part of the step its caller made.
+ * A change to the list: `fn` takes the rules and gives the new ones, as one undo step or, with `push: false`, as part of its caller's step.
  * @param {(rules: Array<object>) => Array<object>} fn
  * @param {{key?: string, push?: boolean}} [options]
  */

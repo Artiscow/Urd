@@ -1,7 +1,5 @@
 /**
- * Where the Urd settings were left, kept for as long as the tab is open (sessionStorage): each scroll of the window's forms, and the entries the dialog's list holds open.
- * A scroll's place is the setting row at its top and how far past that row's top it stood, so a row above it that grows or hides moves nothing; the scroll's own offset is the fallback when that row is gone.
- * A scroll at its top keeps no place, and a search clears it and keeps none while it stands, since its rows are not the window's own; the window then opens at the top.
+ * Where the Urd settings were left, in sessionStorage: each form's scroll, as the row at its top and how far past it, and the dialog list's open entries.
  */
 
 const KEY = 'urd-settings-left';
@@ -41,8 +39,7 @@ function placeOf(scroller) {
 }
 
 /**
- * An attachment for one of the settings' scrolls: as the window opens it scrolls back to the place kept under `name` before the window is first drawn, and keeps the place as it scrolls.
- * `query` is the search, and the attachment runs anew as it changes; `scrollerOf` finds the scroll from the element it is attached to, the element itself where that scrolls.
+ * An attachment that scrolls a settings form back to the place kept under `name` before it is drawn and keeps the place as it scrolls; a search clears it.
  * @param {string} name
  * @param {string} [query]
  * @param {(el: HTMLElement) => HTMLElement | null} [scrollerOf]

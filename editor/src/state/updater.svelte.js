@@ -1,15 +1,12 @@
 /**
  * What the deployed site tells the editor: the publish history and its revert, the update check and the update, the publish baseline.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { ta, taApiError } from '$engine/i18n.js';
 import { awaitServed, deployTargets } from '../lib/deploy-wait.js';
 import { shellState } from './shell.svelte.js';
 
 /**
- * The HEAD commit when the editor loaded (or last published): the
- * baseline for the conflict warning. null = unknown (not logged in /
- * local server), in which case the check is silently skipped.
+ * The HEAD commit when the editor loaded or last published: the conflict check's baseline, null where unknown.
  */
 let baseSha = null;
 
@@ -21,18 +18,11 @@ async function refreshBaseSha() {
 }
 
 /**
- * Conflict check before publishing: has someone else published since we
- * loaded, and do we touch the same files? Returns {head, warning}: head is
- * the HEAD we observed and is sent as expect to the commit endpoint
- * (closes the window between check and commit server-side); warning is a
- * section for the one question publishing asks ({heading, lines}), or null.
+ * The check before a publish: whether another publish since the load touched the same files; gives the HEAD seen, sent as `expect`, and the warning or null.
  */
 async function checkConflict(files) {
   if (!baseSha) {
-    // The baseline slipped at load (GitHub down): fetch HEAD now, so
-    // expect at least closes the commit window. Without the original
-    // baseline we cannot diff, so the editor must make the call
-    // explicitly instead of the guard being silently skipped.
+    // Without a baseline, HEAD is read now for `expect`, and the owner is asked, the overlap unknown.
     await refreshBaseSha();
     return {
       head: baseSha,
@@ -52,8 +42,7 @@ async function checkConflict(files) {
   const mine = new Set(files.map((f) => f.path));
   // A deleted folder (a removed plugin's) overlaps every file someone else changed under it.
   const folders = files.filter((f) => f.delete).map((f) => `${f.path}/`);
-  // Truncated diff (very large changes): we do NOT know whether there is
-  // overlap, so the editor must make the call.
+  // A truncated diff leaves the overlap unknown, so the owner is asked.
   const overlap = data.truncated
     ? [ta('confirm.conflict.truncated')]
     : (data.changedFiles ?? []).filter((p) => mine.has(p) || folders.some((folder) => p.startsWith(folder)));
@@ -90,31 +79,21 @@ async function loadHistory() {
 }
 
 /**
- * After a revert the editor still shows the content from BEFORE the
- * revert (the restored version exists on the server only after deploy).
- * Publishing from that state would silently reintroduce what was
- * reverted - so publishing is blocked until the admin is reloaded.
+ * A revert since the load, which blocks publishing until the admin is reloaded.
  */
 let revertedSinceLoad = false;
 
-/** The publish whose deploy is being awaited: a newer publish makes an
- *  older wait fall silent instead of reporting a stale result. */
+/** The publish whose deploy is awaited; a newer publish silences an older wait. */
 let publishWave = 0;
 
 /**
- * After a publish: poll the committed content files until the site serves
- * them (lib/deploy-wait.js), so the status can say «live» rather than just
- * «committed». Nothing is reloaded and no draft changes: the drafts already
- * are the published state.
- * `onLive` runs when the site serves the commit, also when a newer message or publish has taken the status line.
+ * After a publish: polls the committed files until the site serves them, and runs `onLive` then, even where a newer message has taken the status line.
  * @param {Array<object>} files The committed files
  * @param {() => void} [onLive]
  */
 async function awaitPublishDeploy(files, onLive) {
   const wave = ++publishWave;
-  // The status sequence at the publish: any message shown since (a
-  // revert, a login prompt) makes the wait fall silent instead of
-  // overwriting it.
+  // The status line's count at the publish: a message shown since silences the wait.
   const seq = shellState.statusSeq;
   const live = await awaitServed(deployTargets(files));
   if (live) onLive?.();
@@ -138,8 +117,7 @@ let updateBusy = $state(false);
 /** The check for a newer Urd is on its way; the panel says so while it has nothing to show. */
 let updateChecking = $state(false);
 
-/** Optional files the owner wants to keep their own version of (only
- *  outside the engine atom group; the server validates the same). */
+/** Optional files the owner keeps their own version of, outside the engine atom group alone. */
 let updateSkip = $state(new Set());
 
 /** The check on its way, which a second call joins instead of starting another. */

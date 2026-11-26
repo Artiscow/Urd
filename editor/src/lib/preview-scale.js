@@ -1,27 +1,10 @@
 /**
- * Scale for the editing canvas: the iframe renders the page in a TARGET
- * VIEWPORT and is scaled down to fit `.frame-wrap`, instead of reflowing into
- * the leftover space. The render is then identical to the published page; only
- * the display size (zoom) changes. Pure functions, node-tested.
- *
- * Two display modes (ADR-0018):
- *
- * - **Device** (default): the target viewport has BOTH a width and a height,
- *   and the scale fits both axes. The fold then holds: an `85vh` section ends
- *   where a visitor sees it end. The price is a bar on whichever axis has
- *   surplus (the Squarespace and DevTools model).
- * - **Fill**: only the width is pinned, and the iframe is made correspondingly
- *   taller, so the canvas fills the panel without bars. It gives the most
- *   working surface, but `vh` then resolves against the panel's aspect ratio,
- *   so the fold cannot be trusted.
- *
- * Fill is `targetH = 0`, that is "no height limit".
+ * Scales the canvas iframe, rendered at a target viewport, to fit `.frame-wrap`.
+ * Device mode fits both axes; fill mode (`targetH = 0`) the width alone (ADR-0018).
  */
 
 /**
- * Raw width ratio: how much the target width must be scaled to fit the frame
- * width. Invalid/unmeasured targets give 1 (no scaling until something is
- * measured).
+ * The scale that fits the target width into the frame width; 1 while either is unmeasured.
  * @param {number} frameW The frame box width (px)
  * @param {number} targetW The target viewport width (px)
  * @returns {number}
@@ -32,15 +15,8 @@ export function fitScale(frameW, targetW) {
 }
 
 /**
- * The applied scale given the zoom mode. `full` = true 1:1 (the canvas may
- * overflow and be panned). `fit` fits the target, but NEVER scales up beyond
- * 1:1. The floor of 0.1 prevents scale(0) on an unmeasured/infinitely narrow
- * window.
- *
- * The height arguments are optional: without them (or with `targetH: 0`) the
- * scale is purely width-driven, which is fill mode. With them both axes are
- * fitted, which is device mode.
- *
+ * The applied scale: 1 in `full` mode; in `fit`, the target fitted to the frame, never above 1 nor below 0.1.
+ * Without `targetH` only the width is fitted.
  * @param {number} frameW The frame box width (px)
  * @param {number} targetW The target viewport width (px)
  * @param {'fit'|'full'} mode

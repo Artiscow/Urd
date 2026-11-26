@@ -1,7 +1,5 @@
 /**
- * The pictures of the Urd settings' look choices (settings-model.js), shown the way the design picker shows a design: each a small drawing of the admin with the choice marked, in the text colour with the accent on what the choice changes.
- * Drawn as SVG strings, the way preset-thumb.js draws the section presets, so the pictures follow the admin theme; the theme swatches alone carry their own colours, the palettes of app.css.
- * Pure, node-tested (tests/settings-model.test.mjs).
+ * The pictures of the Urd settings' look choices (settings-model.js): small SVG drawings of the admin in the text colour, the accent on what the choice changes.
  */
 import { COVER_LOOKS, coverPicture } from './canvas-cover.js';
 
@@ -68,7 +66,7 @@ const LAYOUT_PICKERS = {
   menu: dim(1, 1, 62, 38, 0.06) + dim(14, 4, 36, 32, 0.16) + acc(17, 8, 9, 6) + line(28, 8, 9, 6, 6) + line(39, 8, 8, 6, 6) + line(17, 17, 9, 6, 6) + line(28, 17, 9, 6, 6) + line(39, 17, 8, 6, 6) + line(17, 26, 9, 6, 6) + line(28, 26, 9, 6, 6),
 };
 
-/** The element menu's forms: beside the block in two columns, in one or with tabs, each drawn with the block it stands beside, and docked in the panel column in one column or with tabs. */
+/** The element menu's forms: beside the block in two columns, one or with tabs, and docked in the panel column in one column or with tabs. */
 const MENU_WIDTHS = {
   wide: dim(1, 1, 62, 38, 0.06) + block(4, 14, 10, 10) + dim(17, 4, 43, 32, 0.14) + acc(20, 7, 16, 2) + line(20, 12, 16, 2) + line(20, 17, 12, 2) + line(20, 22, 16, 2) + line(20, 27, 10, 2) + line(40, 7, 16, 2) + line(40, 12, 13, 2) + line(40, 17, 16, 2) + line(40, 22, 11, 2),
   narrow: dim(1, 1, 62, 38, 0.06) + block(6, 14, 12, 10) + dim(22, 4, 24, 32, 0.14) + acc(25, 7, 6, 3) + line(32, 7, 5, 3) + line(38, 7, 5, 3) + line(25, 14, 18, 2) + line(25, 19, 15, 2) + line(25, 24, 18, 2) + line(25, 29, 12, 2),
@@ -104,7 +102,7 @@ const PAGE_SETTINGS = {
 /** The phone on the stage, in the middle of the room the stage leaves it. */
 const phoneOnStage = (x) => `<rect x="${x}" y="10" width="12" height="27" rx="2" fill="currentColor" opacity="0.24"/>`;
 
-/** Where the Phone panel's blocks in their order stand, drawn in the accent: in a column at the stage's right edge, first in the panel, or in a fold under the panel's settings. */
+/** Where the Phone panel's blocks in their order stand, in the accent: a column at the stage's right edge, first in the panel, or in a fold under its settings. */
 const PHONE_PANELS = {
   dock: topbar() + dim(1, 7, 22, H - 8, 0.22) + line(3, 10, 12, 2) + line(3, 15, 16, 2) + line(3, 20, 14, 2) + line(3, 25, 16, 2) + stage(23) + phoneOnStage(31)
     + dim(51, 7, 12, H - 8, 0.22) + acc(53, 10, 8, 2) + acc(53, 14, 8, 2) + acc(53, 18, 8, 2) + acc(53, 22, 8, 2) + acc(53, 26, 8, 2),
@@ -118,7 +116,7 @@ const hair = (y, x = 1, w = W - 2) => `<rect x="${x}" y="${y}" width="${w}" heig
 const tint = (x, y, w, h, r = 0) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${ACCENT}" opacity="0.5"/>`;
 const boxed = (x, y, w, h, colour = 'currentColor', o = 0.5) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" stroke="${colour}" opacity="${o}"/>`;
 
-/** How the column at the stage's right edge is drawn, each picture the column itself seen close: two folded sections, the open section at work with two of its blocks, and the section after it. */
+/** How the column at the stage's right edge is drawn, seen close: two folded sections, the open section with two blocks, and the section after it. */
 const PHONE_COLUMNS = {
   table: dim(1, 3, W - 2, 7, 0.2) + line(6, 5.5, 22, 2) + hair(10) + tint(1, 10.6, W - 2, 7) + line(6, 13, 16, 2) + line(13, 21, 26, 2) + hair(25) + line(13, 27.5, 20, 2) + dim(1, 32, W - 2, 7, 0.2) + hair(32) + line(6, 34.5, 18, 2),
   flat: line(6, 5, 22, 2) + hair(10, 5, 54) + tint(4, 12, 56, 7, 2) + line(6, 14.5, 16, 2) + line(14, 22.5, 24, 2) + line(14, 28, 18, 2) + hair(33, 5, 54) + line(6, 35.5, 18, 2),
@@ -174,7 +172,7 @@ const SIDEBAR_FOLDS = {
   flyout: sideWords() + acc(4, 14, 12, 2) + line(4, 18, 10, 2) + line(4, 22, 12, 2) + line(4, 26, 9, 2) + `<rect x="22" y="12" width="20" height="18" rx="2" fill="currentColor" opacity="0.18"/>` + line(25, 15, 12, 1.5) + line(25, 19, 14, 1.5) + line(25, 23, 10, 1.5) + line(25, 27, 13, 1.5),
 };
 
-/** Where a dragged row will land: a list of rows with the dragged one faint at the top and its card under the pointer, and a dashed slot, or a line with a ring at its start, between two rows. */
+/** Where a dragged row will land: rows with the dragged one faint and its card under the pointer, and a dashed slot or a ringed line between two rows. */
 const listRows = (ys) => ys.map((y) => dim(14, y, 36, 4, 0.3)).join('') + dim(14, 6, 36, 4, 0.1);
 const dragCard = (y) => `<rect x="24" y="${y}" width="30" height="5.5" rx="1.5" fill="currentColor" opacity="0.6" stroke="${ACCENT}" stroke-width="0.8"/>`;
 const DRAG_MARKS = {
@@ -182,7 +180,7 @@ const DRAG_MARKS = {
   line: listRows([12, 18, 24, 30]) + acc(16, 22.4, 34, 1.2, 0.6) + `<circle cx="15" cy="23" r="1.3" stroke="${ACCENT}" stroke-width="0.8"/>` + dragCard(14.5),
 };
 
-/** The admin designs (lib/admin-designs.js), each the whole admin with a block selected on the page: the menu floating beside it under the strip of panels; the page's tabs with a bar on the block and a small panel beside it; the sidebar of words with a docked panel of tabs; and the rail with one long column of headed sections. */
+/** The admin designs (lib/admin-designs.js), each the whole admin with a block selected on the page, its menu, panels and bars where the design sets them. */
 const ADMIN_DESIGN_PICS = {
   floating: topbar() + dim(1, 7, W - 2, 6, 0.1) + acc(4, 9, 7, 2) + line(13, 9, 7, 2) + line(22, 9, 7, 2) + line(31, 9, 7, 2) + stage(1, 13) + block(10, 20, 16, 10)
     + dim(31, 15, 29, 22, 0.24) + acc(33, 17, 10, 2) + line(33, 22, 10, 2) + line(33, 26, 8, 2) + line(33, 30, 10, 2) + line(46, 22, 10, 2) + line(46, 26, 9, 2) + line(46, 30, 7, 2),
@@ -204,7 +202,7 @@ const SHORTCUTS = {
   chips: menuBox() + acc(17, 6, 8, 3.5, 1.75) + dim(27, 6, 8, 3.5, 0.35) + dim(37, 6, 9, 3.5, 0.35) + line(17, 13, 10, 1.5) + groupsBelow(17),
 };
 
-/** The way to add a capability: a «+» in the menu's head, a dashed chip for each at an area's foot, one dashed add button there, a column of names with a card added in its name's place, or drawings in the heading, each over the groups of the menu. */
+/** The ways to add a capability, each over the menu's groups: a «+» in its head, chips, an add button, a column of names, or drawings in the headings. */
 const groupLines = (y, n) => Array.from({ length: n }, (_, i) => line(17, y + i * 5, 28, 3, 1)).join('');
 const plusMark = (x, y) => acc(x, y + 1.5, 4, 1, 0.3) + acc(x + 1.5, y, 1, 4, 0.3);
 const dashed = (x, y, w, h, r) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" stroke="${ACCENT}" stroke-width="0.6" stroke-dasharray="1.2 0.8"/>`;
@@ -216,7 +214,7 @@ const CAP_ADD_PICS = {
   icons: menuBox() + line(17, 5.5, 10, 2) + dashed(32, 4.5, 4, 4, 0.8) + dashed(37.5, 4.5, 4, 4, 0.8) + acc(43, 4.5, 4, 4, 0.8) + groupLines(11, 5),
 };
 
-/** How a look is chosen: a menu whose looks are buttons side by side, each with its small picture, the setting's name and the design's under it, or a heading over the designs' pictures, the chosen one ringed, each over the groups below. */
+/** How a look is chosen, each over the groups below: buttons side by side with a picture and the names under it, or the designs' pictures under a heading. */
 const lookTile = (x, y, on = false) => `<rect x="${x}" y="${y}" width="8.5" height="6" rx="1" fill="currentColor" opacity="${on ? 0.42 : 0.28}"${on ? ` stroke="${ACCENT}" stroke-width="0.9"` : ''}/>`;
 const lookButton = (x, y) => dim(x, y, 14.5, 7, 0.22) + acc(x + 1, y + 1.5, 4.5, 4, 0.8) + line(x + 6.5, y + 1.7, 6, 1.4) + dim(x + 6.5, y + 4.2, 4.5, 1, 0.3);
 const DESIGN_CHOICE_PICS = {
@@ -225,9 +223,8 @@ const DESIGN_CHOICE_PICS = {
 };
 
 /**
- * The bar over a selected block («Toolbar» and «Toolbar look»), drawn as the canvas draws it: a text block selected on a page, its bar above it, each tool its own small drawing (TOOL_ICONS, the same figures as the canvas's own), the main act a word drawn as a short line on its button.
- * The forms show their own tools: every group a tool (Every group); every action ending in the red cross (Every action); a word with Motion and Placement (Essentials) and the short bar (Minimal), each with what ⋮ opens beside it.
- * The looks show the same bar of a text block, so only the look changes; the two area looks show an image block's tools, whose groups stand in three areas.
+ * The bar over a selected block («Toolbar» and «Toolbar look») as the canvas draws it.
+ * The two area looks show an image block's tools, in three areas.
  */
 const TOOL_ICONS = {
   grip: '<circle cx="9" cy="6" r="1.9"/><circle cx="15" cy="6" r="1.9"/><circle cx="9" cy="12" r="1.9"/><circle cx="15" cy="12" r="1.9"/><circle cx="9" cy="18" r="1.9"/><circle cx="15" cy="18" r="1.9"/>',
@@ -266,8 +263,7 @@ const TEXT_TOOLS = ['type', 'box', 'motion', 'arrange', 'gear', 'more'];
 const IMAGE_AREAS = [['picture', 'link'], ['palette', 'motion'], ['arrange']];
 
 /**
- * A bar of tiles, each tool its own filled button (the accent squares and their kin): the main act a wider tile with a word's line, the rest a square each with its drawing.
- * `groups` splits the tools into clusters set a little apart, each in its own shade; `caps` draws each tool's caption under its drawing; `del` paints the last tool red.
+ * A bar of tiles, each tool its own filled button: `groups` sets clusters apart, `caps` draws captions under the drawings, `del` paints the last tool red.
  */
 function tileBar({ tools = TEXT_TOOLS, groups = null, lead = true, y = 11, cell = 7, h = 7.6, r = 1, caps = false, del = false, shades = [ACCENT] } = {}) {
   let x = 6;
@@ -293,8 +289,8 @@ function tileBar({ tools = TEXT_TOOLS, groups = null, lead = true, y = 11, cell 
 }
 
 /**
- * A bar on one body (the strip, the glass and the capsules): the body behind, the main act a filled button with a word's line, the tools as drawings on the body with no boxes of their own.
- * `seps` sets lines between the clusters of `groups`.
+ * A bar on one body (the strip, the glass and the capsules): the main act a filled button, the tools drawn on the body.
+ * `seps` sets lines between `groups`.
  */
 function bodyBar({ tools = TEXT_TOOLS, groups = null, y = 10.5, h = 8.6, cell = 6.8, fill = DARK, opacity = 1, r = 2, ink = INK_LIGHT, leadFill = ACCENT, leadInk = INK_DARK, rim = null } = {}) {
   const clusters = groups ?? [tools];

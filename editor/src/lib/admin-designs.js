@@ -1,9 +1,5 @@
 /**
- * The admin designs as data (ADR-0030): the parts a design is made of, each with its stored key, its options and its default, and the four designs, each a full set of parts.
- * A part is stored only where it differs from its default, under the key it has always had, so an owner with nothing stored stands in the default design and one with stored choices stands in it with those parts changed, with no migration.
- * Which design stands, and which parts differ from it, is read from the parts (designState) and never stored; choosing a design writes every part at once (designWrites), and the values before it are what takes it back as one step (restoreWrites).
- * A design never touches what is the owner's own taste or the site's: the colour theme, the language, the button press, look choices as pictures or words, spell check, moving rows, the panels on a fresh load, the update notice and the analytics token are no parts.
- * Pure, node-tested (tests/admin-designs.test.mjs); the state that applies a design comes with the settings window that offers it.
+ * The admin designs as data (ADR-0030): the parts a design is made of, each with its stored key, options and default, and the designs, each a full set of parts.
  */
 import { SETTINGS_PLACES } from './settings-model.js';
 import { COLLECTION_LAYOUTS, CSV_PREVIEWS } from './collection-layout.js';
@@ -16,13 +12,11 @@ import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, 
 export const ADMIN_LAYOUTS = ['top-tabs', 'rail', 'sidebar', 'panel-tabs', 'page-tabs'];
 
 /**
- * The parts; the Urd settings window lists them in the order of their rows (inWindowOrder in state/admin-design.svelte.js).
- * `key` is where the part is stored, `options` its values with the default first, `setting` the row of the Urd settings that sets it today (lib/settings-model.js, marked `part`), and `labelKey`/`optionKey` the words a new part is drawn with.
- * A part with no row yet (`setting: null`) names the step that builds what it chooses (`builds`).
+ * The parts: `key` where each is stored, `options` its values with the default first, and `setting` the Urd settings row that sets it.
  * @type {Array<{ id: string, key: string, options: string[], setting: string|null, builds?: string, labelKey?: string, optionKey?: string }>}
  */
 export const PARTS = [
-  // The element menu: where it opens and how it is laid out, «narrow» being the form one column beside the block; then how its folds behave, whether every setting is shown, and what stands first in it.
+  // The element menu: its form, its folds, its toolbar, its designs and extras, and what stands first in it.
   { id: 'menu', key: 'urd-admin-menu-width', options: MENU_FORMS, setting: 'menuWidth', optionKey: 'opt.menuForm' },
   { id: 'folds', key: 'urd-folds', options: FOLDS_MODES, setting: 'folds', labelKey: 'adminPart.folds', optionKey: 'opt.folds' },
   { id: 'toolbar', key: 'urd-block-toolbar', options: TOOLBAR_FORMS, setting: 'toolbar', labelKey: 'adminPart.toolbar', optionKey: 'opt.toolbar' },
@@ -37,7 +31,7 @@ export const PARTS = [
   { id: 'capAdd', key: 'urd-add-capability', options: CAP_ADD_FORMS, setting: 'capAdd', labelKey: 'adminPart.capAdd', optionKey: 'opt.capAdd' },
   { id: 'capList', key: 'urd-cap-list', options: CAP_LISTS, setting: 'capList', labelKey: 'adminPart.capList', optionKey: 'opt.capList' },
   { id: 'shortcuts', key: 'urd-menu-shortcuts', options: SHORTCUTS_MODES, setting: 'shortcuts', labelKey: 'adminPart.shortcuts', optionKey: 'opt.shortcuts' },
-  // The choices Urd settings has today, each a part under the key it has always had.
+  // The panels' and windows' choices.
   { id: 'layout', key: 'urd-admin-layout', options: ADMIN_LAYOUTS, setting: 'layout' },
   { id: 'sidebarFolds', key: 'urd-sidebar-folds', options: ['tree', 'hover', 'flyout'], setting: 'sidebarFolds' },
   { id: 'panelTabMenus', key: 'urd-panel-tab-menus', options: ['off', 'on'], setting: 'panelTabMenus' },
@@ -58,8 +52,8 @@ export const PARTS = [
 export const partDefault = (part) => part.options[0];
 
 /**
- * The designs, in the order the design picker shows them, the default first.
- * A part a design leaves at null has no effect in it (what it chooses between is not there, as the tabs' menus in the sidebar whose folds stand as a tree): the design writes its default, and the part is not weighed when the standing design is read.
+ * The designs in the picker's order, the default first.
+ * A part a design leaves at null has no effect in it: the design writes its default, and it is not weighed.
  * @type {Array<{ id: string, labelKey: string, parts: Record<string, string|null> }>}
  */
 export const ADMIN_DESIGNS = [
@@ -123,7 +117,7 @@ export function readParts(get) {
 }
 
 /**
- * The design that stands and the parts that differ from it: the design whose weighed parts differ least from the values, the earlier design on a tie, so nothing stored reads as the default design with nothing changed.
+ * The design that stands and the parts that differ from it: the design whose weighed parts differ least from the values, the earlier one on a tie.
  * @param {Record<string, string>} values Every part's value (readParts)
  * @param {typeof ADMIN_DESIGNS} [designs] The designs to weigh against
  * @returns {{ design: string, changed: string[] }}
@@ -162,10 +156,7 @@ export function restoreWrites(values) {
   });
 }
 
-/**
- * The defaults that changed, each round with its own mark, read once in a browser: «Adding extras» and «Top of the menu» until 11 November 2026, when «A line of names» and the search field took their place, and «Settings in a group» until 25 November 2026, when «Added as needed» took its place.
- * A part whose key holds nothing was read as its earlier default until its round.
- */
+/** The rounds of changed defaults, each with its mark and the parts' earlier defaults, read once in a browser. */
 const EARLIER_ROUNDS = [
   { mark: 'urd-earlier-defaults-read', defaults: { capAdd: 'head', shortcuts: 'pinned' } },
   { mark: 'urd-earlier-defaults-read-2', defaults: { extra: 'shown' } },
@@ -178,9 +169,7 @@ export const EARLIER_READ_KEY = EARLIER_ROUNDS[0].mark;
 export const EARLIER_READ_KEYS = EARLIER_ROUNDS.map((round) => round.mark);
 
 /**
- * What keeps a design chosen before a default changed as it stood, read once in a browser for each round: the parts of the round whose keys hold nothing are read as their earlier defaults, and where that makes a design other than the default, the earlier defaults are written, so the design and its parts read as they did.
- * A round reads the parts as they stood before it, the later rounds' parts at their earlier defaults too, and sees the writes of the rounds before it.
- * With nothing stored, or with the default design, only the mark is written and the new defaults stand.
+ * Keeps a design chosen before a default changed: for each round once, its earlier defaults are written where they make a design other than the default.
  * @param {(key: string) => string|null} get Reads a stored value (localStorage.getItem)
  * @returns {Array<{ key: string, value: string }>}
  */

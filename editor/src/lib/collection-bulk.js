@@ -1,6 +1,5 @@
 /**
- * Several entries at once in the Collections panel (panels/collections/SelectionBar.svelte and the collection's menu): which entries fit which kind of collection, the ticks with a run and all shown, the copies placed under their originals, the moves between collections, and one field set or cleared on many.
- * Pure, node-tested (tests/collection-bulk.test.mjs).
+ * Several entries at once in the Collections panel: the kinds they fit, the ticks, copies, moves between collections, and one field set on many.
  */
 
 /** The fields only a product has (kind products). */
@@ -31,7 +30,7 @@ export function kindsFor(collection) {
 }
 
 /**
- * The kinds the collection's menu offers, its own among them, or none where there is nothing to choose: a products collection keeps its kind, since its fields (price, sizes, colours, quantity) are its own, and another collection is offered only the kinds its entries fit.
+ * The kinds the collection's menu offers, its own among them, or none: a products collection keeps its kind, another is offered the kinds it fits.
  * @returns {string[]} Empty, or two kinds and more
  */
 export function kindChoices(collection) {
@@ -99,8 +98,7 @@ export function withCopies(entries, ids, makeId) {
 }
 
 /**
- * The entries named, carried from one collection's list to another's: moved (they leave the first) or copied (fresh ids); an id the second list already holds is given a new one.
- * The carried entries go last in the second list, where a product stays in the order the panel keeps, and a dated entry stands by its date anyway.
+ * The entries named, moved or copied (with fresh ids) last into another collection's list; an id the second list already holds is given a new one.
  * @returns {{from: Array, to: Array, carriedIds: string[]}}
  */
 export function carryEntries(fromEntries, toEntries, ids, copy, makeId) {
@@ -133,7 +131,7 @@ export function settableFields(kind) {
 }
 
 /**
- * What the entries hold in a field, for its line in «Set a field»: none of them anything, all one value, one value on some and nothing on the rest, or several values.
+ * What the entries hold in a field, for «Set a field»: nothing, all one value, one value on some and nothing on the rest, or several values.
  * @param {Array<object>} entries
  * @param {string} field
  * @returns {{state: 'none'|'same'|'some'|'mixed', values: Array, set: number, unset: number}}
@@ -157,7 +155,7 @@ export function valuesInUse(entries, field, max = 6) {
 }
 
 /**
- * The entries with one field set on those named, or cleared where the value is empty; a number field takes a number from 0 up, and anything else leaves the entries as they were.
+ * The entries with one field set on those named, or cleared where the value is empty; a number field takes a number from 0 up.
  * @returns {Array|null} null when the value does not fit the field
  */
 export function withField(entries, ids, field, value) {

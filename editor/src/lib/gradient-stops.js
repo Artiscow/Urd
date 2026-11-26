@@ -1,7 +1,5 @@
 /**
- * The gradient's stops as the Background editor moves them (the bar with a handle per colour, and the rows under it): the list kept in position order, a stop added where the pointer is or where the widest gap is, and a pointer's place on the bar as a position.
- * The engine reads any order (backgrounds/gradient.js sorts at render), so the sorting here is for the rows alone, which stand in the order the bar shows.
- * Pure, so it is node-tested (tests/gradient-stops.test.mjs).
+ * The gradient's stops as the Background editor moves them: in position order, a stop added at the pointer or in the widest gap, and a pointer's place on the bar.
  */
 
 const clampAt = (v) => Math.min(100, Math.max(0, Math.round((Number(v) || 0) * 100) / 100));

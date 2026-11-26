@@ -1,7 +1,5 @@
 /**
- * How a new Urd is told in the admin: a dot on the Updates panel's icon, word or tab, or a pill in the top bar naming the version, chosen for the site in Urd settings (`site.admin.updateNotice`) and shared by everyone who edits it.
- * The pill asks for room, so a narrow window, where the bar's first cluster has folded, falls back to the dot.
- * Pure, node-tested (tests/update-notice.test.mjs).
+ * How a new Urd is told in the admin: a dot on the Updates panel or a pill naming the version (`site.admin.updateNotice`); a narrow window falls back to the dot.
  */
 
 /** The notice forms the setting offers. */

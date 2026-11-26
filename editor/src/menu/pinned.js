@@ -1,7 +1,6 @@
 /**
- * Which settings stand in the element menu's Pinned rows now, as the rows inside an area read it (PinScope.svelte, 0.7.30.3).
- * A setting row leaves its area while it is pinned (lib/rows/Setting.svelte), and a family leaves out a fold whose every setting is pinned, so no fold stands empty.
- * Call it while a component starts: it reads the scope's context.
+ * Which settings stand in the element menu's Pinned rows now, read inside an area (PinScope.svelte).
+ * Call it as a component starts: it reads the scope's context.
  */
 import { getContext } from 'svelte';
 

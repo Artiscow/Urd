@@ -1,6 +1,5 @@
 /**
  * The page draft: the store, the selected block and its mutators, the fits, the section mirrors and their mutators, the animations, and the page switch.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { tick } from 'svelte';
 import { capability } from '../menu/capabilities.js';
@@ -40,8 +39,7 @@ import { copyJSON } from '../lib/json-copy.js';
 
 let pageId = $state(null);
 
-/** "Switch layout": the variant's frames + minHeight are recorded as ONE
- *  undo step; a block pinned on the phone is flagged for the phone's review as for the desktop's other moves. */
+/** A layout card's choice (urd-apply-layout): its frames and minHeight as one undo step, a block pinned on the phone flagged for review as by other desktop moves. */
 function handleApplyLayout(msg) {
   const section = store.data.sections.find((x) => x.id === msg.sectionId);
   if (!section) return;
@@ -65,12 +63,12 @@ const pinnedOnPhone = (block) => Number.isFinite(block.frames?.mobile?.row);
 /** A block with a size of the phone's own (ADR-0019 decision 1): the phone draws it at that size whatever the desktop's. */
 const sizedOnPhone = (block) => phoneSized(block) !== block;
 
-/** Can the section fall behind the desktop on the phone: does it hold a block pinned to rows of its own, a block with words of the phone's own (ADR-0033), or one with a size of the phone's own? */
+/** Whether the section can fall behind the desktop on the phone: a block pinned to its own rows, or with words or a size of the phone's own. */
 function canFallBehind(section) {
   return section?.blocks?.some((b) => pinnedOnPhone(b) || Object.keys(phoneWordsOf(b.type, b.phoneProps)).length || sizedOnPhone(b)) ?? false;
 }
 
-/** Flags the section for the phone's review (ADR-0019 decision 5), with what fell behind and, where it is one block's, that block; a section already flagged keeps its first reason. */
+/** Flags the section for the phone's review (ADR-0019) with what fell behind and its block; a section already flagged keeps its first reason. */
 function flagReview(section, reason, blockId = null) {
   if (section.responsive?.mobile?.attention?.needed) return;
   section.responsive = {
@@ -84,18 +82,18 @@ function flagReview(section, reason, blockId = null) {
   previewState.bridge?.sendAttention(section.id, true);
 }
 
-/** The desktop's blocks moved, came or went around a block pinned on the phone, which stays on its rows: the section is flagged for the phone's review. A change made in the phone view is seen as it is made, and flags nothing. */
+/** Flags the section for review where the desktop's blocks changed around a block pinned on the phone; a change in the phone view flags nothing. */
 function markPinnedBehind(section) {
   if (!section || previewState.viewMode === 'mobile' || !section.blocks?.some(pinnedOnPhone)) return;
   flagReview(section, 'pinned-behind');
 }
 
-/** The section's phone layout before a change that may or may not reshape it (lib/phone-check.js), where a pinned block could fall behind it: null in the phone view and in a section with no block pinned. */
+/** The section's phone layout before a change, where a pinned block could fall behind it; null in the phone view or with no block pinned. */
 function pinnedKey(section) {
   return previewState.viewMode !== 'mobile' && section?.blocks?.some(pinnedOnPhone) ? layoutKey(section) : null;
 }
 
-/** The change reshaped the phone around a pinned block, as `before` (pinnedKey) and the section now tell: the section is flagged for the phone's review; a change that left the phone as it was (a layer order, a setting) flags nothing. */
+/** Flags the section for review where the change reshaped the phone around a pinned block, as `before` and the section now tell. */
 function markPinnedMoved(section, before) {
   if (before !== null && layoutKey(section) !== before) markPinnedBehind(section);
 }
@@ -110,7 +108,7 @@ function markSizeBehind(section, block) {
   if (section && previewState.viewMode !== 'mobile' && sizedOnPhone(block)) flagReview(section, 'size-changed', block.id);
 }
 
-/** A section where nothing can fall behind any more (its pinned blocks back in the flow, the phone's words given back) has nothing left to review: its flag goes too. */
+/** A section where nothing can fall behind loses its review flag. */
 function clearReviewWithoutOverrides(section) {
   if (!section?.responsive?.mobile?.attention || canFallBehind(section)) return;
   section.responsive.mobile.attention = null;
@@ -134,7 +132,7 @@ function phoneBases() {
   return bases;
 }
 
-/** Keeps a page's baseline, and lets go of those of pages the site no longer has. */
+/** Keeps a page's baseline, and lets go of those of pages the site does not hold. */
 function keepPhoneBase(id, base) {
   const pages = new Set((siteState.siteDraft?.pages ?? []).map((p) => p.id));
   bases = Object.fromEntries(Object.entries({ ...phoneBases(), [id]: base }).filter(([page]) => page === id || !pages.size || pages.has(page)));
@@ -168,14 +166,11 @@ function phoneChecked(id, sections) {
 let store = null;
 
 /**
- * Newly published pages that do not yet exist on the server: the draft is
- * kept as the source until the deploy finishes, and counts as
- * "unpublished" only where it was edited since it went. Cleaned up
- * automatically the first time the page is loaded from the server.
+ * Pages published but not yet on the server: the draft stays the source until the page is first loaded from the server.
  */
 const pendingPublished = new Set();
 
-/** What each page waiting for its deploy held as it went, as its stored draft text ('' for a page that went blank, with no draft stored): an edit since makes it a change waiting to be published, and «Discard drafts» brings it back to this. */
+/** What each page waiting for its deploy held as it went, as its stored draft text, '' for a blank one; «Discard drafts» brings it back to this. */
 const pendingSent = new Map();
 
 /** Marks a page as committed and waiting for its deploy, holding `text`, its draft as it went. */
@@ -184,7 +179,7 @@ function markPending(id, text) {
   pendingSent.set(id, text);
 }
 
-/** Whether a page waiting for its deploy was edited since it went: the open page by its store, another by its stored draft; a page that went blank, with no draft stored, once it holds one. */
+/** Whether a page waiting for its deploy was edited since it went: the open page by its store, another by its stored draft. */
 function pendingChanged(id) {
   const sent = pendingSent.get(id);
   if (sent === undefined) return false;
@@ -200,7 +195,7 @@ function pendingSentText(id) {
 }
 
 /**
- * The page files and site.json a publish committed, held until the deploy serves them (lib/held-publish.js): a page opened before then takes the committed file as its published state, and the preview is sent it, since the server still answers with the file from before the publish.
+ * The page files and site.json a publish committed, held until the deploy serves them; a page opened before then is drawn from the committed file.
  */
 const held = createHeld();
 
@@ -208,10 +203,7 @@ const held = createHeld();
 const pageEntry = () => siteState.siteDraft?.pages.find((p) => p.id === pageId);
 
 /**
- * The selected block in the preview, as a reactive COPY for the
- * Properties panel (the draft data itself is not reactive). Synced from
- * the draft on selection, on panel changes and on changes made in the
- * iframe.
+ * The selected block as a reactive copy for the Properties panel, synced from the draft, which is not reactive.
  */
 let selectedBlock = $state(null);
 
@@ -259,7 +251,7 @@ function syncSelectedBlock() {
     mobileRow: Number.isFinite(block.frames.mobile?.row) ? block.frames.mobile.row : null,
     animation: block.animation ? copyJSON(block.animation) : null,
     hover: block.hover === false ? false : block.hover ? copyJSON(block.hover) : null,
-    // The type of the pointer effect the section gives the block while it has none of its own, its `blocksHover` ('' = none; a decor block takes none, pointerEffectOf in animations/core.js).
+    // The pointer effect the section gives the block while it has none of its own; '' for none, and a decor block takes none.
     blocksHoverType: !block.decor && section?.blocksHover?.type ? section.blocksHover.type : '',
     sticky: block.sticky ? copyJSON(block.sticky) : null,
   };
@@ -274,18 +266,16 @@ function onSelectBlock(msg) {
     return;
   }
   selectedBlock = { sectionId: msg.sectionId, blockId: msg.blockId };
-  // The block's section becomes the palette target (block gestures do not post urd-select-section, so Properties is not torn from the block to the section), and the section's mirrors follow it, as the Phone panel shows that section's settings.
+  // The block's section becomes the palette target, and the section's mirrors follow it for the Phone panel.
   if (msg.sectionId && msg.sectionId !== activeSectionId) {
     activeSectionId = msg.sectionId;
     syncSectionMirrors(store?.data.sections.find((s) => s.id === msg.sectionId));
   }
   syncSelectedBlock();
-  // Only a NEW SECTION opens the Properties panel automatically; a block
-  // click never does.
+  // Only a new section opens the Properties panel by itself; a block click never does.
 }
 
-/** A press on the stage around the canvas: neither a block nor a section stays selected, the floating menu closes, and the canvas lets go of its selection.
- *  The Phone panel always shows a section: while it is open its section stays at work, and marked on the canvas. */
+/** A press on the stage around the canvas clears the selection and closes the floating menu; with the Phone panel open, its section stays at work. */
 function clearSelection() {
   blockMenu = null;
   selectedBlock = null;
@@ -310,13 +300,10 @@ function resetPhoneWords(sectionId, blockId) {
   if (selectedBlock?.blockId === blockId) syncSelectedBlock();
 }
 
-/** The floating menu (the gear on a block's or a section's bar): position in editor coordinates, null = closed.
- *  `section: true` holds a section's settings, else the selected block's; the content is the same as in the Settings panel. */
+/** The floating menu, the gear on a block's or section's bar: its place in editor coordinates, null while closed; `section: true` holds a section's settings. */
 let blockMenu = $state(null);
 
-/** The room for the floating menu (menu/state.svelte.js): measured from
- *  the preview frame's left edge to its right, and again when the window
- *  resizes while the menu is open. */
+/** The room for the floating menu, from the preview frame's left edge to its right, measured again as the window resizes. */
 function measureMenuRoom() {
   const frame = previewState.frameWrapEl?.getBoundingClientRect();
   measureRoom(frame?.left ?? 0, frame?.right);
@@ -325,8 +312,7 @@ function measureMenuRoom() {
 /** The design picker (DesignPicker) over the editor: 'set' changes the selected calendar's design, 'add' adds a calendar in the chosen design; null = closed. */
 let designPicker = $state(null);
 
-/** The element menu's search belongs to one block's menu, so another
- *  block, or the floating menu closing, empties it (menu/state.svelte.js). */
+/** The block whose menu the element menu's search belongs to; another block, or the floating menu closing, empties it. */
 let searchBlockId = null;
 
 /** 1, 2 or 3 pressed on a selected block in the preview: the area in the floating menu when it is open, else in the Properties panel, which is opened. */
@@ -351,7 +337,7 @@ function opensAgain(only, section, id) {
 }
 
 /**
- * What a tool of the bar asks for, opened inside the full menu that stands open for its block, in place of a small window: its group opened and brought into view, its capability's card kept for the session (ADR-0031), or its area chosen.
+ * What a tool of the bar asks for inside the full menu open for its block: its group opened and in view, its capability's card kept, or its area chosen.
  */
 async function revealInMenu(only) {
   const [kind, id] = only.split(':');
@@ -369,7 +355,7 @@ async function revealInMenu(only) {
   }
   await tick();
   const target = root?.querySelector(kind === 'look' ? `[data-pin="${id}"]` : `[data-fold="${id}"]`);
-  // A fold drawn closed, as a menu just drawn whose folds open one at a time leaves all but the first, is opened where it stands, which closes the others of its area.
+  // A fold drawn closed is opened where it stands, which closes the others of its area.
   if (target instanceof HTMLDetailsElement && !target.open) target.open = true;
   const area = target?.closest('[data-area]')?.dataset.area;
   if (area && menu.tab !== area) {
@@ -418,7 +404,7 @@ function toolIcon(msg) {
 /** What a small panel keeps when it is moved or put back beside its block. */
 const smallOf = (open) => (open?.only ? { only: open.only, title: open.title, icon: open.icon, w: open.w, h: open.h, opened: open.opened } : {});
 
-/** The small panel's way to the full menu: the block's or the section's menu in the form the Urd settings choose, with the group the panel held opened and in view there. */
+/** The small panel's way to the full menu: the block's or section's menu in the form the Urd settings choose, the panel's group open and in view. */
 async function openFullMenu() {
   if (!blockMenu?.only || !menuAnchor) return;
   const { only, section } = blockMenu;
@@ -458,7 +444,7 @@ function onSectionMenu(msg) {
   else blockMenu = { ...menuPlaceFor(msg.rect, false, true), section: true };
 }
 
-/** The design button on a block's toolbar: the block selected and its design picker open, the calendar's own or the one every other block with designs shares; from the phone view, the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS in push-model.js). */
+/** The design button on a block's toolbar: the block selected and its design picker open; from the phone view, the design it draws on a phone where it has one. */
 function onBlockDesign(msg) {
   onSelectBlock(msg);
   if (!selectedBlock) return;
@@ -478,9 +464,7 @@ function menuSize(small = false) {
 }
 
 /**
- * A small panel by its own measured size (FloatingMenu.svelte), measured when it opens and whenever it grows or shrinks.
- * When it opens it is placed beside its block by that size, unless the owner dragged the menu.
- * Its height (`h`) keeps it inside the window from then on (the top's clamp in app.css), so near the window's foot it stands by its block and rises only as far as it must.
+ * A small panel by its measured size, placed beside its block when it opens unless the menu was dragged; its height keeps it inside the window.
  */
 function fitSmallMenu(size, first) {
   if (!blockMenu?.only) return;
@@ -491,27 +475,23 @@ function fitSmallMenu(size, first) {
 }
 
 /**
- * Where the floating menu stands for a block: where the owner dragged it this
- * session, else beside the block (lib/menu-place.js). ir is the SCALED iframe
- * rect and rect the block in the iframe's OWN coordinates, so inner points
- * are multiplied by the scale before being added to the iframe's window
- * position (visual = ir + scale * inner).
+ * Where the floating menu stands for a block: where the owner dragged it this session, else beside the block; `rect` is in the iframe's own coordinates.
  */
 function menuPlaceFor(rect, small = false, section = false, { keepForm = false } = {}) {
   const view = { w: window.innerWidth, h: window.innerHeight };
   const stage = previewState.frameWrapEl?.getBoundingClientRect();
-  // The room a menu placed beside its block stands in: the window, short of a column docked at the stage's right edge (the Phone panel's order, panels/phone/PhoneDock.svelte); a menu the owner dragged may stand anywhere in the window.
+  // The room a menu beside its block stands in: the window, short of a column docked at the stage's right edge.
   const room = stage ? { w: Math.min(view.w, stage.right), h: view.h } : view;
   const ir = previewState.iframeEl?.getBoundingClientRect();
   const s = previewState.scale;
   const own = ir ? { left: ir.left + s * rect.left, top: ir.top + s * rect.top, right: ir.left + s * rect.right, bottom: ir.top + s * rect.bottom } : null;
-  // In the phone view the menu stands beside the phone, level with what it belongs to, never over the page where the stage has room (0.7.3.19.3): the phone's width stands for the block's, a section's menu gives way to one column there as a block's does, and the menu takes the side away from the bars beside the phone (CanvasBar.svelte).
+  // In the phone view the menu stands beside the phone, level with what it belongs to, on the side away from the bars beside the phone.
   const phone = previewState.viewMode === 'mobile' && own;
   const block = phone ? { ...own, left: ir.left, right: ir.right } : own;
-  // What the menu keeps clear of: in the phone view the whole phone in sight, so it never stands below the block over the page where the stage has room beside the phone.
+  // What the menu keeps clear of: in the phone view, the whole phone in sight.
   const cover = phone && stage ? { left: ir.left, right: ir.right, top: Math.max(ir.top, stage.top), bottom: Math.min(ir.bottom, stage.bottom) } : block;
   const bars = [canvasBarState.placed, canvasBarState.sectionPlaced, canvasBarState.navPlaced].filter((b) => phone && b && b.w > 0 && b.h > 0);
-  // The wide menu opened beside a block gives way to one column where that covers clearly less of the block (givesWay); a menu the owner dragged keeps its form, and so does a section's on the desktop.
+  // The wide menu gives way to one column where that covers clearly less of the block; a dragged menu keeps its form.
   if (!small && !keepForm) {
     menu.cramped = false;
     menu.cramped = givesWay(block, room, { wide: menuIsWide(), wideW: MENU_WIDE_W, narrowW: 400, h: menuSize().h, min: menu.min, dragged: Boolean(menu.place), section: section && !phone, cover, strict: Boolean(phone) });
@@ -529,7 +509,7 @@ function menuPlaceFor(rect, small = false, section = false, { keepForm = false }
   return { left: place.left, top: place.top };
 }
 
-/** The layer order from the element menu: the selected block in front of its section's other blocks or behind them all, as on the canvas (layer-order.js), in one undo step; in the phone view a block pinned there is ordered among the pinned blocks on the phone alone (phoneLayerChanges), and a flowing block, which overlaps none there, is left as it is. */
+/** The selected block in front of or behind its section's other blocks, one undo step; in the phone view among the pinned blocks alone. */
 function setBlockLayer(dir) {
   if (previewState.viewMode === 'mobile') {
     const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
@@ -546,7 +526,7 @@ function setBlockLayer(dir) {
   });
 }
 
-/** The menu dragged by its head: the place is kept for the session and the menu stands there for every block. The menu's own measured box, when given, is what is kept inside the window. */
+/** The menu dragged by its head: the place is kept for the session and the menu stands there for every block, its measured box kept inside the window. */
 function moveBlockMenu(place, size = menuSize(Boolean(blockMenu?.only))) {
   const next = clampPlace(place, size, { w: window.innerWidth, h: window.innerHeight }, menu.min);
   menu.place = next;
@@ -598,8 +578,7 @@ function mutateBlockAt(sectionId, blockId, key, fn) {
 }
 
 function setBlockProp(name, value) {
-  // The key includes the property name: changing the label and then the
-  // style must be TWO undo steps, while a burst in the same field coalesces.
+  // The key holds the property's name: two fields make two undo steps, a burst in one field one.
   mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { b.props[name] = value; });
 }
 
@@ -608,10 +587,7 @@ function setBlockProps(name, patch) {
   mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b) => { Object.assign(b.props, patch); });
 }
 
-/** A group's reset (0.7.20.5): when any of its settings holds a value other
- *  than its default, the patch that brings the defaults back as one undo
- *  step; else null, so the group carries no mark. An absent setting is its
- *  default. */
+/** A group's reset: the patch that brings its defaults back in one undo step where a setting differs, else null; an absent setting is its default. */
 function groupReset(id, defaults) {
   const p = selectedBlock.props;
   const changed = Object.entries(defaults).some(([k, d]) => p[k] !== undefined && JSON.stringify(p[k]) !== JSON.stringify(d));
@@ -634,7 +610,7 @@ const ribbonReach = (w) => (w === 'canvas' || w === 'page' ? w : 'content');
 const RIBBON_MOTIONS = () => [['roll', ta('opt.ribbonMotion.roll')], ['sway', ta('opt.ribbonMotion.sway')],
   ['step', ta('opt.ribbonMotion.step')], ['none', ta('opt.ribbonMotion.none')]];
 
-/** The image editor (PictureEditor.svelte) on the selected block's picture: an image block's, a video's cover or a quote's portrait (the floating menu steps aside for it). */
+/** The image editor on the selected block's picture: an image block's, a video's cover or a quote's portrait. */
 function openImageEditor() {
   if (!selectedBlock) return;
   const kind = selectedBlock.type === 'video' ? 'cover' : selectedBlock.type === 'quote' ? 'portrait' : 'image';
@@ -646,7 +622,7 @@ function openImageEditor() {
 
 /** A font or a size for the whole text of the block, applied by the preview's text toolbar (`{fontFamily}` or `{fontSize}`, null takes the theme's). */
 function setTextStyle(style) {
-  // A text's style is the design's, the same on the phone: in the phone view, where what is written in place is the phone's own words, it is written here into the desktop's words and the phone's alike, an undo step of its own.
+  // In the phone view the style goes into the desktop's words and the phone's alike, an undo step of its own.
   if (previewState.viewMode === 'mobile') {
     const key = `edit:${selectedBlock.blockId}`;
     historyState.asOwnStep(() => mutateBlock(key, (b) => {
@@ -655,7 +631,7 @@ function setTextStyle(style) {
     }));
     return;
   }
-  // The preview writes the style into the text and hands it back as the text's edit, an undo step of its own, which writes it into the phone's words too (takeWholeStyle).
+  // The preview writes the style into the text and hands it back as the text's edit, which writes it into the phone's words too.
   historyState.ownStepNext(`edit:${selectedBlock.blockId}`);
   wholeStyleNext.set(selectedBlock.blockId, style);
   previewState.bridge?.sendTextStyle(selectedBlock.blockId, style);
@@ -664,21 +640,17 @@ function setTextStyle(style) {
 /** The whole text's font or size the desktop view asked the preview for, by block, until the preview's edit comes back with it (handleEdit). */
 const wholeStyleNext = new Map();
 
-/** The whole text's style asked for on a block, taken once: handleEdit writes it into the phone's words in the same step, since a text's style reaches both texts (ADR-0033). */
+/** The whole text's style asked for on a block, taken once; handleEdit writes it into the phone's words in the same step (ADR-0033). */
 function takeWholeStyle(blockId) {
   const style = wholeStyleNext.get(blockId) ?? null;
   wholeStyleNext.delete(blockId);
   return style;
 }
 
-/** A block whose height follows its content (ADR-0025) has its frame fitted
- *  after every edit that can change the height (its settings, its text, its
- *  width): the preview is asked for the height the content needs and
- *  answers with it (urd-fit-block, urd-grow). Desktop frame only. */
+/** The fit of a block whose height follows its content (ADR-0025): after an edit the preview is asked for the height its content needs, desktop frame only. */
 const fitTimers = new Map();
 
-/** The latest fit asked for per block: an answer to an earlier one, or to
- *  one asked for before an undo, is dropped. */
+/** The latest fit asked for per block; an answer to an earlier one is dropped. */
 const fitSeq = new Map();
 
 let fitCount = 0;
@@ -692,12 +664,7 @@ function fitBlockSoon(sectionId, block) {
   fitTimers.set(block.id, setTimeout(() => previewState.bridge?.sendFitBlock(sectionId, block.id, seq), 60));
 }
 
-/* The phone height of a block that fetches its content (0.7.21.7,
-   lib/phone-fit.js): after every edit that can change it, a hidden preview
-   at the phone width is asked for the height the block takes there, and it
-   is stored as the block's mobileHeight, which the loading state stands at
-   on the phone. Like the desktop fit it is part of the edit that asked for
-   it: no undo step of its own. */
+/* The phone height of a block that fetches its content, measured after an edit in a hidden preview and stored as `mobileHeight` within the edit's step. */
 const phoneSeq = new Map();
 
 let phoneFit = null;
@@ -728,8 +695,7 @@ function phoneFitSoon(sectionId, block) {
 const missingAsked = new Set();
 
 /**
- * Asks once per session for the phone height of each block on the open page that fetches its content and has none stored (a block whose phone height was never measured).
- * Called as the canvas's cover lifts (preview.svelte.js liftCover), so the hidden preview never competes with the canvas's start; the height then goes out with the page's next publish.
+ * Asks once per session for the phone height of each block on the open page that fetches its content and has none stored, as the canvas's cover lifts.
  */
 function fitMissingPhoneHeights() {
   for (const section of store?.data.sections ?? []) {
@@ -807,18 +773,8 @@ function setBlockFitMin(value) {
   mutateBlock(`edit:${selectedBlock.blockId}:fitMin`, (b) => { b.fitMin = value; });
 }
 
-/* The block's size (ADR-0025 decision 6): the whole block, text included,
-   drawn smaller or larger, and held where its base text meets a bound the
-   owner set (sizeRange). The default is stored as nothing, and a block
-   back at full size drops its bounds with it. The frame follows the size,
-   so the content keeps its lines: the width by the ratio, capped at the
-   canvas edge, and the height the same way where the block owns it, with
-   the blocks below moved as for a fit; a block whose height follows its
-   content is fitted by the preview after the edit (fitBlockSoon). */
-/* One slider gesture is computed from where it began (sizeGesture: the
-   block's size, its frame and the other blocks' places then), so a slide
-   up and back returns the frame and the blocks below to where they were,
-   also when the width met the canvas edge on the way. */
+/* The block's size (ADR-0025): the whole block drawn smaller or larger within the owner's bounds, the frame following it; full size is stored as nothing. */
+/* One slider gesture is reckoned from where it began, so a slide up and back returns the frame and the blocks below to where they were. */
 let sizeGesture = null;
 
 function sizeStart(b, section) {
@@ -870,9 +826,7 @@ function setBlockSize(value) {
   });
 }
 
-/* The block's own size on the phone (ADR-0019 decision 1): a factor in the steps and the range of «Size», which the phone draws in place of the desktop's.
-   Undefined gives the phone back to the desktop's size.
-   The stored frame stays as it is: the phone takes a fixed height from it at its own size (phoneFrame in push-model.js). */
+/* The block's own size on the phone (ADR-0019), in the steps and range of «Size»; undefined gives the phone the desktop's size, and the stored frame stays. */
 function setBlockPhoneSize(value) {
   mutateBlock(`edit:${selectedBlock.blockId}:phoneSize`, (b, section) => {
     if (value === undefined) {
@@ -886,11 +840,7 @@ function setBlockPhoneSize(value) {
   });
 }
 
-/* A bound on the base text is the owner's own, and an empty field removes
-   it. A bound that moves the end of the range past the size takes the size
-   with it, and the frame follows as for the slider. The size is first
-   stored as it is drawn, so a stored size outside the range never comes
-   back when a bound widens it. */
+/* A bound on the base text, an empty field removing it; a bound past the size takes the size with it, and the frame follows, the size first stored as drawn. */
 function setBlockSizeBound(name, value) {
   sizeGesture = null;
   mutateBlock(`edit:${selectedBlock.blockId}:${name}`, (b, section) => {
@@ -907,11 +857,7 @@ function setBlockSizeBound(name, value) {
   });
 }
 
-/* The height of a block whose height follows its content by default
-   (ADR-0025 decision 3): «Own height» is stored as `height: { mode: 'own' }`
-   with the content's place in the box beside it, and the frame keeps the
-   height it has until it is dragged. Back to the content removes the field,
-   and the fit that follows the edit takes the frame to the content. */
+/* «Own height» for a block whose height follows its content (ADR-0025) is `height: { mode: 'own' }`; back to the content removes the field. */
 function setBlockHeightMode(mode) {
   mutateBlock(`edit:${selectedBlock.blockId}:height`, (b) => {
     if (mode === 'own') b.height = { mode: 'own' };
@@ -926,8 +872,7 @@ function setBlockHeightAlign(align) {
   });
 }
 
-/** Whether stretch is offered: the block types that fill their box, and the
- *  calendar in the list and card views (the design's own view, or the block's under the plain design), which spread their rows and cards. */
+/** Whether stretch is offered: the block types that fill their box, and the calendar in its list and card views. */
 function canStretch() {
   const b = selectedBlock;
   if (STRETCHES.has(b.type)) return true;
@@ -942,11 +887,7 @@ function setBlockFrame(field, value) {
   });
 }
 
-/** The width in px the selected block's canvas, or a given section's, has
- *  at the design width (ADR-0018): the site's content width, or its
- *  section's own px width when that is narrower; 0 on a full-width site or
- *  section, or a section width that is not in px, where nothing has a
- *  design size. The engine computes the same in renderSection. */
+/** The px width the selected block's section, or a given one, has at the design width, as renderSection reckons it; 0 where nothing has a design size. */
 function designWidth(sectionId = selectedBlock?.sectionId) {
   const section = store.data.sections.find((s) => s.id === sectionId);
   const sec = section?.size?.maxWidth;
@@ -956,10 +897,7 @@ function designWidth(sectionId = selectedBlock?.sectionId) {
   return site;
 }
 
-/* A shape's size in px at the design width: the frame's width is stored
-   in percent of the content surface, so px and percent convert through
-   designWidth(). A line takes the width alone; a shape's height follows
-   its own ratio. Where there is no design width the fields are not shown. */
+/* A shape's size in px at the design width, its frame's width stored in percent; a line takes the width alone, a shape's height its own ratio. */
 function shapePx(pct) {
   return Math.round((pct / 100) * designWidth());
 }
@@ -976,8 +914,7 @@ function setShapeSizePx(px, keepRatio) {
   });
 }
 
-/** The card style (boxStyle, additive): null values in the patch remove
- *  the field, and an empty object is removed entirely (= the base style). */
+/** The card style (boxStyle): a null in the patch removes its field, and an empty style is removed. */
 function setBoxStyle(patch) {
   mutateBlock(`edit:${selectedBlock.blockId}:boxStyle`, (b) => {
     const next = { ...(b.props.boxStyle ?? {}), ...patch };
@@ -993,9 +930,7 @@ function setBlockDecor(on) {
   mutateBlock('decor', (b) => { b.decor = on; });
 }
 
-/** The block's name for links (anchor-model.js), refused unless it follows the rule and is free on the page.
- * A link target is not a change to the desktop layout, so it bypasses mutateBlock and never raises the phone review, as the phone switch does.
- * An empty name removes it; the block's id still takes links. */
+/** The block's name for links, refused unless it follows the rule and is free on the page; it bypasses mutateBlock, so it never raises the phone review. */
 function setBlockAnchor(name) {
   const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
   if (!block || (name && anchorError(name, takenAnchors(store.data, block.id)))) return;
@@ -1022,9 +957,7 @@ function anchorsTaken(own) {
   return takenAnchors(store?.data, own);
 }
 
-/** Hide on mobile is a MOBILE intent, not a desktop change: it bypasses
- *  mutateBlock so the review flag is never triggered by it (same rule as
- *  the phone toggle in the canvas, ADR-0019). */
+/** Hiding on phones is a phone choice, not a desktop change: it bypasses mutateBlock, so it never raises the review flag (ADR-0019). */
 function setBlockHideMobile(on) {
   const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
   if (!block) return;
@@ -1065,7 +998,7 @@ function setBlockEntranceMobile(on) {
   syncSelectedBlock();
 }
 
-/** Pinning on the phone too (`sticky.phone`): a phone choice, outside the review flag, written on every block of the selected block's pinning group, whose first block speaks for it; off takes the field away. */
+/** Pinning on the phone too (`sticky.phone`), outside the review flag, written on every block of the selected block's pinning group. */
 function setStickyPhone(on) {
   const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
   if (!block?.sticky) return;
@@ -1081,8 +1014,7 @@ function setStickyPhone(on) {
   syncSelectedBlock();
 }
 
-/** The most recently clicked section in the preview: the palette adds
- *  new blocks here, and the grid menu can give it its own grid. */
+/** The section last clicked in the preview: the palette adds new blocks here, and the grid menu can give it its own grid. */
 let activeSectionId = $state(null);
 
 /** The block under the mouse on the canvas (urd-hover-block), or null: the Phone panel lights its row. */
@@ -1123,7 +1055,7 @@ let sectionMaxWidth = $state('');
 /** Mirror of the active section's own space between its blocks on the phone (`size.mobileGap` in px, null = the site's) */
 let sectionMobileGap = $state(null);
 
-/** Mirror of the active section's own room above its first block and below its last on the phone (`size.mobilePadTop`, `size.mobilePadBottom` in px, null = the standard) */
+/** Mirror of the active section's own room above its first block and below its last on the phone, in px, null for the standard */
 let sectionPhoneRoom = $state({ top: null, bottom: null });
 
 /** Mirror of the active section's rule for its order on the phone (`phoneOrder`, phone-order.js) */
@@ -1132,7 +1064,7 @@ let sectionPhoneOrder = $state('top');
 /** Mirror of whether the active section's order on the phone follows the desktop: true unless the section holds its own list (`phoneList`) */
 let sectionPhoneFollows = $state(true);
 
-/** Mirror of the active section's «Force readable text» for each screen (`size.readablePhone`, `size.readableDesktop`, ADR-0034): on unless the section turns it off */
+/** Mirror of the active section's forced readable text on each screen (ADR-0034): on unless the section turns it off */
 let sectionReadable = $state({ phone: true, desktop: true });
 
 function syncSectionMirrors(section) {
@@ -1153,12 +1085,8 @@ function syncSectionMirrors(section) {
   sectionAnchor = section?.anchor ?? '';
 }
 
-/* Measurements for the "Cover"/"Show all" buttons on image background
-   layers: the section box (measured in the preview iframe, same-origin)
-   and the image's natural size let us compute the scale that exactly
-   fills/shows the whole image. */
+/* The selected section's box in the preview, from which an image layer's «Cover» and «Show all» scales are reckoned. */
 let secBox = $state(null);            // { w, h } for the selected section
-          // { w, h } for the selected section
 
 function measureSecBox() {
   try {
@@ -1213,16 +1141,13 @@ function animObj(type) {
   return { type, version: coreAnimations[type].version, props: coreAnimations[type].defaults() };
 }
 
-/** Entrance animation and hover effect are independent fields
- *  (animation/hover) and can be combined. Older pages can have a hover
- *  effect stored in animation: it is normalized to hover on the next edit. */
+/** An entrance and a pointer effect are fields of their own; normalizeAnim moves an effect stored in `animation` to `hover`. */
 const isEntrance = (anim) => Boolean(anim && coreAnimations[anim.type]?.entrance);
 
 const ENTRANCE_OPTIONS = $derived([['', ta('common.none')],
   ...Object.entries(coreAnimations).filter(([, def]) => def.entrance).map(([id, def]) => [id, def.labelKey ? ta(def.labelKey) : def.label])]);
 
-// The block dropdown: group animations (stagger) are section-level and
-// do nothing on a block - they are filtered out here.
+// The block's list leaves out the group animations, which act on a section alone.
 const BLOCK_ENTRANCE_OPTIONS = $derived(ENTRANCE_OPTIONS.filter(([id]) => !coreAnimations[id]?.group));
 
 const HOVER_OPTIONS = $derived([['', ta('common.none')],
@@ -1282,7 +1207,7 @@ function setSectionHeight(raw) {
   previewState.bridge?.sendSection(pageId, section);
 }
 
-/** The section's own content width (ADR-0018): `full`, a px length, or undefined for the site's; the blocks keep their frames in percent of the content surface, so they follow the new width. A slider's drag is one undo step. */
+/** The section's own content width (ADR-0018): `full`, a px length, or undefined for the site's; a slider's drag is one undo step. */
 function setSectionWidth(value) {
   mutateSection(`edit:section-width:${activeSectionId}`, (s) => {
     const size = { ...(s.size ?? {}) };
@@ -1301,8 +1226,7 @@ function setSectionMobileGap(value) {
 }
 
 /**
- * The room above a section's first block ('top') or below its last ('bottom') on the phone, in px; null, or the standard, takes it away.
- * A slider's moves join one step; `own` (a seam's grip on the canvas) makes the change a step of its own. `sectionId` names the section, the one at work by default.
+ * The room above a section's first block or below its last on the phone, in px, null taking it away; `own` makes it a step of its own, as a seam's grip does.
  * @param {'top'|'bottom'} side
  * @param {number|null} value
  * @param {{sectionId?: string|null, own?: boolean}} [opts]
@@ -1353,7 +1277,7 @@ function setSectionPhoneOrder(rule) {
   });
 }
 
-/** «Follow the desktop» on the phone: off, the order as it reads now is held as the section's list (`phoneList`); on, the list goes and the section's rule orders the blocks again, with the exceptions and stacks they had. */
+/** «Follow the desktop» on the phone: off holds the order as it reads now as the section's list (`phoneList`); on, the list goes. */
 function setSectionPhoneFollows(on) {
   mutateSection('phone-follows', (s) => {
     if (on) delete s.phoneList;
@@ -1362,8 +1286,7 @@ function setSectionPhoneFollows(on) {
 }
 
 /**
- * A change to a section's phone order, cells, heights, rooms and layers (phone-moves.js: a move in the Phone panel's list, a drag, the arrows, the handles or the set bar on the canvas; phone-layouts.js: a preset; layer-order.js: to the front or back on the phone): the blocks' exceptions, the stacks, the custom order, the cells, the blocks' own heights on the phone, the flowing blocks' own rooms above them there and the pinned blocks' own layers, written as one undo step under `key`.
- * Only ids the section holds are written, and a stack of fewer than two blocks is left out.
+ * A change to a section's phone order, cells, heights, rooms and layers, written as one undo step under `key`; only ids the section holds are written.
  * @param {string} sectionId
  * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>, spaces?: Record<string, number|null>, layers?: Record<string, number>}} change
  * @param {string} [key] The history key: a burst of keys joins under one
@@ -1391,7 +1314,7 @@ function changeSectionPhone(sectionId, change, key = 'phone-order') {
     const loose = [...new Set(change.loose)].filter((id) => ids.has(id));
     if (loose.length) section.phoneLoose = loose; else delete section.phoneLoose;
   }
-  // A preset's cells (phone-layouts.js): each flowing block's columns, taking the place of a width and a left edge set by hand; null for the full row, where a width set by hand stays.
+  // A preset's cells: each flowing block's columns in place of a hand-set width and left edge; null for the full row.
   for (const [id, cells] of Object.entries(change.cells ?? {})) {
     const block = section.blocks.find((b) => b.id === id);
     if (!block || Number.isFinite(block.frames.mobile?.row)) continue;
@@ -1439,8 +1362,7 @@ function changeSectionPhone(sectionId, change, key = 'phone-order') {
 }
 
 /**
- * The selected block's cells on the phone (`frames.mobile.col` and `cols`), or null for the full row; a block in the owner's stack sets its whole stack, as the stack shares one cell.
- * The cells take the place of a width and a left edge set by hand (`x`, `w`); a block placed on rows of its own is left as it is, and a placement left with nothing in it goes back to following the desktop.
+ * The selected block's cells on the phone, or null for the full row, in place of a hand-set width and left edge; a block in a stack sets its whole stack.
  * @param {{col: number, cols: number}|null} cells
  */
 function setBlockPhoneCells(cells) {
@@ -1468,8 +1390,7 @@ function setBlockPhoneCells(cells) {
 }
 
 /**
- * The selected block's own height on the phone (`frames.mobile.height`, px), or null to follow its words or its desktop height again (ADR-0019).
- * A block placed on rows of its own keeps its rows, and a placement left with nothing in it goes back to following the desktop.
+ * The selected block's own height on the phone in px, or null to follow its words or its desktop height again; a block on rows of its own keeps them.
  * @param {number|null} height
  */
 function setBlockPhoneHeight(height) {
@@ -1487,7 +1408,7 @@ function setBlockPhoneHeight(height) {
   syncSelectedBlock();
 }
 
-/** The selected block's exception in the phone order (`phonePlace`): directly before or after another block, or null to follow the section's rule. A phone change, outside the review flag. */
+/** The selected block's exception in the phone order (`phonePlace`): before or after another block, or null for the section's rule; outside the review flag. */
 function setBlockPhonePlace(place) {
   const { section, block } = readBlock(selectedBlock?.sectionId, selectedBlock?.blockId);
   if (!block) return;
@@ -1550,7 +1471,7 @@ function blankPage(entry) {
 }
 
 async function selectPage(id, { keepHistory = false } = {}) {
-  // The page left is written before another is read, and its message goes with it; a message raised while the page loads, or by the loaders beside it as the editor opens, stays.
+  // The page left is written before another is read, and its status message goes with it; a message raised while the page loads stays.
   flushDrafts();
   shellState.status = '';
   pageId = id;
@@ -1564,33 +1485,24 @@ async function selectPage(id, { keepHistory = false } = {}) {
   } catch { /* an address that cannot be written leaves the reload on the page the address names */ }
   pageLoading = (async () => {
     const entry = pageEntry();
-    // New pages do not exist on the server yet: 404, or an SPA fallback
-    // answering 200 with HTML (json() throws). Then a blank page is the
-    // baseline, and any draft in localStorage wins regardless.
+    // A page not yet on the server answers 404 or with HTML, so a blank page is the baseline, and a stored draft wins.
     let published = held.get(entry.file);
     if (!published) {
       try {
         const res = await fetch(`/${entry.file}`);
-        // Older page files are lifted to the current format before editing,
-        // so drafts and publishing are always on the latest schemaVersion.
-        // Old drafts in localStorage are lifted too.
+        // An older page file is lifted to the current format before editing, and so is a stored draft below.
         if (res.ok) published = liftPageFile(await res.json(), siteState.siteStore.data);
       } catch { /* new, unpublished page */ }
     }
     if (published) {
-      // The page is out on the server: any wait-for-deploy marker is done
-      // (store.save() below cleans the draft if it is identical).
+      // The page is out on the server, so its wait for the deploy is done.
       pendingPublished.delete(id);
       pendingSent.delete(id);
     } else {
       published = blankPage(entry);
     }
     store = createDraftStore(`urd-draft-${id}`, () => published, shellState.draftSaveError);
-    // A draft with a HIGHER schemaVersion than the engine (written by a
-    // newer Urd) can neither be edited nor published safely: liftPageFile
-    // lets it pass untouched, the layers render as placeholders, and a
-    // publish would cement it. Discard the draft; the server is the
-    // source of truth.
+    // A draft of a later schemaVersion than the engine's can neither be edited nor published safely, so it is discarded for the published page.
     if ((store.data.schemaVersion ?? 1) > PAGE_SCHEMA_VERSION) {
       console.warn(`Urd: the draft for '${id}' has schemaVersion ${store.data.schemaVersion} (the engine has ${PAGE_SCHEMA_VERSION}) and is discarded`);
       store.replace(structuredClone(published));
@@ -1601,10 +1513,7 @@ async function selectPage(id, { keepHistory = false } = {}) {
     // The phone check's baseline, where this browser has none for the page or holds no change of it: the page as published (lib/phone-check.js).
     if (!phoneBases()[id] || !store.hasDraft()) phoneChecked(id, published.sections);
     storePage = id;
-    // The undo history survives page switches: snapshots carry pageId,
-    // and restore switches back to the right page. Without keepHistory
-    // only the coalesce key is cleared, so the next change always gets
-    // its own step.
+    // The undo history lasts across pages; without keepHistory only the coalesce key is cleared, so the next change gets a step of its own.
     if (!keepHistory) historyState.lastHistoryKey = null;
     activeSectionId = null;
     hoveredBlockId = null;
@@ -1613,9 +1522,7 @@ async function selectPage(id, { keepHistory = false } = {}) {
     shellState.updateAttention();
   })();
   await pageLoading;
-  // The iframe switches src via pageId; the draft is pushed when the
-  // engine reports ready (urd-ready), never on iframe load (no one is
-  // listening yet then).
+  // The iframe follows pageId, and the draft goes to it as the engine reports ready (urd-ready), never on the iframe's load.
 }
 
 /** Another page's current data: draft, else published, else blank. */
@@ -1634,9 +1541,7 @@ async function readPageDraft(entry) {
 }
 
 /**
- * «Test the payment» (0.7.28.7): the checkout page in a new tab as the draft view (`?draft=1`, drafts.js), where it stands as it does here and the pay buttons run against the site's functions.
- * The editor and the page share the origin and so the basket; an empty basket gets the first published product with a price, since the payment is priced from the published catalogue.
- * Unpublished changes are said in the status line, for the same reason.
+ * «Test the payment»: the checkout page in a new tab as the draft view (`?draft=1`); an empty basket gets the first published product with a price.
  */
 function testPayment() {
   const entry = pageEntry();
@@ -1672,8 +1577,7 @@ function testPayment() {
 let pageSearch = false;
 
 /**
- * Opens the page that holds a block of the type (the shop's links: the checkout page from the product cards, the shop page from the checkout), the open page first, then the pages in the Pages panel's order.
- * The element menu closes first, since its block stays behind; on the open page the preview scrolls to the block's section, and a status line says so when no page holds one.
+ * Opens the page that holds a block of the type, the open page first, then the pages in the Pages panel's order; the status line says when none does.
  * @param {string} type
  */
 async function openPageWith(type) {
@@ -1779,8 +1683,7 @@ export function effects() {
     if (!blockMenu) menu.menuQuery = '';
   });
 
-  // Re-measure when the selected section changes (after the preview has
-  // rendered) and when the preview iframe resizes.
+  // Measured again as the selected section changes, once the preview has drawn it, and as the preview iframe resizes.
   $effect(() => {
     activeSectionId; sectionBg;
     requestAnimationFrame(() => requestAnimationFrame(measureSecBox));

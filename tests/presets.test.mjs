@@ -1,9 +1,11 @@
 /**
  * Contract test for the section presets: every create() gives a well-formed section, and every item() places new elements without overlapping existing blocks.
  * Schema validation of the same happens in editor/scripts/validate.mjs (ajv lives there); this test covers the structure and the placement geometry.
+ * A section a preset hands the editor without an id gets one as it joins the page (state/bridge.svelte.js).
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { engineImport } from './_engine.mjs';
 const { registerSectionPresets, termsHtml } = await engineImport('sections/presets.js');
 
@@ -175,4 +177,18 @@ test('makeId: crypto.getRandomValues where crypto.randomUUID is missing, as on t
   for (const id of ids) assert.match(id, /^blk-[0-9a-f]{8}$/);
   assert.equal(new Set(ids).size, ids.length);
   assert.match(makeId('sec'), /^sec-[0-9a-f]{8}$/, 'with randomUUID the id has the same shape');
+});
+
+test('a section a preset hands the editor without an id gets one as it joins the page, as the schema requires', async () => {
+  const { makeId } = await engineImport('sections/presets.js');
+  const schema = JSON.parse(readFileSync(new URL('../schema/page.schema.json', import.meta.url), 'utf8'));
+  assert.ok(schema.$defs.section.required.includes('id'));
+  assert.match(makeId('sec'), new RegExp(schema.$defs.id.pattern));
+  const bridge = readFileSync(new URL('../editor/src/state/bridge.svelte.js', import.meta.url), 'utf8');
+  assert.match(bridge, /^import \{[^}]*\bmakeId\b[^}]*\} from '\$engine\/sections\/presets\.js';$/m);
+  const add = bridge.split('function handleAddSection(msg) {')[1].split('\n}\n')[0];
+  assert.match(add, /if \(!msg\.section\.id\) msg\.section\.id = makeId\('sec'\);/);
+  const given = add.indexOf("msg.section.id = makeId('sec')");
+  assert.ok(given < add.indexOf('pageState.store.data.sections.splice(msg.index, 0, msg.section);'), 'before it joins the page');
+  assert.ok(given < add.indexOf('pageState.store.save();'), 'and before it is stored');
 });

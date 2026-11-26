@@ -1,7 +1,6 @@
 /**
- * The files a publish committed, held until the deploy serves them: the host answers with the files from before the publish for about a minute, so a page opened in that time, and the preview loading it, read the committed state from here.
- * Each file carries the publish it came from and is let go of when that publish's deploy serves it; a file a newer publish holds again waits for the newer one.
- * Pure, node-tested (tests/held-publish.test.mjs).
+ * The files a publish committed, held until the deploy serves them, so the admin reads the committed state.
+ * Each file goes with the publish that last held it.
  */
 
 /**

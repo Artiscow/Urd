@@ -1,24 +1,22 @@
 /**
  * The rules of the undo history (state/history.svelte.js): when a change joins the step before it, and how many steps are kept.
- * Pure, node-tested (tests/history-model.test.mjs).
  */
 
 /** How many steps the history keeps. */
 export const HISTORY_LIMIT = 50;
 
-/** How long after a change the same kind of change still joins its step, in ms: a slider dragged across its range, or the same setting changed in a burst, is one step. */
+/** How long after a change the same kind of change still joins its step, in ms, so a slider dragged or a setting changed in a burst is one step. */
 export const MERGE_MS = 500;
 
 /** How long after a change a change that follows it as part of it (`<key>:then`) still joins its step, in ms: the preview's measuring after a redraw. */
 export const FOLLOW_MS = 3000;
 
-/** The keys a burst joins within MERGE_MS: the panels' settings, where a slider writes on every tick. An action (a block added or deleted, a section moved, a page renamed, a collection's change) is one step each however fast they come. */
+/** The keys a burst joins within MERGE_MS: the panels' settings, where a slider writes on every tick; an action is one step each however fast they come. */
 const TIME_JOINED = new Set(['nav', 'footer', 'theme', 'site', 'legal', 'section-size', 'section-theme', 'section-hover', 'section-anim']);
 const TIME_JOINED_PREFIX = ['section-divider-', 'sticky-group:', 'sticky-dock:', 'page-meta:'];
 
 /**
- * Whether a change joins the step before it instead of making its own.
- * The same key again joins: an `edit:` or `grid:` key at any pause (a text typed, a grid tuned), a step of its own's key (ownStepKey) at any pause, a panel setting's key while the changes come within MERGE_MS of each other (TIME_JOINED), and no other key.
+ * Whether a change joins the step before it: the same `edit:`, `grid:` or own-step key at any pause, the same panel setting's key within MERGE_MS.
  * @param {{key: string, at: number}|null} last The step the history ended on, and when it last grew
  * @param {string} key The change's key
  * @param {number} now The time of the change, in ms
@@ -33,8 +31,7 @@ export function joinsLast(last, key, now) {
 }
 
 /**
- * The key of a change made as a step of its own (asOwnStep in state/history.svelte.js, a setting's way back): its own key with a mark of its own, so it never joins the change before it, nor the change after it it.
- * The key keeps its start, so the list of steps names it as it names the change (stepKind).
+ * The key of a step of its own (asOwnStep in state/history.svelte.js): its key with a unique mark, so it never joins another, its start kept for stepKind.
  * @param {string} key The change's own key
  * @param {number} n A number no other such step has
  */
@@ -43,7 +40,7 @@ export const ownStepKey = (key, n) => `${key}:own-step-${n}`;
 const OWN_STEP = /:own-step-\d+$/;
 
 /**
- * What kind of change a step was, from its key, as the list of steps names it: a dictionary key for its words, an icon, and whether it was made on a page (so the list names the page beside it).
+ * What kind of change a step was, from its key, as the list of steps names it: a dictionary key, an icon, and whether it was made on a page.
  * @param {string} key The step's key (the history's pushHistory)
  * @param {{typed?: boolean}} [step] typed: the step carries a caret, so it was typing
  * @returns {{labelKey: string, icon: string, onPage: boolean}}
@@ -97,8 +94,7 @@ export const stepTyped = (step) => !!(step.typed ?? step.view?.caret);
 export const stepPage = (step) => step.pageId ?? step.view?.pageId ?? null;
 
 /**
- * The list of steps' jump as a walk over the steps taken off one stack (state/history.svelte.js goSteps): the entries for the other stack, and the state and view to put back.
- * A step's state holds the drafts of the pages beside the open one it wrote (`others`); every page any passed step wrote is carried along with its draft as the walk leaves it, so a jump past several steps puts back every page they touched.
+ * A jump in the list of steps as a walk over a stack (goSteps): the other stack's entries, and the state and view to put back with each page a passed step wrote.
  * @param {Array<{snap: string, view: object, pages?: string[], key: string, at: number, typed?: boolean, pageId?: string}>} steps The steps in the order the walk passes them, the nearest first
  * @param {{state: string, view: object}} start The state and the view the walk starts from
  * @param {(id: string) => any} readDraft A page's draft as stored now
@@ -127,8 +123,7 @@ export function walkSteps(steps, start, readDraft, stringify = JSON.stringify) {
 }
 
 /**
- * Whether the steps kept from the last session lead to the drafts as they stand (state/history.svelte.js loadKept).
- * The mark is written as the history is kept and again as the page goes, so it is never older than the drafts; it names the steps the kept history ends on, and holds hashes of the state: the open page apart from the rest, and that page's stored draft, for a session that opens on another page.
+ * Whether the steps kept from the last session lead to the drafts as they stand (loadKept in state/history.svelte.js), by the mark's step counts and state hashes.
  * @param {{steps: number, top: number, redo: number, redoTop: number, pageId: string, page: string, rest: string, draft: string}} mark
  * @param {{history: Array<{made?: number}>, redoStack: Array<{made?: number}>}} kept The steps as IndexedDB kept them
  * @param {{pageId: string, page: string, rest: string, draftOf: (id: string) => string}} now The state now, hashed the same way

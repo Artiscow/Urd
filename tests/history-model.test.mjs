@@ -1,14 +1,17 @@
 /**
  * The rules of the undo history (editor/src/lib/history-model.js): which change joins the step before it, and the steps that changed nothing.
+ * And two of state/history.svelte.js, read from its source: an undo puts back the parts shared by every page before it turns to the page of its step, and a step holds the collections and the templates only once their stores are filled.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
 import './_svelte-loader.mjs';
 
 const { joinsLast, emptyTail, stepKind, walkSteps, stepTyped, stepPage, keptHolds, MERGE_MS, FOLLOW_MS, HISTORY_LIMIT, ownStepKey } = await import('../editor/src/lib/history-model.js');
 import { engineImport } from './_engine.mjs';
 const dict = (await engineImport('locales/admin/en-GB.js')).default.strings;
 const { ICONS } = await import('../editor/src/lib/icons.js');
+const editorFile = (path) => readFileSync(new URL(`../editor/src/${path}`, import.meta.url), 'utf8');
 
 test('joinsLast: a text typed joins at any pause, a slider dragged joins while it moves, a new kind of change never joins', () => {
   assert.equal(joinsLast(null, 'nav', 0), false, 'nothing to join');
@@ -147,4 +150,40 @@ test('a change that follows another as part of it joins its step shortly after, 
   assert.equal(joinsLast({ key: 'phone-order', at: 1000 }, 'phone-layout:then', 1001), false, 'it follows its own change only');
   assert.equal(joinsLast(last, 'phone-layout', 1001), false, 'a second preset is a step of its own');
   assert.equal(stepKind('phone-layout:then').labelKey, stepKind('phone-layout').labelKey);
+});
+
+test('an undo puts back the collections, the templates, the plugins and the redirects before it turns to the page its step was made on', () => {
+  const restore = editorFile('state/history.svelte.js').split('function restore(snap) {')[1].split('\n}\n')[0];
+  assert.match(restore, /const \{ pageId: snapPageId, page, site: siteSnap, collectionsIndex, collections, templatesIndex, templates, plugins, redirects, others \} = media\.parse\(snap\);/);
+  const branch = restore.indexOf('if (snapPageId && snapPageId !== pageState.pageId');
+  assert.ok(branch > 0, 'the step of another page takes its own way');
+  assert.match(restore.slice(branch), /^if \(snapPageId[^\n]*\{[\s\S]*?pageState\.selectPage\(snapPageId, \{ keepHistory: true \}\);[\s\S]*?return;/, 'and leaves there');
+  const before = restore.slice(0, branch);
+  assert.doesNotMatch(before, /\breturn\b/);
+  // Each a statement of the function itself, so it runs whatever page the step was made on.
+  for (const call of ['restoreCollections(collectionsIndex, collections ?? {});', 'restoreTemplates(templatesIndex, templates ?? {});', 'restorePlugins(plugins);', 'redirectsState.restoreRedirects(redirects);']) {
+    assert.ok(before.includes(`\n  ${call}\n`), call);
+  }
+});
+
+test('a step holds the collections and the templates only once all their stores are filled, and an undo leaves them alone where it holds none', () => {
+  const history = editorFile('state/history.svelte.js');
+  const state = history.split('function stateObject() {')[1].split('\n}\n')[0];
+  assert.match(state, /collectionsIndex: collectionsState\.collectionsReady \? collectionsState\.collectionsIndexStore\.data : null,/);
+  assert.match(state, /collections: collectionsState\.collectionsReady\s*\?[^:]*\s*: \{\},/);
+  assert.match(state, /templatesIndex: templatesState\.templatesReady \? templatesState\.templatesIndexStore\.data : null,/);
+  assert.match(state, /templates: templatesState\.templatesReady\s*\?[^:]*\s*: \{\},/);
+  assert.match(history, /function restoreCollections\(indexSnap, collectionsSnap\) \{\s*if \(!collectionsState\.collectionsIndexStore \|\| !indexSnap\) return;/);
+  assert.match(history, /function restoreTemplates\(indexSnap, templatesSnap\) \{\s*if \(!templatesState\.templatesIndexStore \|\| !indexSnap\) return;/);
+  // Ready once the loop that fills every store has ended, and in no other place.
+  for (const [file, flag, ids] of [['state/collections.svelte.js', 'collectionsReady', 'collectionIds'], ['state/templates.svelte.js', 'templatesReady', 'templateIds']]) {
+    const source = editorFile(file);
+    assert.match(source, new RegExp(`^let ${flag} = false;$`, 'm'), file);
+    assert.match(source, new RegExp(`\\n  for \\(const \\[i, id\\] of ${ids}\\.entries\\(\\)\\) \\{\\n[\\s\\S]*?\\n  \\}\\n  ${flag} = true;\\n`), `${file}: after the stores are filled`);
+    assert.equal(source.match(new RegExp(`\\b${flag} = true`, 'g')).length, 1, `${file}: set in one place`);
+  }
+  const sources = readdirSync(new URL('../editor/src/', import.meta.url), { recursive: true }).filter((name) => /\.(js|svelte)$/.test(name));
+  for (const name of sources) {
+    assert.doesNotMatch(editorFile(name), /State\.(collectionsReady|templatesReady) = /, `${name}: the flags are the stores' own`);
+  }
 });

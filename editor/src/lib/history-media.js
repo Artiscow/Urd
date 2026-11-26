@@ -1,7 +1,5 @@
 /**
- * The pictures and films of the drafts, kept once for the undo steps (state/history.svelte.js).
- * An unpublished picture stands in a draft as a data address of hundreds of kilobytes; a step's state holds a token in its place, and the table holds the address once, however many steps hold it.
- * A token is made from the address's own content, so the same picture has the same token in every session and a kept history finds its pictures again.
+ * The drafts' pictures and films, kept once for the undo steps: a step holds a token made from a data address's content, and the table holds the address.
  */
 
 /** What a token starts with. */

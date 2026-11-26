@@ -1,7 +1,5 @@
 /**
- * The saved drafts as the editor sees them (ADR-0032): each part of the work stands in this browser alone, saved, or live, read from the drafts this browser holds, the saved drafts' index, and what this browser last saw of each saved part.
- * A part is named as the drafts function names it (functions/_lib/drafts.js), and holds the stored draft keys that function lets it hold.
- * Pure, node-tested (tests/saved-model.test.mjs); the hashes come in from the caller.
+ * The saved drafts as the editor sees them (ADR-0032): each part of the work in this browser alone, saved, or live, named as functions/_lib/drafts.js names it.
  */
 
 const PAGE_KEY = /^urd-draft-([a-z0-9][a-z0-9-]{0,79})$/;
@@ -15,7 +13,7 @@ const NOT_A_PAGE = /^(?:site|templates|plugins|redirects|media-moves|collections
 export const pageIdTaken = (id) => NOT_A_PAGE.test(String(id ?? ''));
 
 /**
- * The part a stored draft key belongs to; null for a key no part holds (the tidy's moves, the mark of a deleted legacy collections' index, a key from before a rename).
+ * The part a stored draft key belongs to; null for a key no part holds.
  * @param {string} key
  * @returns {string|null}
  */
@@ -71,7 +69,7 @@ export function partOfName(name) {
 }
 
 /**
- * One short text for a part, from each of its stored keys and the hash of that key's text, the same wherever it is read, so its hash tells two copies apart without hashing the long texts again.
+ * One short text for a part from its stored keys and the hash of each key's text, the same wherever it is read.
  * @param {Record<string, string>} keyHashes The part's stored keys and the hash of each key's text
  */
 export function partCanon(keyHashes) {
@@ -79,9 +77,7 @@ export function partCanon(keyHashes) {
 }
 
 /**
- * What a load does with the saved drafts, part by part: nothing comes in by itself (ADR-0032 decision 3).
- * A saved part this browser holds exactly as it is saved counts as seen; any other keeps what this browser last saw of it.
- * A part this browser saw saved that has left the index was published or discarded elsewhere: where this browser still holds it as it saw it, its copy here goes too.
+ * What a load does with the saved drafts, nothing coming in by itself (ADR-0032): what this browser has seen, and the parts whose copy here goes.
  * @param {{local: Record<string, string|null>, saved: Record<string, {hash: string}>, seen: Record<string, string>}} state
  *   `local`: the hash here of each part saved or seen, null where this browser holds none of it; `seen`: the hash of each saved part as this browser last saw it
  * @returns {{dropLocal: string[], seen: Record<string, string>}} The parts whose copy here goes, and what this browser has seen
@@ -98,8 +94,7 @@ export function meet({ local, saved, seen }) {
 }
 
 /**
- * Where each part this browser holds waiting stands, one row each, in the order the waiting list gives: «Saved» where this browser's copy is the saved one, «In this browser» otherwise, where the saved part is set apart as saved elsewhere when it changed since this browser last saw it.
- * A saved part this browser does not hold stands only in the Drafts window's Saved tab (savedList), so Publish never sends it.
+ * Where each part this browser holds waiting stands: «Saved» where this browser's copy is the saved one, «In this browser» otherwise.
  * @param {{parts: Array<{kind: string, id?: string, name?: string}>, localHash: (name: string) => string|null, saved: Record<string, {hash: string, savedAt?: string, saver?: string}>, seen: Record<string, string>}} state
  * @returns {Array<{kind: string, id?: string, name?: string, part: string, band: 'browser'|'saved', draft: boolean, elsewhere: {savedAt?: string, saver?: string}|null}>}
  */
@@ -123,8 +118,7 @@ export function counts(rows) {
 }
 
 /**
- * The Saved tab's rows, the newest saved first: each saved part with who saved it, from which browser and when, the owner's note on the save, whether this browser holds it as saved (`same`), holds it as it last saw it saved, unchanged since while the saved one went on (`behind`), holds its own changes to it (`mine`) or holds none of it (`none`), and whether it is new here.
- * A part is new where it was saved since this browser last saw it, the owner has not been shown it, and this browser does not hold it as saved.
+ * The Saved tab's rows, newest first: each saved part with who saved it, where, when and the note, how this browser holds it, and whether it is new here.
  * @param {{saved: Record<string, {hash: string, savedAt?: string, saver?: string, title?: string, note?: string, device?: string}>, localHash: (name: string) => string|null, seen: Record<string, string>, noticed: Record<string, string>}} state
  *   `noticed`: the hash of each saved part as the Saved tab last showed it
  */
@@ -163,8 +157,7 @@ export function publishedSaves(rows, saved) {
 }
 
 /**
- * The parts a save of the ticked writes: those that stand in this browser alone and are not kept for later.
- * With `quiet` (Ctrl+S and autosave), a part saved elsewhere since this browser last saw it is left for the owner to look at, rather than asked about.
+ * The parts a save of the ticked writes: those in this browser alone and not kept for later, and with `quiet` none saved elsewhere since.
  * @param {ReturnType<typeof standing>} rows
  * @param {Iterable<string>} later The parts kept for later (unticked)
  * @param {{quiet?: boolean}} [opts]
@@ -176,7 +169,7 @@ export function tickedNames(rows, later, { quiet = false } = {}) {
 }
 
 /**
- * The tab the Drafts window opens at: the saved drafts where one is new here, this browser's where something stands in it alone, the saved where there are any, and the live state otherwise.
+ * The tab the Drafts window opens at: the saved drafts where one is new here, then This browser, then the saved drafts, then Live.
  * @param {{fresh: number, waiting: number, saved: number}} counts
  * @returns {'browser'|'saved'|'live'}
  */

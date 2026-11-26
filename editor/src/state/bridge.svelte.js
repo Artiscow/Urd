@@ -1,6 +1,5 @@
 /**
  * The handlers of the preview's messages: edits, moves, growth, the mobile review, sections, deletion and the sticky dock.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { DOCK_OPTIONS } from '../menu/options.js';
 import { makeId } from '$engine/sections/presets.js';
@@ -16,9 +15,7 @@ import { pageState } from './page.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 
-/** Screen-docked block dragged to a new anchor point in the preview. The
- *  dock point applies to both surfaces (a window anchor, not layout), so
- *  mobile review is not triggered. */
+/** A screen-docked block dragged to a new dock point in the preview, which holds on both screens and so asks no phone review. */
 function handleStickyDock(msg) {
   const { section, block } = pageState.readBlock(msg.sectionId, msg.blockId);
   if (!section || !block?.sticky) return;
@@ -31,9 +28,7 @@ function handleStickyDock(msg) {
   pageState.syncSelectedBlock();
 }
 
-/** "Pin the group" from the multi-select bar: the whole selection shares
- *  one sticky group and is pinned as one unit, or dissolved again. ONE
- *  undo step for the whole selection, like the other group actions. */
+/** "Pin the group" from the multi-select bar: the selection shares one sticky group and is pinned as one, or dissolved, in one undo step. */
 function handleStickyGroup(msg) {
   const ids = msg.blockIds ?? [];
   const { section } = pageState.readBlock(msg.sectionId, ids[0]);
@@ -44,8 +39,7 @@ function handleStickyGroup(msg) {
   const phone = section.blocks.some((block) => ids.includes(block.id) && block.sticky?.phone === true);
   for (const block of section.blocks) {
     if (!ids.includes(block.id)) continue;
-    // Off: the pinning is removed entirely. On: existing offset/limit is
-    // kept so a block that was already pinned does not lose its settings.
+    // Off removes the pinning; on keeps a pinned block's own offset and limit.
     block.sticky = group ? { offset: 16, until: null, ...block.sticky, group } : null;
     if (block.sticky) {
       if (phone) block.sticky.phone = true;
@@ -64,15 +58,14 @@ function sendWords(section, block) {
   previewState.bridge?.sendBlockWords(section.id, block.id, $state.snapshot(block.props), block.phoneProps ? $state.snapshot(block.phoneProps) : null);
 }
 
-/** Click-and-type change from the iframe: update the draft. The iframe
- *  already shows the change, so we do not push back (that would break focus). */
+/** A click-and-type change from the iframe, written into the draft; the iframe already shows it, so nothing is sent back. */
 function handleEdit(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
   if (!block) return;
   // The caret where the typing began goes with the step, for the undo to put back.
   const caret = Number.isFinite(msg.caret) ? { blockId: msg.blockId, offset: msg.caret } : null;
-  // Words written in the phone view are the phone's own (ADR-0033): they go into phoneProps, those equal to the desktop's left out, and the desktop's props and frame stay as they are.
+  // Words written in the phone view go into phoneProps (ADR-0033), those equal to the desktop's left out; the desktop's props and frame stay.
   if (msg.phone) {
     historyState.pushHistory(`edit:phone-words-${msg.blockId}`, { caret });
     const words = phoneWordsChange(block.type, block.props, block.phoneProps, msg.props ?? {});
@@ -84,20 +77,20 @@ function handleEdit(msg) {
     pageState.store.save();
     historyState.updateDirty();
     if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
-    // The page keeps the words in its own copy without drawing the block again, so the caret stays where it is typed and a later drawing (a switch of view) reads them.
+    // The page keeps the words in its own copy without drawing the block again, so the caret stays and a later drawing reads them.
     sendWords(section, block);
     shellState.status = '';
     return;
   }
   historyState.pushHistory(`edit:${msg.blockId}`, { caret });
-  // A font or size for the whole text, asked for in the desktop view, reaches the phone's words in the same step (ADR-0033), and is no change of words to review.
+  // A font or size for the whole text, set in the desktop view, reaches the phone's words in the same step (ADR-0033) and asks no review.
   const whole = pageState.takeWholeStyle(msg.blockId);
   if (whole && typeof block.phoneProps?.html === 'string') block.phoneProps = { ...block.phoneProps, html: wholeStyleHtml(block.phoneProps.html, whole) };
   // The desktop's words changed under words of the phone's own: the section is flagged for the phone's review, naming the block.
   else if (Object.keys(phoneWordsOf(block.type, block.phoneProps)).length && (PHONE_WORDS[block.type] ?? []).some((key) => msg.props?.[key] !== block.props?.[key])) {
     pageState.markWordsBehind(section, block.id);
   }
-  // An edit on the canvas never changes a block's design: a block drawn in its phone design (PHONE_DESIGNS) hands its words back with that design in its props, and the stored design stays.
+  // An edit on the canvas keeps the block's stored design, though a block drawn in its phone design (PHONE_DESIGNS) sends that design back.
   const props = { ...msg.props };
   const designProp = PHONE_DESIGNS[block.type];
   if (designProp) {
@@ -109,38 +102,32 @@ function handleEdit(msg) {
   historyState.updateDirty();
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
   sendWords(section, block);
-  // The image editor requests a rerender on image swap (empty blocks
-  // have no img to update live); text editing never does (an echo
-  // mid-typing would lose the caret).
+  // The image editor asks for a redraw as an image is swapped; text editing never does, as it would lose the caret.
   if (msg.rerender) previewState.bridge?.sendSection(pageState.pageId, section);
   shellState.status = '';
-  // Typing in a block that follows its content changes its height too; the
-  // fit comes back without drawing the section again, so the caret stays.
+  // Typing in a block that follows its content changes its height; the fit comes back without drawing the section again, so the caret stays.
   pageState.fitBlockSoon(section.id, block);
 }
 
-/** A block with a phone design crossed its width's line in the preview: the section is sent again from the draft, which holds what was typed since it was drawn, so the preview draws it in the other design without losing a word. */
+/** A block with a phone design crossed its width's line in the preview: the section is sent again from the draft, with all typed since, in the other design. */
 function handleRedrawSection(msg) {
   const section = pageState.store?.data.sections.find((s) => s.id === msg.sectionId);
   if (section) previewState.bridge?.sendSection(pageState.pageId, section);
 }
 
-/** Drag/resize from the iframe: the iframe already shows the snapped
- *  position, so we just record it in the draft. */
+/** A drag or a resize from the iframe, which already shows the snapped frame, written into the draft. */
 function handleMove(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
   if (!block) return;
-  // coalesce: automatic growth during typing belongs to the same undo
-  // step as the typing itself. groupKey (from the z reordering) gathers
-  // moves of SEVERAL blocks into one step.
+  // coalesce: growth while typing joins the typing's undo step; groupKey (the z reordering) gathers the moves of several blocks into one step.
   historyState.pushHistory(msg.coalesce ? `edit:${msg.groupKey ?? msg.blockId}` : 'move-block');
   const key = msg.frameKey === 'mobile' ? 'mobile' : 'desktop';
   const width = block.frames.desktop?.w;
   const phoneWidth = block.frames.mobile?.w;
   const before = key === 'desktop' ? pageState.pinnedKey(section) : null;
   block.frames[key] = msg.frame;
-  // A block placed on the phone inside its section takes or gives back the room below the section's blocks, in the same step, so the section keeps its height (preview-edit.js roomKeeping).
+  // A block placed on the phone takes or gives back the room below the section's blocks in the same step, so the section keeps its height.
   if (key === 'mobile' && Number.isInteger(msg.room?.bottom) && msg.room.bottom >= 0) pageState.writePhoneRoom(section, 'bottom', msg.room.bottom);
   // The section's other blocks pinned on the phone, given the rows that keep them where they stood as the grid changed under them, in the same step.
   if (key === 'mobile' && Array.isArray(msg.others)) {
@@ -149,29 +136,25 @@ function handleMove(msg) {
       if (pinned && Number.isInteger(other.frame?.row) && other.frame.row > 0 && Number.isFinite(pinned.frames.mobile?.row)) pinned.frames.mobile = { ...pinned.frames.mobile, row: other.frame.row };
     }
   }
-  // A desktop move that reshaped the phone around a pinned block flags it for the phone's review; a move on the phone is seen as it is made (the phone check).
+  // A desktop move that reshaped the phone around a pinned block flags it for review; a move on the phone is seen as it is made.
   if (key === 'desktop') pageState.markPinnedMoved(section, before);
   else pageState.phoneSeen([section.id]);
   pageState.store.save();
   historyState.updateDirty();
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
-  // A block that follows its content flows in its new width, and its frame
-  // is fitted to the height the content takes there (ADR-0025).
+  // A block that follows its content flows in its new width, its frame fitted to the height the content takes there (ADR-0025).
   if (key === 'desktop' && msg.frame?.w !== width) pageState.fitBlockSoon(section.id, block);
   // A block pinned to a new width in the row grid takes a new height on the phone.
   else if (key === 'mobile' && msg.frame?.w !== phoneWidth) pageState.phoneFitSoon(section.id, block);
 }
 
-/** A height the preview reports for a block (urd-grow): from a plugin copy
- *  of the former data-block plugins on its own render, or as the answer to
- *  the fit of a block that follows its content (`fit`, urd-fit-block). ONLY
- *  h changes, never x/y, so a dragged block is never teleported back. */
+/** A height the preview reports (urd-grow): a plugin copy's own, or the fit of a block that follows its content (`fit`); only h changes, never x or y. */
 function handleGrow(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
   if (!block?.frames?.desktop) return;
   if (msg.fit) {
-    // A fit is for the desktop frame of a block that follows its content, and only the latest one asked for counts: an answer measured late, after the block stopped following its content (a shape taken off), is not its height.
+    // A fit counts only for a block that still follows its content, and only the latest one asked for.
     if (!followsContent(block)) return;
     // A video that keeps a shape takes the height its width gives at the design width, whatever width the preview's surface has.
     const h = shapeHeight(block, pageState.designWidth(section.id)) || msg.h;
@@ -179,13 +162,7 @@ function handleGrow(msg) {
     return;
   }
   if (block.frames.desktop.h === msg.h) return;
-  // A plugin copy's own height is a MEASUREMENT, not an edit (ADR-0024's
-  // compatibility surface): it varies with content, feed responses and
-  // window, and is reported on every render. It is therefore recorded in
-  // BOTH the draft in memory and the comparison baseline, so it never by
-  // itself constitutes "unpublished changes", and is not stored: the
-  // stored draft changes only with an edit, so a page held as it was
-  // saved on another device stays held as saved (ADR-0032).
+  // A plugin copy's own height is a measurement, not an edit (ADR-0024): written into the draft in memory and the baseline both, and not stored.
   pageState.store.amendBaseline((base) => {
     const s = base.sections.find((x) => x.id === msg.sectionId);
     const b = s?.blocks.find((x) => x.id === msg.blockId);
@@ -195,13 +172,7 @@ function handleGrow(msg) {
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
 }
 
-/** The frame of a block that follows its content, fitted to the height the
- *  content takes (ADR-0025 decision 5). The fit is part of the edit that
- *  asked for it: no undo step of its own, and it is a change to publish
- *  like the edit. A taller frame moves the blocks below as far as the push
- *  pass already showed them (fitMoves), so the page does not move, and the
- *  section's own height stays the owner's; the preview gets the frames
- *  without drawing the section again. */
+/** Fits a block that follows its content to its height (ADR-0025) within the edit that asked, moving the blocks below as the push pass showed them (fitMoves). */
 function applyFit(section, block, h) {
   const moves = fitMoves(section.blocks, block.id, h);
   const frames = {};
@@ -219,7 +190,7 @@ function applyFit(section, block, h) {
   previewState.bridge?.sendFrames(section.id, $state.snapshot(frames));
 }
 
-/** A block pinned on the phone unpinned (its bar's crossed pin, its menu, the Phone panel): back into the phone's order, its cells and turn kept (phone-moves.js unpinned); a section left with nothing that can fall behind loses its review flag. */
+/** A block pinned on the phone unpinned: back into the phone's order, its cells and turn kept; a section left with nothing that can fall behind loses its flag. */
 function handlePhoneUnpin(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   const block = section?.blocks.find((b) => b.id === msg.blockId);
@@ -233,8 +204,7 @@ function handlePhoneUnpin(msg) {
   previewState.bridge?.sendSection(pageState.pageId, section);
 }
 
-/** ↺ in mobile view: reset mobile overrides, the whole section or one
- *  block (ADR-0019). hideMobile is kept: visibility is intent. */
+/** ↺ in mobile view: resets the mobile frames of the whole section or one block (ADR-0019), keeping hideMobile. */
 function handleMobileReset(msg) {
   const section = pageState.store.data.sections.find((s) => s.id === msg.sectionId);
   if (!section) return;
@@ -252,7 +222,7 @@ function handleMobileReset(msg) {
   previewState.bridge?.sendSection(pageState.pageId, section);
 }
 
-/** A move in the phone's reading order from the preview (the bar's arrows, Alt with the arrow keys): the change phone-moves.js settled it into, one undo step; a burst of keys one step. */
+/** A move in the phone's reading order from the preview (the bar's arrows, Alt with an arrow key), one undo step; a burst of keys is one step. */
 function handlePhoneOrder(msg) {
   pageState.changeSectionPhone(msg.sectionId, msg.change, msg.coalesce ? `edit:phone-step-${msg.blockId}` : 'phone-order');
 }
@@ -313,14 +283,10 @@ function handleBlockFlag(msg) {
   if (pageState.selectedBlock?.blockId === msg.blockId) pageState.syncSelectedBlock();
 }
 
-/** New section from "+ New section" in the iframe (the section is
- *  already built by the preset's create() in there). */
+/** A new section from the iframe, built there by its preset's create(). */
 function handleAddSection(msg) {
   historyState.pushHistory('add-section');
-  // Guard: a section MUST have an id (the schema requires it). The core
-  // presets set it themselves, but a plugin preset can forget it, and an
-  // id-less section would make the page file invalid on publish. Assign
-  // one here if it is missing.
+  // A section the preset gave no id gets one, as the schema requires.
   if (!msg.section.id) msg.section.id = makeId('sec');
   // Names the page already uses arrive as name-2 (a section template).
   claimAnchors([msg.section], pageState.store.data);
@@ -336,7 +302,7 @@ function handleAddSection(msg) {
   shellState.activePanel = 'properties';
 }
 
-/** «Duplicate the section» from the section's toolbar or right-click menu: the copy lands directly below with fresh ids and free anchor names, selected, in one undo step. */
+/** Duplicates a section from its toolbar or right-click menu: the copy lands below with fresh ids and free anchor names, selected, in one undo step. */
 function handleDuplicateSection(msg) {
   const copy = duplicatedSection(pageState.store.data, msg.sectionId, makeId);
   if (!copy) return;
@@ -402,16 +368,13 @@ function handleDeleteSection(msg) {
   previewState.bridge?.sendPage(pageState.pageId, pageState.store.data);
 }
 
-/** Height drag in the iframe: the iframe already shows the new height,
- *  so we just record it. */
+/** A height drag in the iframe, which already shows the new height, written into the draft. */
 function handleSectionSize(msg) {
   const section = pageState.store.data.sections.find((x) => x.id === msg.sectionId);
   if (!section) return;
   historyState.pushHistory('section-size');
   section.size = { ...section.size, minHeight: msg.minHeight };
-  // The seam grip changed the section at its top: all its blocks are
-  // shifted in the SAME undo step (the content stood visually still in
-  // the preview; the new y values are recorded here).
+  // The seam grip changed the section at its top: its blocks' new y values, which kept them still in the preview, go into the same undo step.
   for (const move of msg.moves ?? []) {
     const block = section.blocks.find((b) => b.id === move.blockId);
     if (!block) continue;
@@ -431,8 +394,7 @@ function handleMoveBlockSection(msg) {
   const to = pageState.store.data.sections.find((s) => s.id === msg.toSectionId);
   const block = from?.blocks.find((b) => b.id === msg.blockId);
   if (!from || !to || !block) return;
-  // groupKey: the drop belongs to the undo step of the frames its drag
-  // settled in the source section.
+  // groupKey: the drop joins the undo step of the frames its drag settled in the source section.
   historyState.pushHistory(msg.groupKey ? `edit:${msg.groupKey}` : 'move-block');
   from.blocks = from.blocks.filter((b) => b.id !== msg.blockId);
   block.frames.desktop = msg.frame;
@@ -446,9 +408,7 @@ function handleMoveBlockSection(msg) {
   pageState.store.save();
   historyState.updateDirty();
   shellState.updateAttention();
-  // Only the two sections, never the whole page: a full send rebuilds the
-  // document from scratch, and the browser clamps the scroll position
-  // while it is collapsed. No section is added, removed or reordered here.
+  // Only the two sections are sent, not the whole page, so the canvas keeps its scroll.
   previewState.bridge?.sendSection(pageState.pageId, from);
   previewState.bridge?.sendSection(pageState.pageId, to);
   if (pageState.selectedBlock?.blockId === msg.blockId) {

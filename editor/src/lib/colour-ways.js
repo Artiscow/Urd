@@ -1,7 +1,5 @@
 /**
- * The ways to make a colour set (BACKLOG 0.7.9.3), each giving the colours of a new set as `[{ code, name? }]`: shades of a colour, colours that match it, the steps between two colours, colours readable on a colour, a picture's main colours, the codes in a text, Urd's ready-made sets, and a shuffle with locks.
- * Colours are worked out in OKLCH (lib/colour-grid.js) and given as #rrggbb codes; contrast is reckoned as WCAG 2 does.
- * Pure: no DOM, and a shuffle draws its chances from the function it is given.
+ * The ways to make a colour set: shades, matching colours, blends, readable colours, a picture's colours, codes in a text, ready-made sets and a shuffle.
  */
 import { oklchToCode, codeToOklch, colourGrid } from './colour-grid.js';
 import { colourCode } from './colour-sets.js';
@@ -40,7 +38,7 @@ export function shades(base, kind = 'all', n = 7) {
 }
 
 /**
- * Colours that match a colour, the colour itself among them: beside it on the wheel, opposite, a third round, split from the opposite, a quarter round, or its own hue lighter and darker.
+ * Colours that match a colour, itself among them: beside it on the wheel, opposite, thirds, split, a square, or its own hue lighter and darker.
  * @param {string} base A colour code
  * @param {string} kind One of MATCH_KINDS
  * @returns {Array<{code: string}>}
@@ -102,8 +100,7 @@ export function contrast(a, b) {
 }
 
 /**
- * Colours readable as text on a colour at the level asked: for the grey and each hue of the palette, the step nearest the middle that still reaches the contrast, from the vivid grid and then the deep one.
- * On a light colour the steps are tried from light to dark, on a dark one from dark to light, so the first that reads is the one nearest the middle.
+ * Colours readable as text on a colour at the level asked: for the grey and each hue of the palette, the step nearest the middle that reaches the contrast.
  * @param {string} background
  * @param {number} level 4.5 (AA), 3 (large text) or 7 (AAA)
  * @returns {Array<{code: string}>}
@@ -154,7 +151,7 @@ export function mainColours(rgba, count = 8) {
 }
 
 /**
- * The colour codes in a text, each once, in the order met: three, six or eight digits after «#», or six without it as a palette link has them (`…/264653-ffffff-…`, two or more joined by dashes); six standing alone need a digit among them, so a word such as «facade» is no colour; anything else is passed by.
+ * The colour codes in a text, each once: three, six or eight digits after «#», or six without it, alone with a digit among them or joined by dashes.
  * @param {string} text
  * @param {number} [limit]
  * @returns {Array<{code: string}>}
@@ -184,7 +181,7 @@ export function shuffle(slots, random = Math.random) {
 }
 
 /**
- * Urd's ready-made sets: colours for special uses, each set and colour named by a key of the admin's words (`cp.ready.<set>`, `cp.readyColour.<colour>`), the names put into a set in the admin's language when it is made.
+ * Urd's ready-made sets, each set and colour named by a key of the admin's words (`cp.ready.<set>`, `cp.readyColour.<colour>`).
  */
 export const READY_SETS = [
   ['metals', [['gold', '#d4af37'], ['oldGold', '#cfb53b'], ['brass', '#b5a642'], ['champagne', '#f7e7ce'], ['silver', '#c0c0c0'], ['platinum', '#e5e4e2'], ['pewter', '#8e9294'], ['gunmetal', '#2a3439'], ['bronze', '#cd7f32'], ['copper', '#b87333'], ['roseGold', '#b76e79'], ['steel', '#71797e']]],
@@ -196,7 +193,7 @@ export const READY_SETS = [
   ['festive', [['hollyRed', '#b3000c'], ['hollyGreen', '#0b6623'], ['goldLeaf', '#e6be8a'], ['candle', '#fff1c1'], ['pumpkin', '#eb6123'], ['witch', '#4b0082'], ['spring', '#fff44f'], ['blossom', '#ffb7c5'], ['mint', '#98ff98'], ['partyPink', '#ff69b4'], ['confetti', '#00b2ff'], ['midnight', '#13274f']]],
 ];
 
-/** The kinds of picture a page or a setting holds, by the end of its address on the site itself (another host's pictures cannot be read here), or a picture kept in the draft before it is published. */
+/** A picture a page or a setting holds: an address on the site itself by its ending, or a picture kept in the draft as data. */
 const PICTURE = /^(?:data:image\/(?:png|jpe?g|webp|gif|avif);base64,|(?![a-z][a-z0-9+.-]*:|\/\/)[^\s"'<>]+\.(?:png|jpe?g|webp|gif|avif)(?:\?[^\s"'<>]*)?$)/i;
 
 /**
@@ -221,8 +218,7 @@ export function sitePictures(docs, limit = 9) {
 }
 
 /**
- * A set's name from a picture's address or file name: its last part without the extension and the content hash Urd's uploads end in, dashes and underscores read as spaces, at most 40 characters.
- * '' where no name can be read (a picture kept as data).
+ * A set's name from a picture's address: the file name without its extension and upload hash, dashes and underscores as spaces, at most 40 characters.
  * @param {string} src
  * @returns {string}
  */

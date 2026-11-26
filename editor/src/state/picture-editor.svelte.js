@@ -1,8 +1,5 @@
 /**
- * The image editor's state (0.7.29.2): which picture is open, the picture as the editor holds it (lib/picture-edit.js readPicture), and its writes.
- * Every change is written at once through the place the picture lives (the image block's or video's props, a gallery picture, a collection entry), so the canvas behind the dialog shows it live, all under one history key per opening: the whole edit is one undo step in the admin.
- * The dialog keeps its own undo and redo for the changes made while it is open; Cancel and Escape write the picture back as it was opened.
- * A baked picture (the site icon, a page's share image, 0.7.29.4) is edited from its kept original in the dialog alone, and «Done» bakes its file and stores both (lib/picture-bake.js).
+ * The image editor's state: the open picture, written live where it lives as one undo step per opening, with the dialog's own undo; Cancel puts it back.
  */
 import { ta } from '$engine/i18n.js';
 import { compressToWebp } from '$engine/imageTools.js';
@@ -28,7 +25,7 @@ let opened = $state(null);
 /** The picture's own width over its height, once the dialog has loaded it. */
 let natural = $state(0);
 
-/** The dialog's own steps back and forward while it is open: each the picture as it stood, and for a gallery picture every picture's settings beside it («Apply to all» changes them). */
+/** The dialog's own undo and redo steps: the picture as it stood, beside a gallery's settings for every picture («Apply to all» changes them). */
 let undoSteps = $state([]);
 let redoSteps = $state([]);
 
@@ -90,7 +87,7 @@ function restore(step) {
 
 const sameStep = sameJSON;
 
-/** Where the picture lives now, read from the draft; a baked picture's kept original comes with the opening, and a background's picture is read by the panel that opened it (`place`). */
+/** Where the picture lives now, read from the draft; a baked picture's original comes with the opening, a background's picture from its panel (`place`). */
 function readSource(t) {
   if (isBaked(t.kind)) return t.source?.src ? clone(t.source) : null;
   if (t.place?.read) {
@@ -110,8 +107,7 @@ function readSource(t) {
 /**
  * Opens the editor on a picture.
  * @param {{kind: 'image'|'gallery'|'entry'|'cover'|'icon'|'share'|'portrait'|'glyph'|'logo'|'layer'|'slide', sectionId?: string, blockId?: string, index?: number, collection?: string, entryId?: string, pageId?: string, place?: 'nav'|'footer'|{read: () => object|null, mutate: (key: string, fn: (place: object) => void) => void}, fresh?: boolean, source?: object, onbaked?: (dataUrl: string) => void, frameRatio?: number, frameWidth?: number, phone?: boolean}} t
- *   source is a baked picture's kept original (its file and settings), or for a new one only its file; onbaked takes a handed picture's baked file (a glyph);
- *   place is a logo's ('nav' or 'footer'), or for a background's picture the panel's reader and writer ({read, mutate(key, fn)}); fresh marks a baked picture opened on a new upload, not yet stored
+ *   source: a baked picture's original; onbaked: takes a glyph's baked file; place: a logo's, or a background panel's reader and writer; fresh: not yet stored
  */
 function open(t) {
   // A gesture's last move on the picture open before goes to that picture.
@@ -121,7 +117,7 @@ function open(t) {
   const source = readSource(t);
   if (!source) return;
   const read = readPicture(t.kind, source);
-  // An image block's frame is part of its picture here: a shape changes it, and Cancel and the dialog's undo put it back; opened in the phone view, so is its place on the phone.
+  // An image block's frame, and in the phone view its place on the phone, is part of its picture: a shape changes it, and Cancel and undo put it back.
   if (t.kind === 'image') {
     const { block } = pageState.readBlock(t.sectionId, t.blockId);
     if (block?.frames?.desktop) read.frame = clone(block.frames.desktop);
@@ -155,7 +151,7 @@ function frameShape(frame) {
 }
 
 /**
- * The frame's width over its height the crop window is drawn with: the chosen shape's, else an image block's desktop frame at the design width, in either view, since that is the frame a crop changes, else the frame as the preview drew it, else a cover's block frame at the design width.
+ * The width over height the crop window draws: the chosen shape's, else an image block's frame at the design width, the frame as drawn, or a cover block's.
  */
 function frameRatio() {
   if (!target || !pic) return 1;
@@ -175,7 +171,7 @@ function frameRatio() {
 }
 
 /**
- * The frame's size on the page in pixels, for the sharpness check: an image block's from its frame at the design width (a new shape changes it), a video cover's from the video's frame, anything else as the preview drew it; null where it is not known.
+ * The frame's size on the page in pixels for the sharpness check: an image block's at the design width, a video cover's from the video, else as drawn; or null.
  * @returns {{width: number, height: number}|null}
  */
 function frameSize() {
@@ -229,7 +225,7 @@ function write(next) {
 }
 
 /**
- * The image block's frame for a new shape: it keeps its height and takes the width the shape gives, moving left where the room to its right is too small; null where the shape leaves the frame as it is.
+ * The image block's frame for a new shape: its height kept, the shape's width, moved left where the room to its right is too small; null where the frame stays.
  * @param {object} frame
  * @param {string} ratio
  */
@@ -242,8 +238,7 @@ function frameForRatio(frame, ratio) {
 }
 
 /**
- * A change in the dialog: written at once, and kept as one of the dialog's own steps.
- * A slider's moves are one step together (`gesture`), kept when it is let go (endGesture), and written to the page at most once a frame while it goes on; a drag on the stage (`live` false) writes once, as it is let go, since the dialog covers the page.
+ * A change in the dialog, written at once as a dialog step; a slider's moves are one step (`gesture`), and a stage drag (`live` false) writes as it is let go.
  * @param {object} patch Top-level fields of the picture, with `style` merged into its settings
  * @param {{gesture?: boolean, live?: boolean}} [options]
  */
@@ -253,7 +248,7 @@ function change(patch, { gesture = false, live = true } = {}) {
   const before = clone(pic);
   const next = { ...before, ...patch, style: patch.style ? { ...before.style, ...patch.style } : before.style };
   if (target.kind === 'image' && patch.ratio && patch.ratio !== before.ratio) next.frame = frameForRatio(before.frame, patch.ratio) ?? before.frame;
-  // Opened in the phone view, a free crop gives the block's place on the phone the desktop frame's new shape where the phone draws one of its own, so both show the same part of the picture; a chosen shape draws itself there.
+  // In the phone view a free crop gives the block's phone place the desktop frame's new shape, so both show the same part; a chosen shape draws itself there.
   if (target.kind === 'image' && 'phone' in opened && next.frame) {
     const free = (next.ratio ?? 'free') === 'free';
     next.phone = !free || sameStep(next.frame, opened.frame) ? clone(opened.phone) : phoneForCrop(opened.phone, target.frameWidth, frameShape(next.frame));
@@ -306,7 +301,7 @@ function redo() {
   restore(next);
 }
 
-/** «Apply to all» in a gallery: every other picture there takes the open one's look, adjustments and overlay (lib/picture-edit.js withShared), as one of the dialog's steps. */
+/** «Apply to all» in a gallery: every other picture takes the open one's look, adjustments and overlay (withShared), as one of the dialog's steps. */
 function applyToAll() {
   if (baking) return;
   const t = target;
@@ -376,7 +371,7 @@ function reset(section) {
   change({ style: resetStyle(pic.style, section) });
 }
 
-/** A new picture in place of the open one, through the same checks as a first upload (an SVG trimmed, the picture compressed into its use's budget, one still over it asked about). */
+/** A new picture in place of the open one, through a first upload's checks: an SVG trimmed, compressed to its use's budget, one still over it asked about. */
 async function replace(file) {
   if (baking) return;
   const t = target;
@@ -392,7 +387,7 @@ async function replace(file) {
   }
 }
 
-/** Takes the picture away and closes: the image block, the video's cover and the quote stand without one, a gallery picture leaves the gallery, an entry keeps its other fields, and a baked picture goes with its original. */
+/** Takes the picture away and closes: a block or a cover stands without one, a gallery picture leaves the gallery, and a baked picture goes with its original. */
 function remove() {
   if (baking) return;
   const t = target;

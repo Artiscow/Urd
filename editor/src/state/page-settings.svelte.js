@@ -1,6 +1,5 @@
 /**
- * A page's own settings (panels/pages/*): which page they are open for, each page's meta fields as the settings show them, and the writes to any page, open on the canvas or not.
- * The open page is written through its store; another page through its draft (pageState.patchPageDraft), so the settings reach every page without switching the canvas.
+ * A page's own settings: which page they are open for, each page's meta fields, and the writes to any page, through its store where open, else its draft.
  */
 import { ta } from '$engine/i18n.js';
 import { pageTitle } from '$engine/seo.js';
@@ -40,7 +39,7 @@ async function loadAllPageMetas() {
   await Promise.all(siteState.siteDraft.pages.map((p) => loadPageMeta(p.id)));
 }
 
-/** The settings opened for a page, where the chosen layout shows them: the step in an open Pages panel, the table with the editing chrome shown. The page's fields are read; the table reads every page's once, as it opens. */
+/** The settings opened for a page where the chosen layout shows them; the table reads every page's fields once, as it opens. */
 async function openPageSettings(id) {
   const opening = pageSettingsFor === null;
   pageSettingsFor = id;
@@ -82,7 +81,7 @@ async function setPageMeta(id, field, rawValue) {
   pageMetas[id] = { ...(pageMetas[id] ?? metaOf(null)), [field]: value };
 }
 
-/** A page's share image chosen: the picture is kept as the original, and the image editor opens on it to crop it to the share image's shape; «Done» bakes the image (setPageShareImage). */
+/** A page's share image chosen: kept as the original, and the image editor opens on it to crop it to the share image's shape. */
 async function uploadPageOgImage(id, event) {
   const file = event.target.files?.[0];
   event.target.value = '';

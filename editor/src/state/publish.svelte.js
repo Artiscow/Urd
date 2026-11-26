@@ -1,6 +1,5 @@
 /**
- * Publishing: the images and files materialised into media/ (lib/materialize.js), the commit, the deploy wait, and the discard of the draft.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
+ * Publishing: the images and files materialised into media/, the commit, the deploy wait, and the discard of the drafts.
  */
 import { ta, taApiError } from '$engine/i18n.js';
 import { liftPageFile } from '$engine/migrate.js';
@@ -34,14 +33,13 @@ import { pageFills } from '../lib/fill-in.js';
 import { hasSellerDetails } from '../lib/site-seed.js';
 
 /**
- * The tidy of media/ (lib/media-tidy.js): the files at the root of media/ move into the folder of their kind, and the references follow.
- * The listing comes from the publishing layer (/api/github/media); the rewritten documents go into the drafts and the moves ride on the next publish, which commits, adopts and waits for the deploy as it always does.
+ * The tidy of media/: the files at its root move into the folder of their kind, the rewritten documents into the drafts, and the moves ride on the next publish.
  */
 let mediaFiles = $state(null);
 
 let mediaBusy = $state(false);
 
-/** The moves the next publish carries (the commit's `from` entries), kept with the drafts until that publish is in or the drafts are discarded, so a reload between the tidy and its publish never leaves the rewritten documents without their moves. */
+/** The moves the next publish carries (the commit's `from` entries), kept with the drafts until that publish is in or the drafts are discarded. */
 const MOVES_KEY = 'urd-draft-media-moves';
 
 let pendingMoves = $state.raw(readMoves());
@@ -87,7 +85,7 @@ async function loadMediaFiles() {
   }
 }
 
-/** The tidy: the plan from the documents as they stand and the listing, the changed documents written into the drafts, and the moves given to a publish. With changes waiting it runs only where `withChanges` asks for them to be published first (the panel's second press), and only once that publish has gone through, so its own publish carries the moves and the paths it rewrites alone. The button stands busy from the press to the publish's answer. */
+/** The tidy: the plan written into the drafts and its moves published; changes waiting are published first where `withChanges` asks, and must have gone through. */
 async function tidyMedia({ withChanges = false } = {}) {
   if ((historyState.dirty && !withChanges) || mediaBusy) return;
   // The collections' links to the files are rewritten with the move; until every collection has been read, the files stay where they are.
@@ -132,7 +130,7 @@ async function tidyMedia({ withChanges = false } = {}) {
       shellState.setStatus(ta('media.tidyNothing'));
       return;
     }
-    // The changed documents into the drafts, which the publish below picks up. A tidy is not undone: the undo list starts anew, since every step before it holds the paths it changes.
+    // The changed documents go into the drafts; a tidy is not undone, so the undo list starts anew.
     historyState.startAnew();
     if (plan.site) {
       siteState.siteStore.replace(plan.site);
@@ -174,7 +172,7 @@ async function tidyMedia({ withChanges = false } = {}) {
 let discardAsked = false;
 
 /**
- * «Discard drafts» as the Publish menu, the History panel and the undo list's foot offer it: the question first, since it takes every unpublished change at once, then the discard, and a message whose action brings the drafts back while the discard is still the last step.
+ * «Discard drafts»: the question first, then the discard, and a message whose action brings the drafts back while the discard is still the last step.
  * @returns {Promise<boolean>} whether the drafts were discarded
  */
 async function askDiscard() {
@@ -209,8 +207,7 @@ function discardDrafts() {
     shellState.setStatus(ta('ui.discarded'), 'info');
     return true;
   } catch (err) {
-    // A failed discard must never pass silently: the drafts may be half
-    // reset, and the owner needs to know that a reload is the way out.
+    // A failed discard is told, as the drafts may be half reset.
     console.error('Urd: discard failed', err);
     shellState.setStatus(String(err?.message ?? err), 'error');
     return false;
@@ -219,7 +216,7 @@ function discardDrafts() {
 
 function discard() {
   flushDrafts();
-  // The other pages' drafts go too, so the step holds them, and an undo of the discard writes them back; a page waiting for its deploy goes back to its draft as it went, which stays the source until the deploy serves it.
+  // The step holds the other pages' drafts, which go too; a page waiting for its deploy goes back to its draft as it went.
   const pending = (id) => pageState.pendingPublished.has(id);
   const others = siteState.siteDraft.pages
     .filter((p) => p.id !== pageState.pageId && localStorage.getItem(`urd-draft-${p.id}`) !== null && (!pending(p.id) || pageState.pendingChanged(p.id)))
@@ -260,8 +257,7 @@ function discard() {
   if (templatesState.templatesIndexStore) {
     templatesState.templatesIndexStore.reset();
     templatesState.templateIds = [...(templatesState.templatesIndexStore.data.maler ?? [])];
-    // Never-published templates (does-not-exist baseline) vanish with the
-    // draft; published ones return to the published state.
+    // A template never published goes with the draft; a published one returns to its published state.
     for (const id of Object.keys(templatesState.templateStores)) {
       if (templatesState.templateIds.includes(id)) templatesState.templateStores[id].reset();
       else { dropDraft(`urd-draft-template-${id}`);
@@ -284,7 +280,7 @@ function discard() {
 }
 
 /**
- * The pages and collections whose own file is not live yet: a page the published site does not list, or lists only as left behind hidden (lib/not-live.js), and a new collection; a page committed and waiting for its deploy is live.
+ * The pages and collections whose own file is not live yet: a page unlisted or left behind hidden, and a new collection; a page awaiting its deploy is live.
  * @returns {{pages: string[], collections: string[]}}
  */
 function notLiveNow() {
@@ -296,7 +292,7 @@ function notLiveNow() {
   };
 }
 
-/** What Publish sends: the parts ticked with the parts they cannot go without, why a part unticked goes anyway, and the parts kept for later (lib/publish-pick.js); the media tidy's moves waiting take every part. */
+/** What Publish sends: the parts ticked with the parts they cannot go without, why a part unticked goes anyway, and the parts kept for later. */
 const pick = $derived(pickParts({
   waiting: historyState.unpublished.map(partName),
   later: draftsState.draftsLater,
@@ -314,8 +310,7 @@ function publishTicked() {
 let publishing = false;
 
 /**
- * Publishes the parts waiting, every one of them or those named in `parts` (lib/publish-pick.js pickParts, with their ties): the files of the parts that go, the site settings with a page not live yet that stays behind marked hidden, the collections' list without a new collection that stays behind; the parts left behind keep their drafts, and those that stand in this browser alone are saved to the drafts branch.
- * One publish at a time.
+ * Publishes the parts waiting, or those named in `parts` with their ties, one at a time; the parts left behind keep their drafts and are saved to the branch.
  * @param {{parts?: Set<string>|null}} [opts]
  */
 async function publish(opts) {
@@ -329,7 +324,7 @@ async function publish(opts) {
 }
 
 async function publishOnce({ parts = null } = {}) {
-  // The saved drafts' index as the editor loaded is read first, so the saved copies this publish makes stale are found; the status line says the publish has begun meanwhile.
+  // The status says the publish has begun while the saved drafts' index is awaited, for the saved copies this publish makes stale.
   shellState.setStatus(ta('status.publishing'));
   // A sign-in due for renewal is renewed before publishing reaches GitHub.
   await shellState.renewIfDue();
@@ -341,10 +336,7 @@ async function publishOnce({ parts = null } = {}) {
     return;
   }
   if (updaterState.updateBusy) {
-    // Publishing writes slug copies from the SERVED root index; in the
-    // deploy window after an engine update it still points to the
-    // deleted engine directory, and the copies would break all the
-    // subpages (ADR-0013).
+    // Publishing waits while an update deploys, as the page copies are written from the served root index (ADR-0013).
     shellState.setStatus(ta('update.publishBlocked'), 'error');
     return;
   }
@@ -361,7 +353,7 @@ async function publishOnce({ parts = null } = {}) {
   const newPageIds = [];
   // The pages going out with parts of a template still to fill in (lib/fill-in.js), for the warnings below.
   const unfilled = [];
-  // The pages going out with sections whose layout changed since they were last looked at in the phone view (lib/phone-check.js), and the sections as they go, which count as checked once they are out.
+  // The pages going out with sections not looked at in the phone view since their layout changed, and the sections as they go.
   const unchecked = [];
   const goneOut = [];
   // The committed files the editor reads in place of the server's until the deploy serves them.
@@ -387,19 +379,15 @@ async function publishOnce({ parts = null } = {}) {
         } catch { /* a corrupt draft is skipped */ }
       }
     }
-    // A page marked as gone out hidden, whose draft this browser no longer holds (published from another browser, or discarded), cannot go: its entry stays hidden, and its mark stands.
+    // A page marked as gone out hidden, whose draft this browser does not hold, cannot go: its entry stays hidden, and its mark stands.
     if (!page && marked) {
       if (!left.pages.includes(entry.id)) left.pages.push(entry.id);
       continue;
     }
-    // A new page must NEVER be published without a page file (visitors
-    // would get a dead address): if the draft is missing, a blank page
-    // is published.
+    // A new page always goes with a page file, a blank one where its draft is missing.
     if (!page && isNew) page = pageState.blankPage(entry);
     if (!page) continue;
-    // Clone before materializing: the drafts in memory are untouched
-    // until the commit actually succeeds (an aborted publish must never
-    // leave image references to files that do not exist).
+    // A copy is materialised, the draft in memory untouched until the commit is in.
     const out = JSON.parse(JSON.stringify(page));
     // Unpublished images become their own files in media/ in the same commit.
     files.push(...materializeImages(out));
@@ -411,9 +399,7 @@ async function publishOnce({ parts = null } = {}) {
     goneOut.push([entry.id, out.sections]);
     const open = entry.hidden ? null : pageFills(out);
     if (open && open.own + open.contact) unfilled.push({ title: entry.title, ...open });
-    // New pages do not exist on the server until the deploy finishes:
-    // the draft is kept as the source until then, and cleaned up
-    // automatically on the next visit.
+    // A new page keeps its draft as the source until its deploy is served.
     if (isNew) newPageIds.push(entry.id);
     else {
       draftKeys.push(key);
@@ -421,22 +407,19 @@ async function publishOnce({ parts = null } = {}) {
     }
   }
 
-  // The site settings as they go out: the draft, with each page not live yet that stays behind marked hidden; they go with a page whose entry went out hidden before its file, to show it.
+  // The site settings as they go out, each page not live yet that stays behind marked hidden; they go with a page whose entry went out hidden.
   const siteGoes = want('site') || [...sentPages].some((id) => notLiveIds.has(id));
   let siteOut = null;
   if (siteGoes && siteState.siteStore.hasDraft()) {
-    // Clone here too: logo uploads are materialized without touching the
-    // draft in memory until the commit is safely in.
+    // A copy here too, the draft in memory untouched until the commit is in.
     siteOut = outSite(JSON.parse(JSON.stringify(siteState.siteDraft)), left.pages);
     files.push(...materializeSiteImages(siteOut));
     files.push({ path: 'content/site.json', content: JSON.stringify(siteOut, null, 2) + '\n', encoding: 'utf-8' });
     committed.push(['content/site.json', siteOut]);
-    // Materialize the theme as render-blocking light-dark() CSS
-    // (FOUC-free first paint). One file covers all pages; the index.html
-    // copies link to it.
+    // The theme as render-blocking light-dark() CSS, one file for every page.
     files.push({ path: 'content/theme.css', content: buildThemeCss(siteOut.theme), encoding: 'utf-8' });
     draftKeys.push('urd-draft-site');
-    // Name WHAT in the site setup changed (for the history).
+    // What in the site settings changed, named for the commit message.
     const eq = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
     if (!eq(siteState.site.theme, siteOut.theme)) publishedTitles.push(ta('publish.part.theme'));
     if (!eq(siteState.site.nav, siteOut.nav)) publishedTitles.push(ta('publish.part.nav'));
@@ -449,11 +432,10 @@ async function publishOnce({ parts = null } = {}) {
     if (!eq(restA, restB)) publishedTitles.push(ta('publish.part.siteInfo'));
   }
 
-  // The site the commit stands on: the settings as they go out, else as the draft holds them, else, where they stay behind, as they are live; the page copies, the sitemap, the deletes, the feeds' links and the redirects' checks follow it.
+  // The site the commit stands on: the settings as they go out, else the draft where they go, else the live ones.
   const siteGoing = siteOut ?? (siteGoes ? siteState.siteDraft : siteState.site);
 
-  // Collections: changed files, the index file and deletions (diff against the published index); a legacy index file with nothing of its own is deleted with any publish.
-  // While the index could not be read, nothing of the collections is written or deleted, since the editor does not know what is published.
+  // Collections: the changed files, the index and the deletions; while the index could not be read, nothing of them is written or deleted.
   const changedCollections = collectionsState.collectionsUnavailable ? [] : Object.entries(collectionsState.collectionStores).filter(([id, st]) => st.hasDraft() && want(`collection-${id}`));
   // The collections' list, its deletes and the legacy index go with the list's own part.
   const indexGoes = want('collections');
@@ -463,9 +445,7 @@ async function publishOnce({ parts = null } = {}) {
       const out = JSON.parse(JSON.stringify(st.data));
       for (const entry of out.entries) materializeEntryImages(entry, files);
       files.push({ path: `content/samlinger/${id}.json`, content: JSON.stringify(out, null, 2) + '\n', encoding: 'utf-8' });
-      // Dated collections get an RSS feed in the same publish (the SEO
-      // package): the entries as plain text, the addresses from the
-      // origin the admin runs on.
+      // A dated collection gets its RSS feed in the same publish, its addresses from the admin's origin.
       if (FEED_KINDS.includes(out.kind)) {
         files.push({
           path: `content/samlinger/${id}.xml`,
@@ -512,9 +492,7 @@ async function publishOnce({ parts = null } = {}) {
     if (changedCollections.length || indexOut || (indexGoes && plan.deleteIds.length)) publishedTitles.push(ta('publish.part.collections'));
   }
 
-  // Template changes are published as content/maler/ files + index, the
-  // same pattern as collections; images in the template are materialized
-  // to media/.
+  // The templates go as their files in content/maler/ and their index, their images materialised.
   const templatesGo = want('templates');
   const changedTemplates = templatesGo ? Object.entries(templatesState.templateStores).filter(([, st]) => st.hasDraft()) : [];
   if (templatesGo && (changedTemplates.length || templatesState.templatesIndexStore?.hasDraft())) {
@@ -529,8 +507,7 @@ async function publishOnce({ parts = null } = {}) {
     if (templatesState.templatesIndexStore?.hasDraft()) {
       files.push({ path: 'content/maler.json', content: JSON.stringify(templatesState.templatesIndexStore.data, null, 2) + '\n', encoding: 'utf-8' });
       draftKeys.push('urd-draft-templates', 'urd-draft-maler');
-      // Templates removed from the index are deleted from the repo (if
-      // the id is also created in the same publish, the create list wins).
+      // A template taken off the index is deleted, unless the same publish creates it.
       let publishedIndex = { maler: [] };
       try {
         publishedIndex = await (await fetch('/content/maler.json')).json();
@@ -554,7 +531,7 @@ async function publishOnce({ parts = null } = {}) {
     publishedTitles.push(ta('publish.part.plugins'));
   }
 
-  // The redirects (ADR-0015): the list, and the host's file written from it. A `_redirects` in the repository that has not been looked at yet is read first, so one written by hand joins the list instead of being written over; where it cannot be read, the list waits as a draft and the owner is told.
+  // The redirects (ADR-0015): the list and the host's file, the repository's `_redirects` read first; where it cannot be read, the list waits.
   let redirectsWait = false;
   if (want('redirects') && redirectsState.redirectsStore?.hasDraft()) {
     if (await redirectsState.ensureHostFileKnown()) {
@@ -568,10 +545,7 @@ async function publishOnce({ parts = null } = {}) {
     }
   }
 
-  // Page routing on all static hosts: every page except the front page
-  // gets its own <path>/index.html (a copy of the root index.html; the
-  // engine routes on pathname). Generated on every publish - unchanged
-  // copies yield identical blobs and thus no diff in the commit.
+  // Every page but the front page gets its own <path>/index.html, a copy of the root index.html, on every publish.
   try {
     const html = await (await fetch('/index.html')).text();
     for (const p of siteGoing.pages) {
@@ -582,23 +556,15 @@ async function publishOnce({ parts = null } = {}) {
     }
   } catch { /* without the index copies the site still works on SPA hosts */ }
 
-  // The visibility files (the SEO package): sitemap and robots are
-  // regenerated on every publish from the origin the admin runs on -
-  // unchanged content yields identical blobs and no diff, like the
-  // index copies.
+  // The sitemap and robots.txt, written on every publish from the admin's origin.
   files.push({ path: 'sitemap.xml', content: buildSitemapXml(siteGoing.pages, location.origin), encoding: 'utf-8' });
   files.push({ path: 'robots.txt', content: buildRobotsTxt(location.origin), encoding: 'utf-8' });
 
-  // Deleted and moved pages: diff against the published site.json. The
-  // server silently skips paths already gone from the repo. A path ALSO
-  // created in the same commit (two pages swapping addresses) must not
-  // be deleted: the last entry with the same path wins in the Git tree,
-  // so such a deletion would remove the new copy.
-  // The media files the tidy moves (lib/media-tidy.js), each from its root path to its folder; the bytes stay in the repository.
-  // They wait only with every part going (lib/publish-pick.js), since the drafts already name the files where they move to.
+  // The media files the tidy moves, each from its root path to its folder.
   for (const move of pendingMoves) files.push({ path: move.to, from: move.from });
 
   const created = new Set(files.map((f) => f.path));
+  // Deleted and moved pages, against the published site.json; a path the same commit creates is never deleted.
   const del = (path) => { if (!created.has(path)) files.push({ path, delete: true }); };
   for (const p of siteState.site.pages) {
     const still = siteGoing.pages.find((q) => q.id === p.id);
@@ -612,7 +578,7 @@ async function publishOnce({ parts = null } = {}) {
     if (still?.hidden && still.path !== '/') del(`${still.path.slice(1)}/index.html`);
   }
 
-  // The warnings before the commit, asked as one question with a section each: a page name or address typed but turned down (it never reached the draft, so the page goes out with what stands), a page with parts of its template still to fill in, and someone else's publish since we loaded touching the same files. The editor must actively choose to publish anyway.
+  // The warnings before the commit, asked as one question with a section each.
   const warnings = [];
   // A page name or address turned down belongs to the site settings, and is told where they go.
   const refused = siteGoes ? siteState.refusedPageFields() : [];
@@ -637,7 +603,7 @@ async function publishOnce({ parts = null } = {}) {
       ],
     });
   }
-  // A page made from a template with parts in [brackets] not yet filled in: the parts by page, and the seller's details, which the Legal panel's contact details hold or still lack.
+  // A page with parts of its template in [brackets] not yet filled in, and the seller's details.
   if (unfilled.length) {
     const haveDetails = hasSellerDetails(siteState.siteDraft);
     warnings.push({
@@ -680,8 +646,7 @@ async function publishOnce({ parts = null } = {}) {
     message: ta('publish.commitMessage', { titles: publishedTitles.join(', ') || ta('publish.theSite') }),
     // A file named by its content (a PDF a page and the footer both link to) may be gathered from several drafts: it is sent once, the last copy as git would keep it.
     files: [...new Map(files.map((file) => [file.path, file])).values()],
-    // The HEAD the conflict check saw: the server rejects with 409 if
-    // someone manages to publish inside the commit window itself.
+    // The HEAD the conflict check saw, which the server holds the commit to.
     ...(conflict.head ? { expect: conflict.head } : {}),
   };
   let res = null;
@@ -701,17 +666,13 @@ async function publishOnce({ parts = null } = {}) {
     if (sha) updaterState.baseSha = sha;
     else updaterState.refreshBaseSha();
     setMoves([]);
-    // Mirror the materialization into memory now that the commit is
-    // safely in (the same deterministic paths the clones got), for the parts that went.
+    // The materialised paths written into memory for the parts that went.
     if (sentPages.has(pageState.pageId)) materializeImages(pageState.store.data);
-    // The drafts ARE now the published state; keep the data in memory
-    // (the server serves old JSON until the deploy finishes) and remove
-    // only the markers.
+    // The drafts that went are the published state: their data stays in memory and their keys go.
     for (const key of draftKeys) localStorage.removeItem(key);
     // The pages that went count as checked on the phone as they went (lib/phone-check.js).
     for (const [id, sections] of goneOut) pageState.phoneChecked(id, sections);
-    // Published baseline = what went out: rebuild the baselines of the stores that went, so
-    // "Discard draft" never rolls back past this publish; a store kept back keeps its own.
+    // Each store that went takes what went out as its baseline; a store kept back keeps its own.
     if (siteOut) {
       materializeSiteImages(siteState.siteDraft);
       // The draft keeps a page left behind shown, and stands as a draft where it differs from the settings as they went out.
@@ -808,8 +769,7 @@ async function publishOnce({ parts = null } = {}) {
     if (parts) draftsState.keepLaterOf(keptParts);
     else draftsState.clearLater();
     const wave = pageState.held.hold(committed);
-    // The wait keeps the message up (info never auto-clears) until the
-    // site serves the commit or the wait gives up.
+    // The message stands until the site serves the commit or the wait gives up.
     shellState.setStatus(ta('status.published'), 'info');
     updaterState.awaitPublishDeploy(files, () => pageState.held.release(wave));
   } else if (res?.status === 401) {
@@ -821,13 +781,11 @@ async function publishOnce({ parts = null } = {}) {
   } else if (res?.status === 403) {
     shellState.setStatus(taApiError(await res.json().catch(() => null)) ?? ta('status.noPublishAccess'), 'error');
   } else if (res?.status === 409) {
-    // Someone published inside the commit window itself: the drafts are
-    // untouched, and baseSha stands still, so a retry runs the conflict
-    // check again and picks up the fresh changes.
+    // Another publish came in meanwhile: the drafts and baseSha stand, so a retry checks for conflicts again.
     shellState.setStatus(ta('status.publishRace'), 'error');
   } else if (res) {
     const data = await res.json().catch(() => null);
-    // The files the moves name are not at the root any more (a publish whose answer was lost has moved them): the moves are dropped, and the documents, which already point at the folders, go with the next publish.
+    // The files the moves name are not at the root: the moves are dropped, and the documents go with the next publish.
     if (data?.code === 'moveMissing') setMoves([]);
     shellState.setStatus(taApiError(data) ?? ta('status.publishFailed'), 'error');
   } else {

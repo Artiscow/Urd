@@ -1,5 +1,6 @@
 /**
  * The rich-text allowlist (RICH_TEXT and buildRich in sanitize.js), the one cleaner the drawing of a text and a paste into one share, run on the audit's hostile samples and on what the editor writes.
+ * The editor reads a rich-text title's words in an inert document too (state/collections.svelte.js plainTitle), checked from its source.
  * Node has no HTML parser, so a small one stands in for the browser's here: it decodes character references, keeps an SVG's elements in the SVG namespace with their own case, and reads script, style and textarea as raw text, as the browser's parser does.
  */
 import { test } from 'node:test';
@@ -323,4 +324,12 @@ test('SCHEMA.md lists the allowlist as RICH_TEXT holds it: every element, its at
   for (const prop of RICH_TEXT.pasted) assert.ok(pasted.includes(`\`${prop}\``), `pasted ${prop}`);
   const dropped = line('The elements left out with their content');
   assert.deepEqual([...dropped.matchAll(/`([a-z]+)`/g)].map((m) => m[1]), RICH_TEXT.dropped);
+});
+
+test('the editor reads the words of a rich-text title in an inert document, never with a pattern over the markup', () => {
+  const collections = readFileSync(new URL('../editor/src/state/collections.svelte.js', import.meta.url), 'utf8');
+  const plain = collections.split('function plainTitle(html) {')[1].split('\n}\n')[0];
+  assert.match(plain, /^\s*const doc = new DOMParser\(\)\.parseFromString\(String\(html \?\? ''\), 'text\/html'\);\s*return \(doc\.body\.textContent \?\? ''\)\.trim\(\);\s*$/);
+  assert.match(collections, /plainTitle,/, 'the one the other parts use');
+  assert.doesNotMatch(collections, /\.replace\(\/<|innerHTML/, 'no markup is stripped by a pattern or read through a live element');
 });

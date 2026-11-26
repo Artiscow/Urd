@@ -1,6 +1,5 @@
 /**
- * The image editor's rules (0.7.29.2), pure so they are tested: what each kind of picture keeps and where, the crop window the stage draws over the whole picture, a pointer on the turned picture as a point on the picture itself, the zoom a corner handle gives, and the resets.
- * The drawing on the page is the engine's picture.js; the dialog is PictureEditor.svelte, and the writes go through state/picture-editor.svelte.js.
+ * The image editor's rules: what each kind of picture keeps and where, the crop window, a pointer on the turned picture, a handle's zoom, and the resets.
  */
 import { pictureStyle, PICTURE_BOUNDS, PICTURE_LOOKS, DUOTONE_DEFAULT, straightenScale } from '$engine/picture.js';
 import { aspectRatio } from '$engine/push-model.js';
@@ -39,14 +38,7 @@ export const ENTRY_SHAPES = ['auto', 'wide', 'square', 'portrait', 'circle'];
 const ENTRY_SHAPE_RATIO = { wide: 16 / 9, square: 1, portrait: 3 / 4, circle: 1 };
 
 /**
- * What each kind of picture can do in the editor: its shapes, the fit, the corners, the overlay and the description.
- * The video's cover has the video's own shape and no description (it is decoration on a button); a gallery picture takes the gallery's shape and corners.
- * The site icon and a page's share image are read from their file by the browser and by link previews, so they are baked (`bake`, their size in pixels) from an original kept beside them.
- * The quote's portrait stands in a round frame of a fixed size (`frame`, in pixels), shaped and drawn by the page.
- * An uploaded icon for a link or the icon block (a glyph) is baked as it comes in and handed back to the field that asked (`handed`), with no original kept.
- * A logo (the nav's or the footer's) is baked at its own shape, its size from the original (`longest`, logoBakeSize), since the nav draws its file at its own width.
- * A background's image layer keeps its own placement (its size, tiling and a focus that may pass the edge), so the editor gives it only a finish (`frameless`): the looks drawn by a filter alone and the adjustments. A slideshow layer's picture takes only its focus point, the layer's tone being its look.
- * `budget` names the use a picture is weighed by where it is not the kind's own, and `removable: false` leaves taking the picture away to the panel it came from.
+ * What each kind of picture can do in the editor: its shapes, fit, corners, overlay and description, and whether it is baked, framed, handed back or frameless.
  */
 export const KIND_TOOLS = {
   image: { ratios: IMAGE_RATIOS, fit: true, corners: true, overlay: true, alt: true },
@@ -63,7 +55,7 @@ export const KIND_TOOLS = {
 };
 
 /**
- * A colour from the picker as a picture or a film keeps it: a theme colour's name, or a hex colour without its transparency (a duotone or an overlay has no use for one); null for anything else.
+ * A colour from the picker as a picture keeps it: a theme colour's name, or a hex colour without its transparency; null for anything else.
  * @param {unknown} value
  * @returns {string|null}
  */
@@ -81,7 +73,7 @@ export const LAYER_KEYS = ['look', 'brightness', 'contrast', 'saturate', 'blur']
 export const isBaked = (kind) => Boolean(KIND_TOOLS[kind]?.bake);
 
 /**
- * A picture as the editor holds it, read from where its kind keeps it: the image block's props, a gallery picture, a collection entry, the video's cover, or a baked picture's kept original (its file and settings side by side).
+ * A picture as the editor holds it, read from where its kind keeps it: block props, a gallery picture, an entry, the video's cover, or a baked picture's original.
  * @param {'image'|'gallery'|'entry'|'cover'|'icon'|'share'} kind
  * @param {object} source The block's props (image, cover), the gallery picture (gallery), the entry (entry) or the kept original (icon, share)
  * @returns {{src: string, alt: string, fit: 'cover'|'contain', ratio: string, radius: string, style: object}}
@@ -101,7 +93,7 @@ export function readPicture(kind, source) {
 }
 
 /**
- * The settings as they are stored: each one at none left out, so a picture never edited stays as lean as it was, and nothing outside the schema's values is written (a `null` never is).
+ * The settings as they are stored: each one at none left out, and nothing outside the schema's values written (never a `null`).
  * @param {object} style
  * @returns {object}
  */
@@ -120,7 +112,7 @@ export function storedStyle(style) {
 }
 
 /**
- * Writes the editor's picture back where its kind keeps it, in place: the settings merged into what is stored, those at none taken out, and the fit, the shape, the corners and the description beside them.
+ * Writes the editor's picture back in place where its kind keeps it: the settings merged in, those at none taken out, and the fit, shape, corners and alt text.
  * @param {'image'|'gallery'|'entry'|'cover'} kind
  * @param {object} target The block's props (image, cover), the gallery picture or the entry, changed in place
  * @param {ReturnType<typeof readPicture>} pic
@@ -195,7 +187,7 @@ export function writePicture(kind, target, pic) {
 }
 
 /**
- * The frame's width over its height for a shape, or null where the shape leaves it to the frame as dragged (free, auto) or the picture's own size is not known yet (original).
+ * The frame's width over its height for a shape, or null where the frame as dragged decides (free, auto) or the picture's own size is not known (original).
  * @param {string} ratio An image block's ratio or an entry's shape
  * @param {number} [natural] The picture's own width over its height
  * @returns {number|null}
@@ -207,8 +199,7 @@ export function ratioValue(ratio, natural) {
 }
 
 /**
- * The part of the picture its frame shows, as fractions of the picture (in its own axes, before the turn): what the stage draws as the crop window.
- * The frame shows the picture covered (or whole, for contain), placed by the focus point and zoomed towards it, the way picture.js draws it; a quarter turn lays the frame across the picture.
+ * The crop window: the part of the picture its frame shows, in fractions of the picture before the turn, as picture.js draws it.
  * @param {{pictureRatio: number, frameRatio: number, x: number, y: number, zoom: number, fit?: string, quarter?: boolean}} p
  * @returns {{left: number, top: number, width: number, height: number}}
  */
@@ -227,7 +218,7 @@ export function cropWindow({ pictureRatio, frameRatio, x, y, zoom, fit = 'cover'
 }
 
 /**
- * A pointer over the stage's turned picture as a point on the picture itself (0..1 on each axis, clamped): the pointer taken back through the turn's rotation and mirrors around the picture's centre.
+ * A pointer over the stage's turned picture as a point on the picture (0..1 on each axis), taken back through the turn and mirrors around its centre.
  * @param {{clientX: number, clientY: number, centerX: number, centerY: number, width: number, height: number, angle: number, flipX?: boolean, flipY?: boolean}} p
  *   width and height are the picture box's own size before the turn; angle is in degrees
  * @returns {{x: number, y: number}}
@@ -252,8 +243,7 @@ const clamped = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const fourth = (v) => Math.round(v * 10000) / 10000;
 
 /**
- * The crop window with one of its eight handles dragged to a point, as crop tools do it: the edges the handle stands on follow the pointer and the opposite ones hold, the window staying inside the picture and never smaller than the largest zoom shows.
- * With a shape kept (`keep`, the window's width over its height in fractions of the picture), a corner follows the pointer on the axis it moves most and an edge grows the window across it around the window's middle, so the shape holds.
+ * The crop window with one of its eight handles dragged to a point: the handle's edges follow, the opposite ones hold, and a kept shape (`keep`) holds.
  * @param {{win: {left: number, top: number, width: number, height: number}, edge: {x: -1|0|1, y: -1|0|1}, point: {x: number, y: number}, keep?: number|null}} p
  *   win is the window where the drag began; edge the handle (-1 the left or top edge, 1 the right or bottom, 0 neither); point the pointer on the picture (0..1)
  * @returns {{left: number, top: number, width: number, height: number}}
@@ -292,8 +282,7 @@ export function croppedWindow({ win, edge, point, keep = null }) {
 }
 
 /**
- * The zoom and the focus point that draw a crop window: the window fills its frame at a zoom of one over its longer side, placed by where it stands in the room the picture leaves it.
- * The zoom keeps four decimals, so the side it is not read from stands where it was cropped. An axis the window fills from edge to edge keeps the point it had.
+ * The zoom and focus point that draw a crop window: a zoom of one over its longer side, and a point by where the window stands in the room the picture leaves.
  * @param {{left: number, top: number, width: number, height: number}} win
  * @param {{x: number, y: number}} point The focus point now
  * @returns {{zoom: number, x: number, y: number}}
@@ -308,8 +297,7 @@ export function styleForWindow(win, point) {
 }
 
 /**
- * An image block's frame after a free crop, as crop tools leave a picture on the page: the picture keeps its size and its place, and the frame follows the window's edges over it.
- * A frame wider than its section is brought back to the section's width with its height, so the shape holds; the height keeps two decimals, so the window's other side stands where it was cropped.
+ * An image block's frame after a free crop: the picture keeps its size and place, and the frame follows the window's edges, within the section's width.
  * @param {{x: number, y: number, w: number, h: number}} frame The frame where the crop began (x and w in per cent of the section, y and h in px)
  * @param {{left: number, top: number, width: number, height: number}} from The window where the crop began
  * @param {{left: number, top: number, width: number, height: number}} to The window now
@@ -330,8 +318,7 @@ export function frameForCrop(frame, from, to) {
 }
 
 /**
- * An image block's placement on the phone after its frame is cropped in the phone view, so the phone draws the crop's shape too.
- * A block pinned there takes the rows its width needs at that shape, a flowing block across the row or with a height of its own takes that height, and a block in cells with none already keeps its desktop frame's shape.
+ * An image block's phone placement after a crop in the phone view, at the crop's shape: rows when pinned, else a height, unless its cells keep the shape.
  * @param {object|null} placement The block's `frames.mobile` as the editor opened
  * @param {number} width The block's width on the phone in px, as drawn
  * @param {number} ratio The cropped frame's width over its height
@@ -384,8 +371,7 @@ export function sectionChanged(style, section) {
 }
 
 /**
- * The frame moved over the picture: the crop window shifted by a distance (fractions of the picture), held inside the picture, as the focus point the page draws it by.
- * The focus point is where the frame stands: an axis the frame fills from edge to edge keeps its point.
+ * The frame moved over the picture: the crop window shifted by a distance and held inside the picture, as a focus point; a filled axis keeps its point.
  * @param {{left: number, top: number, width: number, height: number}} win The window where the move began
  * @param {number} dx
  * @param {number} dy
@@ -405,8 +391,7 @@ export function movedFrame(win, dx, dy, point) {
 const SHARP_SCALE = 1.05;
 
 /**
- * How large the page draws a picture's own pixels in its frame: above 1 the picture is stretched past its own size and shows soft.
- * The frame shows the picture covered (or whole, for contain), zoomed and grown by its straightening, the way picture.js draws it; a quarter turn lays the picture across its frame.
+ * How large the page draws a picture's own pixels in its frame, as picture.js does: above 1 the picture is stretched past its own size and shows soft.
  * @param {{natural: {width: number, height: number}, frame: {width: number, height: number}, zoom?: number, fit?: string, quarter?: boolean, grow?: number}} p
  *   natural is the picture's own size in pixels, frame the frame's on the page; grow is the straightening's scale (picture.js straightenScale)
  * @returns {{scale: number, sharp: boolean, drawnWidth: number}|null} null where a size is not known
@@ -464,7 +449,7 @@ export function sourceOf(pic) {
 }
 
 /**
- * A logo's baked size in pixels: the part its shape and zoom show of the original (a quarter turn lays the original across it), no larger than `longest` on its longest side; a drawing (SVG) has no pixels of its own, so it is drawn at `longest`.
+ * A logo's baked size in pixels: the part its shape and zoom show of the original, at most `longest` on its longest side; a drawing (SVG) is drawn at `longest`.
  * @param {{natural: {width: number, height: number}, ratio: string, zoom?: number, quarter?: boolean, drawing?: boolean, longest?: number}} p
  * @returns {{width: number, height: number}}
  */
@@ -481,8 +466,7 @@ export function logoBakeSize({ natural, ratio, zoom = 1, quarter = false, drawin
 }
 
 /**
- * Where a baked picture's original is drawn on its canvas, the way picture.js draws a picture in its frame: the turn (`angle` in radians, `sx` and `sy` with the mirrors and the straightening's growth) around the canvas's centre, and the picture's rectangle before the turn, covered (or whole) in its box, placed by the focus point and zoomed towards it.
- * A quarter turn lays the box across the canvas. Coordinates are from the canvas's centre.
+ * Where a baked picture's original is drawn on its canvas, as picture.js draws it: the turn, and the picture's rectangle before it, about the canvas's centre.
  * @param {{natural: {width: number, height: number}, out: {width: number, height: number}, style: object, fit?: string}} p
  * @returns {{angle: number, sx: number, sy: number, rect: {x: number, y: number, w: number, h: number}}}
  */

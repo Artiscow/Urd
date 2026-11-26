@@ -1,6 +1,5 @@
 /**
- * The element menu's own state (0.7.26.2), shared by every copy of the menu (the Properties panel, the floating menu and the search's copy of the areas): the form the menu opens in and the four choices beside it (ADR-0030's parts), the room it has, the two search queries, the tab in view, and the Pinned choices per block type.
- * Which groups stand open is kept with every other surface's folds (lib/folds.svelte.js).
+ * The element menu's own state, shared by every copy of the menu: its form and the choices beside it (ADR-0030), its room, the searches, the tab and Pinned.
  */
 import { readChoices, writeChoices, togglePin, NO_CHOICE } from '../lib/quick-row.js';
 import { MENU_FORMS, FOLDS_MODES, EXTRA_MODES, SHORTCUTS_MODES, DESIGN_CHOICES, CAP_LISTS, CAP_ADD_FORMS } from './forms.js';
@@ -8,8 +7,7 @@ import { earlierDefaultWrites } from '../lib/admin-designs.js';
 import { folds } from '../lib/folds.svelte.js';
 
 /**
- * The form a menu opens in (Urd settings «Where the menu opens»), kept in the browser under `urd-admin-menu-width`, where «narrow» is the form one column beside the block: beside the block in two columns or one, docked in the panel column in one column or with tabs, or beside the block with tabs.
- * The button in the menu's head switches between wide and the chosen form for the session.
+ * The form a menu opens in («Where the menu opens»), kept in the browser; the button in the menu's head switches between wide and it for the session.
  */
 const MENU_FORM_KEY = 'urd-admin-menu-width';
 const menuFormOf = (v) => (MENU_FORMS.includes(v) ? v : 'wide');
@@ -29,7 +27,7 @@ const SHORTCUTS_KEY = 'urd-menu-shortcuts';
 /** How the «+» list shows what a block can take («The add list»): a list, or tiles in two columns. */
 const CAP_LIST_KEY = 'urd-cap-list';
 
-/** The way to add a capability («Adding extras»): a quiet line of names at the foot of each area with the cards folding («A line of names»), the «+» in the menu's head, chips or an add button at the foot of each area, or icons in each area's heading. */
+/** The way to add a capability («Adding extras»): a column of names, the menu's head, chips or an add button in each area, or icons in the headings. */
 const CAP_ADD_KEY = 'urd-add-capability';
 
 const stored = (key, list) => (list.includes(localStorage.getItem(key)) ? localStorage.getItem(key) : list[0]);
@@ -41,7 +39,7 @@ try {
   /* The storage is blocked or full: the new defaults stand. */
 }
 
-/** The floating menu's width with the areas poured through two columns (app.css, .block-menu.wide), and a small panel's, one group from a tool of the bar (.block-menu.small). */
+/** The floating menu's width with its areas in two columns (.block-menu.wide), and a small panel's with one group from a bar tool (.block-menu.small). */
 export const MENU_WIDE_W = 660;
 export const MENU_SMALL_W = 320;
 
@@ -64,7 +62,7 @@ export const menu = $state({
   propsQuery: '',
   /** Where the owner dragged the floating menu, kept for the session; null = beside the block (lib/menu-place.js). */
   place: null,
-  /** Whether the wide floating menu gives way to one column for the block it is opened at, where it would cover more than a tenth of the block beyond what the column covers (wideFits in lib/menu-place.js); the head button takes it back to wide. */
+  /** Whether the wide menu gives way to one column at this block, as it would cover a tenth more of it (wideFits in lib/menu-place.js). */
   cramped: false,
 });
 
@@ -127,7 +125,7 @@ export function menuLayout() {
   return menu.formPref === 'tabs' || menu.formPref === 'docked-tabs' ? 'tabs' : 'narrow';
 }
 
-/** The menu never lies over the panels, nor over a column at the stage's right edge: measured from the preview frame's left edge to its right, the window's where none is given. */
+/** The room the menu has, from the preview frame's left edge to its right (the window's by default), so it never lies over the panels or a column at the right. */
 export function measureMenuRoom(left, right = window.innerWidth) {
   menu.min = Math.round(left) + 8;
   menu.room = Math.min(Math.round(right), window.innerWidth) - menu.min - 8;
@@ -137,9 +135,7 @@ export function measureMenuRoom(left, right = window.innerWidth) {
 export const MENU_AREAS = ['content', 'style', 'placement'];
 
 /**
- * The keys of the areas (0.7.20.9): scrolls to where the area starts, in its column when wide and stacked when narrow.
- * Unless the focus is in the search field, it puts the focus on the area's first group head or button (never the help chip, never a field), so the next key is still the menu's.
- * `root` is the menu the key was pressed in (the floating menu, or the Properties panel's body).
+ * The keys of the areas: scrolls to the area and, outside the search field, focuses its first group head or button, so the next key is still the menu's.
  */
 export function chooseArea(area, root = null) {
   if (!MENU_AREAS.includes(area)) return;
@@ -153,7 +149,7 @@ export function chooseArea(area, root = null) {
   });
 }
 
-/* Pinned (0.7.20.3, lib/quick-row.js): what the owner pinned or took out, kept per block type in the browser. */
+/* Pinned (lib/quick-row.js): what the owner pinned or took out, kept per block type in the browser. */
 const quick = $state({ choices: readChoices(localStorage) });
 
 export function quickChoice(type) {

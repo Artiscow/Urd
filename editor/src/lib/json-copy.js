@@ -1,10 +1,9 @@
 /**
- * Copies and comparisons of the drafts' plain JSON data that share its strings.
- * A JSON round trip writes every string out and reads it back, a picture's data address of hundreds of kilobytes included; these walk the objects and arrays and keep each string as it is, since a string is never changed in place.
+ * Copies and comparisons of the drafts' plain JSON data that keep each string as it is, a picture's data address included.
  */
 
 /**
- * A deep copy of plain JSON data (objects, arrays and plain values, as the drafts hold): new objects and arrays, the same strings, numbers and booleans, and what JSON leaves out left out as it would be (an undefined or a function as a property, null in an array, a number that is not finite as null).
+ * A deep copy of plain JSON data with the same strings, leaving out what JSON leaves out; an undefined array item or a number that is not finite is null.
  * @template T
  * @param {T} value
  * @returns {T}

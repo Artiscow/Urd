@@ -1,7 +1,6 @@
 /**
- * A group of the site's settings as the row kit's fold takes it (lib/rows/Fold.svelte), in the shape menu/groups.js gives the element menu: its defaults, its reset, and what each setting in it needs for its mark and its own reset.
- * A site setting at its default stands in no field of the file, so a reset takes the fields away rather than writing the defaults.
- * Pure, node-tested (tests/site-groups.test.mjs).
+ * A group of the site's settings for the row kit's fold: its defaults, its reset, and each setting's mark and own reset.
+ * A reset takes the fields away.
  */
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -34,7 +33,7 @@ export function siteGroup(read, write, id, defaults) {
 }
 
 /**
- * One fold's group made of groups whose settings stand in different objects (the menu's own fields and its style, say): a setting is the fold's own where any part holds it as its own, the reset runs the reset of every part that has one, and a setting's reset goes to the first part that names its key.
+ * A fold's group made of groups in different objects: a setting is its own where any part holds it, and its reset goes to the first part naming its key.
  * @param {...ReturnType<typeof siteGroup>} groups
  */
 export function mergeGroups(...groups) {

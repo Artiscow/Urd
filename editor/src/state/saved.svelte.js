@@ -1,9 +1,5 @@
 /**
- * The saved drafts (ADR-0032): the work kept on the drafts branch through /api/github/drafts, for another device, without touching the live site.
- * Nothing saved comes into this browser by itself: every saved draft stands in the Drafts window's Saved tab (state/drafts.svelte.js), and is opened here by choice as one undo step (openSaved); a saved draft this browser has not seen is told by a dot on the Drafts tab and a line in the status bar, as the admin loads and as its tab comes back into view.
- * As the editor loads, a part this browser holds exactly as it saw it saved, whose saved copy has left the branch (published or discarded elsewhere), leaves this browser too, before the stores are built; where no part is held so, the stores are built without waiting for the index (meetOnLoad, lib/saved-model.js meet).
- * Each part this browser holds stands in this browser alone, saved, or live; a save writes the ticked parts that stand in this browser alone, with the owner's note and this browser's name, and asks before it writes over a part saved on another device since this browser last saw it.
- * What this browser last saw of each saved part is kept in `urd-saved-seen`, and what the Saved tab last showed in `urd-saved-noticed`, both admin keys.
+ * The saved drafts (ADR-0032): the work kept on the drafts branch for another device, saved, opened by choice, and told of where new.
  */
 import { ta, taApiError, adminLang } from '$engine/i18n.js';
 import { flushDrafts, dropDraft } from '../lib/draftStore.js';
@@ -163,10 +159,8 @@ const fresh = $derived(list.filter((r) => r.fresh).length);
 let loadMeeting = Promise.resolve();
 
 /**
- * Meets the saved drafts as the editor loads, within LOAD_WAIT: nothing comes in by itself, and a part this browser holds exactly as it saw it saved, whose saved copy has left the branch, leaves this browser too.
- * Only a part held exactly as this browser saw it saved can leave, which is known before the index is read: where there is one, the meeting is returned for the stores to wait for, and where there is none, it goes on beside the load, lets go of nothing, and null is returned.
- * An answer that saving cannot be done here leaves it off; a slow or failed read goes on without the saved drafts, and the next Save reads them again. Nothing here stops the editor from loading.
- * @returns {Promise<void>|null}
+ * Meets the saved drafts as the editor loads: a part held here exactly as seen saved, whose saved copy has left the branch, leaves this browser too.
+ * @returns {Promise<void>|null} The meeting for the stores to wait for, or null where no part may leave
  */
 function meetOnLoad() {
   const byPart = keysByPart(storedKeys());
@@ -253,9 +247,7 @@ async function readAgain() {
 }
 
 /**
- * A save: writes the parts named (`names`, every part that stands in this browser alone where none are named) with the owner's `note` and this browser's name (`device`), and asks first where a part was saved elsewhere since; a saved copy is taken away only by the Saved tab's bin.
- * With `quiet` (Ctrl+S, autosave) a part saved elsewhere since is left for the owner rather than asked about, and with `auto` (autosave) a save that goes well says nothing, the Drafts tab's mark standing for it.
- * A part this browser cannot write (a draft held in memory where the storage is full, a page whose draft key is another part's) is left, and the status line says so, once a session for autosave.
+ * A save of the parts named, or every part in this browser alone, asking first where one was saved elsewhere since; `quiet` leaves such a part out.
  * @param {{names?: string[]|null, note?: string, device?: string, quiet?: boolean, auto?: boolean}} [opts]
  * @returns {Promise<boolean>} Whether anything was saved
  */
@@ -330,7 +322,7 @@ async function save({ names = null, note = '', device = '', quiet = false, auto 
 }
 
 /**
- * The state a saved part's stored texts make, written into the history's state object: every store of the part takes the draft the saved part holds, or its published state where the saved part holds none, so the result is the saved copy and never a mix.
+ * Writes a saved part into the history's state object: each store of the part takes the saved draft, or its published state where the part holds none.
  */
 function applyKeys(state, name, keys) {
   const parse = (key) => JSON.parse(keys[key]);
@@ -373,8 +365,7 @@ async function readParts(names) {
 }
 
 /**
- * «Open here» (and «Use the saved one»): the saved part in place of this browser's, as one step an undo takes back.
- * A page this browser's site settings do not list opens together with the saved site settings, which hold its entry; where this browser holds its own changes to a part it opens, the owner is asked first.
+ * «Open here»: the saved part in place of this browser's as one undo step, with the saved site settings for a page not listed here; own changes ask first.
  */
 async function openSaved(name) {
   const of = partOfName(name);
@@ -510,8 +501,7 @@ async function minePage(of) {
 let lookAsked = 0;
 
 /**
- * «Look»: the saved version of a page or of the site settings in the canvas, with editing paused (previewState.startLook); on the phone with `phone`, and beside this browser's version of the same page with `both`.
- * A look whose saved version comes in after another look has started, or a look has ended, starts nothing.
+ * «Look»: the saved version in the canvas, editing paused, on the phone with `phone` and beside this browser's with `both`; only the last asked starts.
  * @param {string} name
  * @param {{phone?: boolean, both?: boolean}} [opts]
  */
@@ -531,7 +521,7 @@ async function lookAt(name, { phone = false, both = false } = {}) {
 }
 
 /**
- * What changed in a saved page against the version this browser holds (lib/page-diff.js), or null for a part that is not a page or cannot be read; a page this browser does not have reads as new.
+ * What changed in a saved page against this browser's version, or null for a part that is no page or cannot be read; a page not here reads as new.
  * @param {string} name
  */
 async function changesOf(name) {
@@ -544,7 +534,7 @@ async function changesOf(name) {
   return { fresh: false, lines: pageDiff(saved.page, mine) };
 }
 
-/** «Keep both»: the saved version of a page this browser has changed too, as a page of its own beside this browser's, named for where it was saved, in one undo step. */
+/** «Keep both»: the saved version of a page changed here too, as a page of its own beside this one, named for where it was saved, in one undo step. */
 async function keepBoth(name) {
   const of = partOfName(name);
   const entry = siteState.siteDraft?.pages.find((p) => p.id === of.id);
@@ -559,8 +549,7 @@ async function keepBoth(name) {
 }
 
 /**
- * «New tab»: the saved version drawn as a visitor's page in a tab of its own (the draft view, `?draft=look`, engine drafts.js receiveLook).
- * The tab opens at once, within the press, so no browser holds it back; the saved texts are then handed over under a one-time key `urd-look-<id>`, which the tab takes away as it loads, and those of an earlier New tab that never loaded go first.
+ * «New tab»: the saved version as a visitor's page in a tab of its own, opened within the press; its texts are handed over under a one-time key.
  * @param {string} name
  */
 function openInTab(name) {
@@ -607,7 +596,7 @@ async function handOver(name, tab) {
   tab.location.href = `${path ?? '/'}?draft=look&look=${id}`;
 }
 
-/** As the Saved tab is left, what it showed is no longer new here. */
+/** Marks what the Saved tab showed as noticed, as the tab is left. */
 function markNoticed() {
   if (!list.length) return;
   const next = { ...noticed };

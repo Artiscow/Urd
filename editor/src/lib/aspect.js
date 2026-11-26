@@ -1,7 +1,5 @@
 /**
- * Aspect ratios for the preview's sizes (the Screen's and the Phone's fold-outs): the common ratios each device offers, a size's height from a width and a ratio, and the name a size's own proportions go by.
- * A ratio is named the way screens are sold, the long side first («16:9», «19.5:9»), for a phone held upright as well as for a screen.
- * Pure, node-tested (tests/aspect.test.mjs).
+ * Aspect ratios for the preview's sizes: each device's common ratios, a height from a width and a ratio, and a size's own ratio, the long side first («16:9»).
  */
 
 /** The common ratios, the long side over the short. */
@@ -39,8 +37,7 @@ export function ratioHeight(width, id, upright) {
 }
 
 /**
- * The ratio a size goes by: a common ratio where the proportions are within one and a half per cent of it, else the long side over the short to two decimals («1.85:1»).
- * The parts are numbers, so the caller writes them in the admin's own number format.
+ * The ratio a size goes by: a common ratio within 1.5 per cent of its proportions, else the long side over the short to two decimals («1.85:1»).
  * @param {number} width
  * @param {number} height
  * @returns {[number, number]|null} null for a size without a height

@@ -1,13 +1,9 @@
 /**
- * Two pages scrolling together (the live phone beside the desktop canvas, shell/LivePhone.svelte): the canvas's scroll and the phone's scroll as one curve through the places where each section starts in both, from the pages' tops to their ends.
- * The curve is a monotone cubic (Fritsch and Carlson): it passes through every section's start, never runs backwards, and changes its speed smoothly from one section to the next, so the page that follows glides where the two pages' sections are of different heights.
- * The map is measured once and read at every scroll, with no measuring there.
- * Pure, node-tested (tests/scroll-map.test.mjs).
+ * Two pages scrolling together (the live phone beside the canvas): one monotone cubic curve (Fritsch and Carlson) through where each section starts in both pages.
  */
 
 /**
- * The curve's points and its slopes in both directions.
- * The points are the pages' tops, each section both pages draw in the canvas's order where it starts further down in both, and the pages' ends; a section past either page's end, or out of step with the one before it, is left out.
+ * The curve's points and slopes both ways: the pages' tops, the start of each section both draw where it lies further down in both, and the pages' ends.
  * @param {Array<[string, number]>} canvasTops Each section's id and where it starts in the canvas's page, in px, in the page's order
  * @param {number} canvasMax The canvas's furthest scroll
  * @param {Array<[string, number]>} phoneTops The same in the phone's page

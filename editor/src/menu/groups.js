@@ -1,10 +1,6 @@
 /**
- * A group's defaults, its reset and its count of changed settings
- * (0.7.20.5), for the families of the element menu: a group whose settings
- * all stand at their defaults carries no mark and no reset. An absent
- * setting is its default. From 0.7.20.7 the group also tells each setting
- * in it whether it holds the block's own value (`own`), and puts one setting
- * back (`resetKey`), for the marks the Setting rows draw.
+ * The element menu's groups: defaults, reset, count of changed settings, and per setting its own value and reset.
+ * An absent setting is its default.
  */
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);

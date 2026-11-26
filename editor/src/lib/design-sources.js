@@ -1,6 +1,5 @@
 /**
- * What the design picker (DesignPicker.svelte) shows: a source per kind of choice, so one picker serves the calendar's designs, its phone and card designs, and every other block's designs (block-designs.js).
- * A source gives the picker its words, the entries in their families with the search and the filter they answer to, each entry's picture, name and description, and the page its live preview draws: the picker itself knows nothing of a block.
+ * The design picker's sources (DesignPicker.svelte), one per kind of choice: its words, families, pictures and preview page, so the picker knows no block.
  */
 import { ta, adminLang } from '$engine/i18n.js';
 import { CAL_VIEWS, calDesign, calDesignFamilies, calOptionDefs, calPhoneDesignDef, calPhoneFamilies, calCardDesignDef, calCardFamilies } from '$engine/calendar-designs.js';
@@ -28,8 +27,7 @@ function onePage(page, block) {
 const VIEW_KEYS = { list: 'calendar.viewList', cards: 'calendar.viewCards', month: 'calendar.viewMonth', agenda: 'calendar.viewAgenda', next: 'calendar.viewNext', week: 'calendar.viewWeek', day: 'calendar.viewDay', year: 'calendar.viewYear' };
 
 /**
- * The calendar's designs (0.7.19.22): `mode` 'set' changes the selected calendar's design, 'add' adds a calendar in the chosen one, 'phone' chooses the phone design the selected calendar draws on a phone (calPhoneCandidates: the neutral list, every design that reads on a phone, and the phone designs designs lend; pictures under phone-<id>.webp and the preview at a phone's width in the calendar's own design, `design`), and 'card' the card design its card wears (calCardCandidates: the neutral card, every design's card, and the card designs designs lend; pictures under card-<id>.webp, the preview with the card open).
- * Under the preview the marked entry is described, and what the owner can change on it is said in plain sentences under three headings: Colours (what its colours paint, `<design labelKey>.colors`, or for another design's phone view or card that it keeps its own), Text (its words) and Options (its settings, `calendar.opt.<key>.phrase`, and its rewriting); a heading with nothing under it is left out.
+ * The calendar's designs: `mode` 'set' changes the selected calendar's, 'add' adds one, 'phone' picks its phone design and 'card' its card design.
  */
 export function calendarDesignSource({ mode = 'set', current = null, design = 'plain', props = {} }) {
   const phone = mode === 'phone';
@@ -76,7 +74,6 @@ export function calendarDesignSource({ mode = 'set', current = null, design = 'p
     },
     /**
      * What the owner can change on the marked entry, as [heading, sentences] rows under Colours, Text and Options; a row with no sentence is left out.
-     * A design: what its colours paint, its words, its settings and its rewriting. A phone view or card: the calendar's colours for a neutral one, what the colours paint for the calendar's own design, or that another design keeps its own; then what follows the calendar.
      */
     yours(def) {
       const look = def.look ? calDesign(def.look) : null;
@@ -102,7 +99,7 @@ export function calendarDesignSource({ mode = 'set', current = null, design = 'p
     previewWidth: phone ? 390 : 1040,
     viewport: phone ? 'mobile' : 'desktop',
     blockId: 'design-picker-cal',
-    /** One calendar in the chosen design on an otherwise empty page, drawn by the preview with the block's own feeds, or the sample events while it has none; for a phone or card design, the calendar's own design with that phone or card design, at a phone's width for the phone. */
+    /** One calendar on an empty page with its feeds or the sample events, in the chosen design, or in its own with the chosen phone or card design. */
     previewPage(id, page) {
       const def = calDesign(lent ? design : id);
       return onePage(page, {
@@ -139,7 +136,7 @@ function watchPreviewCard(win, watch, tries) {
 }
 
 /**
- * A block's designs as the picker, the menu's design row and its row in Pinned read them: the core catalogue's (block-designs.js), or a plugin block's (the design contract, pluginBlockDesigns in plugins.js, posted by the preview with its words resolved), or null for a block without designs.
+ * A block's designs as the picker and the menu read them: the core catalogue's (block-designs.js), a plugin block's (pluginBlockDesigns), or null for none.
  * @param {string} type
  * @param {Array<object>} [pluginBlocks] the plugin blocks the preview reported
  */
@@ -180,8 +177,7 @@ export function blockDesigns(type, pluginBlocks = []) {
 }
 
 /**
- * A choice's designs as the menus and the panels show their pictures in place (lib/rows/LookChoice.svelte), in the picker's order, each with its id, name, picture and description.
- * Read from a source the picker is given (calendarDesignSource, footerPresetSource), whose words are read from each design's definition (`def`), or from a block's designs (blockDesigns), whose words are read by id.
+ * A choice's designs as menus and panels picture them in place (LookChoice.svelte), in the picker's order, each with its id, name, picture and description.
  * @param {{ families: () => Array<{ designs: Array<{ id: string }> }>, name: Function, picture: (id: string) => string, about: Function, def?: (id: string) => object }} source
  */
 export function pictureList(source) {
@@ -192,8 +188,8 @@ export function pictureList(source) {
 }
 
 /**
- * Every other block's designs (blockDesigns): the selected block drawn in each design with its own content, at its real width and close up (designPreviewFrame); a block with nothing of its own to show (no pictures, no collection, no contact details) is drawn with the sample its picture has.
- * @param {{block: object, site: object|null, designs: object, sectionWidth?: string}} opts the selected block as the page stores it (its version, frames and props) and the site, as snapshots, the block's designs, and its section's own width (`size.maxWidth`)
+ * Every other block's designs: the selected block drawn in each with its own content at its real width, or with the picture's sample where it has none of its own.
+ * @param {{block: object, site: object|null, designs: object, sectionWidth?: string}} opts the selected block as the page stores it and the site, as snapshots, the block's designs, and its section's own width (`size.maxWidth`)
  */
 export function blockDesignSource({ block, site = null, designs, sectionWidth }) {
   const current = designs.read(block.props);
@@ -266,8 +262,7 @@ export function phoneDesignName(designs, props) {
 }
 
 /**
- * A block's phone design (PHONE_DESIGNS in push-model.js): the design it draws while it is narrow, on a phone or in a narrow column, as the calendar's phone view.
- * The first entry keeps the block's own design; the others are its designs, each pictured at a phone's width, and the preview draws the block with the owner's content at a phone's width in the design marked.
+ * A block's phone design (PHONE_DESIGNS in push-model.js), drawn while it is narrow: the first entry keeps its own design, each pictured at a phone's width.
  * @param {{block: object, site: object|null, designs: object}} opts the selected block as the page stores it, the site, and the block's designs (blockDesigns)
  */
 export function blockPhoneDesignSource({ block, site = null, designs }) {
@@ -320,9 +315,7 @@ export function blockPhoneDesignSource({ block, site = null, designs }) {
 }
 
 /**
- * The footer's presets (footer-presets.js): the site's own footer drawn in each preset on an empty page, keeping its own content in each part the preset shows and the preset's sample where it has none, so the preview shows what a choice gives.
- * A preset is an arrangement, not a look the footer keeps, so none stands marked as the one in use.
- * The picker keeps the footer in its preview for this source, measures it, and sends the site anew at every choice, since the footer is the site's, not a block's.
+ * The footer's presets (footer-presets.js): the site's own footer in each preset on an empty page, its sample where the footer has none; none stands marked.
  * @param {{site: object|null}} opts the site as a snapshot
  */
 export function footerPresetSource({ site = null }) {
@@ -368,7 +361,7 @@ export function footerPresetSource({ site = null }) {
     /** The footer ends the page, so the preview ends with it; it stands through the draws, so it is watched afresh at each. */
     room: 0,
     stays: true,
-    /** The page above the footer is watched too: it empties after the choice is drawn, which moves the footer up without changing its size, and the preview is measured again then. */
+    /** The page above the footer is watched too: it empties after the choice is drawn, moving the footer up, and the preview is measured again. */
     afterDraw: (win, footer, watch) => {
       const page = win.document.getElementById('urd-root');
       if (page) watch(page);
@@ -377,8 +370,7 @@ export function footerPresetSource({ site = null }) {
 }
 
 /**
- * The «Back to top» button's designs (the engine's totop.js): the site's own button drawn in each design over the top of the page at work, with the owner's other settings (size, colours, waves, words) kept, shown at once rather than after scrolling.
- * The picker keeps the button in its preview for this source and sends the site anew at every choice, since the button is the site's.
+ * The «Back to top» button's designs (totop.js): the site's own button in each design over the page at work, its other settings kept, shown without a scroll.
  * @param {{site: object|null}} opts the site as a snapshot
  */
 export function toTopDesignSource({ site = null }) {

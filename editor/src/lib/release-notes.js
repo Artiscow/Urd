@@ -1,10 +1,5 @@
 /**
- * A release's notes as the Update panel draws them (UpdatePanel.svelte, lib/ReleaseNotes.svelte): the Markdown GitHub keeps for a release, read into a tree of blocks and runs of words that the panel draws with its own elements, so nothing in the notes is ever put into the page as HTML.
- * It reads headings (with # or underlined), paragraphs, lists (nested by their indent, numbered or not), fenced code, rules, quotes (GitHub's alerts among them), bold, italic, inline code, links and bare addresses, and GitHub's folds (`<details>` with its `<summary>`); `<b>`, `<strong>`, `<i>`, `<em>`, `<code>` and `<br>` outside code are read as their Markdown, comments are left out, and any other tag stands as the words it is.
- * A link leads only to an http or https address; any other stands as its words, and the words of a link hold no link of their own.
- * The notes come over the network, so every part reads in time with their length: marks and folds are found by plain searches, each line's next filled line is known ahead, and folds and lists nest no deeper than NEST_DEPTH.
- * Notes cut short (the update function keeps a bounded length) end as they stand: a fold left open closes at the end.
- * Pure, node-tested (tests/release-notes.test.mjs).
+ * A release's Markdown notes as a tree of blocks and inline runs that the Updates panel draws with its own elements, never as HTML; a link leads only to http(s).
  */
 
 /**
@@ -134,8 +129,7 @@ function withBareLinks(text) {
 }
 
 /**
- * A run of words read into its inline marks.
- * A mark's end depends only on where it stands, so the last search for each mark is kept and every search starts past the one before: a long text reads in time with its length.
+ * A run of words read into its inline marks, each mark's last search kept, so a long text reads in time with its length.
  * @param {string} source
  * @param {boolean} [inLink] Whether the words are a link's, which hold no link of their own
  * @returns {Inline[]}
@@ -228,9 +222,7 @@ export function parseInline(source, inLink = false) {
 }
 
 /**
- * The lines of a fold from its opening line on: its summary, whether it opens open, the lines inside it, and the index after its closing line (or the end, where the notes were cut).
- * A summary runs over its lines up to its closing tag, never past a blank line or the fold's end; one left unclosed is its first line's words.
- * A fold's end is never read inside a code block.
+ * A fold from its opening line on: its summary, whether it opens open, its inner lines, and the index after its close or the end; a code block holds no close.
  */
 function readFold(lines, start) {
   const opening = DETAILS_OPEN.exec(lines[start]);
@@ -290,7 +282,7 @@ function readFold(lines, start) {
   return { summary, open, inner, next: i };
 }
 
-/** The lines of a list from its first item on, each item's lines taken under it, and the index after the list; a rule, a heading, a fold or a code block at the list's indent ends it. */
+/** A list from its first item on, each item's lines under it, and the index after it; a rule, heading, fold, code block or quote at its indent ends it. */
 function readList(lines, filled, start, depth) {
   const base = indentOf(lines[start]);
   const ordered = /\d/.test(LIST_ITEM.exec(lines[start])[2]);
@@ -432,7 +424,7 @@ export function plainText(nodes) {
 }
 
 /**
- * The words that name a release in the Update panel: its name as GitHub has it where the name holds its version as a whole number («v0.7.11 - The Phone Focus», never 0.7.1 within 0.7.10), else the version before the name, else the version alone.
+ * A release's words in the Updates panel: its GitHub name where it holds the whole version, else the version before the name, else the version alone.
  * @param {string|null|undefined} name The release's name
  * @param {string} tag Its version tag, such as v0.7.11
  * @returns {string}

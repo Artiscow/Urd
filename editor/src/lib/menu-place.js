@@ -1,7 +1,5 @@
 /**
- * Where the floating element menu stands (0.7.20.6, proposals J and K on the Design canvas): beside its block, to the right, else to the left (the left first where asked), else below it, never over it where the window allows; and where the owner dragged it, kept for the session and clamped into the window.
- * Whether the wide menu gives way to one column beside its block (wideFits, givesWay, 0.7.33.9).
- * Pure and node-tested; the coordinates are the editor window's.
+ * Where the floating element menu stands: beside its block, right, left or below, never over it where the window allows, or where the owner dragged it.
  */
 
 /** The menu's box at a place, kept inside the window: `min` is the left edge the admin's panels leave free. */
@@ -22,8 +20,7 @@ function overlap(place, size, block) {
 }
 
 /**
- * Whether the wide menu has its place beside the block: one where it covers none of it, or covers no more than a tenth of the block beyond what the one-column menu would; else the one-column menu stands there instead, covering less.
- * `cover` is what the menu keeps clear of, the block where none is given; the tenth is the block's all the same, and none with `strict`, as the phone view asks, where any of the page covered is too much.
+ * Whether the wide menu has its place beside the block: covering none of `cover`, or at most a tenth of the block more than one column (none with `strict`).
  * @param {{left: number, top: number, right: number, bottom: number}} block The block in window px
  * @param {{w: number, h: number}} wide The wide menu's box
  * @param {{w: number, h: number}} narrow The one-column menu's box
@@ -39,10 +36,10 @@ export function wideFits(block, wide, narrow, view, opts = {}) {
 }
 
 /**
- * Whether the wide floating menu, opened beside what it was opened at, gives way to one column there: only for a block (a section spans the canvas, so its menu keeps the owner's form), only while the menu stands beside it rather than where the owner dragged it, and only where the wide form lacks its place beside the block (wideFits).
+ * Whether the wide menu gives way to one column beside the block it was opened at: never for a section or a dragged menu, and only where wideFits says no.
  * @param {{left: number, top: number, right: number, bottom: number}|null} block The block in window px
  * @param {{w: number, h: number}} view The window
- * @param {{ wide: boolean, wideW: number, narrowW: number, h: number, min?: number, dragged?: boolean, section?: boolean, cover?: {left: number, top: number, right: number, bottom: number}, strict?: boolean }} opts whether the menu would stand wide, the two widths, the menu's height, the left edge the panels leave free, and what the menu keeps clear of and how strictly (wideFits)
+ * @param {{ wide: boolean, wideW: number, narrowW: number, h: number, min?: number, dragged?: boolean, section?: boolean, cover?: {left: number, top: number, right: number, bottom: number}, strict?: boolean }} opts whether it would stand wide, the two widths, its height, the left edge the panels leave free, and what it keeps clear of and how strictly (wideFits)
  */
 export function givesWay(block, view, { wide, wideW, narrowW, h, min = 8, dragged = false, section = false, cover = undefined, strict = false }) {
   if (!wide || !block || dragged || section) return false;
@@ -50,9 +47,7 @@ export function givesWay(block, view, { wide, wideW, narrowW, h, min = 8, dragge
 }
 
 /**
- * The place beside the block: the first of right, left and below that covers none of it once clamped into the window, else the one that covers the least, so the block stays visible where the window allows.
- * `first` 'left' tries the left before the right.
- * `cover` is what the menu keeps clear of, the block where none is given: in the phone view the whole phone, so the menu stands beside it rather than below the block over the page.
+ * The first of right, left and below beside the block that covers none of `cover` when clamped, else the one covering least; `first` 'left' starts at the left.
  * @param {{left: number, top: number, right: number, bottom: number}} block The block in window px
  * @param {{w: number, h: number}} size The menu's box
  * @param {{w: number, h: number}} view The window
@@ -74,7 +69,7 @@ export function placeBesideBlock(block, size, view, { min = 8, gap = 12, margin 
 }
 
 /**
- * Where the text bar stands while a text on the canvas is written (lib/TextToolbar.svelte, 0.7.3.19): beside the canvas, in the stage's room on the side with more of it (the left on a tie), level with the block, where that room holds the bar; else above the block, or below it where there is no room above; always inside the stage.
+ * Where the text bar stands while a text is written: beside the canvas on the roomier side, level with the block, else above or below it; always in the stage.
  * @param {{left: number, top: number, right: number, bottom: number}} block The text's block in window px, its own bar above it included
  * @param {{w: number, h: number}} size The bar's box
  * @param {{left: number, right: number}} canvas The canvas as drawn in the stage
@@ -97,7 +92,7 @@ export function placeTextBar(block, size, canvas, stage, { gap = 12, margin = 8 
 }
 
 /**
- * A box placed by the canvas as placeTextBar places it, kept clear of the boxes already standing there (the phone view's bars, CanvasBar.svelte): beside the canvas it moves down under one it would meet; above or below the block it stands above or below that box as well.
+ * A box placed as placeTextBar does, clear of the boxes standing there (CanvasBar.svelte): moved down past one beside the canvas, else above or below it.
  * @param {{left: number, top: number, right: number, bottom: number}} block
  * @param {{w: number, h: number}} size
  * @param {{left: number, right: number}} canvas
@@ -124,7 +119,7 @@ export function placeClearOf(block, size, canvas, stage, held, { gap = 6 } = {})
 }
 
 /**
- * Where a window opened from a tab stands (the Drafts window): under a tab (`beside` false), beside a rail's icon, a sidebar's word or a menu's row, and at the window's top right where it opened from no tab; kept inside the window.
+ * Where a window opened from a tab stands (the Drafts window): under a tab, beside a rail icon or a menu row (`beside`), or at the top right; inside the window.
  * @param {{left: number, top: number, right: number, bottom: number}|null} anchor The tab's box
  * @param {{w: number, h: number}} size
  * @param {{w: number, h: number}} view

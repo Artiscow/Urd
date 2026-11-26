@@ -1,8 +1,5 @@
 /**
- * The editor's keyboard shortcuts as the shortcut sheet lists them (ShortcutSheet.svelte), in groups by where they work.
- * Each row names its action by a dictionary key, with a tooltip where the action holds for some blocks only, and lists its ways to press it: a way is a list of tokens pressed together, and a row with more than one way takes any of them.
- * A token is a key's name (KEY_LABELS), an arrow (ARROW_TOKENS, drawn) or the character on the key.
- * The keys are handled where they work: the page in preview-edit.js, the panels in state/shell.svelte.js and the element menu in menu/ElementMenu.svelte; tests/shortcuts.test.mjs holds the list to the dictionaries and to the «?» that opens it.
+ * The editor's keyboard shortcuts as the shortcut sheet (ShortcutSheet.svelte) lists them, by where they work; each row an action and the keys that press it.
  */
 
 /** The names of the keys and of the pointer's actions, as dictionary keys; an arrow's name is what a screen reader says for its drawing. */
@@ -114,8 +111,7 @@ export const SHORTCUT_GROUPS = [
 ];
 
 /**
- * Whether a key press in the panels opens the shortcut sheet: «?» with no Ctrl, Cmd or Alt, outside a place where it is typed.
- * The page asks the same in its own key handler (preview-edit.js), which then sends `urd-shortcuts`.
+ * Whether a key press in the panels opens the shortcut sheet: «?» with no Ctrl, Cmd or Alt, outside a field; the page asks the same (preview-edit.js).
  * @param {{ key: string, ctrlKey: boolean, metaKey: boolean, altKey: boolean }} event
  * @param {boolean} inField The focus stands where text is typed (a field, a text area, an editable text)
  */
@@ -124,8 +120,7 @@ export function opensShortcuts(event, inField) {
 }
 
 /**
- * Whether a key press in the panels shows or hides the grid: G with no Ctrl, Cmd or Alt, outside a place where it is typed.
- * The page asks the same in its own key handler (preview-edit.js), which then sends `urd-toggle-grid`.
+ * Whether a key press in the panels shows or hides the grid: G with no Ctrl, Cmd or Alt, outside a field; the page asks the same (preview-edit.js).
  * @param {{ key: string, ctrlKey: boolean, metaKey: boolean, altKey: boolean }} event
  * @param {boolean} inField The focus stands where text is typed
  */

@@ -34,6 +34,10 @@ test('the hidden preview is let go once idle, an answer or a waiting request kee
     const fit = createPhoneFit({ title: () => 'Phone', prepare: (post, first) => firsts.push(first), onHeight: (...args) => heights.push(args) });
     fit.request('hjem', { sections: [] }, 's1', 'b1', 1);
     assert.equal(frames.length, 1, 'made on the first request');
+    const style = frames[0].style.cssText;
+    assert.match(style, /position:fixed;left:0;top:0;/, 'laid out inside the window, so its drawing is never held back');
+    assert.match(style, /opacity:0;/, 'unseen by its opacity alone');
+    assert.doesNotMatch(style, /display:\s*none|visibility:\s*hidden|left:-|top:-/, 'never hidden or moved off the screen, which would leave its blocks unmeasured');
     from(frames[0], { type: 'urd-ready' });
     mock.timers.tick(400);
     assert.deepEqual(firsts, [true, false], 'readied, then fed the drafts it measures');

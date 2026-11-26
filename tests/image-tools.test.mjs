@@ -1,7 +1,9 @@
 /**
  * imageTools: the pure SVG helpers for auto-trim at upload. The pixel
  * measuring (canvas) is DOM-dependent and covered by the headless checks;
- * here pure text is tested.
+ * here pure text is tested, and the editor's measuring
+ * (state/media.svelte.js) is read from its source: it draws the SVG only as
+ * a picture.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -222,4 +224,19 @@ test('mediaPath gives the same path for the same content and another for other c
   assert.equal(mediaPath('kake', a, url(a)), mediaPath('kake', a, url(a)));
   assert.equal(mediaPath('kake', a, url(a)), mediaPath('kake', `${a}`, `data:image/webp;name=kake;base64,${a}`), 'the name in the address is no part of the content');
   assert.notEqual(mediaPath('kake', a, url(a)), mediaPath('kake', b, url(b)));
+});
+
+test('an uploaded SVG is measured for its trim only as a picture drawn on a canvas, never as live markup, and only once the check has let it through', async () => {
+  const { readFileSync } = await import('node:fs');
+  const media = readFileSync(new URL('../editor/src/state/media.svelte.js', import.meta.url), 'utf8');
+  const bbox = media.split('async function svgContentBBox(dataUrl, vb) {')[1].split('\n}\n')[0];
+  assert.match(bbox, /const img = new Image\(\);/);
+  assert.match(bbox, /img\.src = dataUrl;/);
+  assert.match(bbox, /ctx\.drawImage\(img, 0, 0, W, H\);/);
+  assert.match(bbox, /ctx\.getImageData\(0, 0, W, H\)/);
+  assert.deepEqual([...bbox.matchAll(/createElement\w*\(([^)]*)\)/g)].map((m) => m[1]), ["'canvas'"], 'the one element made is the canvas');
+  assert.doesNotMatch(bbox, /innerHTML|outerHTML|insertAdjacentHTML|DOMParser|createContextualFragment|appendChild|\.append\(|\.prepend\(|getBBox|<svg|\.text\(\)/);
+  const trim = media.split('async function svgAutoTrim(file) {')[1].split('\n}\n')[0];
+  assert.match(trim, /const first = svgToDataUrl\(text\);[\s\S]*?const bbox = await svgContentBBox\(first\.dataUrl, vb\);/, 'the picture measured is the checked one');
+  assert.equal(media.match(/svgContentBBox\(/g).length, 2, 'measured nowhere else');
 });

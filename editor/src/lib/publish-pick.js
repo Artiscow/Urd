@@ -1,16 +1,13 @@
 /**
  * Which parts a publish sends (ADR-0032 decision 2): the ticked ones, with the parts they cannot go without.
- * A page not live yet goes with the site settings, which hold its entry; a collection not live yet with the collections' list, which holds its id; the site settings and the redirects go together, since an address change, a hidden or deleted page and a new front page write both in one step; the media tidy's moves waiting take everything with them.
- * A page whose entry went out hidden before its file (lib/not-live.js) takes the site settings with it inside the publish itself, to show the entry, even where they wait with nothing else and no row of theirs is ticked; the redirects stay, since showing an entry changes no address.
- * Where the site settings go out while a page not live yet stays behind, that page's entry goes out hidden, so the menu, the sitemap and the page's address leave it out; where the collections' list goes out while a new collection stays behind, the list goes out without it.
- * Pure, node-tested (tests/publish-pick.test.mjs).
+ * Pure, node-tested.
  */
 import { partOfName } from './saved-model.js';
 
 /**
  * The parts a publish sends, and why a part left unticked goes anyway.
  * @param {{waiting: Iterable<string>, later: Iterable<string>, notLive?: {pages?: Iterable<string>, collections?: Iterable<string>}, movesPending?: boolean}} state
- *   `waiting`: the parts waiting to be published, by name (lib/saved-model.js partName); `later`: the parts unticked; `notLive`: the ids of the pages and collections whose own file is not live yet
+ *   `waiting`: the parts waiting, by partName (lib/saved-model.js); `later`: the unticked; `notLive`: the pages and collections whose own file is not live yet
  * @returns {{going: Set<string>, forced: Map<string, string>, kept: string[]}}
  *   `forced`: each part unticked that goes anyway, with the part it goes with (`moves` for the media tidy's moves); `kept`: the parts that stay
  */

@@ -1,12 +1,11 @@
 /**
- * What the admin shows when it is loaded again («Open panel» in the Urd settings): the panel last open, and in the tab layouts whether its column was folded; no panel; always the same panel; or, in the tab layouts, the column folded to its handle.
- * Pure, node-tested (tests/panels-start.test.mjs).
+ * What the admin shows when loaded again («Open panel»): the panel last open, no panel, always the same panel, or the column folded to its handle.
  */
 
 /** The choices, the first the default. */
 export const PANELS_PREFS = ['remember', 'reset', 'fixed', 'folded'];
 
-/** The layouts that keep the panel's column standing with its tabs, and so can fold it to a handle (App.svelte). */
+/** The layouts that keep the panel's column standing with its tabs, and so can fold it to a handle. */
 export const COLUMN_LAYOUTS = ['panel-tabs', 'page-tabs'];
 
 /** The panel «Always the same panel» opens until another is chosen. */
@@ -17,13 +16,13 @@ export function panelsPrefOf(raw) {
   return PANELS_PREFS.includes(raw) ? raw : 'remember';
 }
 
-/** The choices that make sense in a layout: the folded column only where the column stands, and in «The page's tabs», whose column folds whenever no panel is open, no separate «no panel». */
+/** The choices a layout offers: the folded column only where the column stands, and no «Start with none» in «The page's tabs and a Site menu». */
 export function panelsPrefsFor(layout) {
   if (layout === 'page-tabs') return PANELS_PREFS.filter((p) => p !== 'reset');
   return COLUMN_LAYOUTS.includes(layout) ? PANELS_PREFS : PANELS_PREFS.filter((p) => p !== 'folded');
 }
 
-/** The choice in effect in a layout: the folded column is no panel where there is no column to fold, and no panel is the folded column in «The page's tabs». */
+/** The choice in effect in a layout: the folded column is no panel where there is no column, and no panel the folded column in «The page's tabs and a Site menu». */
 export function panelsPrefIn(pref, layout) {
   const p = panelsPrefOf(pref);
   if (p === 'folded' && !COLUMN_LAYOUTS.includes(layout)) return 'reset';
@@ -33,7 +32,7 @@ export function panelsPrefIn(pref, layout) {
 
 /**
  * The panel and the fold the admin starts with.
- * A remembered or chosen id that names no panel any more (the settings panel, which the gear opens, or a panel from an older version) opens none, or the default panel for the chosen one.
+ * A stored id that names no panel opens none, or the default panel for the chosen one.
  * @param {{pref: string|null, layout: string, panels: string[], stored: string|null, storedFolded: boolean, start: string|null}} o
  * @returns {{panel: string|null, folded: boolean}}
  */
@@ -52,7 +51,7 @@ export function startPanels({ pref, layout, panels, stored, storedFolded, start 
 }
 
 /**
- * The page's tabs with the site in a menu («page-tabs»): its column never stands open without a panel, since only the page's tabs would stand in it; it folds to its handle, and the handle opens the panel last open (Pages where none has been).
+ * In «The page's tabs and a Site menu» the column never stands open without a panel: it folds to its handle.
  * @param {string} layout
  * @param {string|null} panel The open panel
  * @returns {boolean} Whether the column folds

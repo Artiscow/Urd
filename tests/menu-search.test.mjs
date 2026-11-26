@@ -4,6 +4,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { searchParts } from '../editor/src/lib/menu-search.js';
 import { engineImport } from './_engine.mjs';
 const { matchWords } = await engineImport('palette-search.js');
@@ -79,4 +80,14 @@ test('a group inside a group opens with its parent', () => {
   const parts = [group('Placement', [row('Layer'), group('Motion', [row('Entrance'), row('On hover')])])];
   assert.deepEqual(shown(parts, 'hover'), ['Placement', 'Motion', 'On hover']);
   assert.deepEqual(shown(parts, 'placement'), ['Placement', 'Layer', 'Motion', 'Entrance', 'On hover']);
+});
+
+test('the search watches the menu\'s children and words, never its attributes, which its marks change, so marking never sets it off again', () => {
+  const src = readFileSync(new URL('../editor/src/lib/menu-search.js', import.meta.url), 'utf8');
+  const observe = src.match(/observer\.observe\(root, (\{[^}]*\})\)/);
+  assert.ok(observe, 'the observer is found');
+  assert.doesNotMatch(observe[1], /attribute/, 'no attribute is watched');
+  const narrow = src.slice(src.indexOf('export function narrowMenu'), src.indexOf('export function menuSearch'));
+  assert.ok(narrow.length > 50, 'narrowMenu is found');
+  assert.doesNotMatch(narrow, /\.(append|appendChild|prepend|before|after|insertBefore|replaceWith|replaceChildren|remove)\(|\.(textContent|innerHTML|innerText|nodeValue|data)\s*=/, 'marking the parts adds, removes or writes no node and no text');
 });

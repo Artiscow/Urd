@@ -1,6 +1,5 @@
 /**
  * The plugins: the installed set, the manifests, the discovery of plugins in the repo, the live CSP, and the plugin blocks the preview reports.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { createDraftStore } from '../lib/draftStore.js';
 import { validateManifest, satisfiesEngine } from '$engine/plugins.js';
@@ -9,13 +8,10 @@ import { historyState } from './history.svelte.js';
 import { previewState } from './preview.svelte.js';
 import { shellState } from './shell.svelte.js';
 
-// plugins.json goes through the same draft flow as the rest: changes are
-// drafts until they are published. Note: the preview loads plugins from
-// the SERVER at boot, so activation shows only after publish and deploy.
+// plugins.json is a draft until it is published; the preview loads the plugins from the server at boot.
 let pluginsStore = null;
 
-/** Explicit promise that exists from the first moment: onReady ALWAYS
- *  waits on it, so a fast iframe can never get an empty plugin list. */
+/** Resolves once the plugin list is read; the preview's ready waits on it. */
 let resolvePluginsReady;
 
 const pluginsReady = new Promise((resolve) => { resolvePluginsReady = resolve; });
@@ -29,9 +25,7 @@ let pluginEngine = $state('0.0.0');
 /** Plugin directories found in the repo (via the publishing layer) that are not in plugins.json yet. */
 let pluginsFound = $state([]);
 
-/** The plugins enabled in the PUBLISHED plugins.json (not the draft):
- *  the admin language picker can only offer language packs the engine
- *  can already load. */
+/** The plugins enabled in the published plugins.json, not the draft: the language packs the admin's language picker can offer. */
 let publishedPluginIds = $state([]);
 
 /** 'pending' | 'ok' | 'unavailable': the type-a-name field is only a fallback when discovery does not work. */
@@ -47,10 +41,7 @@ function syncPluginsView() {
   pluginsView = JSON.parse(JSON.stringify(pluginsStore.data));
 }
 
-/** The site's LIVE CSP, read from the response headers (Cloudflare sets
- *  it from _headers on all paths). null = not loaded; {unknown: true} =
- *  no CSP header (local development): then nothing is blocked, and the
- *  instructions would just be noise. */
+/** The site's live CSP, read from the response headers: null before it is read, {unknown: true} where there is none (local development). */
 let liveCsp = $state(null);
 
 async function loadLiveCsp() {
@@ -83,15 +74,11 @@ async function initPlugins() {
   for (const id of knownPlugins()) loadPluginInfo(id);
   discoverPlugins();
   resolvePluginsReady();
-  // Belt and suspenders against the ready race: if the iframe has
-  // already reported in, the list is pushed now.
+  // The list is pushed now too, for a preview that has already reported in.
   previewState.bridge?.sendPlugins($state.snapshot(pluginsView)?.enabled ?? []);
 }
 
-/** Asks the publishing layer for the plugin directories in the repo
- *  (static hosting cannot list directories). An unavailable endpoint
- *  (local server, not logged in) is perfectly fine: then the
- *  type-a-name flow applies. */
+/** Asks the publishing layer for the plugin directories in the repo, the last list found standing where it cannot answer. */
 async function discoverPlugins() {
   try {
     const res = await fetch('/api/github/plugins');
@@ -169,9 +156,7 @@ function removePlugin(id) {
   previewState.reloadPreview();
 }
 
-/** The plugin blocks in the Blocks panel: the preview reported
- *  type/label/defaults at plugin load (urd-plugin-blocks), so the block
- *  can be built here. */
+/** The plugin blocks in the Blocks panel, as the preview reports them (urd-plugin-blocks). */
 let pluginBlocks = $state([]);
 
 /** What the other parts read and write through, and the effects the shell runs once. */

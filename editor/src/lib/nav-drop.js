@@ -1,7 +1,6 @@
 /**
- * Where a dragged menu row lands in the Nav panel's tree, reckoned on the menu's items alone.
- * A row's key is its path in the menu, 'i', 'i.j', 'i.j.k' or 'i.j.k.l'; its level is the number of steps under the bar, and the menu is `depth` submenu levels deep (NAV_DEPTH in the engine's nav-model.js).
- * Pure, so it is node-tested (tests/nav-drop.test.mjs); the panel draws the clone where these say and moves the row on the drop.
+ * Where a dragged row lands in the Nav panel's menu tree.
+ * A row's key is its path, 'i', 'i.j' and deeper, and its level the number of steps under the bar.
  */
 
 /** The level of a row under the bar. */
@@ -42,11 +41,7 @@ export function navKeyOf(items, item, prefix = '') {
 export const landLevel = (drop) => (drop.pos === 'into' ? navLevel(drop.key) + 1 : navLevel(drop.key));
 
 /**
- * The drop position over a row from the pointer's place in it.
- * The top third puts the dragged row before the row and the bottom third after it, across the whole row, so the first place in the menu is as easy to reach as any other.
- * The middle third takes it in as the row's last child, where the menu's depth still holds the dragged row with its own submenu; over a row it cannot go under, the midline alone decides.
- * On a row under the bar the strip left of `out` is the way out: there the drop lands one level up, after the row's parent and its whole submenu. The Nav panel's menu takes its rows' grip column (28 px); a list whose rows' grips stand where a drag usually starts takes 0, the room the row is set in by.
- * A position that would change nothing gives null.
+ * The drop over a row by where the pointer is in it: before in the top third, after in the bottom third, into it in the middle where the depth allows.
  * @param {Array<object>} items
  * @param {string} dragKey The dragged row
  * @param {string} key The row under the pointer
@@ -68,8 +63,7 @@ export function navDropAt(items, dragKey, key, x, y, depth, out = 28) {
 }
 
 /**
- * The drop unless the row would land exactly where it is, or inside its own submenu.
- * A drop too deep for the row's own submenu is lifted, level by level, to the first place the menu's depth holds it; the top level always does.
+ * The drop unless the row would land where it is or inside its own submenu; a drop too deep for the row's submenu is lifted to the first level that holds it.
  */
 export function navDropOrNull(items, dragKey, drop, depth) {
   const moving = navRowAt(items, dragKey).node;
@@ -89,7 +83,7 @@ export function navDropOrNull(items, dragKey, drop, depth) {
 }
 
 /**
- * One name for one place, so the clone is never torn down and regrown where it already stands: before a row with a row above it is after that row, and after a row's last child is into the row.
+ * One name for one place: before a row with a row above it is after that row, and after a row's last child is into the row.
  */
 export function canonicalDrop(items, drop) {
   if (!drop) return null;

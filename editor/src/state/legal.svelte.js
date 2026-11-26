@@ -1,6 +1,5 @@
 /**
- * The Legal panel's state (panels/LegalPanel.svelte): the privacy facts of the whole site (privacy-model.js), gathered from the open page and every other page's draft or published file, and the panel's state from them (lib/legal-model.js), read by the panel, the amber dot on its tab and the tab's menu (shell/PanelTab.svelte).
- * Also the folds' open state, kept while other panels are open.
+ * The Legal panel's state: the site's privacy facts (privacy-model.js) from the open page and every other page, read by the panel and its tab, and its open folds.
  */
 import { privacyModel, cloudflareBeacon } from '$engine/privacy-model.js';
 import { legalState } from '../lib/legal-model.js';
@@ -14,7 +13,7 @@ import { previewState } from './preview.svelte.js';
 /** The other pages' files by id, read as the pages come and go and as another page is opened. */
 let otherPages = $state({});
 
-/** Whether the published front page carries Cloudflare Web Analytics' beacon, as the site serves it: read once per session, false where it cannot be read (a local server serves no beacon). */
+/** Whether the published front page carries Cloudflare Web Analytics' beacon: read once per session, false where it cannot be read (a local server serves none). */
 let beacon = $state(false);
 let beaconRead = false;
 
@@ -32,7 +31,7 @@ const legal = $derived.by(() => {
   return legalState({ site: draft, facts, termsOpen: fills.own + fills.contact, shopOn: blocksState.shopBlocksOn(), beacon });
 });
 
-/** The published files read for pages without a draft, by file: fetched once, since a page's file on the server changes only by a publish, which writes the pages that had drafts (read from their drafts, then from the held files, until the site serves them). */
+/** The published files of pages without a draft, by file, fetched once each, since only a publish changes them. */
 const fetched = new Map();
 
 /** Another page's file: its draft, else the file a publish holds, else its published file, fetched once. */
@@ -64,7 +63,7 @@ function effects() {
     if (siteState.siteDraft && previewState.canvasOpened) readBeacon();
   });
 
-  // The other pages are read again as pages come and go, as another page is opened (the page left behind is one of them now), and as the drafts are published or discarded.
+  // The other pages are read again as pages come and go, another page is opened, and drafts are published or discarded.
   $effect(() => {
     const draft = siteState.siteDraft;
     if (!draft || !previewState.canvasOpened) return;

@@ -1,10 +1,5 @@
 /**
- * The phone height of a block that fetches its content (0.7.21.7): a hidden preview of the page at the phone width, where the editor asks for the height such a block takes there once its content is drawn.
- * The answer is stored as the block's `mobileHeight`, and the loading state stands at it on the phone, so the first load of a session does not jump.
- *
- * The preview is the real page (`/?preview=1`) in the mobile viewport, as the design picker draws its own: same engine, same CSS, the media queries of a phone.
- * It is created on the first request, and let go once it has been neither asked, fed nor answered for IDLE_MS, since it is the whole page with its pictures, films and feeds; the next request makes it again.
- * It is fed the same drafts as the main preview by `prepare`, and measures with the main preview's own fit (`urd-fit-block`, answered with `urd-grow`), which waits for a feed and skips a block still loading.
+ * The phone height of a block that fetches its content, measured in a hidden preview of the page at the phone width and stored as the block's `mobileHeight`.
  */
 import { PHONE_FILL_WIDTH } from './preview-width.js';
 
@@ -14,7 +9,7 @@ export const PHONE_W = PHONE_FILL_WIDTH;
 /** Edits close together are measured once. */
 const SETTLE_MS = 400;
 
-/** How long the hidden preview stays with nothing asked of it, fed to it or answered: a fit measures a block three times as its content comes in, so the wait runs from the last of them. */
+/** How long the hidden preview stays with nothing asked of it, fed to it or answered. */
 export const IDLE_MS = 30_000;
 
 /**
@@ -94,10 +89,7 @@ export function createPhoneFit({ prepare, onHeight, title }) {
     frame.tabIndex = -1;
     frame.inert = true;
     frame.setAttribute('aria-hidden', 'true');
-    // Laid out at the phone's size, inside the window but transparent,
-    // behind the admin and out of reach: a frame outside the window or
-    // hidden may have its rendering throttled, and the calendar decides its
-    // narrow layout from an observer of its own width.
+    // Laid out at the phone's size inside the window, transparent, behind the admin and out of reach.
     frame.style.cssText = `position:fixed;left:0;top:0;width:${PHONE_W}px;height:844px;border:0;opacity:0;pointer-events:none;z-index:-1`;
     document.body.appendChild(frame);
   };

@@ -1,12 +1,10 @@
 /**
- * The phone's sizes and the dragged width of the editing canvas (ADR-0018, the Squarespace model of real screen sizes): the Phone device shows one of the common phone viewports with its height, a tablet, or the width alone, remembered per browser like the Screen's editing size; and any width can be dragged at the canvas's edge, snapping to the devices' widths and the site's phone breakpoint on the way.
- * A common aspect ratio keeps the width the Phone stood at when it was chosen and takes its height from the ratio, the phone held upright (lib/aspect.js).
- * Pure, node-tested (tests/preview-width.test.mjs).
+ * The Phone's sizes (ADR-0018): a common viewport, the width alone, an own size or a ratio; and a dragged canvas width that snaps to the devices' widths.
  */
 
 import { PHONE_RATIOS, ratioHeight } from './aspect.js';
 
-/** The viewports offered, in CSS px, from the narrowest: the sizes most phones lay a page out in today, and a tablet held upright, which the engine draws as a desktop since it stands above the phone breakpoint. */
+/** The viewports offered, in CSS px, from the narrowest: common phone sizes, and a tablet held upright, which the engine draws as a desktop. */
 export const PHONE_SIZES = [
   { id: 'phone-s', width: 360, height: 780 },
   { id: 'phone', width: 393, height: 852 },
@@ -30,8 +28,7 @@ export const FREE_WIDTH_MAX = 3840;
 const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
 /**
- * Normalises the stored phone preference: a preset's id, `fill` for the width alone, `own` with a width and a height, or `ratio` with a common ratio and the width it stands at; anything else is the preset `phone`.
- * The ratio's width is its own, so choosing a ratio leaves the own size's fields as they were.
+ * Normalises the stored phone preference: a preset's id, `fill`, `own` with its size, or `ratio` with a ratio and its own width; else the preset `phone`.
  * @param {unknown} raw
  * @returns {{size: string, width: number, height: number, ratio?: string, ratioWidth?: number}}
  */
@@ -52,7 +49,7 @@ export function phoneSetting(raw) {
 }
 
 /**
- * The viewport the phone preference gives: a preset's size, the fill width with no height, the own size, or a ratio's width with the height the ratio gives it upright.
+ * The viewport the phone preference gives: a preset's, the fill width with no height, the own size, or a ratio's width with its upright height.
  * @param {{size: string, width: number, height: number}} pref
  * @returns {{width: number, height: number}} height 0 fills the panel
  */
@@ -65,7 +62,7 @@ export function phoneViewport(pref) {
 }
 
 /**
- * A dragged width held inside its bounds and snapped to the nearest stop within the tolerance, so the devices' widths and the site's phone breakpoint catch the pointer as it passes them.
+ * A dragged width held inside its bounds and snapped to the nearest stop within the tolerance.
  * @param {number} width The width under the pointer, in canvas px
  * @param {number[]} stops The widths to snap to
  * @param {number} tolerance In canvas px

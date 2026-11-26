@@ -1,7 +1,6 @@
 /**
- * The command palette's list (comparison/ELEMENTS.md E1): the commands in their groups, the ones run last first, and a typed query narrowing them to the matches in the rank palette-search.js gives.
- * A command is `{ id, group, label, hint?, run }`; the groups stand in GROUP_ORDER, with the site's shared shortcuts (`site.shortcuts`, pinned for everyone who edits the site) and the recent ones as groups of their own at the top while nothing is typed.
- * Pure, so it is node-tested (tests/command-palette.test.mjs); the dialog (lib/CommandPalette.svelte) draws what this returns, handing in the engine's searchItems (palette-search.js).
+ * The command palette's list: the commands in their groups, or the ranked matches of a typed query.
+ * A command is `{ id, group, label, hint?, run }`.
  */
 
 /** The groups in the order the palette lists them. */
@@ -14,7 +13,7 @@ export const PINNED_MAX = 40;
 export const PINNED_ID = /^[a-z][a-z0-9-]*(:[A-Za-z0-9_.:-]+)?$/;
 
 /**
- * Whether a command can be pinned as a shared shortcut: its id fits the stored form, and it is not bound to the moment: a section of the open page, a device that is not the current one, and Publish stand only while they apply, so a pin on them would come and go.
+ * Whether a command can be pinned: its id fits the stored form, and it is not one that stands only while it applies (a section, a device, Publish).
  * @param {string} id
  * @returns {boolean}
  */
@@ -67,8 +66,7 @@ export function rememberCommand(list, id, max = RECENT_MAX) {
 }
 
 /**
- * The commands grouped for the list. With nothing typed: the shared shortcuts first (in their stored order, those still offered), the recent ones next (in the order they were run, those still offered and not pinned), then every group in GROUP_ORDER. With a query: one group of the matches, ranked by how well the label matches (searchItems).
- * A command whose group is unknown stands with the plugins'.
+ * The commands grouped: with nothing typed, the shared shortcuts, the recent ones, then each group in GROUP_ORDER; with a query, the ranked matches.
  * @template {{ id: string, group: string, label: string }} T
  * @param {T[]} commands
  * @param {string} query

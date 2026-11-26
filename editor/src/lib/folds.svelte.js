@@ -1,8 +1,6 @@
 /**
- * Which folds stand open, in every surface of the admin (the row kit, 0.7.30.2): one store, keyed by the surface and the fold's id, so a fold stays as it was left when the surface is drawn again (another block selected, a panel reopened).
- * The folds that stand open, and those that have had their first showing, are kept for the tab's life (sessionStorage), as scroll-place.js keeps the windows' scroll, so a reload opens the same folds; a new tab starts afresh.
- * The element menu's surface is 'menu'; a panel's is its name.
- * It also keeps, until the admin is loaded again, which rows a fold's «Add a setting» has shown («Settings in a group» on «Added as needed», lib/rows/Fold.svelte), by the fold and the row's own name, and the order the owner added them in, so they stand at the foot of their fold in that order.
+ * Which folds stand open in each surface of the admin, kept for the tab's life.
+ * It also keeps the rows a fold's «Add a setting» has shown, in the order added.
  */
 import { SvelteSet } from 'svelte/reactivity';
 
@@ -51,7 +49,7 @@ export const folds = {
     if (on) open.add(keyOf(surface, id));
     else open.delete(keyOf(surface, id));
   },
-  /** Opens the fold on its first showing only, so a fold that starts open is afterwards left as the owner leaves it; `tag` names what asked («All open»), whose first showings `forget` takes back. */
+  /** Opens the fold on its first showing only; `tag` names what asked («All open»), whose first showings `forget` takes back. */
   openOnce(surface, id, tag = '') {
     void forgotten;
     const key = keyOf(surface, id);

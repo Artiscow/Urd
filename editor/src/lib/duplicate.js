@@ -1,15 +1,12 @@
 /**
- * Duplication of a page (the Pages panel's row menu) and of a section in place (the section's toolbar and right-click menu).
- * The copies take the re-id of template insertion (templates-model.js), so a copy never shares an id with its original; a section's anchor names are made free on the page (anchor-model.js claimAnchors).
- * Pure, node-tested (tests/duplicate.test.mjs).
+ * Duplication of a page (the Pages panel's row menu) and of a section in place: copies get fresh ids, and a section's anchor names are made free (claimAnchors).
  */
 
 import { cloneSectionForInsert } from '$engine/templates-model.js';
 import { claimAnchors } from '$engine/anchor-model.js';
 
 /**
- * The slug of a page's copy: the original's with the first free running number from 2 (`om-oss-2`, then `om-oss-3`); a copy's own number is replaced, so the copy of `om-oss-2` is `om-oss-3`, while `top-10` with no `top` beside it keeps its name whole.
- * A slug `reserved` turns down is passed over; where every numbered copy would be (a page named «collection», whose copies would begin as a collection's draft does), the copy is named `page-<name>-<n>`.
+ * A page copy's slug: the first free number from 2 (`om-oss-2`), a copy's own dropped where its stem is a page; `page-<name>-<n>` where -2 and -3 are reserved.
  * @param {string} id
  * @param {Array<{id: string, path?: string}>} pages
  * @param {(slug: string) => boolean} [reserved]

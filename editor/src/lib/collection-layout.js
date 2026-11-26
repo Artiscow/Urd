@@ -1,6 +1,5 @@
 /**
- * The Collections panel's layouts and the rules they share (panels/CollectionsPanel.svelte): stepping in from the collections to the entries to one entry (the default), two columns in a widened panel, or a table over the page with the entry in a drawer.
- * Pure, node-tested (tests/collection-layout.test.mjs).
+ * The Collections panel's layouts and shared rules: stepping in to one entry (the default), two columns, or a table with the entry in a drawer.
  */
 
 /** The layouts, the first the default. */
@@ -19,7 +18,7 @@ export function csvPreviewOf(raw) {
   return CSV_PREVIEWS.includes(raw) ? raw : 'dialog';
 }
 
-/** Whether the page keeps an entry where the panel puts it: a product always, another kind's entry while it has no date, since the collection block sorts dated entries by their date (collections.js). */
+/** Whether the page keeps an entry where the panel puts it: a product always, another entry while it has no date, as the collection block sorts by date. */
 export function movable(kind, entry) {
   return kind === 'products' || !entry?.date;
 }
@@ -31,8 +30,7 @@ export function sameColorName(colors, index) {
 }
 
 /**
- * Whether an entry answers a search: every word of the query in its title, text, date, badge, sizes or colour names.
- * `plain` turns the rich title and text into their words (the editor's plainTitle, which parses rather than strips).
+ * Whether an entry answers a search: every word of the query in its title, text, date, badge, sizes or colour names; `plain` turns rich text into words.
  * @param {object} entry
  * @param {string} query
  * @param {(html: string) => string} plain
@@ -70,7 +68,7 @@ export function afterRemoval(ids, id) {
   return at.next ?? at.prev;
 }
 
-/** The table's columns after the picture and the title, by the collection's kind: a product's price, member price, sizes, colours and badge; another kind's date and text. */
+/** The table's columns after the picture and title: a product's price, member price, sizes, colours and badge, another kind's date and text. */
 export function tableColumns(kind) {
   if (kind === 'products') {
     return [

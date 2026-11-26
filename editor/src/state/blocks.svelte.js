@@ -1,6 +1,5 @@
 /**
  * The block catalogue: every block type's seed and name, building and placing a new block, and the calendar designs as blocks.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { ta } from '$engine/i18n.js';
 import { defaultFormFields } from '$engine/blocks/form.js';
@@ -20,17 +19,10 @@ import { siteState } from './site.svelte.js';
 import { collectionsState } from './collections.svelte.js';
 import { shopOn } from '$engine/block-palette.js';
 
-// FONT_STACKS lives in the engine's fonts.js (shared with the text editor
-// bar's typography row).
-
 /** Names of the block types in the panel. */
 const BLOCK_LABELS = $derived({ text: ta('blocks.text'), button: ta('blocks.button'), image: ta('blocks.image'), shape: ta('blocks.shape'), spacer: ta('blocks.spacer'), video: ta('blocks.video'), icon: ta('blocks.icon'), gallery: ta('blocks.gallery'), faq: ta('blocks.faq'), collection: ta('blocks.collection'), timeline: ta('blocks.timeline'), quote: ta('blocks.quote'), stats: ta('blocks.stats'), ribbon: ta('blocks.ribbon'), table: ta('blocks.table'), share: ta('blocks.share'), contact: ta('blocks.contact'), countdown: ta('blocks.countdown'), audio: ta('blocks.audio'), product: ta('blocks.product'), cart: ta('blocks.cart'), checkout: ta('blocks.checkout'), map: ta('blocks.map'), form: ta('blocks.form'), calendar: ta('blocks.calendar'), privacy: ta('blocks.privacy'), terms: ta('blocks.terms') });
 
-/** The block palette: a new block ready to be dragged where it belongs. */
-/** w in percent of the section width, h in px (physical units). The wide
- *  blocks are 88.89 %, which is 80 of the content surface's 90 grid cells
- *  at the default width: an even cell count leaves five cells on each side,
- *  so snapping can reach the centred position. */
+/** The block palette's new blocks: w in per cent of the section, h in px; a wide block's 88.89 % is 80 of the content's 90 grid cells, centred. */
 const BLOCK_DEFAULTS = $derived({
   text: { type: 'text', props: { html: ta('seed.text'), align: 'left' }, w: 33, h: 28 },
   'text-box': { type: 'text', props: { html: ta('seed.textBox'), align: 'left', box: true }, w: 30, h: 150 },
@@ -130,7 +122,7 @@ const BLOCK_DEFAULTS = $derived({
     props: {},
     w: 60, h: 600,
   },
-  // The terms of sale (blocks/text.js termsBlock): written in the site's language with the site's facts before it is placed (seedTerms), as the page template writes them.
+  // The terms of sale (blocks/text.js termsBlock): written in the site's language with the site's facts before it is placed (seedTerms).
   terms: {
     type: 'terms',
     props: { html: '', align: 'left', design: 'long' },
@@ -171,13 +163,13 @@ function shopBlocksOn() {
   return shopOn(siteState.siteDraft?.site, hasProducts);
 }
 
-/** Whether every new block of a type starts with a block-level flag on (`decor`, `hideMobile`): the shapes and the icon start as decor hidden on phones, so that is their standard. */
+/** Whether every new block of a type starts with a block-level flag on (`decor`, `hideMobile`), as the shapes and the icon do. */
 function blockStarts(type, flag) {
   const seeds = Object.values(BLOCK_DEFAULTS).filter((d) => d.type === type);
   return seeds.length > 0 && seeds.every((d) => d[flag] === true);
 }
 
-/** The value a prop starts with on every new block of a type (BLOCK_DEFAULTS), or undefined where the type has no seed or its seeds start it differently: the map starts with a zoom of 15. */
+/** The value a prop starts with on every new block of a type (BLOCK_DEFAULTS), or undefined where the type has no seed or its seeds differ. */
 function propStarts(type, key) {
   const seeds = Object.values(BLOCK_DEFAULTS).filter((d) => d.type === type);
   if (!seeds.length) return undefined;
@@ -192,8 +184,7 @@ function buildBlock(kind) {
     id: makeId('blk'),
     type: d.type,
     version: d.version ?? 1,
-    // Shapes are decor by default: outside the entrance wave (decor) and
-    // hidden on mobile (hideMobile); both can be turned off per block.
+    // A shape starts as decor, outside the entrance wave, and hidden on phones; both can be turned off per block.
     decor: Boolean(d.decor),
     hideMobile: Boolean(d.hideMobile),
     props: structuredClone(d.props),
@@ -208,8 +199,7 @@ async function seedTerms(block) {
   return block;
 }
 
-/** The iframe places the block in the middle of the viewport (it knows
- *  where the user has scrolled) and reports back via urd-add-block → insertBlock. */
+/** The preview places the block in the middle of the viewport and answers with urd-add-block, which insertBlock takes. */
 async function requestPlacement(block) {
   if (!block) return;
   await seedTerms(block);
@@ -221,7 +211,7 @@ async function requestPlacement(block) {
 }
 
 /**
- * The phone's place a message adding blocks carries (`phone`): sent from the phone view, where blocks added stand on the phone only, with the drop where the first lands (phone-moves.js phoneAdded); null from the desktop view.
+ * The phone's place a message adding blocks carries (`phone`): from the phone view, the drop where the first lands (phoneAdded); null from the desktop view.
  * @param {{phone?: {drop?: object|null}}} msg
  * @returns {{drop: object|null}|null}
  */
@@ -231,7 +221,7 @@ function phoneOf(msg) {
   return { drop: phone.drop && typeof phone.drop === 'object' && typeof phone.drop.pos === 'string' ? phone.drop : null };
 }
 
-/** Blocks added in the phone view written into their section (phoneAdded): on phones only, in the phone's order where they were asked for, the desktop as it was. Part of the step that adds them. */
+/** Blocks added in the phone view written into their section (phoneAdded): on phones only, in the phone's order where asked for, the desktop as it was. */
 function addOnPhone(section, blocks, phone) {
   const next = phoneAdded(section, blocks, phone.drop);
   section.blocks = next.blocks;
@@ -245,8 +235,7 @@ function addOnPhone(section, blocks, phone) {
 const pendingFits = new Map();
 
 /**
- * A block put in a section as a step of its own. A new block (`fit`, from «+ New block», the Blocks panel or the palette) has its box fitted to what it draws, where its kind's box is not what it draws: the preview measures it (urd-fit-new) and the fit is written as part of this step (handleNewFitted); a pasted or duplicated block keeps its own size.
- * A block added in the phone view (`phone`, phoneOf) stands on the phone only, where it was asked for there (addOnPhone), and is not fitted.
+ * A block put in a section as one step: a new block (`fit`) gets its box fitted to what it draws (handleNewFitted); one added in the phone view stands there only.
  * @param {string} sectionId
  * @param {object} block
  * @param {{fit?: boolean, phone?: {drop: object|null}|null}} [options]
@@ -255,8 +244,7 @@ function insertBlock(sectionId, block, { fit = false, phone = null } = {}) {
   const section = pageState.store.data.sections.find((s) => s.id === sectionId) ?? pageState.store.data.sections[0];
   if (!section) return;
   historyState.pushHistory('add-block');
-  // New and duplicated blocks go to the TOP of the stacking order, so
-  // they never hide behind what is already in the section.
+  // New and duplicated blocks go to the top of the stacking order.
   const topZ = Math.max(0, ...section.blocks.map((b) => b.frames?.desktop?.z ?? 1)) + 1;
   if (block.frames?.desktop) block.frames.desktop = { ...block.frames.desktop, z: topZ };
   // A name the page already uses arrives as name-2 (a template's block).
@@ -276,13 +264,12 @@ function insertBlock(sectionId, block, { fit = false, phone = null } = {}) {
     previewState.bridge?.sendFitNew(section.id, block.id, block.frames.desktop.w);
   }
   previewState.bridge?.sendSection(pageState.pageId, section);
-  // A block that follows its content (ADR-0025) gets its frame fitted to what it shows; a block being fitted as it is added gets it once that fit has come (handleNewFitted).
+  // A block that follows its content (ADR-0025) gets its frame fitted to what it shows; one fitted as it is added gets it in handleNewFitted.
   if (!fits) pageState.fitBlockSoon(section.id, block);
 }
 
 /**
- * A new block's box fitted to what it draws, as the preview measured it before showing it (urd-new-fitted): written into its desktop frame, its horizontal centre kept as the preview kept it, as part of the step that added it, so one undo takes both away.
- * Only while that step is the last and the block stands as it was added: a block changed meanwhile keeps what the owner made of it, and the preview is given the draft's frame again; a fit that comes after another block's add has made a step of its own is not written into that one. An answer without a size (a block not fitted) only finishes the add.
+ * A new block's fitted box from the preview (urd-new-fitted), written into the step that added it while that step is last and the block stands as added.
  */
 function handleNewFitted(msg) {
   const pending = pendingFits.get(msg.blockId);
@@ -297,20 +284,16 @@ function handleNewFitted(msg) {
     pageState.store.save();
     historyState.updateDirty();
     if (pageState.selectedBlock?.blockId === block.id) pageState.syncSelectedBlock();
-    // Nothing is drawn again: the preview shows the block at this frame already, in its copy of the section too, and a drawing would draw a calendar's content anew.
+    // Nothing is drawn again: the preview already shows the block at this frame.
   } else if (sized) {
-    // A fit the draft no longer takes (the block changed, or the step undone and done again meanwhile) leaves the preview showing a frame the draft does not hold: the section is drawn again from the draft.
+    // A fit the draft does not take: the section is drawn again from the draft.
     previewState.bridge?.sendSection(pageState.pageId, section);
   }
   // The height of a block that follows its content is fitted at the width it now stands at.
   pageState.fitBlockSoon(section.id, block);
 }
 
-/** The "+ card/row" button on a section: the preset item arrives as a
- *  group of blocks in ONE undo step. moves shifts existing blocks at the
- *  same time (FAQ pushes the closing line down), in the same step. The
- *  section grows to minBottom when the min height is in px (the item
- *  presets always use px). */
+/** A preset item's blocks added to a section in one undo step, `moves` shifting blocks already there, and a min height in px grown to `minBottom`. */
 function insertBlocks(sectionId, blocks, minBottom, moves, phone = null) {
   const section = pageState.store.data.sections.find((s) => s.id === sectionId);
   if (!section || !blocks?.length) return;
@@ -346,7 +329,7 @@ function insertBlocks(sectionId, blocks, minBottom, moves, phone = null) {
 /** The size a new calendar starts at, by the view its design shows; the frame is fitted to the design once it is placed. */
 const CAL_KIND_BY_VIEW = { list: 'calendar', cards: 'calendar-cards', month: 'calendar-month', next: 'calendar-next', agenda: 'calendar-agenda', week: 'calendar-month', day: 'calendar', year: 'calendar-month' };
 
-/** A new calendar in one of the designs (the design picker opened from either list): placed in the view, or in the section and at the point the canvas menu was opened from (`place`). */
+/** A new calendar in one of the designs: placed in the view, or in the section and at the point the canvas menu was opened from (`place`). */
 function addCalendarDesign(id, place = null) {
   const design = calDesign(id);
   const block = buildBlock(CAL_KIND_BY_VIEW[design.view] ?? 'calendar');
@@ -363,9 +346,7 @@ function addCalendarDesign(id, place = null) {
 }
 
 /**
- * A block put in a section: with a click point (`at`, from a double click on the section surface) it lands centred on the point, clamped and snapped (frameAtPoint); without one it is centred horizontally.
- * Added in the phone view (`phone`, phoneOf), it stands on the phone only, where it was asked for there.
- * The new block is then selected, as from the Blocks panel (the preview learns its id through selectById).
+ * A block put in a section and selected: centred on a click point (`at`, frameAtPoint) or centred across; added in the phone view, it stands on the phone only.
  */
 function placeInSection(block, sectionId, at, phone = null) {
   if (!phone && at && typeof at.x === 'number' && typeof at.y === 'number') {
@@ -383,9 +364,7 @@ function placeInSection(block, sectionId, at, phone = null) {
 }
 
 /**
- * "+ Add block" in a section: build the block and put it there (placeInSection).
- * An image or a gallery comes with the pictures picked in the preview (`files`), compressed here as the Blocks panel does; without them it starts empty.
- * The block waits for the compression, and is left out, with a word in the status line, when its section is no longer on the page by then (the owner moved to another page, or took the section away).
+ * «+ New block» in a section: the block built with the pictures picked in the preview, and placed unless its section has left the page meanwhile.
  */
 async function handleRequestBlock(msg) {
   const block = buildBlock(msg.kind);

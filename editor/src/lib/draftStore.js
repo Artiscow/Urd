@@ -1,11 +1,5 @@
 /**
- * Draft storage: a localStorage draft compared against a baseline.
- *
- * Principle: "has unpublished changes" is true if and only if the draft key exists in localStorage.
- * A write therefore deletes the key when the draft is identical to the published state, so the marker is always honest (for example after the user undoes everything).
- *
- * save() writes once the changes pause: every store with a change waiting is written together 250 ms after the last one, and at most 2 s after the first, so typing or a drag writes a large draft a few times rather than at every step.
- * flushDrafts() writes them at once, before anything reads the stored drafts (an undo, a publish, a page switch, the saved drafts, the draft view, the page going).
+ * A localStorage draft compared against the published state: its key exists only while the draft differs, and save() writes once the changes pause.
  */
 
 /** The stores with a change waiting to be written. */
@@ -63,8 +57,7 @@ export function onDraftsWritten(fn) {
 export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
   // A store made for a key reads what is stored: a change another store still has waiting is written first.
   flushDrafts();
-  // Migrate-on-read (ADR-0021): a draft saved under the pre-rename key is
-  // moved to the new key once; an existing draft under the new key wins.
+  // A draft under the legacy key (ADR-0021) moves to `key` once; a draft already under `key` wins.
   if (legacyKey) {
     const old = localStorage.getItem(legacyKey);
     if (old !== null) {
@@ -74,9 +67,7 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
       if (localStorage.getItem(key) !== null) localStorage.removeItem(legacyKey);
     }
   }
-  // Cloning via JSON, not structuredClone: the content is plain JSON per the
-  // contract, and JSON tolerates Svelte 5 reactive proxies (structuredClone
-  // throws DataCloneError on them).
+  // Copied through JSON, which reads Svelte's state proxies.
   const published = loadPublished();
   let baseline = JSON.stringify(published);
 
@@ -111,11 +102,7 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
       waiting.add(store);
       schedule();
     },
-    /** Persists the draft now; deletes the key if it equals the published state.
-     *  A full quota (base64 images in the draft) must never pass silently:
-     *  any throw from setItem reports onSaveError and returns false, and the
-     *  in-memory data is left untouched. Returns true when the draft is
-     *  persisted. */
+    /** Writes the draft now, or deletes the key when it equals the published state; a failed write reports onSaveError, keeps the data and returns false. */
     saveNow() {
       due = false;
       waiting.delete(store);
@@ -149,12 +136,7 @@ export function createDraftStore(key, loadPublished, onSaveError, legacyKey) {
       data = next;
       return data;
     },
-    /**
-     * Adjust the comparison baseline: for MEASUREMENTS (the data blocks'
-     * auto-growth) that are mirrored in both the draft and the baseline, so
-     * they never on their own constitute "unpublished changes". The mutator
-     * receives a copy of the baseline object; the change is written back.
-     */
+    /** Changes the baseline through `fn` on a copy, for measurements mirrored in draft and baseline so they alone never count as unpublished changes. */
     amendBaseline(fn) {
       const base = JSON.parse(baseline);
       fn(base);

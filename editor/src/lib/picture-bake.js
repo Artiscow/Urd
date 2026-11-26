@@ -1,6 +1,5 @@
 /**
- * A baked picture's file (0.7.29.4): the site icon and a page's share image drawn from their kept original on a canvas, the way picture.js draws a picture in its frame (bakeLayout in picture-edit.js), and written as WebP within the use's budget.
- * The browser and link previews read these as files, so the settings the page draws elsewhere are drawn into them here.
+ * Bakes the site icon or a page's share image: the kept original drawn with its settings as picture.js draws them, written as WebP within the use's budget.
  */
 import { pictureStyle, pictureFilter, parseColor, duotoneFilterUrl } from '$engine/picture.js';
 import { compressToWebp, PICTURE_BUDGETS } from '$engine/imageTools.js';
@@ -43,7 +42,7 @@ export async function bakePicture(source, { width: givenWidth, height: givenHeig
   ctx.drawImage(img, layout.rect.x, layout.rect.y, layout.rect.w, layout.rect.h);
   ctx.restore();
   ctx.filter = 'none';
-  // The vintage look's vignette: base.css's inset shadow (60 px at 0.45), cast inwards by a band filled just outside the canvas, its blur at the share of 60 px a 1200 px picture has.
+  // The vintage look's vignette as base.css's inset shadow (60 px at 0.45), cast inwards by a band just outside the canvas, its blur scaled from 1200 px.
   if (style.look === 'vintage') {
     ctx.save();
     ctx.shadowColor = 'rgb(0 0 0 / 0.45)';

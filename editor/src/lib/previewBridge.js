@@ -1,121 +1,9 @@
 /**
- * The preview bridge: the editor shows the REAL page in an iframe (?preview=1)
- * and talks to it over postMessage. The preview therefore cannot drift from
- * production: it IS production.
- *
- * Message format:
- *   editor → page: { type: 'urd-preview', pageId, section }    (one section)
- *                  { type: 'urd-preview-full', pageId, page }  (whole page)
- *                  { type: 'urd-site', site, page? }           (site draft: grid/theme/nav; with the open page where one change moved both, drawn in one pass)
- *                  { type: 'urd-plugins', enabled }            (the plugin draft's enabled list; loaded live in the preview)
- *                  { type: 'urd-collections', collections }    (the collection drafts: id → data; the preview uses them instead of the server files)
- *                  { type: 'urd-viewport', mode }              (the editor's viewport choice: desktop/mobile)
- *                  { type: 'urd-duplicate' }                   (Ctrl+D in admin: duplicate the selected block)
- *                  { type: 'urd-clipboard', clipboard }        (the last copy or cut, for the page just loaded)
- *                  { type: 'urd-active-section', sectionId }   (a section the editor selected itself: new, duplicated or pasted)
- *                  { type: 'urd-caret', blockId, offset }       (an undo of typing: the caret back in the block's text)
- *                  { type: 'urd-run-command', id }           (a plugin's command, run where it was registered)
- *   page → editor: { type: 'urd-edit', sectionId, blockId, props, rerender? }  (click-to-type/image editor)
- *                  { type: 'urd-move', sectionId, blockId, frame, frameKey, coalesce?, groupKey? }  (drag/resize)
- *                  { type: 'urd-grow', sectionId, blockId, h, fit?, seq? }  (a plugin copy's own height, or the answer to urd-fit-block: ONLY h, never x/y)
- *                  { type: 'urd-mobile-reset', sectionId, blockId? } (reset the mobile overrides; without blockId the whole section, ADR-0019)
- *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? } (a block moved one place in the phone's reading order, taken out of its group from the block's menu, or a set grouped or ungrouped on phones: the change phone-moves.js settled it into; coalesce from the keys)
- *                  { type: 'urd-attention-cards', cards: [{ sectionId, rect }] } (the sections that need a phone review in the phone view, where each stands in the canvas, for their cards beside the phone)
- *                  { type: 'urd-phone-unpin', sectionId, blockId } (a block pinned on the phone unpinned, back into the phone's order with its cells kept)
- *                  { type: 'urd-phone-seen', sectionIds } (the sections standing in the phone view's window, looked at on the phone as they stand now: the phone check before publishing, lib/phone-check.js)
- *                  { type: 'urd-too-narrow', screen } (a drag or a handle greys its block as too narrow for its words under the section's «Force readable text», ADR-0034: 'phone' or 'desktop' while it does, null once it does not)
- *                  { type: 'urd-phone-layout', sectionId, change, preset?, follow? } (a preset of the phone view's «Phone layout» strip: its cells and order, phone-layouts.js, `preset` asking for «Same height» after it; «Same width»; or «Same height», `follow` where it joins the preset's step; or the phone's set bar's alignment, and the pinned blocks' layer order on the phone, `layers`)
- *                  { type: 'urd-hover-block', blockId } (the block under the mouse on the canvas, null for none)
- *                  { type: 'urd-text-state', blockId, rect, state } (the text being written: its block's box in the canvas and what its selection holds; blockId null when none is, lib/TextToolbar.svelte)
- *                  { type: 'urd-block-bar', blockId, rect?, tools?, set? } (in the phone view, the selected block's box and its bar's tools for the bar drawn beside the phone, lib/CanvasBar.svelte, a tool `disabled` where it greys; `set` true while the tools are a set's bar and the box the set's; blockId null when none stands)
- *                  { type: 'urd-section-bar', sectionId, rect?, tools? } (the same for the section the mouse was last over, or put at work, 0.7.3.23)
- *                  { type: 'urd-nav-bar', on, rect? } (in the phone view, where the site's menu stands while its size bar is drawn beside the phone, 0.7.3.25)
- *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest } (in the phone view, a menu's rows for the editor to draw, at the point or under the ⋮ of the bar `editor` names, 'block' or 'section')
- *                  { type: 'urd-ctx-close' } / { type: 'urd-ctx-hold' } / { type: 'urd-ctx-hover', over } (that menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
- *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
- *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields; null clears one)
- *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
- *                  { type: 'urd-delete', sectionId, blockId | blockIds } (blockIds from a multi-selection: the whole selection in one undo step)
- *                  { type: 'urd-add-section', index, section }
- *                  { type: 'urd-move-section', sectionId, dir }
- *                  { type: 'urd-delete-section', sectionId }
- *                  { type: 'urd-duplicate-section', sectionId }
- *                  { type: 'urd-clipboard', clipboard, cut }  (a copy or a cut on the page: blocks or a section)
- *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last)
- *                  { type: 'urd-section-phone-room', sectionId, side, px } (a seam's grip in the phone view: the room above or below the section's blocks there, 0.7.3.26)
- *                  { type: 'urd-section-size', sectionId, minHeight, moves? } (moves from the seam grip, for a section changed at its top: [{blockId, dy}] in the same undo step)
- *                  { type: 'urd-undo', redo }                 (Ctrl+Z inside the iframe)
- *                  { type: 'urd-select-section', sectionId }  (active section for the palette)
- *                  { type: 'urd-select-block', sectionId, blockId } (selected block, null = deselected)
- *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? } (open the block menu at the block; `group` opens that group in its Content area)
- *                  { type: 'urd-section-menu', sectionId, rect }  (open the section's settings in the floating menu, beside the section)
- *                  { type: 'urd-redraw-section', sectionId } (a block with a phone design crossed its width's line, or a section its hand-off width to the phone layout: the section is sent again from the draft)
- *                  { type: 'urd-edit-on-phone', sectionId } (a section showing its phone layout in the desktop view, its words too narrow there: «Edit on the phone» on its bar opens it in the phone view)
- *                  { type: 'urd-block-design', sectionId, blockId, phone? } (open the design picker for the block, from the design button on its toolbar; `phone` from the phone view: its design on a phone)
- *                  { type: 'urd-ready' }                      (the engine is listening; safe to send drafts)
- *                  { type: 'urd-shown', round }               (what the editor's start sent is drawn and painted; answers urd-startup-done with its round)
- *                  { type: 'urd-plugin-blocks', blocks }      (the plugin blocks: type/label/defaults for the Blocks panel)
- *                  { type: 'urd-navigate', path, hash }       (internal link clicked in the preview; hash is the link's fragment or '')
- *                  { type: 'urd-picture-edit', kind, sectionId?, blockId?, index?, collection?, entryId?, frameRatio, frameWidth, frameHeight, phone? } (a picture on the canvas asks the image editor to open: an image block's, a video's cover, a gallery picture, a collection entry's or a quote's portrait, with its frame's width over its height and its size in pixels as drawn, and phone where it is drawn in the phone view)
- *                  { type: 'urd-link-edit', value, text }     (the text toolbar's link or Ctrl+K: the link at the caret in the link shape, or null, and the selected words)
- *                  { type: 'urd-add-block', sectionId, block, fit?, phone? } (block placed from the palette, or a plugin block from «+ New block»: fit, a new block whose box is fitted to what it draws; a duplicate has none; phone = {drop}, added in the phone view and standing on the phone only, landing where drop asks, phone-moves.js phoneAdded)
- *                  { type: 'urd-new-fitted', sectionId, blockId, w, h } (a new block's box fitted to what it draws, the answer to urd-fit-new, sent once as the preview shows the block fitted, add-fit.js)
- *                  { type: 'urd-add-blocks', sectionId, blocks, minBottom, moves, phone? } (preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step)
- *                  { type: 'urd-request-block', sectionId, kind, at?, files?, phone? } ("+ Add block"; at = click point {x in %, y in px}, without = centered; files = the pictures an image or a gallery is made from, picked in the preview)
- *                  { type: 'urd-calendar-designs', sectionId, at?, phone? } ("All calendar designs …" in "+ Add block": the design picker, the calendar then placed as a requested block)
- *                  { type: 'urd-shortcuts' }                  («?» on the page: the shortcut sheet)
- *                  { type: 'urd-toggle-grid' }                (G on the page: the grid shown or hidden)
- *                  { type: 'urd-palette' }                    (Ctrl/⌘+K on the page outside a text: the command palette)
- *                  { type: 'urd-save-key' }                   (Ctrl/⌘+S on the page: the ticked drafts saved)
- *                  { type: 'urd-commands', commands }          (the commands plugins registered in the preview: [{ id, label }])
- *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey? } (block dropped in another section; groupKey joins the frames its drag settled in the source)
- *                  { type: 'urd-collection-edit', collection, entryId, field, value } (click-to-type/image swap in the collection block)
- *                  { type: 'urd-collection-add', collection } (new entry from the "+ Product" adder in the product block)
- *                  { type: 'urd-open-entry', collection, entryId, field } (a click on a product card of a selected block: its entry in the Collections panel, the field focused)
- *                  { type: 'urd-open-panel', panel, fold, part } (the right-click menu on the site's menu: the Nav panel, at one of its folds or at its top, with `part` naming a card in the fold to open)
- *                  { type: 'urd-nav-width', width }           (side-by-side column width dragged in the preview)
- *                  { type: 'urd-save-template', kind, section | blocks } (Save as template: an unnamed snapshot; the editor names and stores it)
- *                  { type: 'urd-sticky-group', sectionId, blockIds, on } (Pin the group: one shared sticky group across the whole selection, or dissolve it)
- *                  { type: 'urd-sticky-dock', sectionId, blockId, dock } (screen-docked block dragged to a new anchor point)
- *                  { type: 'urd-delete-template', id }        (the delete button in the My templates tab; the editor confirms and deletes)
- *                  { type: 'urd-apply-layout', sectionId, frames, minHeight } (switch layout: the variant's frames + height in ONE undo step)
- *   editor → page: { type: 'urd-chrome', visible }            (show/hide the editing handles)
- *                  { type: 'urd-show-grid', visible }         (show the grid in every section)
- *                  { type: 'urd-show-guides', visible }       (guides: center/content width in every section)
- *                  { type: 'urd-spellcheck', on }             (the browser's spell check on the texts)
- *                  { type: 'urd-announce-reset' }             (the Announcement panel: forget the dismissal, so the strip returns)
- *                  { type: 'urd-select', blockId, picked? }   (select a block the editor just built, e.g. + New block; `picked` in the editor's lists, brought into view with the focus left in the list)
- *                  { type: 'urd-light', ids }                 (light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away)
- *                  { type: 'urd-phone-pin', blockId }         (pin the block on the phone where it stands now: the Phone panel's row menu)
- *                  { type: 'urd-ask-picture', sectionId, blockId, kind } (open the image editor on an image block's picture or a video's cover as a press on it does, the preview answering with urd-picture-edit: «Open the image editor» in the block's menu)
- *                  { type: 'urd-block-words', sectionId, blockId, props, phoneProps } (a block's words written on the page, the desktop's and the phone's own, as the editor keeps them, put in the page's copy of the section without drawing it again, ADR-0033)
- *                  { type: 'urd-deselect' }                   (a press on the stage around the canvas: no block, set or section stays selected)
- *                  { type: 'urd-text-cmd', cmd, value, focus } (a command of the text bar on the text being written; focus hands the focus back to the text)
- *                  { type: 'urd-text-end' }                   (the writing of the text ended from the editor: a press outside the text bar)
- *                  { type: 'urd-bar-press', bar, id, index, rest } (a tool of a bar drawn beside the phone pressed: the page presses the tool at that place on the block's or the section's own bar; rest, the ⋮ opened by a resting mouse)
- *                  { type: 'urd-section-settings', sectionId } (a section's settings asked for from the Phone panel: the page opens them as the gear on the section's bar does)
- *                  { type: 'urd-ctx-run', index } / { type: 'urd-ctx-closed', focus } (a row of the phone view's menu chosen in the editor, or the menu closed there without one; focus, closed with a key, gives the block its focus back)
- *                  { type: 'urd-admin-theme', colors }        (the admin color theme {bg, surface, accent, text}: the editor menus in the preview follow admin, not the site)
- *                  { type: 'urd-templates', templates }               (the template drafts: a list of {id, name, kind, section?, blocks?, page?}; the My templates tab reads them)
- *                  { type: 'urd-insert-template', id }        (the Blocks panel's My templates: insert a block-group template into the active section)
- *                  { type: 'urd-zoom', scale }                (the canvas zoom; the handles counter-scale so they keep their admin size)
- *                  { type: 'urd-scroll-section', sectionId }  (scroll the preview to the section; the review marker in the top bar)
- *                  { type: 'urd-scroll-anchor', hash }        (jump to the spot a link's fragment names, once its page stands)
- *                  { type: 'urd-scroll-to', sectionId, offset } (back to where the canvas was scrolled before a reload, lib/reload-place.js)
- *                  { type: 'urd-link-apply', link }           (the link editor's answer for the text being edited: the link shape, or null to take the link away)
- *                  { type: 'urd-close-menus' }                (a click in the admin panels closes open menus in the preview)
- *                  { type: 'urd-place-block', block }         (the palette: the engine finds a placement mid-viewport and reports back)
- *                  { type: 'urd-attention', sectionId, needed } (a section flagged for the phone's review, or cleared with needed: false: its mark, kept in the page the preview holds)
- *                  { type: 'urd-demo-anim', sectionId, blockId } (play the changed animation once; blockId null = the section)
- *                  { type: 'urd-demo-motion' } (let the ribbons roll for a few seconds while editing)
- *                  { type: 'urd-open-block-config', blockId } (open a plugin block's settings from Properties)
- *                  { type: 'urd-fit-block', sectionId, blockId, seq } (ask for the height of a block that follows its content, ADR-0025; answered with urd-grow)
- *                  { type: 'urd-fit-new', sectionId, blockId, w } (a new block's box to be fitted to what it draws, from the width it was added at, sent before its section so the preview draws it hidden until fitted; answered with urd-new-fitted)
- *                  { type: 'urd-frames', sectionId, frames } (frames fitted to their content, block id to desktop frame: put in place without drawing the section again)
- *                  { type: 'urd-text-style', blockId, style } (a font or a size for the whole text of a block: {fontFamily} or {fontSize}, null takes the theme's)
+ * The preview bridge: the editor drives the real page in an iframe over postMessage (ADR-0001).
+ * docs/ARCHITECTURE.md lists the messages, «The preview's messages».
  */
 
-/** The page's messages that still reach the editor while a saved draft is looked at: none of them changes the draft. The review cards' places and the phone view's bars and menu pass so the editor holds what the page last sent; it draws none of them while a draft is looked at. */
+/** The page's messages that still reach the editor while a saved draft is looked at, none of which changes the draft. */
 const LOOK_PASSES = new Set(['urd-ready', 'urd-shown', 'urd-navigate', 'urd-shortcuts', 'urd-palette', 'urd-save-key', 'urd-commands', 'urd-plugin-blocks', 'urd-toggle-grid', 'urd-attention-cards', 'urd-block-bar', 'urd-section-bar', 'urd-nav-bar', 'urd-ctx-close']);
 
 /**
@@ -124,7 +12,7 @@ const LOOK_PASSES = new Set(['urd-ready', 'urd-shown', 'urd-navigate', 'urd-shor
  * @returns {{sendSection(pageId: string, section: object): void, sendPage(pageId: string, page: object): void, sendSite(site: object): void, destroy(): void}}
  */
 export function createPreviewBridge(iframe, handlers = {}) {
-  /** While a saved draft is looked at in the canvas (setLooking): the draft's own sends wait, and the page's edits are dropped, so the saved version and this browser's never mix. */
+  /** While a saved draft is looked at in the canvas: the draft's own sends wait, and the page's edits are dropped. */
   let looking = false;
   const listener = (event) => {
     // The bridge's own iframe alone: another preview iframe (the design picker's) has a bridge of its own.
@@ -211,7 +99,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     setLooking(on) {
       looking = on;
     },
-    /** The version looked at, in the canvas while the draft's own sends wait: a page, and the site settings it stands in where they are the saved ones, both in one message so the page is drawn once. */
+    /** The version looked at, sent while the draft's own sends wait: a page with the saved site settings where there are any, in one message. */
     sendLook(pageId, page, site = null) {
       if (site) post({ type: 'urd-site', site, ...(page ? { page } : {}) });
       else if (page) post({ type: 'urd-preview-full', pageId, page });
@@ -250,8 +138,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendViewport(mode, { startup = false } = {}) {
       post({ type: 'urd-viewport', mode, ...(startup ? { startup } : {}) });
     },
-    /** The canvas zoom, so the editing handles can counter-scale and keep the
-     *  same on-screen size as the admin panels at any zoom level. */
+    /** The canvas zoom, so the editing handles keep the admin panels' size on the screen at any zoom. */
     sendZoom(scale) {
       post({ type: 'urd-zoom', scale });
     },
@@ -309,7 +196,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendBlockWords(sectionId, blockId, props, phoneProps) {
       draftPost({ type: 'urd-block-words', sectionId, blockId, props, phoneProps });
     },
-    /** «Same height» for a section on the phone: the preview measures its lines and posts their heights back (urd-phone-layout); `follow` where they belong to a preset's step. */
+    /** «Same height» for a section on the phone: the preview posts its lines' heights back (urd-phone-layout); `follow` where they belong to a preset's step. */
     sendPhoneSameHeight(sectionId, follow = false) {
       post({ type: 'urd-phone-same-height', sectionId, follow });
     },
@@ -317,7 +204,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendPhonePin(blockId) {
       post({ type: 'urd-phone-pin', blockId });
     },
-    /** Opens the image editor on a block's picture as a press on it does, so it is measured as drawn and knows the view it is drawn in («Open the image editor» in the block's menu). */
+    /** «Open the image editor» in the block's menu: opens it on the block's picture as a press on it does, measured as drawn. */
     sendAskPicture(sectionId, blockId, kind) {
       post({ type: 'urd-ask-picture', sectionId, blockId, kind });
     },
@@ -333,7 +220,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendTextEnd() {
       post({ type: 'urd-text-end' });
     },
-    /** A tool of a bar drawn beside the phone pressed: the page presses it on the block's or the section's own bar (`bar`, 'block' or 'section', and its `id`); `rest`, the ⋮ opened by a mouse resting on it. */
+    /** A tool pressed on a bar beside the phone: the page presses it on the block's or section's own bar (`bar`, `id`); `rest`, the ⋮ opened by a resting mouse. */
     sendBarPress(bar, id, index, rest = false) {
       post({ type: 'urd-bar-press', bar, id, index, rest: Boolean(rest) });
     },
@@ -353,7 +240,7 @@ export function createPreviewBridge(iframe, handlers = {}) {
     sendFitBlock(sectionId, blockId, seq = 0) {
       draftPost({ type: 'urd-fit-block', sectionId, blockId, seq });
     },
-    /** Asks for a new block's box fitted to what it draws, measured from the width it was added at (`w`, in percent), before its section is sent; answered with urd-new-fitted. */
+    /** Asks for a new block's box fitted to what it draws at the width it was added at (`w`, percent), before its section is sent; answered with urd-new-fitted. */
     sendFitNew(sectionId, blockId, w) {
       draftPost({ type: 'urd-fit-new', sectionId, blockId, w });
     },

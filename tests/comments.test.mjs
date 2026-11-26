@@ -30,7 +30,7 @@ const AREAS = {
   editorViews: () => walk(`${ROOT}editor/src/`).filter((f) => /\.(svelte|css)$/.test(f)),
 };
 /** The areas the rule holds today. */
-const SCOPE = new Set(['functions', 'engine', 'visitor']);
+const SCOPE = new Set(['functions', 'engine', 'visitor', 'editorScripts']);
 
 /** A release or commit number of Urd's (0.7.26.5, 0.7.0.16-35p), or a release a thing dates from («since v0.6»). */
 const RELEASE = /(?<![\w.])0\.[1-9]\d*\.\d+(?:\.\d+)*(?:-\d+)?p?\b|\b(?:since|from|until)\s+v?0\.\d+(?:\.\d+)*/i;

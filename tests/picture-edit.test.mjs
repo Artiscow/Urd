@@ -1,4 +1,5 @@
 // The image editor's rules (lib/picture-edit.js): what each kind of picture keeps and where, the crop window, a pointer on the turned picture, the zoom a corner gives, and the resets.
+// And the bake (lib/picture-bake.js) on a stand-in canvas: the vintage look's vignette held to base.css.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import './_svelte-loader.mjs';
@@ -365,4 +366,52 @@ test('the video\'s cover takes an overlay as every picture in a frame does, and 
   assert.equal(pickedColour('#0B1716'), '#0b1716');
   assert.equal(pickedColour('#0b171680'), '#0b1716');
   assert.equal(pickedColour('rgb(0, 0, 0)'), null);
+});
+
+test('a picture baked in the vintage look takes the vignette base.css draws: its colour, inset with no offset, and its blur at a 1200 px picture', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const rule = css.match(/\.urd-pic-look-vintage::before \{\s*box-shadow: inset 0 0 ([\d.]+)px (rgb\([^)]*\));\s*\}/);
+  assert.ok(rule, 'base.css draws the vignette as one inset shadow without offset or spread');
+  const [, blur, colour] = rule;
+  const { bakePicture } = await import('../editor/src/lib/picture-bake.js');
+  // A canvas that notes the shadow and the shapes of each fill, and gives no file back, so the bake stops after drawing.
+  const fills = [];
+  const canvas = { width: 0, height: 0, toBlob: (done) => done(null) };
+  canvas.getContext = () => {
+    let rects = [];
+    return {
+      save() {}, restore() {}, translate() {}, rotate() {}, scale() {}, drawImage() {}, fillRect() {},
+      beginPath() { rects = []; },
+      rect(...r) { rects.push(r); },
+      fill(rule) { fills.push({ rule, rects, shadowColor: this.shadowColor, shadowBlur: this.shadowBlur, offset: [this.shadowOffsetX ?? 0, this.shadowOffsetY ?? 0] }); },
+    };
+  };
+  const kept = { Image: globalThis.Image, document: globalThis.document };
+  globalThis.Image = class {
+    set src(value) {
+      this.naturalWidth = 2400;
+      this.naturalHeight = 1260;
+      queueMicrotask(() => this.onload());
+    }
+  };
+  globalThis.document = { createElement: (tag) => (tag === 'canvas' ? canvas : null) };
+  const bake = (look, width, height) => bakePicture({ src: '/media/images/a.webp', look }, { width, height, use: 'share', color: () => '#000000' });
+  try {
+    await assert.rejects(bake('vintage', 1200, 630), /could not be baked/);
+    await assert.rejects(bake('vintage', 630, 2400), /could not be baked/);
+    await assert.rejects(bake('natural', 1200, 630), /could not be baked/);
+  } finally {
+    globalThis.Image = kept.Image;
+    globalThis.document = kept.document;
+  }
+  const words = (value) => String(value).replace(/\s+/g, ' ').trim();
+  assert.equal(fills.length, 2, 'one vignette for each vintage bake, none for the natural look');
+  assert.equal(words(fills[0].shadowColor), words(colour));
+  assert.equal(fills[0].shadowBlur, Number(blur), 'at 1200 px the blur is the CSS\'s own');
+  assert.equal(fills[1].shadowBlur, Number(blur) * 2, 'and scales with the picture\'s longer side');
+  assert.deepEqual(fills[0].offset, [0, 0]);
+  // Inset: a band just outside the canvas casts the shadow inwards.
+  assert.equal(fills[0].rule, 'evenodd');
+  assert.deepEqual(fills[0].rects, [[-1200, -630, 3600, 1890], [0, 0, 1200, 630]]);
 });

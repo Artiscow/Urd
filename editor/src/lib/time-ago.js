@@ -1,7 +1,5 @@
 /**
- * How long ago something happened, in the admin's language: minutes under an hour, hours under a day, else days («2 min ago», «3 hr ago», «yesterday», «5 days ago»).
- * Under a minute gives '', and the caller says «now» in its own words.
- * Pure, node-tested (tests/time-ago.test.mjs).
+ * How long ago something happened, in the admin's language: minutes, hours or days, and '' under a minute, for the caller to say «now».
  * @param {number} at The moment, in ms
  * @param {string} lang The admin language; a code Intl rejects falls back to the browser's own
  * @param {number} [now]

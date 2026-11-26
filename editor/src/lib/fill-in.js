@@ -1,7 +1,5 @@
 /**
- * The parts of a page made from a template that the owner still has to fill in: the words in [brackets] the template marks (`data-urd-fill`, sections/presets.js), counted while words in brackets remain in them.
- * `contact` parts are the seller's details, which the site's contact details had none of when the page was made.
- * Read by the Pages panel's count on a page's row and by the warning before publishing.
+ * The parts of a template's page to fill in: the [bracketed] words it marks (`data-urd-fill`) while brackets remain; `contact` parts hold the seller's details.
  */
 
 /** A marked part as the text stores it: its kind, if any, and its words, with any formatting the owner put inside them. */

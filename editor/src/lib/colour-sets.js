@@ -1,7 +1,6 @@
 /**
- * The site's colour sets (BACKLOG 0.7.9.2, `theme.colorSets` in site.json): named sets of colour codes that every colour picker offers under its palette, the same for everyone who edits the site.
- * Also the live set «On this site»: the colours the site's pages and settings use, the most used first, gathered anew at each opening of a picker and never stored.
- * Pure: it reads and returns data, and changes nothing it is given.
+ * The site's colour sets (`theme.colorSets` in site.json) that every colour picker offers, and the live set «On this site» of the colours the site uses.
+ * Pure.
  */
 
 /** The bounds of the sets: how many sets, how many colours in one, and how long a name. */
@@ -34,7 +33,7 @@ export function colourCode(raw) {
 }
 
 /**
- * The sets a theme holds, each read within its bounds: an id, a name, and its colours as codes with a name where one was given; a set without a valid id, or with an id met before, is left out, and so is a colour without a code.
+ * The sets a theme holds, each read within its bounds; a set without a valid id or with one met before is left out, and so is a colour without a code.
  * @param {object|null|undefined} theme site.theme
  * @returns {Array<{id: string, name: string, colors: Array<{code: string, name?: string}>}>}
  */
@@ -57,8 +56,7 @@ export function setsOf(theme) {
 }
 
 /**
- * The sets after one change, or the same list where the change changes nothing:
- * `add` a set at the end, `rename` one, `addColour` a code to one (not twice), `removeColour` the colour at an index, `delete` a set.
+ * The sets after one change, or the same list where it changes nothing: `add`, `rename`, `addColour` (not twice), `removeColour` at an index, or `delete`.
  * @param {ReturnType<typeof setsOf>} sets
  * @param {{kind: string, id?: string, set?: object, name?: string, code?: string, index?: number}} change
  * @returns {ReturnType<typeof setsOf>}
@@ -109,8 +107,7 @@ const IN_STYLE = /(?:background-color|color)\s*:\s*(#[0-9a-f]{3,8}\b|rgba?\([^)]
 const NOT_COLOUR = new Set(['href', 'url', 'link', 'target', 'anchor', 'id', 'src', 'page', 'path', 'file', 'slug']);
 
 /**
- * The colours the documents use, the most used first, a tie in the order met: a code standing alone as a value, and a colour written in a style inside a text (`color:` or `background-color:`); a field that holds a link, a place or a name is passed by (NOT_COLOUR).
- * The caller leaves the theme out, since the Theme tab holds its colours.
+ * The colours the documents use, the most used first: a code standing alone as a value, and a colour in a style inside a text, past the fields in NOT_COLOUR.
  * @param {Array<unknown>} docs The pages' data and the site's settings
  * @param {number} [limit]
  * @returns {Array<{code: string, count: number}>}

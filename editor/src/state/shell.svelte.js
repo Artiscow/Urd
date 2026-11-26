@@ -1,6 +1,5 @@
 /**
- * The shell's state: the admin theme and language, the status toast, the sign-in, the confirmation dialog, the setup wizard, the panel choice and its preferences, the top bar's fold steps, the guides and the grid buttons, the keyboard, and the startup.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
+ * The shell's state: the admin theme and language, the status, the sign-in, the confirmation, the setup wizard, the panels, the keyboard and the startup.
  */
 import { ta } from '$engine/i18n.js';
 import { TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_SIZES, TOOLBAR_GEARS, TOOLBAR_PHONES, TOOLBAR_PHONE_PLACES, TOOLBAR_DESIGNS } from '../menu/forms.js';
@@ -36,12 +35,7 @@ import { redirectsState } from './redirects.svelte.js';
 import { partsState, PANEL_PARTS } from '../lib/parts.svelte.js';
 import { updaterState } from './updater.svelte.js';
 
-/**
- * The admin's own color theme (the editor ONLY - the site's theme is
- * controlled by the user in the Theme panel). Picked in the top bar,
- * stored per browser. The palettes are defined as CSS variables in the
- * style block below.
- */
+/** The admin's own colour themes, picked in the top bar and stored per browser; the site's theme is the Theme panel's. */
 const ADMIN_THEMES = $derived([
   ['purple', ta('adminTheme.purple')],
   ['well', ta('adminTheme.well')],
@@ -52,8 +46,7 @@ const ADMIN_THEMES = $derived([
   ['ember', ta('adminTheme.ember')],
 ]);
 
-// The stored id may predate ADR-0021 (Norwegian theme ids); it is mapped on
-// read and the effect below writes the current id back.
+// A stored Norwegian theme id is mapped on read, and the effect below writes the current id back.
 const LEGACY_ADMIN_THEMES = { lilla: 'purple', bronn: 'well', gull: 'gold', graa: 'grey', nordlys: 'aurora', skumring: 'dusk', glo: 'ember' };
 
 let adminTheme = $state((() => {
@@ -61,10 +54,7 @@ let adminTheme = $state((() => {
   return LEGACY_ADMIN_THEMES[stored] ?? stored ?? 'grey';
 })());
 
-/** Reports the admin's theme colors to the preview: the editor menus in
- *  there (block menu, section gallery) follow the admin, not the page.
- *  Read from the document's actual variables, so the palettes live in
- *  one place. */
+/** Reports the admin's theme colours to the preview, read from the document's variables, so the editor's menus there follow the admin. */
 function sendAdminTheme() {
   const style = getComputedStyle(document.documentElement);
   const accent = style.getPropertyValue('--urd-color-accent').trim();
@@ -73,8 +63,7 @@ function sendAdminTheme() {
     surface: style.getPropertyValue('--urd-color-surface').trim(),
     accent,
     text: style.getPropertyValue('--urd-color-text').trim(),
-    // Readable text ON the admin accent: pick black or white by the
-    // accent's luminance, so white-on-light never occurs.
+    // Readable text on the admin accent, black or white by its contrast.
     'accent-text': readableOn(accent),
   });
 }
@@ -93,10 +82,10 @@ let statusKind = $state('info');
 
 let statusSeq = 0;
 
-/** Set the status message; 'ok' messages clear themselves after 8 s. */
 /** The status line's one action beside its words, such as «Undo» after a delete of several entries; a new status clears it. */
 let statusAction = $state(null);
 
+/** Sets the status message; an 'ok' message clears itself after 8 s. */
 function setStatus(msg, kind = 'info', action = null) {
   status = msg;
   statusKind = kind;
@@ -148,16 +137,14 @@ function toPhoneView() {
   previewState.deviceId = 'mobile';
 }
 
-/** The review badge: switch to mobile view and scroll to the first
- *  section that needs review. The scroll is sent after the viewport
- *  effect has flushed (postMessage is FIFO, so the order is guaranteed). */
+/** The review badge: the phone view, scrolled to the first section that needs review once the view has changed. */
 function jumpToAttention() {
   const target = pageState.store?.data.sections.find((s) => s.responsive?.mobile?.attention?.needed);
   toPhoneView();
   if (target) setTimeout(() => previewState.bridge?.sendScrollSection(target.id), 0);
 }
 
-/** «Look on the phone» from the phone check before publishing: the phone view on the page, at its first section not looked at there since its layout changed; another page is opened after, and scrolled once its canvas is ready, the sections of the page left in the phone view meanwhile counting for nothing (phoneSeen waits for the page's store). */
+/** «Look on the phone» from the phone check: the phone view at the section, on this page or on another page once its canvas is ready. */
 async function lookOnPhone(id, sectionId) {
   toPhoneView();
   if (id === pageState.pageId) {
@@ -168,10 +155,7 @@ async function lookOnPhone(id, sectionId) {
   await pageState.selectPage(id);
 }
 
-// A click anywhere in the admin outside the block menu closes it (clicks
-// in the preview are handled via onSelectBlock; iframe clicks never reach here).
-// A dialog over the menu (the design picker, the icon editor) is work the
-// menu opened: a press in it, and its own Escape, leave the menu open.
+// A press in the admin outside the block menu closes it; one in a dialog over the menu leaves it open.
 function onPointerdownWindow(e) {
   if (!pageState.blockMenu) return;
   // A tool of the phone view's bar that opens the menu (CanvasBar.svelte) leaves it to its press, which closes it at a second one, as on the page.
@@ -200,7 +184,7 @@ function onKeydown(e) {
       return;
     }
   }
-  // «?» opens the shortcut sheet wherever in the panels it is not typed: a toggle, a slider or a colour keeps the focus after a choice and takes no text, so it lets the key through, and a dialog over the editor keeps it.
+  // «?» opens the shortcut sheet wherever it is not typed: a toggle, a slider or a colour lets the key through, and a dialog keeps it.
   const focus = e.target;
   const typed = focus instanceof HTMLElement
     && (focus.isContentEditable || focus.tagName === 'TEXTAREA' || focus.tagName === 'SELECT'
@@ -227,18 +211,14 @@ function onKeydown(e) {
     draftsState.saveKey();
     return;
   }
-  // Ctrl+K outside a text opens the command palette, and Ctrl+Shift+P everywhere a browser keeps Ctrl+K for itself; in a text Ctrl+K stays the link key (the text toolbar's).
+  // Ctrl+K outside a text opens the command palette, and Ctrl+Shift+P anywhere; in a text Ctrl+K stays the link key.
   if ((key === 'k' && !e.altKey && !e.shiftKey) || (key === 'p' && e.shiftKey && !e.altKey)) {
     if (typed && key === 'k') return;
     e.preventDefault();
     paletteState.openPalette();
     return;
   }
-  // Ctrl+D with focus in the admin panels: duplicate the selected block
-  // in the preview (otherwise the shortcut opens the browser's bookmark
-  // dialog). Only real TEXT FIELDS keep the browser shortcut; numbers,
-  // toggles and sliders (where focus lingers after a panel choice) must
-  // not swallow Ctrl+D.
+  // Ctrl+D duplicates the selected block in the preview; only a text field keeps the browser's shortcut.
   if (key === 'd') {
     const t = e.target;
     const inTextField = t instanceof HTMLElement
@@ -251,9 +231,7 @@ function onKeydown(e) {
   }
   if (key !== 'z' && key !== 'y') return;
   const t = e.target;
-  // Free-text fields keep the browser's own undo; everything else
-  // (numbers, toggles, sliders, COLOR PICKERS - focus lingers in them
-  // after a choice) uses the editor's history.
+  // A text field keeps the browser's own undo; numbers, toggles, sliders and colour pickers use the editor's history.
   const nativeUndo = t instanceof HTMLElement
     && (t.isContentEditable || t.tagName === 'TEXTAREA'
       || (t.tagName === 'INPUT' && !['number', 'checkbox', 'range', 'color'].includes(t.type)));
@@ -264,7 +242,7 @@ function onKeydown(e) {
 }
 
 async function init() {
-  // The sign-in is asked for at once, beside the rest of the load; one due for renewal is renewed before any other call reaches GitHub, since a renewal ends the sign-in such a call carries.
+  // The sign-in is asked for beside the rest of the load; one due for renewal is renewed before any other call reaches GitHub.
   const due = renewDue();
   const signedIn = checkAuth();
   if (due) await signedIn;
@@ -275,17 +253,14 @@ async function init() {
   window.addEventListener('storage', (event) => {
     if (event.key === RENEW_KEY && event.newValue && !auth?.loggedIn) checkAuth();
   });
-  // The saved drafts are met before any store is built where the meeting may let a part here go (ADR-0032); where it cannot, it goes on beside the load (meetOnLoad).
-  // The site is set together with its draft once both are read, so nothing drawn meanwhile finds a site without one.
+  // The saved drafts are met before any store is built (ADR-0032, meetOnLoad), and the site is set together with its draft.
   const meeting = savedState.meetOnLoad();
   const siteFile = fetch('/content/site.json').then((res) => res.json());
   const published = liftSiteFile(await siteFile);
   await meeting;
   siteState.site = published;
   siteState.siteStore = createDraftStore('urd-draft-site', () => siteState.site, draftSaveError);
-  // Site drafts with a higher schemaVersion than the engine are
-  // discarded, the same guard as for page drafts (liftSiteFile would
-  // otherwise let them through).
+  // A site draft with a higher schemaVersion than the engine's is discarded, as a page draft is.
   if ((siteState.siteStore.data.schemaVersion ?? 1) > SITE_SCHEMA_VERSION) {
     console.warn(`Urd: the site draft has schemaVersion ${siteState.siteStore.data.schemaVersion} (the engine has ${SITE_SCHEMA_VERSION}) and is discarded`);
     // site is $state: structuredClone on the proxy throws (the snapshot lesson).
@@ -309,9 +284,7 @@ async function init() {
   // The steps kept from the last session in this browser, taken up when the drafts are the ones they were kept with.
   await historyState.loadKept();
   await signedIn;
-  // The publish baseline requires login: signed out, the call would just
-  // produce 401 noise in the console. After login (OAuth redirect) the
-  // page reloads, so the baseline is fetched here then.
+  // The publish baseline is fetched only when signed in.
   if (auth) updaterState.refreshBaseSha();
   // The update check runs at the start for a publisher, so a new Urd is told in the admin's navigation without the Updates panel open.
   if (auth?.allowed) updaterState.loadUpdateCheck();
@@ -319,9 +292,7 @@ async function init() {
   loadPanelData();
   // A draft saved on another device that this browser has not seen is told now, and as the tab comes back into view (ADR-0032).
   savedState.watchSaves();
-  // The setup wizard: first visit on a fresh clone and not dismissed
-  // before. Triggered ONLY by the template's explicit signal (site.setup);
-  // the wizard removes the field on completion, so it never shows again.
+  // The setup wizard, on the template's signal (site.setup) where this browser has not closed it.
   if (siteState.siteDraft.site.setup === true && !localStorage.getItem('urd-setup-done')) {
     setupName = siteState.siteDraft.site.title;
     setupAccent = siteState.siteDraft.theme.tokens.color.accent;
@@ -330,12 +301,10 @@ async function init() {
   }
 }
 
-// The editor's own replacement for confirm(): a promise-based modal in
-// the same style as the setup wizard. Only one at a time (publishing and
-// undo are sequential flows).
+// The editor's own confirm(): a promise-based modal, one at a time.
 let confirmBox = $state(null);
 
-/** sections: several things to weigh in one question, each under its own heading ({heading, lines}), as publishing asks; danger: the answer undoes much, and its button is dark red. */
+/** `sections`: several things to weigh, each under its heading ({heading, lines}); `danger`: the answer undoes much, and its button is dark red. */
 function askConfirm({ title, lines = [], sections = [], okLabel = ta('confirm.ok'), cancelLabel = ta('confirm.cancel'), danger = false }) {
   return new Promise((resolve) => {
     confirmBox = { title, lines, sections, okLabel, cancelLabel, danger, resolve };
@@ -350,8 +319,8 @@ function askPrompt({ title, lines = [], value = '', placeholder = '', okLabel = 
 }
 
 /**
- * Asks where the visitors of an address go (a page deleted or hidden): the front page, another page from `options` ([path, title]), or nowhere.
- * Resolves with { to } (a path, or null for «not found»), or null when the owner cancels.
+ * Asks where the visitors of a deleted or hidden page's address go: the front page, a page from `options`, or nowhere.
+ * Resolves with { to }, or null on cancel.
  */
 function askDestination({ title, lead, okLabel, options = [] }) {
   return new Promise((resolve) => {
@@ -371,9 +340,7 @@ function answerConfirm(ok) {
   box.resolve(box.prompt ? (ok ? box.value : null) : ok);
 }
 
-// Distinguishes a click on the backdrop from a text drag that started
-// inside the card: both end with the same click target, but only the
-// former began on the backdrop.
+// Whether a press began on the backdrop, so a text drag out of the card does not close it.
 let confirmDownOnOverlay = false;
 
 let showSetup = $state(false);
@@ -397,18 +364,14 @@ function applySetup() {
     siteState.siteDraft.nav.logo = { type: 'text', value: name };
     siteState.siteDraft.theme.tokens.color.accent = setupAccent;
     siteState.siteDraft.theme.tokens.color.bg = setupBg;
-    // The signal is spent: the next publish removes it from site.json, so
-    // the wizard never runs again for other editors.
+    // The signal is spent: the next publish removes it from site.json.
     delete siteState.siteDraft.site.setup;
   });
   closeSetup();
   setStatus(ta('status.setupDone'), 'ok');
 }
 
-/** Active panel in the left panel picker (null = closed) */
-/* What the admin shows when it is loaded again («Open panel», lib/panels-start.js): the panel last open and its fold, no panel, always the same panel, or the folded column.
-   Personal workspace preferences in localStorage (like theme and language), with only the non-default stored.
-   Clean view keeps the folds on its own (the rail and the panel are hidden, not unmounted); this is about a fresh load of the admin. */
+/* What the admin shows when it is loaded again («Open panel», lib/panels-start.js), stored per browser where it is not the default. */
 const PANELS_PREF_KEY = 'urd-admin-panels';
 
 const PANEL_OPEN_KEY = 'urd-admin-panel-open';
@@ -437,21 +400,17 @@ function setPanelsStart(v) {
 /** The open panel; set from the stored choice once the panels are known below. */
 let activePanel = $state(null);
 
-/** Whether the open panel is drawn: a panel loaded on demand (lib/parts.svelte.js) once its code is in, so what reaches into it (a fold asked for, the place it was left, a field to focus) waits for it. */
+/** Whether the open panel is drawn: a panel loaded on demand once its code is in, so what reaches into it waits for it. */
 const panelDrawn = $derived(!PANEL_PARTS[activePanel] || Boolean(partsState.loaded[PANEL_PARTS[activePanel]]));
 
-/**
- * How the panels are reached (the Urd settings, «Panel navigation»): an icon rail, the sidebar of words, tabs at the top of the panel in three groups, a strip of every panel under the top bar, or the page's panels as tabs with the site's in a menu.
- * A personal workspace preference in localStorage, like the theme; the rail is the default and is not stored.
- * The rail, the sidebar and the strip toggle a panel; the two tab forms keep the panel's column standing with the tabs, folded to a handle at the edge when the owner asks (`panelFolded`), and the rail lets the panel fold away.
- */
+/** How the panels are reached («Panel navigation»): the rail by default, the sidebar, the panel's tabs, the strip or the page's tabs, stored per browser. */
 const ADMIN_LAYOUT_KEY = 'urd-admin-layout';
 
 let adminLayout = $state(ADMIN_LAYOUTS.includes(localStorage.getItem(ADMIN_LAYOUT_KEY)) ? localStorage.getItem(ADMIN_LAYOUT_KEY) : ADMIN_LAYOUTS[0]);
 
 function setAdminLayout(v) {
   adminLayout = ADMIN_LAYOUTS.includes(v) ? v : ADMIN_LAYOUTS[0];
-  // The column folded because no panel was open in «The page's tabs» stands open in a layout that keeps it with its tabs.
+  // The column folded because no panel was open in «The page's tabs and a Site menu» stands open in a layout that keeps it with its tabs.
   if (!activePanel && adminLayout !== 'page-tabs') panelFolded = false;
   if (adminLayout === ADMIN_LAYOUTS[0]) localStorage.removeItem(ADMIN_LAYOUT_KEY);
   else localStorage.setItem(ADMIN_LAYOUT_KEY, adminLayout);
@@ -468,10 +427,10 @@ const UPDATE_NOTICE_OPTIONS = $derived(UPDATE_NOTICES.map((id) => [id, ta(`opt.u
 /** Whether the tab layouts' column is folded to a handle at the edge; a panel opened from anywhere unfolds it (the activePanel setter). */
 let panelFolded = $state(false);
 
-/** The panel open last, which the handle opens again in «The page's tabs» (lib/panels-start.js unfoldedPanel). */
+/** The panel open last, which the handle opens again in «The page's tabs and a Site menu» (lib/panels-start.js unfoldedPanel). */
 let lastPanel = null;
 
-/** The handle at the column's edge: the column unfolds, in «The page's tabs» with the panel last open, since it never stands empty there. */
+/** The handle at the column's edge: the column unfolds, in «The page's tabs and a Site menu» with the panel last open, since it never stands empty there. */
 function unfoldPanel() {
   const panel = unfoldedPanel(adminLayout, activePanel, lastPanel);
   panelFolded = false;
@@ -481,10 +440,7 @@ function unfoldPanel() {
   }
 }
 
-/** The panels grouped by workflow: build the page, style the site, tools.
- *  Shown with dividers in the panel picker.
- *  The ids are stable English identifiers (never display text); PANEL_LABELS owns what the user sees.
- *  Drafts stands first in the System group as a tab of its own, which opens the Drafts window (state/drafts.svelte.js) rather than a panel. */
+/** The panels grouped by workflow, with dividers in the panel picker; PANEL_LABELS holds their names, and Drafts opens a window. */
 const PANEL_GROUPS = [
   ['pages', 'blocks', 'properties', 'phone'],
   ['site', 'legal', 'theme', 'nav', 'footer', 'collections', 'plugins'],
@@ -518,8 +474,8 @@ let startPanel = null;
 }
 
 /**
- * Whether a panel stands because the admin started with it, asked as the panel first stands: the Phone panel shows the phone when the owner opens it, and leaves the view the admin came back to when it opens with the admin (PhonePanel.svelte).
- * Asked once: any later standing of a panel is the owner's opening.
+ * Whether a panel stands because the admin started with it, asked as it first stands (PhonePanel.svelte).
+ * Asked once: a later standing is the owner's opening.
  * @param {string} id
  * @returns {boolean}
  */
@@ -536,10 +492,7 @@ const PANELS_PREF_OPTIONS = $derived(panelsPrefsFor(adminLayout).map((id) => [id
 
 const PANELS_START_OPTIONS = $derived(PANEL_IDS.map((id) => [id, PANEL_LABELS[id]]));
 
-/* The panel intros (the prose rule, ADR-0016): the explanation lives as
-   a tooltip on the panel title, never as a paragraph in the panel.
-   Panels without an entry have no intro; multiple keys are joined with
-   line breaks. */
+/* The panel intros, a tooltip on the panel's title (ADR-0016), their keys joined with line breaks. */
 const PANEL_INTROS = {
   pages: ['hint.pages.drafts'],
   blocks: ['hint.blocks.intro'],
@@ -549,10 +502,7 @@ const PANEL_INTROS = {
   history: ['hint.history.intro'],
 };
 
-/** The admin language picker: the languages under their OWN names
- *  (endonyms, never translated, never flags); "Automatic" follows the
- *  device language and is the default - a choice is remembered per
- *  browser (urd-admin-lang). */
+/** The admin languages under their own names, never translated; a choice is kept per browser (urd-admin-lang). */
 const LANG_OPTIONS = [
   ['se', 'Davvisámegiella'],
   ['en-GB', 'English (UK)'],
@@ -561,18 +511,14 @@ const LANG_OPTIONS = [
   ['tr', 'Türkçe'],
 ];
 
-/** Languages from language-pack plugins: codes the engine does not have
- *  built in. Alphabetical by the language's own name, like the built-ins. */
+/** Languages by their own names, as the built-ins are. */
 const sortLangs = (list) => [...list].sort((a, b) => a[1].localeCompare(b[1]));
 
 function packLangOptions(ids, kind) {
   const out = [];
   for (const id of ids) {
     for (const lang of pluginsState.pluginInfo[id]?.languages ?? []) {
-      // Raw manifest data: a broken entry (missing name/code, or with a
-      // built-in code) is skipped instead of taking down the panel - the
-      // engine's loading filters the same way, so the picker must never
-      // promise more.
+      // A broken entry (no name or code, or a built-in code) is skipped, as the engine's loading skips it.
       if (lang?.[kind] !== true) continue;
       if (typeof lang.code !== 'string' || typeof lang.name !== 'string' || !lang.name) continue;
       if (LANG_OPTIONS.some(([code]) => code === lang.code)) continue;
@@ -582,19 +528,14 @@ function packLangOptions(ids, kind) {
   return out;
 }
 
-/** The admin picker follows the PUBLISHED plugin list: that is what the
- *  engine reads at startup, so a choice from here works right away. A
- *  stored choice that no longer exists (the pack was removed) is kept as
- *  its own option, so the picker never stands empty. */
+/** The admin languages follow the published plugin list, which the engine reads at startup; a stored choice not among them stands as its own option. */
 function adminLangOptions() {
   const options = sortLangs([...LANG_OPTIONS, ...packLangOptions(pluginsState.publishedPluginIds, 'admin')]);
   const known = adminLangChoice === 'auto' || options.some(([code]) => code === adminLangChoice);
   return known ? options : [[adminLangChoice, adminLangChoice], ...options];
 }
 
-/** The visitor language follows the draft: site.lang is published
- *  together with the plugin draft, so a pack enabled now applies to the
- *  same publish. */
+/** The visitor languages follow the draft: site.lang is published together with the plugin draft. */
 const sitePackLangs = () => packLangOptions(pluginsState.pluginsView?.enabled ?? [], 'site');
 
 const adminLangChoice = localStorage.getItem('urd-admin-lang') ?? 'auto';
@@ -603,8 +544,7 @@ function setAdminLang(v) {
   if (v === adminLangChoice) return;
   if (v === 'auto') localStorage.removeItem('urd-admin-lang');
   else localStorage.setItem('urd-admin-lang', v);
-  // A language switch is a reload (the Publii model): the dictionaries
-  // are read at startup, and the iframe follows.
+  // A language switch is a reload: the dictionaries are read at startup.
   location.reload();
 }
 
@@ -630,7 +570,7 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 
 /** Where the time the sign-in is next renewed is kept, in milliseconds since 1970: a personal workspace value, shared by the editor's tabs. */
 const RENEW_KEY = 'urd-sign-in-renew';
-/** How long before the planned renewal a call that reaches GitHub renews first, in milliseconds: the status call's `soon` (RENEW_SOON in functions/_lib/session.js). */
+/** How long before the planned renewal a call that reaches GitHub renews first, in milliseconds (RENEW_SOON in functions/_lib/session.js). */
 const RENEW_LEAD = 5 * 60 * 1000;
 /** The longest wait planned, in seconds, so a far time never overflows the timer. */
 const RENEW_LONGEST = 24 * 60 * 60;
@@ -664,21 +604,20 @@ function planRenewal(seconds) {
   if (wait) renewTimer = setTimeout(() => checkAuth(), wait * 1000);
 }
 
-/** Renews the sign-in first where it falls due within RENEW_LEAD, before a call that reaches GitHub (a publish, a save of drafts), so the planned renewal does not end the sign-in under it. */
+/** Renews the sign-in first where it falls due within RENEW_LEAD, before a call that reaches GitHub (a publish, a save of drafts). */
 async function renewIfDue() {
   if (renewDue(RENEW_LEAD)) await checkAuth({ soon: true });
 }
 
-/** The status call, one at a time across the editor's tabs where the browser has Web Locks, so a tab asking after another asks with the cookies the other was given. */
+/** The status call, one at a time across the editor's tabs where the browser has Web Locks, so a tab asks with the cookies another was given. */
 function askStatus(soon) {
   const ask = () => fetch(soon ? '/api/github/me?soon=1' : '/api/github/me');
   return navigator.locks?.request ? navigator.locks.request('urd-sign-in', ask) : ask();
 }
 
 /**
- * The sign-in status (api/github/me.js), which renews a sign-in that has fallen due; asked once at a time in a tab.
- * A refused renewal is asked once more a moment later: another tab may have renewed the sign-in with the same key, and its answer brings the cookies this tab then sends.
- * Without an answer, or with the host or GitHub down, the sign-in shown is kept, and a renewal due is asked for again in a minute.
+ * The sign-in status (api/github/me.js), which renews a sign-in that has fallen due; one call at a time in a tab.
+ * A refused renewal is asked again once.
  * @param {{soon?: boolean}} [opts] soon: renew where the sign-in falls due within RENEW_LEAD
  */
 function checkAuth(opts) {
@@ -723,11 +662,10 @@ async function signOut() {
   }
 }
 
-/** Guides on/off: a personal workspace preference, remembered in
- *  localStorage (not page data) and re-established in onReady. */
+/** Guides on or off, kept per browser and set again in onReady. */
 let guidesOn = $state(localStorage.getItem('urd-guides') === '1');
 
-/** The live phone beside the desktop canvas (0.7.36.1, shell/LivePhone.svelte): a personal workspace preference, remembered in localStorage only while it is on. */
+/** The live phone beside the desktop canvas (shell/LivePhone.svelte), kept per browser while it is on. */
 let livePhoneOn = $state(localStorage.getItem('urd-live-phone') === '1');
 
 function toggleLivePhone() {
@@ -736,14 +674,10 @@ function toggleLivePhone() {
   else localStorage.removeItem('urd-live-phone');
 }
 
-/** Whether Urd's own settings stand open over the admin (settings/SettingsDialog.svelte): the dialog or the sheet, by `settingsPlace`; the panel form is the panel id `settings` in activePanel instead. */
+/** Whether the Urd settings stand open as the dialog or the sheet (settings/SettingsDialog.svelte); the panel form is `settings` in activePanel. */
 let settingsOpen = $state(false);
 
-/**
- * Where the Urd settings open («Settings window», lib/settings-model.js): the dialog with sections (the default), the panel in the panel column, or the sheet with the look at the left; and whether a look choice is shown as pictures or as words («Pictures in these settings»).
- * Personal workspace preferences in localStorage, like the theme; the defaults are not stored.
- * A change of place while the settings are open moves them: the dialog closes and the panel opens, or the other way round.
- */
+/** Where the Urd settings open («Settings window») and whether their look choices show pictures, kept per browser; a change of place moves open settings. */
 const SETTINGS_PLACE_KEY = 'urd-settings-place';
 
 const SETTINGS_PICTURES_KEY = 'urd-settings-pictures';
@@ -770,7 +704,7 @@ function setSettingsPictures(v) {
   else localStorage.removeItem(SETTINGS_PICTURES_KEY);
 }
 
-/** How the Collections panel shows a collection («Collections editor», lib/collection-layout.js): stepping in (the default, not stored), two columns in a widened panel, or a table over the page; kept per browser. */
+/** How the Collections panel shows a collection («Collections editor»): stepping in by default, two columns, or a table over the page; kept per browser. */
 const COLLECTIONS_LAYOUT_KEY = 'urd-collections-layout';
 
 let collectionsLayout = $state(collectionLayoutOf(localStorage.getItem(COLLECTIONS_LAYOUT_KEY)));
@@ -796,7 +730,7 @@ function setPressFeel(v) {
 
 const PRESS_OPTIONS = $derived(PRESS_FEELS.map((id) => [id, ta(`opt.press.${id}`)]));
 
-/** What covers the desktop canvas and the live phone while a page loads (Urd settings «Canvas loading», lib/canvas-cover.js): the rune circle by default, not stored; kept per browser. */
+/** What covers the canvas and the live phone while a page loads («Canvas loading», lib/canvas-cover.js): the rune circle by default; kept per browser. */
 const CANVAS_COVER_KEY = 'urd-canvas-cover';
 
 let canvasCover = $state(coverLookOf(localStorage.getItem(CANVAS_COVER_KEY)));
@@ -809,7 +743,7 @@ function setCanvasCover(v) {
 
 const CANVAS_COVER_OPTIONS = $derived(COVER_LOOKS.map((id) => [id, ta(`opt.canvasCover.${id}`)]));
 
-/** How a list shows where a dragged row will land (Urd settings «Moving rows», lib/rows/row-drag.svelte.js): the slot by default, not stored, or the line; kept per browser. */
+/** How a list shows where a dragged row will land («Moving rows»): the slot by default, or the line; kept per browser. */
 const DRAG_MARK_KEY = 'urd-drag-mark';
 const DRAG_MARKS = ['slot', 'line'];
 let dragMark = $state(localStorage.getItem(DRAG_MARK_KEY) === 'line' ? 'line' : 'slot');
@@ -834,7 +768,7 @@ function setTabMenus(v) {
 
 const TAB_MENU_OPTIONS = $derived(TAB_MENU_STYLES.map((id) => [id, ta(`opt.tabMenus.${id}`)]));
 
-/** Whether a tab's menu stays open after a row is picked until the mouse leaves it (the default), or closes at the pick (Urd settings «After a pick»), remembered per browser. */
+/** Whether a tab's menu stays open after a pick until the mouse leaves it (the default), or closes («After a pick»); kept per browser. */
 const TAB_MENU_STAY_KEY = 'urd-tab-menu-stay';
 let tabMenuStay = $state(localStorage.getItem(TAB_MENU_STAY_KEY) === 'close' ? 'close' : 'stay');
 
@@ -844,7 +778,7 @@ function setTabMenuStay(v) {
   else localStorage.setItem(TAB_MENU_STAY_KEY, tabMenuStay);
 }
 
-/** Where the sidebar of words shows a panel's folds (Urd settings «Folds in the sidebar»): under the open panel's word as a tree (the default, not stored), under the word the mouse rests on, or in a flyout beside each word; kept per browser. */
+/** Where the sidebar of words shows a panel's folds («Folds in the sidebar»): a tree under the open panel by default, under the hovered word, or a flyout. */
 const SIDEBAR_FOLDS_KEY = 'urd-sidebar-folds';
 const SIDEBAR_FOLDS = ['tree', 'hover', 'flyout'];
 const sidebarFoldsOf = (v) => (SIDEBAR_FOLDS.includes(v) ? v : 'tree');
@@ -858,7 +792,7 @@ function setSidebarFolds(v) {
 
 const SIDEBAR_FOLDS_OPTIONS = $derived(SIDEBAR_FOLDS.map((id) => [id, ta(`opt.sidebarFolds.${id}`)]));
 
-/** Whether the panel's own tabs («Tabs at the top of the panel») open a menu of a panel's folds (Urd settings «Menus under the tabs»): off by default, on where chosen; kept per browser. */
+/** Whether the panel's own tabs open a menu of a panel's folds («Menus under the tabs»): off by default; kept per browser. */
 const PANEL_TAB_MENUS_KEY = 'urd-panel-tab-menus';
 let panelTabMenus = $state(localStorage.getItem(PANEL_TAB_MENUS_KEY) === 'on');
 
@@ -868,7 +802,7 @@ function setPanelTabMenus(v) {
   else localStorage.removeItem(PANEL_TAB_MENUS_KEY);
 }
 
-/** Where a page's settings open («Page settings», lib/page-settings.js): a dialog over the admin (the default, not stored), a step in the Pages panel, or a table of every page over the canvas; kept per browser. */
+/** Where a page's settings open («Page settings»): a dialog by default, a step in the Pages panel, or a table of every page; kept per browser. */
 const PAGE_SETTINGS_KEY = 'urd-page-settings';
 
 let pageSettingsPref = $state(pageSettingsLayoutOf(localStorage.getItem(PAGE_SETTINGS_KEY)));
@@ -881,7 +815,7 @@ function setPageSettingsPref(v) {
 
 const PAGE_SETTINGS_OPTIONS = $derived(PAGE_SETTINGS_LAYOUTS.map((id) => [id, ta(`opt.pageSettings.${id}`)]));
 
-/** Where a collection's CSV import shows what it will do («CSV import preview», lib/collection-layout.js): a dialog (the default, not stored), a step in the panel, or a table over the page; kept per browser. */
+/** Where a CSV import shows what it will do («CSV import preview»): a dialog by default, a step in the panel, or a table over the page; kept per browser. */
 const CSV_PREVIEW_KEY = 'urd-csv-preview';
 
 let csvPreviewPref = $state(csvPreviewOf(localStorage.getItem(CSV_PREVIEW_KEY)));
@@ -894,7 +828,7 @@ function setCsvPreview(v) {
 
 const CSV_PREVIEW_OPTIONS = $derived(CSV_PREVIEWS.map((id) => [id, ta(`opt.csvPreview.${id}`)]));
 
-/** Where the Phone panel's blocks in their order stand (lib/phone-panel.js), and whether its column at the stage's right edge stands open or folded to a tab there, which the owner's last fold keeps. */
+/** Where the Phone panel's blocks in their order stand (lib/phone-panel.js), and whether its column at the stage's edge stands open or folded. */
 let phonePanelPref = $state(storedOf('urd-phone-panel', PHONE_PANEL_LAYOUTS));
 const setPhonePanel = (v) => { phonePanelPref = keepOf('urd-phone-panel', PHONE_PANEL_LAYOUTS, v); };
 const PHONE_PANEL_OPTIONS = $derived(PHONE_PANEL_LAYOUTS.map((id) => [id, ta(`opt.phonePanel.${id}`)]));
@@ -910,13 +844,10 @@ const SETTINGS_PLACE_OPTIONS = $derived(SETTINGS_PLACES.map((id) => [id, ta(`opt
 
 const SETTINGS_PICTURES_OPTIONS = $derived([['pictures', ta('opt.settingsPictures.pictures')], ['words', ta('opt.settingsPictures.words')]]);
 
-/* The switch-layout picker's form: a strip above the section (default)
-   or a gallery menu; a personal workspace preference in localStorage
-   (like theme/language). The preview reads the key on every opening
-   (shared origin), so the switch works without a reload. */
+/* The layout picker's form: a strip above the section by default, or a gallery menu; the preview reads its key at every opening. */
 let layoutPickerPref = $state(localStorage.getItem('urd-layout-picker') === 'menu' ? 'menu' : 'strip');
 
-/** The browser's own spell check on the texts while editing: on unless the owner turns it off (a site in a language the browser has no dictionary for underlines every word). */
+/** The browser's own spell check on the texts while editing: on unless the owner turns it off. */
 let spellcheckPref = $state(localStorage.getItem('urd-spellcheck') === 'off' ? 'off' : 'on');
 
 function setSpellcheck(v) {
@@ -941,7 +872,7 @@ function setLayoutPicker(v) {
   else localStorage.removeItem('urd-layout-picker');
 }
 
-/** The form of the canvas's «+ New block» menu: the groups on the side (the default), or the slim list with the blocks added last first. The preview reads the key on every open, as it does the layout picker's. */
+/** The form of the canvas's «+ New block» menu: the groups on the side by default, or the slim list; the preview reads the key at every opening. */
 let addBlockMenuPref = $state(localStorage.getItem('urd-add-block-menu') === 'slim' ? 'slim' : 'side');
 
 function setAddBlockMenu(v) {
@@ -950,10 +881,7 @@ function setAddBlockMenu(v) {
   else localStorage.removeItem('urd-add-block-menu');
 }
 
-/**
- * The bar on the blocks and the sections (Urd settings «Toolbar», «Toolbar look», «Settings gear on the bar», «Phone button on the bar» and «Toolbar size», menu/forms.js): each the list's first by default, not stored, and stored only where it differs.
- * The preview reads the keys at every draw, and draws the bars anew when one changes (urd.js).
- */
+/** A setting's stored value from its list, the list's first where it holds none of the list. */
 function storedOf(key, list) {
   const v = localStorage.getItem(key);
   return list.includes(v) ? v : list[0];
@@ -985,8 +913,8 @@ const setToolbarPhonePlace = (v) => { toolbarPhonePlacePref = keepOf('urd-toolba
 let shortcutsOpen = $state(false);
 
 /**
- * Opens the shortcut sheet over the editor.
- * It stays shut while a confirmation or the image editor is open, overlays that answer Escape themselves, and it closes the Urd settings dialog, a tool menu and a page's menu first, so the sheet is the one thing open over the editor.
+ * Opens the shortcut sheet, closing the Urd settings and the tool menu first.
+ * It stays shut while a confirmation or the image editor is open.
  */
 function openShortcuts() {
   if (confirmBox || pictureEditorState.picture) return;
@@ -995,17 +923,10 @@ function openShortcuts() {
   shortcutsOpen = true;
 }
 
-/* The top bar folds in fixed steps instead of wrapping to two rows.
-   Most steps are pure CSS at the bottom of the file, but the three that
-   swap a tool cluster for a menu change STRUCTURE and must therefore
-   also be read in JS. The clusters yield one at a time, ordered by how
-   often they are used: View first, then Device, and Zoom last. The
-   numbers here are exactly the same as the media queries, not a
-   measurement of the content, and the twinship is guarded in
-   tests/topbar-fold.test.mjs. */
+/* The widths at which the top bar's clusters fold into menus, View first and Zoom last, equal to the media queries (tests/topbar-fold.test.mjs). */
 const FOLD_MQ = { view: 1079, device: 999, zoom: 919 };
 
-/** The room the Site menu takes in the top bar, per layout: the clusters fold that much earlier there, so the bar still holds Publish at its right edge; the CSS ladder has the same steps under `.editor[data-layout]` (tests/topbar-fold.test.mjs). */
+/** The room the Site menu takes in the top bar, per layout, by which the clusters fold earlier; the CSS has the same steps (tests/topbar-fold.test.mjs). */
 const FOLD_OFFSET = { 'page-tabs': 80 };
 
 let toolMenu = $state(null);
@@ -1020,8 +941,7 @@ function toggleGuides() {
   previewState.bridge?.sendShowGuides(guidesOn);
 }
 
-/** The grid overlay on/off: its own toggle next to the guides,
- *  independent of the Grid panel, remembered in localStorage like them. */
+/** The grid overlay on or off, apart from the Grid panel, kept per browser. */
 let gridOn = $state(localStorage.getItem('urd-grid-overlay') === '1');
 
 function toggleGrid() {
@@ -1030,7 +950,7 @@ function toggleGrid() {
   previewState.bridge?.sendShowGrid(gridOn);
 }
 
-/** How the grid is drawn (0.7.34, snap-model.js GRID_LOOKS): a quiet grid of lines, the default, dots, or only in a drag. Kept per browser, and only when it is not the default; the preview reads it where it draws the grid. */
+/** How the grid is drawn (snap-model.js GRID_LOOKS): lines by default, dots, or only in a drag; kept per browser and read by the preview. */
 let gridLook = $state(gridLookOf(localStorage.getItem('urd-grid-look')));
 
 function setGridLook(v) {
@@ -1044,19 +964,13 @@ function setGridLook(v) {
 
 const GRID_LOOK_OPTIONS = $derived(GRID_LOOKS.map((id) => [id, ta(`opt.gridLook.${id}`)]));
 
-/* Submenu (one level, additive): the children always have their own
- * target; the parent can additionally be a pure opener ('__none' in
- * setNavTarget). */
-
-
-// The panel's fold-all buttons act on the rendered details elements; the
-// buttons are shown only for a panel that has group folds at all.
+// The panel's fold-all buttons act on its drawn details elements, shown only for a panel with group folds.
 let panelEl = $state(null);
 
-/** A fold asked for by a link or a tab's menu (lib/panel-folds.js): once its panel stands open, the fold is unfolded alone, the panel's other folds closing, brought into view and its heading lit for a moment, or, for a fold that holds one button (`press`), the button is pressed; `part` names a card in the fold (its `data-part`) that opens too and is what is brought into view. */
+/** A fold asked for by a link or a tab's menu, unfolded alone and lit once its panel stands, its one button pressed (`press`) or a card in it opened (`part`). */
 let foldFocus = $state(null);
 
-/** Opens a panel at one of its folds, by the fold's `data-fold`, unfolding a folded sidebar; `press` presses the fold's one button instead, and `part` opens a card in the fold. */
+/** Opens a panel at one of its folds, by its `data-fold`; `press` presses the fold's one button instead, and `part` opens a card in the fold. */
 function showFold(panel, fold, { press = false, part = null } = {}) {
   foldFocus = { panel, fold, press, part };
   activePanel = panel;
@@ -1081,11 +995,7 @@ function togglePanelGroups() {
   syncPanelFolds();
 }
 
-// A group that holds sub-folds gets its own fold-all button in the
-// summary row, for the sub-folds alone; it expands while any sub-fold is
-// closed and collapses once all are open. Decorated from the DOM
-// (idempotent) and kept up by an observer, since groups come and go with
-// the draft.
+// A group that holds sub-folds gets a fold-all button of its own in its summary row, kept up by an observer as groups come and go.
 function decorateSubFolds(root) {
   for (const group of root.querySelectorAll('details.group')) {
     const summary = group.querySelector(':scope > summary');
@@ -1119,14 +1029,13 @@ function decorateSubFolds(root) {
 /** The effects of this module, run once by the shell at its start. */
 export function effects() {
 
-  // In «The page's tabs» the column folds once no panel is open (closed by its tab, its head's fold button or the Site menu), rather than standing with the page's tabs alone; the panel open last is kept for the handle.
+  // In «The page's tabs and a Site menu» the column folds once no panel is open, and the panel open last is kept for the handle.
   $effect(() => {
     if (activePanel && activePanel !== 'settings') lastPanel = activePanel;
     if (foldsEmpty(adminLayout, activePanel) && !panelFolded) panelFolded = true;
   });
 
-  // A fold asked for: unfolded alone, brought into view, its heading focused and lit, once its panel has drawn it, a panel loaded on demand once its code is in; a fold the panel does not draw now leaves the panel as it opens.
-  // The panel's other folds close with their own motion (app.css, 0.24 s), and the scroll waits for it, so the fold asked for is brought to where it stands once they have closed.
+  // A fold asked for is unfolded alone, focused and lit once its panel has drawn it, and brought into view once the other folds have closed.
   $effect(() => {
     const want = foldFocus;
     if (!want || activePanel !== want.panel || !panelEl || !panelDrawn) return;
@@ -1184,12 +1093,7 @@ export function effects() {
     return () => document.removeEventListener('pointerdown', onDown, true);
   });
 
-  // Escape cancels, like every other closable surface in the editor. Its
-  // own listener rather than the global keydown handler: the dialog must
-  // respond to Escape as long as focus is in the admin document, and
-  // stopPropagation keeps the same keystroke from also closing the block
-  // menu behind it. No blur closing (a modal must survive the preview
-  // iframe taking focus).
+  // Escape cancels the confirmation, through a listener of its own that keeps the key from the block menu behind it.
   $effect(() => {
     if (!confirmBox) return;
     const onKey = (e) => {
@@ -1226,17 +1130,17 @@ export function effects() {
     return () => offs.forEach((off) => off());
   });
 
-  /* A cluster that has unfolded again has no menu; the choice is cleaned up with it. The Site menu, the devices' sizes, the page switcher and the steps belong to no cluster. */
+  /* A cluster that has unfolded again has no menu, so its choice is cleared; the Site menu, the sizes, the page switcher and the steps belong to no cluster. */
   $effect(() => {
     if (toolMenu && !['site', 'phone', 'screen', 'page', 'steps', 'publish'].includes(toolMenu) && !folded[toolMenu]) toolMenu = null;
   });
 
-  /* One open tool menu at a time, same closing pattern as the settings. A question asked from a menu (the steps' «Discard drafts») is part of it: pressing in the question or answering it with Escape leaves the menu open. */
+  /* One open tool menu at a time; a press in a question asked from the menu, or Escape answering it, leaves the menu open. */
   $effect(() => {
     if (!toolMenu) return;
     const onDown = (e) => { if (!toolMenuEl?.contains(e.target) && !e.target?.closest?.('.confirm-dialog, .publish-wrap')) toolMenu = null; };
     const onKey = (e) => { if (e.key === 'Escape' && !confirmBox) toolMenu = null; };
-    // Focus moving into the preview (a jump between steps selects a block there) is no press outside: a press in the preview closes the menu from there (preview.svelte.js).
+    // Focus moving into the preview is no press outside: a press in the preview closes the menu from there (preview.svelte.js).
     const onBlur = () => { if (document.activeElement?.tagName !== 'IFRAME') toolMenu = null; };
     document.addEventListener('pointerdown', onDown, true);
     document.addEventListener('keydown', onKey);
@@ -1258,8 +1162,7 @@ export function effects() {
     if (!el) return;
     const observer = new MutationObserver(() => { decorateSubFolds(el); syncPanelFolds(); });
     observer.observe(el, { childList: true, subtree: true });
-    // toggle does not bubble: captured at the panel, so the head button
-    // follows folds the user opens and closes by hand.
+    // toggle does not bubble, so it is captured at the panel for the head button to follow folds opened by hand.
     el.addEventListener('toggle', syncPanelFolds, true);
     decorateSubFolds(el);
     return () => { observer.disconnect(); el.removeEventListener('toggle', syncPanelFolds, true); };

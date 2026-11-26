@@ -1,6 +1,5 @@
 /**
  * The preview: the iframe and the bridge to it, the device and the zoom, the Screen setting, the chrome, and the light or dark preview mode.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
  */
 import { ownWindowWidthOf, screenSetting, screenViewport, screenIcon as screenIconOf, SCREEN_SIZES } from '../lib/own-screen.js';
 import { contentBand } from '../lib/content-width.js';
@@ -33,16 +32,7 @@ let iframeEl = $state(null);
 /** Clean preview: hides all editing handles in the iframe */
 let chromeVisible = $state(true);
 
-/** The canvas target devices (ADR-0018, the Squarespace model): each is a
- *  REAL screen size, not a view mode, so there is no "wrong" mode to be in.
- *  Screen is the owner's own browser window width by default (the window the
- *  published page is compared in), a common screen size with its height, or
- *  an own size (lib/own-screen.js); the Phone is a phone or tablet size
- *  (lib/preview-width.js). Both are split buttons whose fold-out holds the
- *  sizes; a size with a height pins both axes and shows the fold.
- *  `viewport` is what the ENGINE gets to know (it only knows
- *  desktop/mobile): the Screen is desktop view, and the Phone's size is
- *  mobile below the site's phone breakpoint and desktop above it (a tablet). */
+/** The owner's browser window width, the Screen's default size beside a common screen size or an own size (ADR-0018, lib/own-screen.js). */
 let ownWidth = $state(ownWindowWidthOf(typeof window !== 'undefined' ? window : null) ?? 1920);
 
 /** The Screen preference, per browser like the admin theme and language. */
@@ -96,13 +86,13 @@ const screenIcon = $derived(screenIconOf(screenPref));
 /** The icon the Phone button shows: a tablet while a tablet size is chosen. */
 const phoneIcon = $derived(phoneTarget.width > (siteState.siteDraft?.breakpoints?.mobile ?? 640) ? 'device_tablet' : 'device_mobile');
 
-/** A width dragged at the canvas's edge, in canvas px; null while a device stands. Kept for a reload of the tab with where the admin stood (lib/reload-place.js), and read back below. */
+/** A width dragged at the canvas's edge, in canvas px; null while a device stands. A reload of the tab keeps it (lib/reload-place.js). */
 let freeWidth = $state(null);
 
 /** The widths a dragged edge snaps to: the devices', the screen and phone sizes' and the site's phone breakpoint. */
 const dragStops = $derived([...devices.map((d) => d.width), ...SCREEN_SIZES.map((s) => s.width), ...PHONE_SIZES.map((p) => p.width), siteState.siteDraft?.breakpoints?.mobile ?? 640]);
 
-/** The sections that need a phone review in the phone view, with where each stands in the canvas, as the preview reports them (urd-attention-cards); drawn beside the phone by AttentionCards.svelte. */
+/** The sections that need a phone review, with where each stands in the canvas (urd-attention-cards), drawn beside the phone by AttentionCards.svelte. */
 let attentionCards = $state([]);
 
 /** «Reviewed» on a section's review card: the flag goes from the draft (handleReviewDone, one undo step), and from the section's mark in the preview. */
@@ -114,7 +104,7 @@ function reviewSection(sectionId) {
 /** The notice that says why a drag or a handle greys its block (ADR-0034), kept so it is taken away only while it is still the one shown. */
 let tooNarrowNotice = '';
 
-/** A drag or a handle in the preview greys its block as too narrow for its words (urd-too-narrow): the notice line says which «Force readable text» stops it, and goes once the block is no longer greyed. */
+/** A block greyed as too narrow for its words (urd-too-narrow): the notice names the readable-text setting that stops it, and goes with the grey. */
 function showTooNarrow(msg) {
   if (msg?.screen === 'phone' || msg?.screen === 'desktop') {
     tooNarrowNotice = ta(`status.tooNarrow.${msg.screen}`);
@@ -140,7 +130,7 @@ function deviceTip(d) {
   return ta(key, { w: d.width, h: d.height ?? 0, c });
 }
 
-/** Where the admin stood before a reload of the tab (lib/reload-place.js): its device is taken at once, and its selection and the canvas's scroll once the canvas first stands (onReady). */
+/** Where the admin stood before a reload of the tab (lib/reload-place.js): its device at once, its selection and scroll once the canvas stands (onReady). */
 let stood = stoodOf(readStood(), ['desktop', 'mobile']);
 
 let deviceId = $state(stood.device ?? 'desktop');
@@ -155,35 +145,25 @@ let device = $derived(freeWidth
   ? { id: 'free', width: freeWidth, height: null, viewport: 'desktop' }
   : devices.find((d) => d.id === deviceId) ?? devices[0]);
 
-/** The engine's viewport. Everything that asks "are we on mobile" reads this.
- *  A Screen narrower than the site's mobile breakpoint is mobile to the
- *  engine, as the published page is in that window. */
+/** The engine's viewport, which all that asks "are we on mobile" reads: a width at or under the site's phone breakpoint is mobile, as on the published page. */
 let viewMode = $derived(device.viewport === 'mobile' || device.width <= (siteState.siteDraft?.breakpoints?.mobile ?? 640) ? 'mobile' : 'desktop');
 
-// Scaled canvas: the iframe renders the page in a full window viewport
-// (same as a visitor with a full window) and is scaled down to fit
-// .frame-wrap, instead of reflowing into the space left over after the
-// chrome. The render is then identical to the published page; only the
-// display size (zoom) changes. See lib/preview-scale.js.
+// Scaled canvas: the iframe draws the page in a full window viewport, scaled to fit .frame-wrap, so only the display size changes (lib/preview-scale.js).
 let frameWrapEl = $state(null);
 
 let frameW = $state(0);            // measured inner surface of .frame-wrap (px)
-          // measured inner surface of .frame-wrap (px)
 let frameH = $state(0);
 
-/** Zoom for the editing canvas: 'fit' adapts to the window, 'full' = true 1:1. */
-let zoomMode = $state('fit'); // 'fit' | 'manual' (stepped with +/-)
- // 'fit' | 'manual' (stepped with +/-)
+/** Zoom for the editing canvas: 'fit' adapts to the window, 'manual' is stepped with + and -. */
+let zoomMode = $state('fit');
 let manualZoom = $state(1);
 
 let targetW = $derived(device.width);
 
-/** The pinned viewport height; 0 (fill the panel) for everything but an
- *  editing size with a height set. */
+/** The pinned viewport height; 0 (fill the panel) for everything but an editing size with a height set. */
 let targetH = $derived(device.height ?? 0);
 
-// A pinned height fits both axes; otherwise the scale is WIDTH-driven,
-// see the comment at iframeH.
+// A pinned height fits both axes; otherwise the width drives the scale (see iframeH).
 let scale = $derived(zoomMode === 'manual'
   ? manualZoom
   : previewScale(frameW, targetW, 'fit', frameH, targetH));
@@ -195,35 +175,20 @@ function stepZoom(dir) {
   zoomMode = 'manual';
 }
 
-// An editing size with a height set: the iframe stands in that height,
-// the stage's bottom edge is the fold, and the panel's surplus below it
-// is the letterbox surface. Every other case FILLS the panel: the iframe
-// is made correspondingly taller, so the scaled height covers .frame-wrap
-// without bars, at the price of a fold that follows the panel's aspect
-// ratio rather than a real screen's.
+// A size with a height stands the iframe in that height, the stage's bottom edge the fold; otherwise the iframe is made taller to fill the panel at its scale.
 let iframeH = $derived(targetH > 0 ? targetH : (scale > 0 ? frameH / scale : frameH));
 
 let stageW = $derived(targetW * scale);
 
 let stageH = $derived(targetH > 0 ? targetH * scale : frameH);
 
-/** Can the canvas be panned? Only after zooming MANUALLY past the surface.
- *
- *  In fit mode the surface must never scroll: the page already has its
- *  own scrollbar inside the iframe, and a scrollbar around the canvas on
- *  top of that is both one scrollbar too many and a self-reinforcing loop
- *  (the scrollbar eats space, the surface measures narrower, the canvas
- *  rescales, the scrollbar comes and goes, and the page pumps). The 1 px
- *  tolerance keeps it from flipping back and forth right at the edge. */
+/** Whether the canvas can be panned: only once a manual zoom passes the surface, as the page scrolls in the iframe; 1 px of tolerance stops a flip at the edge. */
 let canPan = $derived(stageW > frameW + 1 || stageH > frameH + 1);
 
 // Raw state, so a part that keeps the bridge in a $derived follows a reload of the preview; the bridge is a plain object, never proxied.
 let bridge = $state.raw(null);
 
-/** The preview's light/dark mode: a stored choice wins, otherwise the OS
- *  (same resolution as the engine's applyTheme). The iframe toggle
- *  writes localStorage from its own browsing context, so the storage
- *  event reaches the admin window. */
+/** The preview's light or dark mode, resolved as the engine's applyTheme: a stored choice, else the OS; the iframe's toggle reaches here by the storage event. */
 const readPreviewMode = () => {
   let stored = null;
   try { stored = localStorage.getItem('urd-theme-mode'); } catch { /* private mode: follow the OS */ }
@@ -242,13 +207,6 @@ function onIframeLoad() {
   const round = canvasRound;
   clearTimeout(coverWait);
   coverWait = setTimeout(() => { if (round === canvasRound) liftCover(); }, CANVAS_WAIT);
-  // A click in the preview (block, text field, canvas) closes the block
-  // menu and the top bar's tool menu. The iframe is same-origin, so we
-  // listen directly. A press on a bar button that opens the menu (the gear,
-  // a tool, the design button, marked `data-opens-menu` by the engine)
-  // leaves the menu to the message that follows it, which opens the tool's
-  // group inside the menu standing open, closes it at a second press, or
-  // opens another (onBlockMenu and onSectionMenu in page.svelte.js).
   iframeEl?.contentWindow?.addEventListener('scroll', () => {
     clearTimeout(canvasPlaceTimer);
     canvasPlaceTimer = setTimeout(() => {
@@ -256,6 +214,7 @@ function onIframeLoad() {
       canvasPlace = top ? { page: pageState.pageId, ...top } : null;
     }, 150);
   }, { passive: true });
+  // A press in the preview closes the element menu and the tool menu; a bar button marked `data-opens-menu` leaves the menu to the message after it.
   iframeEl?.contentDocument?.addEventListener('pointerdown', (event) => {
     if (pageState.blockMenu && !event.target?.closest?.('[data-opens-menu]')) pageState.blockMenu = null;
     if (shellState.toolMenu) shellState.toolMenu = null;
@@ -337,20 +296,19 @@ function onIframeLoad() {
     onDeleteTemplate: templatesState.handleDeleteTemplate,
     onApplyLayout: pageState.handleApplyLayout,
     onPluginBlocks: (msg) => { pluginsState.pluginBlocks = msg.blocks ?? []; },
-    // Side-by-side column width dragged in the preview: bursts in the
-    // same drag coalesce into ONE undo step (the edit: prefix).
+    // The nav's width dragged in the preview: the bursts of one drag are one undo step (the edit: prefix).
     onNavWidth: (msg) => siteState.siteMutate('edit:nav-width', () => {
       siteState.siteDraft.nav.style ??= {};
       siteState.siteDraft.nav.style.width = msg.width;
     }),
   });
-  // The bridge is built anew for every load of the canvas: a look that stands holds the draft's sends and the page's edits from the first message, and onReady draws it again.
+  // A new bridge for each load of the canvas: a look that stands holds its sends and edits from the first message, and onReady draws it again.
   bridge.setLooking(Boolean(look));
 }
 
 /** The fragment of a link in the preview that named a spot on another page, jumped to once that page has loaded (onReady). */
 let pendingAnchor = '';
-/** Whether the canvas has answered its first handshake: what the admin reads for itself alone (the Legal panel's other pages) waits for it, so the canvas's own files are fetched first. */
+/** Whether the canvas has answered its first handshake: what the admin reads for itself (the Legal panel's other pages) waits, so the canvas's files come first. */
 let canvasOpened = $state(false);
 /** Whether the canvas stands under its cover (lib/CanvasCover.svelte): from the moment it is asked for a document until that document has drawn the editor's start. */
 let canvasCovered = $state(true);
@@ -401,7 +359,7 @@ function onShown(msg) {
   liftCover();
 }
 
-/** The cover lifts once a round: then a fetching block without its phone height is measured, so the hidden phone preview that measures it never competes with the canvas's start, and the published page's loading state stands at it. */
+/** The cover lifts once a round; then the fetching blocks without a phone height are measured. */
 function liftCover() {
   if (!canvasCovered) return;
   canvasCovered = false;
@@ -415,14 +373,11 @@ async function answerReady() {
   attentionCards = [];
   await pageState.pageLoading;
   await pluginsState.pluginsReady;
-  // The plugin draft's enabled list and the view choice: the preview
-  // loads plugins from the DRAFT, and the viewport follows the editor's
-  // choice (not the iframe width).
+  // The preview loads the plugins the draft enables, and its viewport follows the view choice, not the iframe's width.
   bridge?.sendPlugins($state.snapshot(pluginsState.pluginsView)?.enabled ?? []);
-  // The view, the site and the page sent here are marked as the handshake's: the preview drew the same drafts as it booted, and draws them again only where they differ.
+  // The view, site and page sent here are marked as the handshake's: the preview drew them as it booted, and draws again only where they differ.
   bridge?.sendViewport(viewMode, { startup: true });
-  // The zoom is sent on every ready handshake, so the handles are
-  // counter-scaled to admin size from the first render.
+  // The zoom is sent on every ready handshake, so the handles are counter-scaled to admin size from the first render.
   bridge?.sendZoom(scale);
   collectionsState.pushCollectionsToPreview();
   templatesState.pushTemplatesToPreview();
@@ -430,8 +385,7 @@ async function answerReady() {
   if (bridgeState.clipboard) bridge?.sendClipboard(bridgeState.clipboard);
   // A publish whose deploy is not out yet: the iframe has read the files from before it.
   if (siteState.siteStore.hasDraft() || pageState.held.has('content/site.json')) siteState.pushSiteToPreview({ startup: true });
-  // Unpublished pages do not exist on the server (the iframe falls back
-  // to the front page): the editor's data is the source and must always be sent.
+  // An unpublished page is not on the server (the iframe shows the front page), so the editor's data is always sent.
   const unpublished = !siteState.site.pages.some((p) => p.id === pageState.pageId);
   if (pageState.store.hasDraft() || unpublished || pageState.held.has(pageState.pageEntry()?.file)) bridge?.sendPage(pageState.pageId, pageState.store.data, { startup: true });
   if (!chromeVisible) bridge?.sendChrome(false);
@@ -478,9 +432,8 @@ function onNavigate(msg) {
 }
 
 /**
- * The text toolbar's link or Ctrl+K in the preview: the link editor opens on the link at the caret, and its answer goes back to the text.
- * Selected words that are an email address or a phone number (eight to fifteen digits, spaces allowed, a + first) are offered as one.
- * The link is an undo step of its own: the text's change it comes back as starts a new step.
+ * The text toolbar's link or Ctrl+K: the link editor opens at the caret, offering selected words that are an email or a phone number.
+ * The link is one undo step.
  */
 function onLinkEdit(msg) {
   const words = typeof msg.text === 'string' ? msg.text.trim() : '';
@@ -510,15 +463,13 @@ function reloadPreview() {
 let panelScroll = 0;
 
 /**
- * Looking at a saved draft in the canvas (the Drafts window, ADR-0032): the saved version drawn in this browser's place, with editing paused until «Back to mine» (endLook).
- * The page's handles are off, its edits dropped and the draft's own sends held by the bridge (lib/previewBridge.js setLooking), the element menu closed and the measures asked for before dropped, so nothing of the saved version is written into this browser's draft; the page switching ends it.
- * `look`: what is looked at (`part`, its `name`, where and when it was saved, `from` and `when`), the saved `page` and the saved `site` where they are sent, this browser's version of the page (`mine`, null where it is the open page's), the device the canvas showed before (`device`), and, with `both`, which of the two the canvas shows (`showing`: 'saved' or 'mine').
+ * A saved draft looked at in the canvas (ADR-0032): drawn with its handles off and its edits dropped until «Back to mine» (endLook) or another page.
  */
 let look = $state.raw(null);
 /** Counts the looks started and ended, so a look whose saved version is still being read starts only where nothing has happened meanwhile. */
 let lookTurns = 0;
 
-/** The version the look shows, sent to the canvas with its handles off, each time with the site settings it stands in, so a saved site from one look never stays for the next; a bridge made anew for a reloaded canvas is told to hold the draft again. */
+/** Sends the version the look shows, its handles off and with the site settings it stands in each time; a bridge made anew is told to hold the draft again. */
 function sendLooked() {
   if (!look || !bridge) return;
   bridge.setLooking(true);
@@ -529,7 +480,7 @@ function sendLooked() {
 }
 
 /**
- * Starts looking at a saved draft, on the phone where asked; the element menu and the top bar's menus close, and the device the canvas showed comes back as the look ends.
+ * Starts looking at a saved draft, on the phone where asked; the menus close, and the device the canvas showed comes back as the look ends.
  * @param {{part: string, name: string, from?: string, when?: string, page?: object|null, site?: object|null, mine?: object|null, both?: boolean, phone?: boolean}} what
  */
 function startLook({ part, name, from = '', when = '', page = null, site = null, mine = null, both = false, phone = false }) {
@@ -570,8 +521,7 @@ function endLook() {
 async function toggleChrome() {
   // A look keeps the canvas's handles off and the admin as it stands, until it ends.
   if (look) return;
-  // display: none keeps the folds' open state but drops the scroll
-  // position, so it is read on the way out and put back on the way in.
+  // display: none keeps the folds' open state but drops the scroll position, so it is read on the way out and put back on the way in.
   if (chromeVisible) panelScroll = shellState.panelEl?.scrollTop ?? 0;
   chromeVisible = !chromeVisible;
   bridge?.sendChrome(chromeVisible);
@@ -579,8 +529,7 @@ async function toggleChrome() {
   if (!chromeVisible) pageState.blockMenu = null;
   if (!chromeVisible) return;
   await tick();
-  // The panel has no scroll range until the browser has laid it out
-  // again, so the restore waits for a frame.
+  // The panel has no scroll range until the browser has laid it out again, so the restore waits for a frame.
   requestAnimationFrame(() => { if (shellState.panelEl) shellState.panelEl.scrollTop = panelScroll; });
 }
 
@@ -601,8 +550,7 @@ export function effects() {
     return () => window.removeEventListener('pagehide', keep);
   });
 
-  // A click anywhere in the admin (panels, top bar) closes open menus in
-  // the preview; the iframe's own outside-click listeners never see these clicks.
+  // A click anywhere in the admin closes open menus in the preview, whose own outside-click listeners never see it.
   $effect(() => {
     // A tool beside the phone that opens a pop-up of the page's own toggles it there (CanvasBar.svelte), so its press is left to it.
     const closeMenus = (event) => {
@@ -613,39 +561,30 @@ export function effects() {
     return () => document.removeEventListener('pointerdown', closeMenus, true);
   });
 
-  // The preview's viewport follows the view choice, not the iframe width:
-  // a narrow admin window must never tip the preview into mobile and hide
-  // the structure tools.
+  // The preview's viewport follows the view choice, not the iframe width, so a narrow admin window never tips it into mobile.
   $effect(() => {
     const mode = viewMode;
     bridge?.sendViewport(mode);
   });
 
-  // The zoom is reported so the editing handles can counter-scale and stay
-  // the same size as the admin panels (see urd-zoom in previewBridge).
+  // The zoom is reported so the editing handles counter-scale to the admin panels' size (urd-zoom in previewBridge).
   $effect(() => {
     const z = scale;
     bridge?.sendZoom(z);
   });
 
-  // The own window width follows the browser: a resize or a zoom change
-  // changes the width the window reports.
+  // The own window width follows the browser's resizes and zoom changes.
   $effect(() => {
     const onResize = () => { ownWidth = ownWindowWidthOf(window) ?? ownWidth; };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   });
 
-  // .frame-wrap changes size on panel/rail open-close AND window resize;
-  // measure it so the scale always fits the actual canvas surface.
+  // Measures .frame-wrap as the panels, the rails and the window change size, so the scale fits the canvas surface.
   $effect(() => {
     const el = frameWrapEl;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    // clientWidth/Height, NOT getBoundingClientRect: the rect is the border
-    // box and includes any scrollbars, while the content box is the surface
-    // the canvas can actually use. The content box also yields integers, so
-    // float rounding cannot make a canvas a fraction of a pixel too wide.
-    // The room the phone view keeps around its frame (app.css .frame-wrap.mobile) is left out.
+    // The content box in whole pixels (clientWidth/Height, without scrollbars), less the room the phone view keeps around its frame.
     const measure = () => {
       const pad = getComputedStyle(el);
       frameW = el.clientWidth - (parseFloat(pad.paddingLeft) || 0) - (parseFloat(pad.paddingRight) || 0);

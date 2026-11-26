@@ -1,6 +1,5 @@
 /**
- * What the CSV import's three previews show of a plan (engine/collections-csv.js importPlan): the groups in the order they are read, the chips that filter them, a row's line under its title, and a cell of the table with the value it had.
- * Shared by panels/collections/ImportDialog.svelte, ImportStep.svelte and ImportTable.svelte. Pure, node-tested (tests/csv-preview.test.mjs).
+ * What the CSV import's previews show of a plan (collections-csv.js importPlan): its groups, the chips that filter them, a row's line and a table cell.
  */
 
 /** The groups in the order the preview lists them: what needs the owner first, what changes nothing last. */
@@ -54,8 +53,8 @@ export function summaryOf(entry, kind) {
 }
 
 /**
- * A cell of the table: what the file says for the column, and what the entry held before where the row changes it.
- * A refused row shows the file's own cell; an entry the file does not name shows its own value.
+ * A cell of the table: the file's value for the column, and the entry's value before where the row changes it.
+ * A refused row shows the file's own cell.
  * @param {object} item A plan item
  * @param {string} column
  * @param {(entry: object, column: string) => string} csvCell The cell as the export writes it (engine/collections-csv.js, with the page register)

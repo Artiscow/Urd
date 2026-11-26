@@ -1,13 +1,11 @@
 /**
- * The canvas's loading cover (Urd settings «Canvas loading»): the four looks drawn over the desktop canvas and the live phone while the page loads, and the stored look read back.
- * Each look is an SVG string in the admin theme's colours, each stroke marked with the span of the load it is drawn in (`--a` to `--b`, of the load's progress from 0 to 1, lib/CanvasCover.svelte); without the cover a drawing stands finished, as the settings' pictures show it.
- * Pure, node-tested (tests/canvas-cover.test.mjs).
+ * The canvas's loading cover («Canvas loading» in the Urd settings): four looks drawn as SVG over the canvas and the live phone while a page loads.
  */
 
 /** The looks, the rune circle the default. */
 export const COVER_LOOKS = ['circle', 'stave', 'tiles', 'stone'];
 
-/** Where the drawing stands once each of the canvas's steps is reached (asked for its page, its engine in, its page drawn, the editor's start drawn), of the load's progress from 0 to 1. */
+/** The load's progress, 0 to 1, at each of the canvas's steps: its page asked for, its engine in, its page drawn, the editor's start drawn. */
 export const COVER_POINTS = [0.2, 0.45, 0.85, 1];
 
 /** How far towards the next point the drawing creeps while a step takes long, and the time most of that takes, in ms. */
@@ -15,7 +13,7 @@ const CREEP = 0.9;
 const CREEP_MS = 1500;
 
 /**
- * Where the drawing is headed `elapsed` ms after step `at` was reached: the step's point, creeping on towards the next one but never reaching it, and the whole drawing at the last step.
+ * Where the drawing is headed `elapsed` ms after step `at`: the step's point creeping towards the next one without reaching it, and 1 at the last step.
  * @param {number} at
  * @param {number} elapsed
  * @returns {number}

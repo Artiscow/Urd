@@ -1,5 +1,4 @@
-/* What the Nav panel's parts share (panels/nav/): the writes more than one fold makes, the variant's kind, and each fold's value while closed with its group of settings to go back from (lib/site-groups.js).
-   Every function reads the draft and the writes from the editor handle when it is called, so one set serves the panel for as long as it stands. */
+/* What the Nav panel's parts share: the writes more than one fold makes, the variant's kind, and each fold's value while closed with its settings group. */
 import { ta } from '$engine/i18n.js';
 import { toolOrder } from '$engine/nav-model.js';
 import { isFloatingVariant, sizePresetOf, phoneSizes } from '../../lib/nav-size.js';
@@ -74,7 +73,7 @@ export function navFolds(ed) {
   const style = () => ed.siteDraft.nav?.style;
   const { toolShown } = navActions(ed);
 
-  /** Every reset is a step of the menu's settings ('nav', as the panel's setters name theirs), so a fold whose settings stand in several objects goes back in one step; `tidy` takes an object it leaves empty out of the file. */
+  /** Every reset is one step of the menu's settings ('nav'); `tidy` takes an object it leaves empty out of the file. */
   const write = (tidy) => (name, change) => ed.siteMutate('nav', () => {
     change();
     tidy?.();
@@ -181,11 +180,11 @@ export function navFolds(ed) {
   /** Where the logo stands in the phone's bar. */
   const phoneLogoValue = () => ta(`opt.navPhoneLogo.${{ center: 'center', hidden: 'hidden' }[style()?.mobile?.logo] ?? 'start'}`);
 
-  /** The menu the burger opens on the phone: its form, how its links answer a touch, the burger, and the full-screen menu's contents and surface; `launcher` adds the launcher's two for the phone, which the Nav panel keeps in its Tools fold. */
+  /** The menu the burger opens on the phone: its form, its links' touch, the burger and the full-screen menu; `launcher` adds the launcher's two. */
   function phoneMenuGroup({ launcher = false } = {}) {
     const sheet = style()?.mobileMenu === 'sheet';
     const hasSubs = Boolean(nav()?.items?.some((item) => item.children?.length));
-    // As NavMobile.svelte shows them: the bar's tools on the phone, and with the bar alone beside the full-screen menu, the theme button and the cart in the menu without asking.
+    // The phone's theme button and cart as NavMobile.svelte shows them, in the bar or in the full-screen menu.
     const themeTool = Boolean(ed.siteDraft.theme?.alt?.tokens) && style()?.tools?.theme !== false;
     const cartTool = Boolean(nav()?.cart?.show);
     const barTools = !(sheet && style()?.sheetBarTools === false);

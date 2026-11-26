@@ -1,7 +1,5 @@
 /**
- * Which designs stand in place in a menu or a panel when Urd settings «Choosing a design» puts their pictures there (lib/rows/LookChoice.svelte).
- * A choice of a few designs shows them all; a larger one shows a run of designs around the one in use, in the picker's order, beside a tile that opens the picker with every design.
- * Pure, node-tested (tests/look-choice.test.mjs).
+ * The designs drawn in place when «Choosing a design» shows pictures: a few whole, or a run around the one in use beside a tile that opens the picker.
  */
 
 /** A choice of up to this many designs stands in place whole. */
@@ -11,8 +9,8 @@ export const LOOKS_WHOLE = 12;
 export const LOOKS_SHOWN = 8;
 
 /**
- * The designs drawn in place, whether the tile that opens the picker stands beside them, and where the run starts.
- * A run already drawn (`start`) stays where it stands while the design in use is in it, so a press on one of its pictures moves none of them; otherwise the run is drawn around the design in use.
+ * The designs drawn in place, whether the picker's tile is beside them, and the run's start.
+ * A run drawn before (`start`) stays while it holds the design in use.
  * @template {{ id: string }} T
  * @param {T[]} items the choice's designs in the picker's order
  * @param {string|null} current the design in use

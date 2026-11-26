@@ -1,6 +1,5 @@
 /**
- * The text bar's state (lib/TextToolbar.svelte, 0.7.3.19): the text being written on the canvas, as the preview tells it (urd-text-state), its block's box in the canvas and what its selection holds; and the bar's commands back to it.
- * The writing itself stays in the preview (preview-edit.js textCommand), so the bar is drawn over the stage, free of the canvas's edges.
+ * The text bar's state (lib/TextToolbar.svelte): the text being written on the canvas (urd-text-state), its block's box and selection, and the commands back.
  */
 import { previewState } from './preview.svelte.js';
 

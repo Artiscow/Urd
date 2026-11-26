@@ -1,16 +1,8 @@
 /**
- * The model behind the content-width setting (ADR-0018). Pure functions,
- * node-tested, so the live sample in the Site panel computes the same thing
- * the engine actually does.
- *
- * The engine's CSS is `width: min(100% - 2 * gutter, contentWidth)` on the
- * content surface. Everything here is that rule expressed in JS so it can
- * SHOW what a value means; it is never used to position anything (the editor
- * measures the surface, see canvasOf in preview-edit.js).
+ * The content-width setting's model (ADR-0018): the engine's `min(100% - 2 * gutter, contentWidth)` in JS, to show what a value means, never to place anything.
  */
 
-/** The bounds for free adjustment. Below 960 the column gets narrower than a
- *  tablet in landscape, above 1920 it does not bind on ordinary screens. */
+/** The bounds of a free width, in px. */
 export const WIDTH_MIN = 960;
 export const WIDTH_MAX = 1920;
 export const WIDTH_STEP = 20;
@@ -18,16 +10,7 @@ export const WIDTH_STEP = 20;
 export const WIDTH_DEFAULT = 1440;
 export const GUTTER_DEFAULT = 6;
 
-/**
- * The side margin against the window edge, in PERCENT OF THE WINDOW WIDTH
- * (vw). Relative rather than px, because the margin only has an effect in the
- * band where the design width does not bind yet: there the breathing space
- * should follow the screen. A fixed margin that fits a phone is too tight on
- * a tablet.
- *
- * The ceiling of 12 is there because 2 x 12 % already eats a quarter of the
- * screen.
- */
+/** The side margin against the window edge, in per cent of the window width (vw). */
 export const GUTTER_MIN = 0;
 export const GUTTER_MAX = 12;
 export const GUTTER_STEP = 1;
@@ -40,11 +23,7 @@ export const GUTTER_PRESETS = [
   { id: 'large', gutter: 9 },
 ];
 
-/**
- * The quick presets. The values come from the field: 1200 is the lower half of
- * Squarespace's range, 1440 is the practitioner consensus at both Squarespace
- * and Webflow, 1600 is Wix Studio's own default.
- */
+/** The quick presets. */
 export const WIDTH_PRESETS = [
   { id: 'compact', width: 1200 },
   { id: 'standard', width: 1440 },
@@ -52,12 +31,7 @@ export const WIDTH_PRESETS = [
   { id: 'full', width: 'full' },
 ];
 
-/**
- * The screen widths the sample is measured against: the three most common
- * desktop resolutions. 1536 is a 1920 screen at 125 % scaling in Windows, so
- * not a screen size of its own but the second most common CSS width in
- * practice.
- */
+/** The screen widths the sample is measured against: the most common desktop CSS widths. */
 export const REF_SCREENS = [1920, 1536, 1366];
 
 /** Clamps and snaps a free width value into the legal range. */
@@ -84,9 +58,7 @@ export function clampSectionWidth(value, fallback = 1440) {
 }
 
 /**
- * A section's content width as the Properties panel shows it: the site's (no field), the full width (`full`), or its own, with the words the panel shows for it.
- * The slider stands at a px width in the range as stored; any other stored length (another unit, a width outside the range) keeps its own words, and the slider stands at the site's width until it is moved.
- * The site's width is also where the slider starts from the two other choices, so a switch from the site's to «Own» changes nothing until the slider moves; on a full-width site it starts at 1440.
+ * A section's content width as the Properties panel shows it: the site's (no field), `full`, or its own, the slider starting at the site's width.
  * @param {string|undefined} maxWidth The section's `size.maxWidth`
  * @param {number|'full'} siteWidth The site's `layout.contentWidth`
  * @returns {{ mode: 'site'|'full'|'own', px: number, shown: string }} `shown` is the own width as stored, '' for the two other choices
@@ -122,15 +94,7 @@ export function clampGutter(value) {
 }
 
 /**
- * The smallest window width where the content actually REACHES the design
- * width.
- *
- * With a relative margin this is not `contentWidth + 2 * gutter`: the margin
- * itself grows with the window, so that width has to be solved out of
- * `W - 2*W*g/100 >= width`. With 1440 and 6 % the answer is 1637, not 1488.
- * Used as the canvas width for "Screen", since anything wider renders
- * identically.
- *
+ * The smallest window width where the content reaches the design width, solved from `W - 2*W*g/100 >= width`.
  * @param {number|'full'} contentWidth
  * @param {number} gutter Percent of the window width
  * @returns {number}
@@ -142,20 +106,14 @@ export function bindingWidth(contentWidth, gutter) {
 }
 
 /**
- * What the content surface actually becomes at a given screen width.
- *
+ * What the content surface becomes at a given screen width.
  * @param {number|'full'} contentWidth
  * @param {number} gutter Percent of the window width
  * @param {number} screen The screen's CSS width
- * @returns {{width: number, margin: number, pct: number, bound: boolean}}
- *   `bound` is true when the design width is what constrains (that is, the
- *   setting has an effect here); false means the surface is fluid and fills
- *   the screen minus the margins.
+ * @returns {{width: number, margin: number, pct: number, bound: boolean}} `bound` where the design width constrains, else the surface fills the screen less the margins
  */
 export function contentBand(contentWidth, gutter, screen) {
-  // The margin is a SHARE of the screen, so it has to be computed per screen
-  // width. This is the whole reason the sample shows three widths: the same
-  // setting gives a different margin on each of them.
+  // The margin is a share of the screen, so it is computed per screen width.
   const g = (Math.max(0, Number(gutter) || 0) / 100) * screen;
   const available = Math.max(0, screen - 2 * g);
   const bound = contentWidth !== 'full' && Number(contentWidth) < available;

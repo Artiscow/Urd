@@ -1,6 +1,5 @@
 /**
- * Search in every language (0.7.10.5), the editor's side of the engine's search-langs.js.
- * The dictionaries load on the first search typed; `ready` turns true when they are in, so a search that reads it runs again with the other languages.
+ * The editor's side of the engine's search in every language: the dictionaries load on the first search typed, and `ready` turns true when they are in.
  */
 import { loadSearchLanguages, searchLanguagesReady } from '$engine/search-langs.js';
 

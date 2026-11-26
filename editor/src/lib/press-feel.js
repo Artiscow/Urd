@@ -1,7 +1,5 @@
 /**
- * How the admin's buttons answer a press (Urd settings «Button press»): the six feels, the stored one read back, and the ripple, the one feel that needs a script.
- * The feel stands as `data-press` on the document's root; app.css holds the rules for every button and ghost control. Movement uses the separate `translate` and `scale` properties, which add to a control's own transform instead of replacing it, so a control placed by a transform keeps its place.
- * Pure but for `ripple`, which draws on the page; node-tested (tests/press-feel.test.mjs).
+ * How the admin's buttons answer a press («Button press»): the six feels, the stored one read back, and the ripple; the feel stands as `data-press` on the root.
  */
 
 /** The feels, Ripple the default. */
@@ -12,7 +10,7 @@ export function pressFeelOf(raw) {
   return PRESS_FEELS.includes(raw) ? raw : 'ripple';
 }
 
-/** The controls a press reaches: a button or a ghost control, not disabled, outside the pickers that draw their own (the same exclusions as the shell's button rules). */
+/** The controls a press reaches: a button or a ghost control, not disabled, outside the pickers that draw their own (as the shell's button rules). */
 export const PRESS_TARGET = 'button:not(:disabled), .ghost';
 const OWN_PRESS = '.dd, .cp, .gp, .mp, .dp-overlay, .choice';
 
@@ -27,8 +25,7 @@ export function pressTarget(node) {
 const running = new WeakMap();
 
 /**
- * The ripple: a ring from where the pointer pressed, inside the control's own shape, gone when it has spread.
- * A control that is not positioned is made a containing block while its rings run, and given back as it was when the last of them ends, so a quick second press never loses its ring's place.
+ * The ripple: a ring from the pressed point inside the control's shape; a control not positioned is made a containing block while its rings run.
  * @param {Element} control
  * @param {{clientX: number, clientY: number}} point
  */

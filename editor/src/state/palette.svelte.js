@@ -1,10 +1,6 @@
 /**
- * The command palette (comparison/ELEMENTS.md E1): the commands the editor
- * offers on Ctrl/⌘+K, built from the other state modules when the palette
- * opens: the actions of the top bar, the pages, the panels, every block the
- * Blocks panel adds in one press, the section templates, and the commands
- * plugins register in the preview (Urd.commands), which run there.
- * The list and its ranking are pure (lib/command-palette.js).
+ * The command palette on Ctrl/⌘+K: its commands, built from the other state modules and the plugins' commands when it opens.
+ * lib/command-palette.js ranks them.
  */
 import { ta } from '$engine/i18n.js';
 import { PALETTE_KINDS, paletteGroupsFor } from '$engine/block-palette.js';

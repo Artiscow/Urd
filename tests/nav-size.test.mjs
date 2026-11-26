@@ -6,6 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { engineImport } from './_engine.mjs';
 import {
   PAD_Y, TEXT_SIZE, PAD_X, GAP, PILL_WIDTH, SHRINK_TO, LOGO_SIZE, LOGO_TEXT_SIZE, RADIUS, COL_WIDTH,
@@ -28,6 +29,23 @@ test('the presets are the rem values of base.css at a 16 px root', () => {
   assert.deepEqual(SIZE_PRESETS.md, { padY: 0.9 * 16, textSize: 16 });
   assert.deepEqual(SIZE_PRESETS.lg, { padY: 1.25 * 16, textSize: 1.05 * 16 });
   assert.deepEqual(SIZE_PRESETS.xl, { padY: 1.7 * 16, textSize: 1.15 * 16 });
+});
+
+test('the presets are read from the size classes in base.css, md from the values the bar falls back to, and the floating menu scales by the same factor', () => {
+  const css = readFileSync(new URL('../template/assets/styles/base.css', import.meta.url), 'utf8');
+  const px = (rem) => Number(rem) * 16;
+  for (const id of SIZE_IDS.filter((size) => size !== 'md')) {
+    const rule = css.match(new RegExp(`^\\.urd-nav-size-${id} \\{\\s*--urd-nav-size-pad: ([\\d.]+)rem;\\s*--urd-nav-size-font: ([\\d.]+)rem;\\s*\\}`, 'm'));
+    assert.ok(rule, `base.css sizes ${id}`);
+    assert.deepEqual(SIZE_PRESETS[id], { padY: px(rule[1]), textSize: px(rule[2]) }, id);
+  }
+  assert.doesNotMatch(css, /\.urd-nav-size-md\b/, 'md has no class of its own');
+  const pad = css.match(/--urd-nav-base-pad: var\(--urd-nav-pad-y, var\(--urd-nav-size-pad, ([\d.]+)rem\)\);/);
+  const font = css.match(/--urd-nav-font: var\(--urd-nav-text-size, var\(--urd-nav-size-font, ([\d.]+)rem\)\);/);
+  assert.deepEqual(SIZE_PRESETS.md, { padY: px(pad[1]), textSize: px(font[1]) });
+  const floating = css.match(/--urd-nav-base-pad: var\(--urd-nav-pad-y, calc\(var\(--urd-nav-size-pad, ([\d.]+)rem\) \* ([\d.]+)\)\);/);
+  assert.equal(px(floating[1]), SIZE_PRESETS.md.padY);
+  assert.equal(Number(floating[2]), PILL_FACTOR);
 });
 
 test('effectivePadY: the preset for the bar, scaled for the floating menu, raw when set', () => {

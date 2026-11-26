@@ -1,7 +1,5 @@
 /**
- * Links to files (0.7.27.9): the link editor's File kind.
- * A PDF chosen there is held in the draft as a data URL that carries its name, and publishing writes it to media/files/ as `<name>-<hash>.pdf` (publishHeldFiles), a name its content decides, so links to the same file share one path.
- * The files the File kind lists are the ones the site's content already uses: every path in media/, at its root or in one of its folders, that is not a picture (siteFiles).
+ * The link editor's File kind: a chosen PDF is held in the draft as a data URL with its name until publishing writes it to media/files/.
  */
 import { mediaPath, slugify } from '$engine/imageTools.js';
 
@@ -51,7 +49,7 @@ export function fileLabel(href) {
 }
 
 /**
- * The files the site's content uses, for the File kind: every path in media/ that is not a picture, found in any text of the values (addresses, sources, rich text), once each and sorted.
+ * The files the site's content uses, for the File kind: every path in media/ that is not a picture, found in any text of the values, once each and sorted.
  * @param {...unknown} values The site, the pages, the collections and the templates
  * @returns {string[]}
  */
@@ -70,8 +68,7 @@ export function siteFiles(...values) {
 }
 
 /**
- * Writes the PDFs held under `href` and `url` anywhere in a value to media/: each becomes a file in the commit, once per path, and the address its path.
- * The value is changed in place.
+ * Writes the PDFs held under `href` and `url` in a value to the commit's files, once per path, and sets each address to its path, in place.
  * @param {unknown} value A page, a section, a block's props, the site or a collection entry
  * @param {Array<{path: string, content: string, encoding: string}>} files The commit's files, added to
  */

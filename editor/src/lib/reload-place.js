@@ -1,7 +1,5 @@
 /**
- * Where the admin stood, kept for the tab's life (sessionStorage) so a reload comes back to it: the device, a width dragged at the canvas's edge, the section or the block selected, and where the canvas was scrolled, as the section at its top and how far past that section's top.
- * The page stands in the address (`?page=`, selectPage in state/page.svelte.js), the open panel in «Open panel» (lib/panels-start.js), the devices' own sizes in the browser (state/preview.svelte.js) and each window's own scroll in lib/scroll-place.js.
- * Pure but for the storage, node-tested (tests/reload-place.test.mjs).
+ * Where the admin stood, kept in sessionStorage for a reload: the device, a dragged width, the selection, and the canvas's scroll as its top section and offset.
  */
 
 import { FREE_WIDTH_MIN, FREE_WIDTH_MAX } from './preview-width.js';
@@ -14,7 +12,7 @@ const ID = /^[A-Za-z0-9_-]{1,64}$/;
 const idOf = (value) => (typeof value === 'string' && ID.test(value) ? value : null);
 
 /**
- * What a reload can use of what was kept, each part checked: the page it was kept on, the device among the devices, a dragged width within the drag's own bounds, the selection and the canvas's place.
+ * What a reload can use of what was kept, each part checked: the page, a known device, a width within the drag's bounds, the selection and the canvas's place.
  * @param {unknown} raw
  * @param {string[]} devices The devices' ids
  * @returns {{ page: string|null, device: string|null, width: number|null, sectionId: string|null, blockId: string|null, top: { sectionId: string, offset: number }|null }}
@@ -51,7 +49,7 @@ export function keepStood(value) {
 }
 
 /**
- * The section at the top of the canvas and how far the canvas stands past that section's top, measured as the preview's jump measures it (spotTop in urd.js: the layout top, under the page's scroll padding); null at the page's top or before a section is drawn.
+ * The section at the canvas's top and how far past it the canvas stands, measured as spotTop in urd.js measures, under the scroll padding; null at the page's top.
  * @param {Document|null|undefined} doc The canvas's document
  * @returns {{ sectionId: string, offset: number }|null}
  */

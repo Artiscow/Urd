@@ -1,8 +1,5 @@
 /**
- * The undo history kept in this browser over a reload (state/history.svelte.js), in IndexedDB, which holds far more than the drafts' localStorage: an index of the steps in their order, a record per step, and a record per picture the steps hold (lib/history-media.js).
- * A keep writes the steps and pictures not written before, writes the newest step again (its time grows as changes join it), and deletes what no step holds, so a step costs its own few kilobytes however many pictures the drafts hold.
- * The keeps run one after another, each from what the one before left, and the first deletes the records no index lists (a session that ended mid-write).
- * A browser without IndexedDB, or one that refuses it (a private window), keeps the history for the session only.
+ * The undo history kept over a reload in IndexedDB: an index of the steps, a record per step and per picture; without IndexedDB it lasts the session only.
  */
 
 const DB_NAME = 'urd-editor';

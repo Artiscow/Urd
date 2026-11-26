@@ -1,12 +1,11 @@
 /**
- * The themed date picker's calendar (lib/DatePicker.svelte): the month as a grid of days, the week's start and names from the admin language through Intl, and the values the fields keep, `YYYY-MM-DD` as `<input type="date">` gives it and `YYYY-MM-DDTHH:MM` as the countdown's target.
- * Pure, so it is node-tested (tests/date-grid.test.mjs).
+ * The date picker's calendar: the month as a grid of days in the admin language, and the stored values, `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM`.
  */
 
 const pad = (n) => String(n).padStart(2, '0');
 
 /**
- * The parts of a stored value: the date, and the time to the minute when the value carries one (seconds, which the fields never write, are read past); null for anything else.
+ * The parts of a stored value: the date, and the time to the minute when it carries one, seconds read past; null for anything else.
  * @param {string|null|undefined} value
  * @returns {{ y: number, m: number, d: number, hh: number|null, mm: number|null }|null}
  */

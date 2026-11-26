@@ -1,12 +1,5 @@
 /**
- * The model behind the nav size settings (ADR-0023). Pure functions,
- * node-tested, so the sliders in the Nav panel start where the CSS actually
- * is: the presets are rem values in base.css (urd-nav-size-*), and a free
- * value (padY, textSize) replaces the preset's part through an inline
- * custom property set by nav.js.
- *
- * The bounds are the engine's NAV_SIZE_BOUNDS (nav-model.js); a parity test
- * keeps the two equal.
+ * The nav size settings' model (ADR-0023): the sliders' bounds, the presets in px as base.css draws them (urd-nav-size-*), and the sizes the bar draws.
  */
 
 export const PAD_Y = { min: 0, max: 64, step: 1 };
@@ -49,9 +42,7 @@ export function clampRange(value, { min, max, step = 1 }, fallback) {
 }
 
 /**
- * The thickness the bar actually renders, in whole px: the stored padY, or
- * the preset's padding (scaled for the floating menu, whose factor applies
- * to presets only).
+ * The thickness the bar draws, in whole px: the stored padY, or the preset's padding, scaled for the floating menu.
  */
 export function effectivePadY(style, variant) {
   if (style?.padY != null && style.padY !== '') return clampRange(style.padY, PAD_Y, SIZE_PRESETS.md.padY);
@@ -67,8 +58,7 @@ export function effectiveTextSize(style) {
 }
 
 /**
- * The highlighted preset: the stored size while no free value overrides
- * it, otherwise null (a custom size).
+ * The highlighted preset: the stored size while no free value overrides it, else null.
  */
 export function sizePresetOf(style) {
   const free = (style?.padY != null && style.padY !== '') || (style?.textSize != null && style.textSize !== '');
@@ -77,8 +67,7 @@ export function sizePresetOf(style) {
 }
 
 /**
- * The sizes the phone draws the menu with now, for the menu's size bar beside the phone (lib/CanvasBar.svelte): the bar's thickness (null for the side variant, whose thickness has no setting of its own on the phone, ADR-0023), the menu's text size, and the logo's size with what it is the size of, the picture's height or the words' size (`logo` null where the phone's bar shows no logo).
- * Each is the phone's own value where it has one, else the desktop's, else what the size step gives.
+ * The sizes the phone draws the menu with now, for the size bar beside the phone: the phone's own value, else the desktop's, else the size step's.
  * @param {object} nav site.nav
  * @returns {{padY: number|null, textSize: number, logo: 'image'|'text'|null, logoSize: number|null}}
  */
@@ -98,7 +87,7 @@ export function phoneSizes(nav) {
 }
 
 /**
- * One step of a size on the menu's size bar: the phone's own value to write, a step from what the phone draws now, kept inside the size's bounds; null where the step leads nowhere (the bound is reached, or the size is not there).
+ * One step of a size on the menu's size bar: the phone's own value to write, a step from what it draws now within the bounds; null at a bound or with no size.
  * @param {object} nav site.nav
  * @param {'padY'|'textSize'|'logo'} what
  * @param {1|-1} dir

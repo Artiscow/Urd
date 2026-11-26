@@ -1,14 +1,11 @@
 /**
- * The files publishing writes to media/ (publish.svelte.js): an unpublished picture, sound or film held as a data URL in the draft becomes a file in the folder of its kind (imageTools.js mediaPath), and the field takes the file's path.
- * The same content gives the same path (a hash of the content), so a republish never duplicates a file. Every walker changes the document in place and adds the files to the commit's list.
- * Pure, node-tested (tests/materialize.test.mjs).
+ * The files publishing writes to media/: a picture, sound or film held as a data URL becomes a file named by its content's hash, and the field takes its path.
  */
 import { slugify, mediaPath, svgProblem, svgDataText } from '$engine/imageTools.js';
 import { publishHeldFiles } from './file-links.js';
 
 /**
- * Turns a data URL in obj[field] into a media file; mutates obj. Pictures, sound and film share the flow.
- * Only base64 data is written as a file. An SVG that holds something that can run (svgProblem) is never written, since a file could be opened on its own; it stays a data address in the page, which draws it as a picture, where nothing in it runs.
+ * Turns a base64 data URL in obj[field] into a media file, in place; an SVG that can run something (svgProblem) is never written, and stays a data address.
  */
 export function materializeField(obj, field, name, files) {
   const src = obj?.[field];
@@ -86,8 +83,7 @@ export function materializeSiteImages(site) {
   if (logo?.type === 'image') materializeField(logo, 'value', 'logo', files);
   if (logo?.type === 'both') materializeField(logo, 'image', 'logo', files);
   if (logo?.imageSource) materializeField(logo.imageSource, 'src', 'logo-original', files);
-  // The legacy single nav background image (back compat) + the layered
-  // backgrounds on nav and footer.
+  // The nav's own background image, and the layered backgrounds of the nav and the footer.
   if (site.nav?.style) materializeField(site.nav.style, 'image', 'menu', files);
   materializeBackground(site.nav?.style?.background, files);
   materializeBackground(site.footer?.background, files);

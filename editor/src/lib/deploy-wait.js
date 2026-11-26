@@ -1,15 +1,8 @@
 /**
- * The wait for the deploy after a publish: GitHub has the commit the moment
- * the API answers, but the host serves it only after its build. The editor
- * polls the committed content files until the site serves exactly what was
- * committed, so «published» can be told apart from «live». Pure functions,
- * node-tested; the caller supplies fetch and the timer.
+ * The wait for the deploy after a publish: polls the committed content files until the site serves exactly them, so «published» is told from «live».
  */
 
-/** Files worth polling: the utf-8 content files of the publish, site.json
- *  first (it is what a page switch reads first), capped so a large publish
- *  never polls dozens of files. Media (base64) and the index copies are
- *  left out: the JSON files land in the same deploy. */
+/** The files worth polling: the publish's utf-8 content files, site.json first, at most `max`; media and the index copies land in the same deploy. */
 export function deployTargets(files, { max = 8 } = {}) {
   const picked = (files ?? []).filter((f) => f
     && typeof f.path === 'string'
@@ -22,8 +15,8 @@ export function deployTargets(files, { max = 8 } = {}) {
 }
 
 /**
- * Polls until every target is served byte for byte as committed. A target
- * that matches once is not fetched again; a fetch error counts as «not yet».
+ * Polls until every target is served byte for byte as committed.
+ * A target that matches once is not fetched again; a fetch error counts as «not yet».
  * @param {Array<{path: string, content: string}>} targets
  * @param {{fetchFn?: typeof fetch, delayMs?: number, attempts?: number, sleep?: (ms: number) => Promise<void>}} [opts]
  * @returns {Promise<boolean>} true when all targets are served, false after the last attempt

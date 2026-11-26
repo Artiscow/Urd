@@ -1,6 +1,5 @@
 /**
- * What the Collections panel's layouts write through: an entry's fields, link, picture, sizes and colours, its move and removal, and a collection's CSV out and in.
- * Built once per layout from the editor handle (`collectionActions(ed)`), so the drill-in, the two columns and the table change an entry the same way, each change one undo step through `mutateCollection`.
+ * What the Collections panel's layouts write through, one undo step each: an entry's fields, link, picture, sizes, colours, move and removal, and CSV out and in.
  */
 import { ta, adminLang } from '$engine/i18n.js';
 import { entriesToCsv, separatorFor } from '$engine/collections-csv.js';
@@ -43,7 +42,7 @@ export function collectionActions(ed) {
     });
   }
 
-  /** One part of the picture's style from the image editor (fit, shape, zoom, rounding, focus, filters), merged into the entry's own; an empty value removes the part. */
+  /** One part of the picture's style from the image editor (fit, shape, zoom, rounding, focus, filters), merged into the entry's; an empty value removes it. */
   function setEntryImageStyle(id, entryId, field, value) {
     onEntry(id, entryId, `edit:collection:${id}:${entryId}:imageStyle:${field}`, (entry) => {
       const style = { ...(entry.imageStyle ?? {}) };
@@ -110,7 +109,7 @@ export function collectionActions(ed) {
     });
   }
 
-  /** CSV export: the entries, or only the ones named, are downloaded as <id>.csv with the kind's columns, the admin language's separator and a byte-order mark (engine/collections-csv.js). */
+  /** CSV export: the entries, or those named, downloaded as <id>.csv with the kind's columns, the admin language's separator and a byte-order mark. */
   function exportCollectionCsv(id, onlyIds = null) {
     const data = ed.collectionStores[id]?.data;
     if (!data) return;

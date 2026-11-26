@@ -1,5 +1,6 @@
 /**
  * The tidy of a site's media/ (editor/src/lib/media-tidy.js): the root files move into the folder of their kind, every reference follows, a full press leaves the rest for the next, and a tidy site gives nothing to do.
+ * The commit cap the press plans for is the one publishing's commit holds to (functions/api/github/commit.js).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -66,6 +67,39 @@ test('tidyRoom: the press takes what the commit has left beside the documents an
   assert.equal(tidyRoom({ pages: 40 }), COMMIT_FILES - 88);
   assert.equal(tidyRoom({ pages: 96 }), 0);
   assert.ok(COMMIT_FILES - (40 * 2 + 8) + 40 * 2 + 8 <= COMMIT_FILES, 'forty pages with their copies and the moves fit the cap');
+});
+
+test('the commit cap the tidy plans for is the one publishing\'s commit holds to: that many files pass, one more is refused', async () => {
+  const { onRequestPost: commit } = await import('../template/functions/api/github/commit.js');
+  const env = { GITHUB_REPO: 'site/repo', GITHUB_CLIENT_ID: 'id', GITHUB_CLIENT_SECRET: 'secret', ALLOWED_LOGINS: 'owner' };
+  const publish = (n) => commit({
+    request: new Request('https://site.pages.dev/api/github/commit', {
+      method: 'POST',
+      headers: { cookie: 'urd_gh=tok', 'sec-fetch-site': 'same-origin', 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'Publish', files: Array.from({ length: n }, (_, i) => ({ path: `content/pages/p${i}.json`, content: '{}' })) }),
+    }),
+    env,
+  });
+  // A stand-in GitHub that knows the publisher and answers nothing else.
+  const real = globalThis.fetch;
+  const asked = [];
+  globalThis.fetch = async (url) => {
+    const path = new URL(String(url)).pathname;
+    asked.push(path);
+    return path === '/user' ? Response.json({ login: 'owner' }) : Response.json({ message: 'stand-in' }, { status: 422 });
+  };
+  try {
+    const over = await publish(COMMIT_FILES + 1);
+    assert.equal(over.status, 400);
+    assert.equal((await over.json()).code, 'badFiles');
+    assert.deepEqual(asked, ['/user'], 'refused before anything is written');
+    asked.length = 0;
+    const at = await publish(COMMIT_FILES);
+    assert.notEqual((await at.json()).code, 'badFiles', 'the cap itself passes');
+    assert.ok(asked.length > 1, 'and goes on to the commit');
+  } finally {
+    globalThis.fetch = real;
+  }
 });
 
 test('strandedReferences: a root path the content names that the listing does not hold', () => {

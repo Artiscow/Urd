@@ -1,7 +1,5 @@
 /**
- * The admin designs at work (ADR-0030, lib/admin-designs.js): the parts' values as stored, the design that stands and the parts that differ from it, and the writes that choose a design, take a part back to it, and undo a design as one step.
- * A part with a row in the Urd settings is written through that row's setter, so the admin follows at once, and then stored as the design has it.
- * The undo lives here with the settings window that offers the designs, not in the site's undo history; it is offered while the parts stand as the design left them.
+ * The admin designs at work (ADR-0030, lib/admin-designs.js): the parts' values, the design that stands, and the writes that choose, take back and undo a design.
  */
 import { ta } from '$engine/i18n.js';
 import { matchAny } from '$engine/search-langs.js';
@@ -29,8 +27,7 @@ let written = $state(0);
 let undoStep = $state(null);
 
 /**
- * Every part's value as stored.
- * Reading each row's value ties the result to the row's state, so a part changed through its row, here or anywhere in the admin, is read again.
+ * Every part's value as stored, read through each row so a part changed anywhere in the admin is read again.
  * @param {object} c The settings' context (lib/settings-model.js)
  */
 export function partValues(c) {
@@ -84,7 +81,7 @@ export function partBack(partId, designId, c) {
 }
 
 /**
- * The designs as the settings' context hands them to the design row (lib/settings-model.js `designs`): the options by name with each design's one line as its tooltip, the values, the design that stands with the parts that differ, and the way to apply one.
+ * The designs as the settings' context hands them to the design row: the options with their tooltips, the values, the design that stands, and how to apply one.
  * @param {object} c The settings' context
  */
 function designsFor(c) {
@@ -98,7 +95,7 @@ function designsFor(c) {
 }
 
 /**
- * The context the Urd settings' rows read and write through (lib/settings-model.js): the editor, the words, the element menu's form and its three choices, the search in every language once the other languages are in (search-langs.js), and the admin designs, derived once for every change of a part.
+ * The context the Urd settings' rows read and write through (lib/settings-model.js): the editor, the words, the menu's choices, the search and the designs.
  * @param {object} ed The editor's state (the `urd-editor` context)
  */
 export function settingsContext(ed) {
@@ -142,7 +139,7 @@ export function partLabel(partId) {
 }
 
 /**
- * The note on a part's row while its value differs from the design that stands: the design, its name and the value it gives the part, by the row's own word for it; null for a row that is no part, a part the design leaves without effect, or one that agrees.
+ * The note on a part's row while its value differs from the standing design: the design, its name and the row's word for its value; null otherwise.
  * @param {string} settingId The row (lib/settings-model.js)
  * @param {object} c The settings' context
  */

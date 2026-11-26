@@ -1,6 +1,6 @@
 /**
  * The collections: their draft stores, the view the preview and the panels read, and the mutators.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
+ * The other parts reach it through the handle below.
  */
 import { createDraftStore, dropDraft } from '../lib/draftStore.js';
 import { INDEX_DRAFT_KEY, readIndexes, indexBaseline, earlierDrafts, openingIds } from '../lib/collection-index.js';
@@ -16,9 +16,7 @@ import { shellState } from './shell.svelte.js';
 import { siteState } from './site.svelte.js';
 import { copyJSON } from '../lib/json-copy.js';
 
-// Collections are shared site data (like nav/footer): an index file +
-// one file per collection, each with its own draftStore. Editing goes
-// through the Ctrl+Z history (like pages/site).
+// An index file and one file per collection, each with its own draft store; edits go through the undo history.
 let collectionsIndexStore = null;
 
 /** The ids only the site's legacy index lists, or null when it has none (readIndexes in lib/collection-index.js). */
@@ -40,13 +38,13 @@ let collectionsUnavailable = $state(false);
 let collectionsView = $state({});
 
 let activeCollection = $state(null);
-/** The entry and field a click on a product card in the preview asks for: the panel opens the entry and focuses the field, its text selected where `select` asks, then clears it. */
+/** The entry and field a click on a product card asks for: the panel opens the entry and focuses the field, its text selected where `select` asks. */
 let focusEntry = $state(null);
 
-/** A collection to open in the Collections panel, asked from outside it («Edit the product catalogue», a new collection); a fresh object each time, so the same collection opens again after it was folded. */
+/** A collection to open in the Collections panel, asked from outside it; a fresh object each time, so the same collection opens again. */
 let openRequest = $state(null);
 
-/** A click on a card in the preview (urd-open-entry), or an entry picked in the Collections tab's menu: the Collections panel on that collection, with the entry open and its field focused, and selected for a new entry or a copy (`select`). */
+/** A card clicked in the preview or an entry picked in a menu: the Collections panel opens on that collection, the entry open and its field focused. */
 function openEntry(msg) {
   if (typeof msg?.collection !== 'string' || !collectionIds.includes(msg.collection) || typeof msg.entryId !== 'string') return;
   activeCollection = msg.collection;
@@ -54,7 +52,7 @@ function openEntry(msg) {
   shellState.activePanel = 'collections';
 }
 
-/** Where the Collections panel stands (panels/CollectionsPanel.svelte): the collection open in it and the entry chosen, kept while the panel is closed and opened again. */
+/** The collection open in the Collections panel and the entry chosen, kept while the panel is closed and opened again. */
 let panelCollection = $state(null);
 
 let panelEntry = $state(null);
@@ -62,16 +60,13 @@ let panelEntry = $state(null);
 /** The entries ticked in the open collection (panels/collections/SelectionBar.svelte); cleared when another collection opens. */
 let panelTicks = $state([]);
 
-/** The search over the open collection's entries, read by the panel's list and by the collection's menu in the two columns' heading (CollectionHeading.svelte); cleared when another collection opens. */
+/** The search over the open collection's entries, read by the panel's list and the collection's menu; cleared when another collection opens. */
 let panelQuery = $state('');
 
-/**
- * A CSV import waiting for the owner's word (panels/collections/ImportDialog.svelte, ImportStep.svelte, ImportTable.svelte): the file read and checked (readCsv),
- * what rows that match an entry do, what becomes of the entries the file does not name, and the view it shows in. Nothing is stored until it is applied.
- */
+/** A CSV import waiting for the owner's word: the file read and checked, its choices and its view; nothing is stored until it is applied. */
 let csvImport = $state.raw(null);
 
-/** What the waiting import will do, drawn from the collection as it stands (importPlan); a new entry without an id of its own shows none until the import is applied and gives it one. */
+/** What the waiting import will do, drawn from the collection as it stands; a new entry gets its id when the import is applied. */
 const csvPlan = $derived(csvImport && collectionsView[csvImport.id]
   ? importPlan($state.snapshot(collectionsView[csvImport.id].entries), csvImport.read.rows, { matched: csvImport.matched, missing: csvImport.missing }, () => '')
   : null);
@@ -106,16 +101,11 @@ async function initCollections() {
   const files = await Promise.all(collectionIds.map((id) => fetch(`/content/samlinger/${id}.json`).then((res) => res.json()).catch(() => null)));
   for (const [i, id] of collectionIds.entries()) {
     const published = files[i];
-    // An unpublished collection has the baseline "does not exist"
-    // (null), never a synthetic published state: otherwise the draft can
-    // equal the false baseline, hasDraft() turn false, and the index be
-    // published without the file (index/file drift).
+    // An unpublished collection's baseline is null, never a made-up published state.
     publishedCollections[id] = published;
     collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => published, shellState.draftSaveError, `urd-draft-samling-${id}`);
     if (!published && !collectionStores[id].data) {
-      // Index without a file and without a draft (drifted deploy): give
-      // an empty draft so the panel works; the does-not-exist baseline
-      // makes the file publish on the next publish and heals the drift.
+      // An id in the index without a file or a draft gets an empty draft, which the next publish writes.
       collectionStores[id].replace({ schemaVersion: 1, id, name: id, kind: 'custom', entries: [] });
       collectionStores[id].save();
     }
@@ -130,9 +120,7 @@ function syncCollectionsView(pushPreview = true) {
     if (collectionStores[id]) view[id] = copyJSON(collectionStores[id].data);
   }
   collectionsView = view;
-  // On click-and-type in the block itself the preview push is skipped:
-  // the iframe already shows the text, and a rerender mid-typing would
-  // lose the caret.
+  // Typing in the block itself skips the push, as the preview already shows the text.
   if (pushPreview) pushCollectionsToPreview();
 }
 
@@ -141,9 +129,7 @@ function pushCollectionsToPreview() {
   previewState.bridge?.sendCollections($state.snapshot(collectionsView) ?? {});
 }
 
-/** Shared flow for collection changes: history, mutate, save, update
- *  the mirror and the preview. key is the undo key (the edit: prefix
- *  coalesces bursts of the same action). */
+/** A change to a collection: the undo step under `key`, the change, the save, and the view and the preview updated. */
 function mutateCollection(id, key, fn, pushPreview = true) {
   const store = collectionStores[id];
   if (!store) return;
@@ -168,7 +154,7 @@ function mutateCollections(ids, key, fn) {
 /** A count in words, the one-entry form where the dictionary has it. */
 const counted = (key, n, params = {}) => ta(n === 1 ? `${key}.one` : key, { ...params, n: String(n) });
 
-/** The status after a change of several entries, with «Undo» beside it. The button undoes that step alone: once a later change stands on top of it, the button says so instead. */
+/** The status after a change of several entries, with «Undo» beside it, which undoes that step alone while it is the last. */
 function doneWithUndo(message) {
   const step = historyState.history.at(-1);
   shellState.setStatus(message, 'ok', { label: ta('ui.undo'), run: () => {
@@ -278,9 +264,7 @@ function handleCollectionAdd(msg) {
   addCollectionEntry(msg.collection);
 }
 
-/** Plain text from a rich-text title: parsed in an inert document (same
- *  approach as the engine's sanitize.js), never with a regex that can
- *  leave remnants. */
+/** Plain text from a rich-text title, parsed in an inert document. */
 function plainTitle(html) {
   const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
   return (doc.body.textContent ?? '').trim();
@@ -290,9 +274,7 @@ function plainTitle(html) {
 function handleCollectionEdit(msg) {
   const { collection, entryId, field, value } = msg;
   if (!['title', 'text', 'image', 'imageAlt', 'imageStyle'].includes(field)) return;
-  // An empty title is not kept (the schema requires a title); the old
-  // title remains until something is typed. The title is rich text, so
-  // emptiness is judged without markup.
+  // A title empty of words is not kept; the old one stands until something is typed.
   if (field === 'title' && !plainTitle(value)) return;
   mutateCollection(collection, `edit:collection:${collection}:${entryId}:${field}`, (data) => {
     const entry = data.entries.find((e) => e.id === entryId);
@@ -307,9 +289,7 @@ function insertCollection(id, name, kind, open = true) {
   // Without the index (it could not be read) no collection is made: the editor does not know what is published.
   if (!collectionsIndexStore) return;
   const fresh = { schemaVersion: 1, id, name, kind, entries: [] };
-  // The baseline is "does not exist" (null) until the first publish: a
-  // fresh collection must have hasDraft() true, otherwise the index is
-  // published without the file.
+  // The baseline is null until the first publish, so the fresh collection is a draft.
   collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => null, shellState.draftSaveError, `urd-draft-samling-${id}`);
   collectionStores[id].replace(fresh);
   collectionStores[id].save();
@@ -370,9 +350,7 @@ function addCollectionEntry(id) {
   const entryId = makeId('entry');
   mutateCollection(id, `collection:${id}:add-entry`, (data) => {
     if (data.kind === 'products') {
-      // Products: no date (irrelevant), the price is set in the panel;
-      // added LAST so the adder card in the preview gets the new card
-      // next to it.
+      // A product has no date, and goes last, beside the adder card in the preview.
       data.entries.push({ id: entryId, title: ta('seed.newProduct'), text: '' });
     } else {
       data.entries.unshift({

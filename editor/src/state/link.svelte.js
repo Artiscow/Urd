@@ -1,6 +1,5 @@
 /**
- * The link editor (lib/LinkDialog.svelte): one dialog for every link the editor stores, opened by a link field (lib/LinkField.svelte), the quick row, the panels and the text toolbar.
- * A request names the link to start from, how the host keeps it, whether it takes pages only, whether it can hold a PDF taken from the computer, and what applies the result.
+ * The link editor (lib/LinkDialog.svelte): one dialog for every link the editor stores, opened by link fields, the quick row, the panels and the text toolbar.
  */
 
 /**

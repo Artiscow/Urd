@@ -127,6 +127,127 @@ Key mechanisms (patterns validated in ApeironLF):
 - **The preview's Screen device (ADR-0018):** its size (My window, a common size, a common aspect ratio at the width it stands at, or an own width with an optional height) is chosen in the Screen button's fold-out and kept per browser in localStorage under `urd-admin-screen`, read and written by `editor/src/lib/own-screen.js`; the Phone's under `urd-admin-phone` by `editor/src/lib/preview-width.js`, and the ratios by `editor/src/lib/aspect.js`. The binding limit of the content width (`contentWidth / (1 - 2 * gutter / 100)`) is the pure function `bindingWidth` in `editor/src/lib/content-width.js`, with its own test; the Site panel shows the width as four quick choices plus free adjustment from 960 to 1920, the side margin as a scale (None, Small, Medium, Large) with the raw vw number under Advanced, and a live sample against three real screen widths showing where the width binds.
 - **The editor measures the canvas, never the section:** every geometry site in `preview-edit.js` (drag, resize, arrow keys, marquee, group drag, grid overlay, block menu, materialisation of mobile frames) takes its width from the shared `canvasOf` helper, so a forgotten measurement is mechanically searchable. `sticky.js` derives the block's left edge and width from the canvas rect and the release limit from the section's top and bottom, in separate variables; it reads the left edge with `parseFloat(el.style.left)`, so the inline `left` must stay a plain percentage (a `calc()` string yields NaN), which is one reason the content width is a canvas node and not a `calc()` in `frameToCss`.
 
+### The preview's messages (ADR-0001)
+
+The editor drives the real page in its iframe (`?preview=1`) over `postMessage`, through `editor/src/lib/previewBridge.js` on the editor's side and the preview's own listeners in the engine (`urd.js`, `preview-edit.js`). These are the messages, each with its fields; `tests/preview-messages.test.mjs` holds the list to the messages the code receives.
+
+**From the editor to the page:**
+
+- `{ type: 'urd-preview', pageId, section }`: One section
+- `{ type: 'urd-preview-full', pageId, page }`: Whole page
+- `{ type: 'urd-site', site, page? }`: Site draft: grid/theme/nav; with the open page where one change moved both, drawn in one pass
+- `{ type: 'urd-plugins', enabled }`: The plugin draft's enabled list; loaded live in the preview
+- `{ type: 'urd-collections', collections }`: The collection drafts: id → data; the preview uses them instead of the server files
+- `{ type: 'urd-viewport', mode }`: The editor's viewport choice: desktop/mobile
+- `{ type: 'urd-duplicate' }`: Ctrl+D in admin: duplicate the selected block
+- `{ type: 'urd-clipboard', clipboard }`: The last copy or cut, for the page just loaded
+- `{ type: 'urd-active-section', sectionId }`: A section the editor selected itself: new, duplicated or pasted
+- `{ type: 'urd-caret', blockId, offset }`: An undo of typing: the caret back in the block's text
+- `{ type: 'urd-run-command', id }`: A plugin's command, run where it was registered
+- `{ type: 'urd-chrome', visible }`: Show/hide the editing handles
+- `{ type: 'urd-show-grid', visible }`: Show the grid in every section
+- `{ type: 'urd-show-guides', visible }`: Guides: center/content width in every section
+- `{ type: 'urd-spellcheck', on }`: The browser's spell check on the texts
+- `{ type: 'urd-announce-reset' }`: The Announcement panel: forget the dismissal, so the strip returns
+- `{ type: 'urd-select', blockId, picked? }`: Select a block the editor just built, e.g. + New block; `picked` in the editor's lists, brought into view with the focus left in the list
+- `{ type: 'urd-light', ids }`: Light blocks on the canvas for the row under the pointer in the editor's lists; [] takes the light away
+- `{ type: 'urd-phone-pin', blockId }`: Pin the block on the phone where it stands now: the Phone panel's row menu
+- `{ type: 'urd-ask-picture', sectionId, blockId, kind }`: Open the image editor on an image block's picture or a video's cover as a press on it does, the preview answering with urd-picture-edit: «Open the image editor» in the block's menu
+- `{ type: 'urd-block-words', sectionId, blockId, props, phoneProps }`: A block's words written on the page, the desktop's and the phone's own, as the editor keeps them, put in the page's copy of the section without drawing it again, ADR-0033
+- `{ type: 'urd-deselect' }`: A press on the stage around the canvas: no block, set or section stays selected
+- `{ type: 'urd-text-cmd', cmd, value, focus }`: A command of the text bar on the text being written; focus hands the focus back to the text
+- `{ type: 'urd-text-end' }`: The writing of the text ended from the editor: a press outside the text bar
+- `{ type: 'urd-bar-press', bar, id, index, rest }`: A tool of a bar drawn beside the phone pressed: the page presses the tool at that place on the block's or the section's own bar; rest, the ⋮ opened by a resting mouse
+- `{ type: 'urd-section-settings', sectionId }`: A section's settings asked for from the Phone panel: the page opens them as the gear on the section's bar does
+- `{ type: 'urd-ctx-run', index } / { type: 'urd-ctx-closed', focus }`: A row of the phone view's menu chosen in the editor, or the menu closed there without one; focus, closed with a key, gives the block its focus back
+- `{ type: 'urd-admin-theme', colors }`: The admin color theme {bg, surface, accent, text}: the editor menus in the preview follow admin, not the site
+- `{ type: 'urd-templates', templates }`: The template drafts: a list of {id, name, kind, section?, blocks?, page?}; the My templates tab reads them
+- `{ type: 'urd-insert-template', id }`: The Blocks panel's My templates: insert a block-group template into the active section
+- `{ type: 'urd-zoom', scale }`: The canvas zoom; the handles counter-scale so they keep their admin size
+- `{ type: 'urd-scroll-section', sectionId }`: Scroll the preview to the section; the review marker in the top bar
+- `{ type: 'urd-scroll-anchor', hash }`: Jump to the spot a link's fragment names, once its page stands
+- `{ type: 'urd-scroll-to', sectionId, offset }`: Back to where the canvas was scrolled before a reload, lib/reload-place.js
+- `{ type: 'urd-link-apply', link }`: The link editor's answer for the text being edited: the link shape, or null to take the link away
+- `{ type: 'urd-close-menus' }`: A click in the admin panels closes open menus in the preview
+- `{ type: 'urd-place-block', block }`: The palette: the engine finds a placement mid-viewport and reports back
+- `{ type: 'urd-attention', sectionId, needed }`: A section flagged for the phone's review, or cleared with needed: false: its mark, kept in the page the preview holds
+- `{ type: 'urd-demo-anim', sectionId, blockId }`: Play the changed animation once; blockId null = the section
+- `{ type: 'urd-demo-motion' }`: Let the ribbons roll for a few seconds while editing
+- `{ type: 'urd-open-block-config', blockId }`: Open a plugin block's settings from Properties
+- `{ type: 'urd-fit-block', sectionId, blockId, seq }`: Ask for the height of a block that follows its content, ADR-0025; answered with urd-grow
+- `{ type: 'urd-fit-new', sectionId, blockId, w }`: A new block's box to be fitted to what it draws, from the width it was added at, sent before its section so the preview draws it hidden until fitted; answered with urd-new-fitted
+- `{ type: 'urd-frames', sectionId, frames }`: Frames fitted to their content, block id to desktop frame: put in place without drawing the section again
+- `{ type: 'urd-text-style', blockId, style }`: A font or a size for the whole text of a block: {fontFamily} or {fontSize}, null takes the theme's
+- `{ type: 'urd-startup-done', round }`: The editor's start is sent; the preview answers with urd-shown once it is drawn and painted
+- `{ type: 'urd-phone-same-height', sectionId, follow }`: «Same height» for a section on the phone: the preview measures its lines and posts their heights back (urd-phone-layout); `follow` where they belong to a preset's step
+
+**From the page to the editor:**
+
+- `{ type: 'urd-edit', sectionId, blockId, props, rerender? }`: Click-to-type/image editor
+- `{ type: 'urd-move', sectionId, blockId, frame, frameKey, coalesce?, groupKey? }`: Drag/resize
+- `{ type: 'urd-grow', sectionId, blockId, h, fit?, seq? }`: A plugin copy's own height, or the answer to urd-fit-block: ONLY h, never x/y
+- `{ type: 'urd-mobile-reset', sectionId, blockId? }`: Reset the mobile overrides; without blockId the whole section, ADR-0019
+- `{ type: 'urd-phone-order', sectionId, blockId, change, coalesce? }`: A block moved one place in the phone's reading order, taken out of its group from the block's menu, or a set grouped or ungrouped on phones: the change phone-moves.js settled it into; coalesce from the keys
+- `{ type: 'urd-attention-cards', cards: [{ sectionId, rect }] }`: The sections that need a phone review in the phone view, where each stands in the canvas, for their cards beside the phone
+- `{ type: 'urd-phone-unpin', sectionId, blockId }`: A block pinned on the phone unpinned, back into the phone's order with its cells kept
+- `{ type: 'urd-phone-seen', sectionIds }`: The sections standing in the phone view's window, looked at on the phone as they stand now: the phone check before publishing, lib/phone-check.js
+- `{ type: 'urd-too-narrow', screen }`: A drag or a handle greys its block as too narrow for its words under the section's «Force readable text on the phone» or «Force readable text on the desktop», ADR-0034: 'phone' or 'desktop' while it does, null once it does not
+- `{ type: 'urd-phone-layout', sectionId, change, preset?, follow? }`: A preset of the phone view's «Phone layout» strip: its cells and order, phone-layouts.js, `preset` asking for «Same height» after it; «Same width»; or «Same height», `follow` where it joins the preset's step; or the phone's set bar's alignment, and the pinned blocks' layer order on the phone, `layers`
+- `{ type: 'urd-hover-block', blockId }`: The block under the mouse on the canvas, null for none
+- `{ type: 'urd-text-state', blockId, rect, state }`: The text being written: its block's box in the canvas and what its selection holds; blockId null when none is, lib/TextToolbar.svelte
+- `{ type: 'urd-block-bar', blockId, rect?, tools?, set? }`: In the phone view, the selected block's box and its bar's tools for the bar drawn beside the phone, lib/CanvasBar.svelte, a tool `disabled` where it greys; `set` true while the tools are a set's bar and the box the set's; blockId null when none stands
+- `{ type: 'urd-section-bar', sectionId, rect?, tools? }`: The same for the section the mouse was last over, or put at work
+- `{ type: 'urd-nav-bar', on, rect? }`: In the phone view, where the site's menu stands while its size bar is drawn beside the phone
+- `{ type: 'urd-ctx-menu', label, rows, at, editor, rest }`: In the phone view, a menu's rows for the editor to draw, at the point or under the ⋮ of the bar `editor` names, 'block' or 'section'
+- `{ type: 'urd-ctx-close' } / { type: 'urd-ctx-hold' } / { type: 'urd-ctx-hover', over }`: That menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one
+- `{ type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }`
+- `{ type: 'urd-block-style', sectionId, blockId, fields }`: A pasted style's block-level fields; null clears one
+- `{ type: 'urd-menu-area', area }`: 1, 2 or 3 on a selected block: the editor's menu shows that area
+- `{ type: 'urd-delete', sectionId, blockId | blockIds }`: `blockIds` from a multi-selection: the whole selection in one undo step
+- `{ type: 'urd-add-section', index, section }`
+- `{ type: 'urd-move-section', sectionId, dir }`
+- `{ type: 'urd-delete-section', sectionId }`
+- `{ type: 'urd-duplicate-section', sectionId }`
+- `{ type: 'urd-clipboard', clipboard, cut }`: A copy or a cut on the page: blocks or a section
+- `{ type: 'urd-paste-section', afterId, section }`: The clipboard's section with fresh ids, below afterId, or last
+- `{ type: 'urd-section-phone-room', sectionId, side, px }`: A seam's grip in the phone view: the room above or below the section's blocks there
+- `{ type: 'urd-section-size', sectionId, minHeight, moves? }`: `moves` from the seam grip, for a section changed at its top: [{blockId, dy}] in the same undo step
+- `{ type: 'urd-undo', redo }`: Ctrl+Z inside the iframe
+- `{ type: 'urd-select-section', sectionId }`: Active section for the palette
+- `{ type: 'urd-select-block', sectionId, blockId }`: Selected block, null = deselected
+- `{ type: 'urd-block-menu', sectionId, blockId, rect, group? }`: Open the block menu at the block; `group` opens that group in its Content area
+- `{ type: 'urd-section-menu', sectionId, rect }`: Open the section's settings in the floating menu, beside the section
+- `{ type: 'urd-redraw-section', sectionId }`: A block with a phone design crossed its width's line, or a section its hand-off width to the phone layout: the section is sent again from the draft
+- `{ type: 'urd-edit-on-phone', sectionId }`: A section showing its phone layout in the desktop view, its words too narrow there: «Edit on the phone» on its bar opens it in the phone view
+- `{ type: 'urd-block-design', sectionId, blockId, phone? }`: Open the design picker for the block, from the design button on its toolbar; `phone` from the phone view: its design on a phone
+- `{ type: 'urd-ready' }`: The engine is listening; safe to send drafts
+- `{ type: 'urd-shown', round }`: What the editor's start sent is drawn and painted; answers urd-startup-done with its round
+- `{ type: 'urd-plugin-blocks', blocks }`: The plugin blocks: type/label/defaults for the Blocks panel
+- `{ type: 'urd-navigate', path, hash }`: Internal link clicked in the preview; hash is the link's fragment or ''
+- `{ type: 'urd-picture-edit', kind, sectionId?, blockId?, index?, collection?, entryId?, frameRatio, frameWidth, frameHeight, phone? }`: A picture on the canvas asks the image editor to open: an image block's, a video's cover, a gallery picture, a collection entry's or a quote's portrait, with its frame's width over its height and its size in pixels as drawn, and phone where it is drawn in the phone view
+- `{ type: 'urd-link-edit', value, text }`: The text toolbar's link or Ctrl+K: the link at the caret in the link shape, or null, and the selected words
+- `{ type: 'urd-add-block', sectionId, block, fit?, phone? }`: Block placed from the palette, or a plugin block from «+ New block»: fit, a new block whose box is fitted to what it draws; a duplicate has none; phone = {drop}, added in the phone view and standing on the phone only, landing where drop asks, phone-moves.js phoneAdded
+- `{ type: 'urd-new-fitted', sectionId, blockId, w, h }`: A new block's box fitted to what it draws, the answer to urd-fit-new, sent once as the preview shows the block fitted, add-fit.js
+- `{ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves, phone? }`: Preset element from the "+ card/row" button OR paste/duplicate of a multi-selection; moves shifts existing blocks in the same undo step
+- `{ type: 'urd-request-block', sectionId, kind, at?, files?, phone? }`: «+ New block»; at = click point {x in %, y in px}, without = centered; files = the pictures an image or a gallery is made from, picked in the preview
+- `{ type: 'urd-calendar-designs', sectionId, at?, phone? }`: "All calendar designs …" in «+ New block»: the design picker, the calendar then placed as a requested block
+- `{ type: 'urd-shortcuts' }`: «?» on the page: the shortcut sheet
+- `{ type: 'urd-toggle-grid' }`: G on the page: the grid shown or hidden
+- `{ type: 'urd-palette' }`: Ctrl/⌘+K on the page outside a text: the command palette
+- `{ type: 'urd-save-key' }`: Ctrl/⌘+S on the page: the ticked drafts saved
+- `{ type: 'urd-commands', commands }`: The commands plugins registered in the preview: [{ id, label }]
+- `{ type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey? }`: Block dropped in another section; groupKey joins the frames its drag settled in the source
+- `{ type: 'urd-collection-edit', collection, entryId, field, value }`: Click-to-type/image swap in the collection block
+- `{ type: 'urd-collection-add', collection }`: New entry from the "+ Product" adder in the product block
+- `{ type: 'urd-open-entry', collection, entryId, field }`: A click on a product card of a selected block: its entry in the Collections panel, the field focused
+- `{ type: 'urd-open-panel', panel, fold, part }`: The right-click menu on the site's menu: the Nav panel, at one of its folds or at its top, with `part` naming a card in the fold to open
+- `{ type: 'urd-nav-width', width }`: Side-by-side column width dragged in the preview
+- `{ type: 'urd-save-template', kind, section | blocks }`: Save as template: an unnamed snapshot; the editor names and stores it
+- `{ type: 'urd-sticky-group', sectionId, blockIds, on }`: Pin the group: one shared sticky group across the whole selection, or dissolve it
+- `{ type: 'urd-sticky-dock', sectionId, blockId, dock }`: Screen-docked block dragged to a new anchor point
+- `{ type: 'urd-delete-template', id }`: The delete button in the My templates tab; the editor confirms and deletes
+- `{ type: 'urd-apply-layout', sectionId, frames, minHeight }`: Switch layout: the variant's frames + height in ONE undo step
+
 ### The editor's parts (0.7.26)
 
 Recorded before the split, 14 October 2026: `editor/src/App.svelte` held the whole editor in one file of 14,676 lines (the script to line 6928, the markup to line 11699, the CSS to the end) with 109 `$state` and 41 `$derived` declarations, 28 effects, 420 functions, 58 snippets and the twelve panels as branches on `activePanel`. The build (`npm run build`: Vite 8.3, vite-plugin-svelte 7.3, Svelte 5.57) took 9 m 31 s on the development machine, of which 573 s was the Svelte compile of this one file, and every family added to the element menu made it longer. The split gives every part one job, lets the compiler work file by file, and changes nothing a site owner sees.

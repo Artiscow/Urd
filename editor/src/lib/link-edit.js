@@ -1,8 +1,5 @@
 /**
- * Link editing shared by the panels, the block menus and the link editor (LinkDialog.svelte): the link shape is in SCHEMA.md under Links and anchors.
- * A host keeps a link either as a link object (`{ page, target, href, newTab, rel }`, the shape `link`) or, for the few hosts that keep one address, as the address itself (the shape `address`).
- * A host stands on one page (a block, words in a text: `here` is that page) or on every page (the menu, the footer, the site's links and collection entries: `here` is null).
- * A spot on the host's own page is stored without the page, so a copy of the host in a template follows the spot's copy; a host on every page always stores the page.
+ * Link editing for the panels, block menus and LinkDialog.svelte: a host keeps a link object or its address alone; `here` is its page, or null on every page.
  */
 import { isSafeHref, isSafeUrl, LINK_RELS } from '$engine/nav-model.js';
 import { telHref } from '$engine/contact-model.js';
@@ -15,8 +12,7 @@ export const LINK_KINDS = ['page', 'web', 'email', 'phone', 'file'];
 const LINK_FIELDS = ['page', 'target', 'href', 'newTab', 'rel', 'download'];
 
 /**
- * Writes a link over a host object in place: the link shape's fields go, and the ones the link has are set.
- * A host that keeps `null` for no address (a block's `href`) gets it back.
+ * Writes a link over a host object in place: the link shape's fields go, and the ones the link has are set; a host's `href: null` is kept.
  * @param {object} host
  * @param {object|null} link
  */
@@ -72,10 +68,7 @@ export function emailHref(email, subject = '') {
 }
 
 /**
- * A stored link as the editor works on it.
- * `value` is a link object, or for a host of the `address` shape the address itself.
- * A path or a fragment of the site that names a page of the register reads as that page and the spot after its #, so an old `/kaker#sec-…` opens with Kaker and the section chosen; the spot may be a name, which the editor matches to its spot.
- * A path in media/ or a PDF held in the draft reads as a file (file-links.js).
+ * A stored link as the editor works on it: a site path or fragment naming a page in the register reads as that page and its spot, and a file path as a file.
  * @param {object|string|null} value
  * @param {{pages?: Array<{id: string, path: string}>, here?: string|null}} [context] The page register, and the page the link stands on
  * @returns {{kind: string, page: string, target: string, url: string, email: string, subject: string, phone: string, file: string, newTab: boolean, rel: string[], download: boolean}}
@@ -124,10 +117,7 @@ export function linkReady(state) {
 }
 
 /**
- * The editor's link written back in the host's shape, or null when it is not complete.
- * A link to a page stores the page and the spot's id; a spot on the host's own page (`here`) is stored without the page.
- * For a host that keeps one address it is the page's path with the spot's id after #, or the # alone for a spot on its own page.
- * A new tab goes with a link to a page, the web or a file, the rel words with a link to the web only, and the wish to save with a link to a file only.
+ * The editor's link written back in the host's shape, or null when it is not complete; a spot on the host's own page is stored without the page.
  * @param {ReturnType<typeof readLink>} state
  * @param {{shape?: 'link'|'address', pages?: Array<{id: string, path: string}>, here?: string|null}} [options]
  * @returns {object|string|null}
@@ -158,8 +148,7 @@ export function writeLink(state, { shape = 'link', pages = [], here = null } = {
 }
 
 /**
- * Why a link no longer lands, or null when it does or this cannot be told: 'page' (its page is gone from the register), 'spot' (its spot is gone from its page) or 'address' (an address within the site that names no page).
- * A spot is checked only when the ids in use on its page are known (`taken`, from takenAnchors); a file, a reserved folder and an address outside the site are never flagged.
+ * Why a link does not land, or null: 'page' (its page is gone), 'spot' (its spot is gone, told only with `taken`) or 'address' (a site path naming no page).
  * @param {ReturnType<typeof readLink>} state
  * @param {{pages?: Array<{id: string, path: string}>, taken?: Set<string>|null, reserved?: string[]}} [context] The register, the ids in use on the link's page, and the reserved first path parts
  * @returns {'page'|'spot'|'address'|null}
@@ -181,7 +170,7 @@ export function linkProblem(state, { pages = [], taken = null, reserved = [] } =
 }
 
 /**
- * The words a link field shows for a link: the page's title with the spot after ›, the web address without its scheme, the email address, the phone number or the file's name; '' for no link.
+ * The words a link field shows: the page's title with the spot after ›, a web address without its scheme, the email, the phone or the file's name; '' for none.
  * @param {ReturnType<typeof readLink>} state
  * @param {{pages?: Array<{id: string, title: string}>, spotLabel?: string}} [context] The register, and the words for the spot when they are known
  * @returns {string}

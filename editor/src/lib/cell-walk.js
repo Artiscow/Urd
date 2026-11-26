@@ -1,15 +1,13 @@
 /**
- * The keyboard walk through a picker's grid of cells from its search field (0.7.10.7), as the canvas block menu walks its hits.
- * Typing marks the first hit, the arrows move the mark to the nearest cell in their direction, and Enter takes the marked cell; the focus stays in the field, so the typing goes on.
- * The geometry is pure (nearestCell) and node-tested; the marking needs a DOM.
+ * A picker's keyboard walk from its search field: typing marks the first hit, an arrow moves the mark to the nearest cell that way, and Enter takes it.
  */
 
 /** The arrow keys as directions. */
 const STEPS = { ArrowDown: [0, 1], ArrowUp: [0, -1], ArrowRight: [1, 0], ArrowLeft: [-1, 0] };
 
 /**
- * The index of the nearest cell from `from` in the direction (dx, dy), by the cells' centres, or -1 when there is none.
- * Only cells lying ahead count; the sideways distance counts double, so a walk keeps to its row or its column.
+ * The index of the nearest cell ahead of `from` in the direction (dx, dy), or -1.
+ * The sideways distance counts double, so a walk keeps to its row or column.
  * @param {Array<{left: number, top: number, width: number, height: number}>} rects
  * @param {number} from
  * @param {number} dx

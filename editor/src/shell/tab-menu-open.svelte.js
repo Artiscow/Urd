@@ -1,2 +1,2 @@
-/* Which tab's menu of folds stands open (shell/PanelTab.svelte): one at a time, so a menu opening on the next tab closes the one before it at once, rather than after the wait that lets a mouse leave a menu on a slant. */
+/* Which tab's menu of folds stands open: one at a time, a menu opening on the next tab closing the one before it at once. */
 export const tabMenuOpen = $state({ owner: null });

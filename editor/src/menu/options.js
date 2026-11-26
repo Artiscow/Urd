@@ -1,7 +1,6 @@
 /**
- * The option lists the element menu shares between its families and its quick
- * row, as functions, since their words come from the admin dictionary and
- * `ta` is never called at module level (ADR-0012).
+ * The option lists the element menu shares between its families and its quick row.
+ * They are functions, since `ta` is never called at module level (ADR-0012).
  */
 import { ta } from '$engine/i18n.js';
 
@@ -10,7 +9,7 @@ export const onOff = () => [['on', ta('common.on')], ['off', ta('common.off')]];
 /** A band's reach (ribbon-model.js): the content surface by default, the window, or the block's own box. */
 export const ribbonReaches = () => [['canvas', ta('opt.ribbonWidth.content')], ['page', ta('opt.ribbonWidth.page')], ['content', ta('opt.ribbonWidth.own')]];
 export const ribbonReach = (w) => (w === 'canvas' || w === 'page' ? w : 'content');
-/** The standards of a ribbon's motion settings, as a new ribbon starts with them: its Motion fold's group (families/Ribbon.svelte) and the rows under a pinned motion (families/RibbonMotion.svelte). */
+/** The standards of a ribbon's motion settings, as a new ribbon starts with them (families/Ribbon.svelte, families/RibbonMotion.svelte). */
 export const RIBBON_MOTION_STANDARD = { motion: 'roll', direction: 'left', speed: 60, dwell: 2.5, pauseOnHover: true, pause: 'button', fade: true };
 export const ribbonMotions = () => [['roll', ta('opt.ribbonMotion.roll')], ['sway', ta('opt.ribbonMotion.sway')],
   ['step', ta('opt.ribbonMotion.step')], ['none', ta('opt.ribbonMotion.none')]];

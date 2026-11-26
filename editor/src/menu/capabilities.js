@@ -1,23 +1,18 @@
 /**
- * The capabilities a block can carry (ADR-0031): groups of settings that take no room in the element menu until they are added or in use, then stand as a card (lib/rows/Capability.svelte) with their settings and a way back to the standard.
- * Pure: each entry tells, through the editor handle (`ed`) and the selected block it is given, whether the block can carry it, whether it is in use, what adding it sets, and how it is taken back.
- * `area` is the menu's area the card stands in, `icon` its drawing (CAP_ICONS in lib/icons.js), `pins` the Pinned rows that hold its settings, `types` the block types that carry it (every type where absent).
- * A capability that is one switch has `single`: what the switch holds and how it is set, drawn as a card of one line with an On/Off chip (lib/rows/Capability.svelte); adding it switches it on, which on a block that starts with it on (a shape hidden on phones) leaves it as it is and keeps the card.
- * `summary` names what a card folded to one line shows (Urd settings «Adding extras» as folded cards), where one word says it; a card without one shows that it is on.
- * The words are `cap.<id>` (its title) and `cap.about.<id>` (one line on what it does) in the admin dictionaries.
- * The shared capabilities stand first, then each block type's own; a block's own capability whose card a tool of the block's bar opens carries the id of the fold it was (bar-tools.js), so the tool finds it.
+ * The capabilities a block can carry (ADR-0031): groups of settings that stand as a card in the element menu (lib/rows/Capability.svelte) once added or in use.
  */
 import { spotLinks } from '$engine/anchor-model.js';
 import { calDesign, calView, CAL_SWITCH_VIEWS } from '$engine/calendar-designs.js';
 import { linkOf } from '../lib/link-edit.js';
 import { DRAWS_NOTHING } from '$engine/push-model.js';
 
-/** The block's own choice under the pointer: its effect, one an older block keeps as its animation, or 'none' where it declines the effect its section gives every element ('' = none of its own). */
+/** The block's own choice under the pointer: its effect, an older block's hover animation, or 'none' where it declines its section's effect ('' = none of its own). */
 export const hoverOf = (block, ed) => (block.hover === false ? (block.blocksHoverType ? 'none' : '')
   : block.hover?.type ?? (block.animation && !ed.isEntrance(block.animation) ? block.animation.type : ''));
 /** Whether a block's type starts with a block-level flag on (state/blocks.svelte.js blockStarts): the shapes and the icon start as decor hidden on phones. */
 const starts = (ed, block, flag) => Boolean(ed.blockStarts(block.type, flag));
 
+/** The shared capabilities, then each type's own: `area` holds the card, `icon` draws it, `pins` are its Pinned rows, `types` its block types (all where absent). */
 export const CAPABILITIES = [
   {
     id: 'text-box', area: 'style', icon: 'box', pins: ['textBox'], types: ['text'],
@@ -75,8 +70,8 @@ export const CAPABILITIES = [
   },
 ];
 
-/* The image's, the calendar's, the button's and the ribbon's own (ADR-0031): what a press on the picture does, what the calendar can show beside its events and how its words are set, the button's colours, and the ribbon's stripes.
-   A calendar's capability is in use by what its card shows in the calendar's view (menu/families/Calendar.svelte), so a setting the view leaves out does not keep a card. */
+/* The image's, the calendar's, the button's and the ribbon's own capabilities.
+   A calendar's is in use by what its card shows (menu/families/Calendar.svelte). */
 /** The views that draw a grid of days, where the earlier events are not offered. */
 export const CAL_GRID_VIEWS = ['month', 'week', 'day', 'year'];
 /** Whether the calendar shows its first day of the week: the views that draw weeks, the bento design, and a calendar with the view switcher. */
@@ -121,8 +116,7 @@ CAPABILITIES.push(
   },
   {
     id: 'cal-buttons', area: 'content', icon: 'buttons', pins: [], types: ['calendar'],
-    // The subscribe button stands until it is turned off, so a calendar that has not turned it off uses the buttons.
-    // The programme's address counts where the design draws it, as the card does.
+    // The subscribe button stands until it is turned off; the programme's address counts where the design draws it.
     inUse: (block) => block.props?.showSubscribe !== false || block.props?.showRecurring === true || block.props?.showAdd === false
       || (Boolean(calDesign(block.props?.design).program) && Boolean(block.props?.programHref)),
     clear: (ed) => ed.setBlockProps('cal-buttons', { showSubscribe: false, showRecurring: undefined, showAdd: undefined, programHref: undefined }),

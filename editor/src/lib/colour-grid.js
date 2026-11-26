@@ -1,7 +1,5 @@
 /**
- * The colour picker's palette (BACKLOG 0.7.9.1): twelve hues and a grey in eight rows of even lightness, worked out in OKLCH, in six strengths.
- * Each colour keeps its row's lightness and its hue, its chroma lowered until the screen's sRGB range holds it, so a row reads as one lightness across the hues.
- * Pure: no DOM and no storage, the same codes on every run.
+ * The colour picker's palette: twelve hues and a grey in eight rows of even OKLCH lightness, in six strengths, each colour's chroma lowered until sRGB holds it.
  */
 
 /** The columns: the grey first, then twelve hues round the wheel, by their OKLCH hue in degrees. */
@@ -98,8 +96,7 @@ export function colourGrid(strength) {
 }
 
 /**
- * The strength whose grid holds a colour, or null.
- * Where the screen's range brings two strengths to the same code (a strong colour cut back), `prefer` is asked first, then the strengths in order.
+ * The strength whose grid holds a colour, or null; where two strengths give the same code, `prefer` is asked first, then the strengths in order.
  * @param {string} code A #rrggbb code, any case
  * @param {string|null} [prefer] The strength to look in first
  * @returns {string|null}
@@ -111,10 +108,7 @@ export function strengthOf(code, prefer = null) {
 }
 
 /**
- * Where the colour picker opens for a colour: the tab and the palette's strength.
- * The tab last chosen opens where the picker has it (Theme only with the theme's colours).
- * With none kept, the tab the colour comes from: a theme colour opens Theme, and so does an empty colour where the picker has the theme's colours; a colour the grid holds opens Palette; any other opens Custom.
- * The strength is the one that holds the colour, the one kept asked first, else the one kept.
+ * Where the colour picker opens: the tab last chosen where usable, else the colour's own (Theme, Palette or Custom), and the strength holding it or the kept one.
  * @param {{value: string, kept: string|null, linked: boolean, themed: boolean, keptTab?: string|null}} at The colour, the strength kept, whether the colour is a theme colour, whether the picker has the theme's colours, and the tab kept
  * @returns {{tab: 'theme'|'custom'|'palette', strength: string}}
  */

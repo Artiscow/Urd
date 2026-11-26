@@ -1,13 +1,9 @@
 /**
- * The folds a panel's tab lists in its menu (shell/PanelTab.svelte): in the strip under the top bar and in the panel's own tabs, a mouse resting on the tab, or the down arrow key on it, opens a menu of the panel's folds, and a row opens the panel with that fold unfolded.
- * Each fold is named by its id, which stands as `data-fold` on its `details.group` in the panel (the row kit's Fold sets it from its `id`), and by the dictionary key of its name; `when` leaves out a fold the panel draws only in some cases.
- * A fold that holds one button and nothing else is `press`: its row in the menu is that button, pressed at once (Footer's Presets opens the design picker), with no fold to unfold, and `icon` names the mark the row carries for it (lib/icons.js).
- * A fold whose one button is a look's row (`look`, lib/rows/LookChoice.svelte) is pressed only while Urd settings «Choosing a design» stands as the row; with the designs' pictures in place the row unfolds the fold to them.
- * `group` puts a long panel's folds in short groups by purpose, each under a small label in the menu (the «Grouped» tab menus, the default); a panel's folds stand in the panel in the same order, so a group's folds are next to each other there too.
- * A panel left out has no menu. Pure, node-tested (tests/panel-folds.test.mjs, which holds the ids to the panels' markup).
+ * The folds a panel's tab lists in its menu (shell/PanelTab.svelte), each by its `data-fold` id and its name's key.
+ * A row opens the panel with that fold unfolded.
  */
 
-/** The panels' folds, in the order the panels draw them. */
+/** The panels' folds, in the order the panels draw them: `when` draws one in some cases, `press` presses its one button, `group` sets its label in the menu. */
 export const PANEL_FOLDS = {
   site: [
     { id: 'identity', key: 'group.siteIdentity', group: 'about' },
@@ -60,7 +56,7 @@ export function tabMenuStyleOf(raw) {
 }
 
 /**
- * A menu's rows in their groups: each run of folds with the same `group` is one group, under its label's key (`menuGroup.<group>`), or under none where the folds have no group.
+ * A menu's rows in their groups: each run of folds with the same `group`, under its label's key (`menuGroup.<group>`) or under none.
  * @param {Array<{id: string, group?: string}>} folds
  * @returns {Array<{label: string|null, folds: object[]}>}
  */
@@ -76,7 +72,7 @@ export function foldGroups(folds) {
 }
 
 /**
- * The Collections tab's rows (shell/PanelTab.svelte): each collection by its name, with its entries in the order the Collections panel lists them (a product catalogue as stored, the others newest first), for the submenu beside its row.
+ * The Collections tab's rows (shell/PanelTab.svelte): each collection by its name, with its entries in the Collections panel's order for the submenu beside it.
  * @param {string[]} ids The collections, in the site's order
  * @param {Record<string, {name?: string, kind?: string, entries?: object[]}>} views The collections as the editor holds them
  * @param {(entries: object[], newestFirst: boolean) => object[]} sort The engine's sortEntries (collections.js)

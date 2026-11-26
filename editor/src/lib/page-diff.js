@@ -1,8 +1,5 @@
 /**
- * What changed between two versions of a page (the Drafts window's Saved tab): the saved draft against the version this browser holds, compared by the ids sections and blocks keep across edits.
- * Each difference names its section or block by its own words (anchor-model.js), else by its kind or place, and says what changed: the page's own settings; a section added, taken away, moved or set differently; a block added, taken away, moved to another section, placed or sized anew, its text, its picture or its settings changed.
- * What is measured rather than set is left out: the height of a block that follows its content, and a block's measured phone height. Objects are compared by what they hold, whatever order their keys were written in.
- * The differences stand in the saved page's order, the parts taken away after them; pure, node-tested (tests/page-diff.test.mjs).
+ * The differences between a page's saved draft and this browser's version, by section and block ids, in the saved order; measured heights are left out.
  */
 import { blockWords, sectionWords } from '$engine/anchor-model.js';
 import { followsContent } from '$engine/push-model.js';
@@ -60,7 +57,7 @@ function kept(order) {
  * @param {{sections?: Array<object>}|null} saved
  * @param {{sections?: Array<object>}|null} mine
  * @returns {Array<{kind: string, sectionId: string, blockId?: string, words: string, type?: string, index?: number}>}
- *   `kind`: pageSettings, sectionAdded, sectionRemoved, sectionMoved, sectionSettings, blockAdded, blockRemoved, blockMoved, blockPlaced, textChanged, pictureChanged or settingsChanged; `words`: the section's or block's own words ('' where it has none); `type`: a block's kind; `index`: a section's place, from 0
+ *   `kind`: what changed, as sectionAdded or textChanged; `words`: the part's own words, or ''; `type`: a block's kind; `index`: a section's place, from 0
  */
 export function pageDiff(saved, mine) {
   const savedSections = saved?.sections ?? [];
@@ -103,7 +100,7 @@ export function pageDiff(saved, mine) {
       const rest = (b) => json({ ...omit(b, ['id', 'frames', 'props', 'mobileHeight']), props: omit(b.props, [...TEXT_PROPS, ...PICTURE_PROPS]) });
       if (rest(block) !== rest(other.block)) out.push({ kind: 'settingsChanged', ...at });
     }
-    // A block of this browser's that the saved section no longer holds, nor any other saved section.
+    // A block of this browser's that no saved section holds.
     for (const block of theirs.blocks ?? []) {
       if (!savedBlocks.has(block.id)) out.push({ kind: 'blockRemoved', sectionId: section.id, blockId: block.id, words: blockWords(block), type: block.type });
     }

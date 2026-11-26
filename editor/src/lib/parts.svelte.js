@@ -1,6 +1,6 @@
 /**
- * The parts of the admin loaded as they are first wanted, each split off by the build into a file of its own beside editor.js: the windows and the panels opened now and then (drawn by lib/LazyPart.svelte).
- * Once the canvas has opened, the parts not loaded yet are fetched while the browser is idle, so a part opened later is drawn at once.
+ * The admin's parts loaded as they are first wanted, each a file of its own beside editor.js (lib/LazyPart.svelte).
+ * The rest load while the browser is idle.
  */
 
 /** Each part's code, by the name the admin asks for it by. */

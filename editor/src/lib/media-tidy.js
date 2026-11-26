@@ -1,7 +1,5 @@
 /**
- * The tidy of a site's media/ (the Site panel's «Tidy the media folder»): the files written at the root of media/ before the folders came move into the folder of their kind, and every reference to them in the site's documents follows.
- * The plan is pure: which files move, which documents change, and how many files wait for another press when a batch is full. Publishing carries the moves (the commit's `from` entries, which take the file's blob as it stands) beside the changed documents, so every commit leaves every reference pointing at a file that exists.
- * Pure, node-tested (tests/media-tidy.test.mjs).
+ * The plan of «Tidy the media folder»: the files at the root of media/ move into the folder of their kind, and every reference in the site's documents follows.
  */
 
 import { tidiedMediaPath } from '$engine/imageTools.js';
@@ -16,7 +14,7 @@ export const TIDY_ROOM = 120;
 export const COMMIT_FILES = 200;
 
 /**
- * How many moves one press can take on a site: the cap less what every publish carries beside them, each page as its document and its index copy, each collection and template, and the site's own files (site.json, theme.css, the sitemap, robots, the feeds).
+ * How many moves one press can take: the commit's cap less what every publish carries beside them.
  * Zero on a site with too many pages for a tidy in one commit.
  * @param {{pages: number, collections?: number, templates?: number}} counts
  */
@@ -24,7 +22,7 @@ export function tidyRoom({ pages, collections = 0, templates = 0 }) {
   return Math.max(0, Math.min(TIDY_ROOM, COMMIT_FILES - (pages * 2 + collections + templates + 8)));
 }
 
-/** The files at the root of media/ among the ones listed (a path with no folder between media/ and the name), each with the folder path it takes; a kind media/ does not hold stays. */
+/** The files at the root of media/ among those listed, each with the folder path it takes; a kind media/ does not hold stays. */
 export function rootMediaFiles(files) {
   return (files ?? [])
     .map((f) => (typeof f === 'string' ? f : f?.path))

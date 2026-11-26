@@ -1,7 +1,6 @@
 /**
- * The capabilities added to a block this session (ADR-0031): a card added from the add list stands on its block until the admin is loaded again, even before it holds a value; one in use stands anyway (menu/capabilities.js).
- * `fresh` names the card just added, which glows once and takes the focus (lib/rows/Capability.svelte).
- * The cards the owner added from the add list are also kept in the order added, so they stand at the foot of their area in that order (addedAt).
+ * The capabilities added to each block this session (ADR-0031), kept in the order added.
+ * `fresh` names the card just added, which glows once and takes the focus.
  */
 import { SvelteSet } from 'svelte/reactivity';
 

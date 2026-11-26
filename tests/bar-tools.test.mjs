@@ -1,6 +1,7 @@
 /**
  * The bar where every group is a tool (bar-tools.js): every group it names is a fold its block's family draws (editor/src/menu/families/*.svelte), with the same title, and every group a section's bar names is one of the section's menu; a group drawn in some states only is a tool in those states only; each tool's name is in the three core dictionaries and its drawing in the engine's set; and the editor opens exactly the groups the bar asks for (lib/only-group.js).
  * The bar's choices the engine reads (BAR_CHOICES) are the keys and options the editor writes as parts of the admin designs, and urd.js draws the bars anew on each of them.
+ * The editor keeps them (state/shell.svelte.js), and the canvas's menus and grid, under the keys and with the values the preview reads.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -105,6 +106,34 @@ test('the engine reads the bar\'s choices under the keys and with the options th
   const urd = read(`../template/assets/engine/${ENGINE}/urd.js`);
   const watched = urd.match(/if \(\[([^\]]*)\]\.includes\(event\.key\)/)?.[1].match(/'[^']+'/g)?.map((s) => s.slice(1, -1)) ?? [];
   assert.deepEqual(watched.sort(), Object.values(BAR_CHOICES).map((c) => c.key).sort());
+});
+
+test('the editor keeps the bar\'s choices and the canvas\'s menus under the keys, and with the values, the preview reads', async () => {
+  const shell = read('../editor/src/state/shell.svelte.js');
+  const forms = await import('../editor/src/menu/forms.js');
+  for (const [choice, { key, options }] of Object.entries(BAR_CHOICES)) {
+    const list = shell.match(new RegExp(`storedOf\\('${key}', (\\w+)\\)`))?.[1];
+    assert.ok(list, `${choice}: read from ${key}`);
+    assert.match(shell, new RegExp(`keepOf\\('${key}', ${list}, `), `${choice}: written to ${key}`);
+    assert.deepEqual(forms[list], options, `${choice}: the same options, the default first`);
+  }
+  // The keys the preview reads of the editor's own, beside the bar's.
+  const edit = read(`../template/assets/engine/${ENGINE}/preview-edit.js`);
+  const own = new Set([...edit.matchAll(/localStorage\.setItem\('([^']+)'/g)].map((m) => m[1]));
+  const reads = [...edit.matchAll(/localStorage\.getItem\('(urd-[^']+)'\)/g)].map((m) => m[1]).filter((key) => !own.has(key));
+  assert.deepEqual(reads.sort(), ['urd-add-block-menu', 'urd-grid-look', 'urd-layout-picker']);
+  const asked = [...edit.matchAll(/localStorage\.getItem\('(urd-[^']+)'\) === '([^']+)'/g)].map((m) => [m[1], m[2]]);
+  assert.deepEqual(asked.sort(), [['urd-add-block-menu', 'slim'], ['urd-layout-picker', 'menu']]);
+  for (const [key, value] of asked) {
+    assert.match(shell, new RegExp(`localStorage\\.getItem\\('${key}'\\) === '${value}'`), `${key}: read as the preview reads it`);
+    assert.match(shell, new RegExp(`localStorage\\.setItem\\('${key}', '${value}'\\)`), `${key}: written as ${value}`);
+  }
+  assert.match(edit, /gridLookOf\(localStorage\.getItem\('urd-grid-look'\)\)/);
+  assert.match(edit, /^import \{[^}]*\bgridLookOf\b[^}]*\} from '\.\/snap-model\.js';$/m);
+  assert.match(shell, /^import \{[^}]*\bgridLookOf\b[^}]*\} from '\$engine\/snap-model\.js';$/m);
+  assert.match(shell, /gridLook = gridLookOf\(v\);\s*if \(gridLook === 'lines'\) localStorage\.removeItem\('urd-grid-look'\);\s*else localStorage\.setItem\('urd-grid-look', gridLook\);/);
+  const { gridLookOf } = await engineImport('snap-model.js');
+  assert.equal(gridLookOf(null), 'lines', 'the look left unstored is the one the preview draws without a key');
 });
 
 test('the design button opens the small window or the picker as «Design button on the bar» asks, and the small window finds the design row where it stands', () => {

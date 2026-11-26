@@ -1,6 +1,5 @@
 /**
- * The sizes a product's «Presets» fill with one press (panels/collections/SizePresets.svelte): the size sets other products of the shop already use, the common sets, and a numbered set whose wording the owner writes, where «#» stands for each number («#-pack» gives «2-pack»).
- * Pure, node-tested (tests/size-presets.test.mjs).
+ * The sizes a product's «Presets» fill: the sets the shop's other products use, the common sets, and a numbered set where «#» stands for each number.
  */
 
 /** The common sets that read the same in every language; a worded set comes from the admin dictionary as seed text. */
@@ -13,7 +12,7 @@ export const COMMON_SETS = [
 const keyOf = (sizes) => sizes.join('\u0000');
 
 /**
- * The size sets the products of every product collection use, each once, named by the first product that has it; the entry being edited is left out, and so is a set it already has.
+ * The size sets the shop's products use, each once, named by the first product with it; the entry being edited is left out, and so is a set it has.
  * @param {Record<string, {kind?: string, entries?: Array}>} views The collections by id
  * @param {string|null} exceptId The entry being edited
  * @param {(html: string) => string} plain A product title's words
@@ -45,8 +44,8 @@ export function wordedSet(text) {
 }
 
 /**
- * A numbered set: each number written into the wording, where «#» stands for it, or put before the wording with a space where there is no «#».
- * The numbers are divided by commas or spaces, so a decimal takes a dot; anything that is not a number is left out, and so is a size given twice.
+ * A numbered set: each number written into the wording at «#», or before it.
+ * Anything that is not a number, and a size given twice, is left out.
  * @param {string} numbers «2, 4, 6»
  * @param {string} wording «#-pack», «# pcs», «Pack of #» or «pcs»
  * @returns {string[]}

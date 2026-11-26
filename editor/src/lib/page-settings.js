@@ -1,6 +1,5 @@
 /**
- * A page's own settings (panels/pages/*): the layouts the owner chooses between, the page's meta fields read and written with the page file kept clean, and the swap that makes another page the front page.
- * Pure, node-tested (tests/page-settings.test.mjs).
+ * A page's own settings (panels/pages/*): the layouts to choose between, the page's meta read and written with the file kept clean, and the front page swap.
  */
 
 import { copySlug } from './duplicate.js';
@@ -27,8 +26,7 @@ export function metaOf(page) {
 }
 
 /**
- * The share image's kept original written into a page's meta beside the baked image (`og.imageSource`): the original's file and the settings the image is baked with; null takes it away, and the og object goes when it empties.
- * The page is changed in place and returned.
+ * Writes the share image's original and bake settings into the page's meta in place (`og.imageSource`); null takes it away, and an empty og goes.
  * @param {{meta?: object}} page
  * @param {object|null} source
  */
@@ -46,8 +44,7 @@ export function withShareSource(page, source) {
 const OG_KEYS = { ogTitle: 'title', ogDescription: 'description', ogImage: 'image' };
 
 /**
- * One field written into a page's meta: an empty value deletes its key, so the page file stays clean, and the og object goes when it empties.
- * The page is changed in place and returned.
+ * One field written into a page's meta in place: an empty value deletes its key, so the file stays clean, and an empty og object goes.
  * @param {{meta?: object}} page
  * @param {'searchTitle'|'description'|'ogTitle'|'ogDescription'|'ogImage'} field
  * @param {string} rawValue
@@ -71,8 +68,7 @@ export function withMeta(page, field, rawValue) {
 }
 
 /**
- * The page registry with another page as the front page: the chosen page takes `/` and the first place, and the old front page takes its own id as its address, or the next free number on it.
- * The ids and the files stay, so the menu's links and the drafts follow.
+ * The registry with another front page: it takes `/` and the first place, the old one its id, or the next free number, as its address; ids and files stay.
  * @param {Array<{id: string, path: string}>} pages The registry as it is (not mutated)
  * @param {string} id The page to put at /
  * @returns {{pages: Array<object>, from: {id: string, path: string}|null}|null} The new registry and the old front page's new address; null when the page is not there or is the front page already
@@ -95,7 +91,7 @@ export function frontPageSwap(pages, id) {
 }
 
 /**
- * The page names and addresses typed but turned down, in the pages' order, as publishing asks about them: each with its page, the field, the reason and what the page keeps.
+ * The page names and addresses typed but turned down, in page order, as publishing asks about them: each with its page, field, reason and what the page keeps.
  * @param {Record<string, {text: string, reason: string|null}>} typed By `<page id>:title` or `<page id>:slug` (state/site.svelte.js)
  * @param {Array<{id: string, title: string, path: string}>} pages The site's pages
  * @returns {Array<{id: string, title: string, field: 'title'|'slug', text: string, reason: string, kept: string}>}

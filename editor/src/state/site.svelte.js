@@ -1,6 +1,5 @@
 /**
- * The site draft: site.json, its mutators for the nav, the footer and the theme, the grid, the pages list with their slugs and search text, the icon, the calendars, the theme suggestions, and the background contexts.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
+ * The site draft: site.json and its mutators for the nav, footer and theme, the grid, the pages list, the icon, calendars, theme suggestions and backgrounds.
  */
 import { colorLayer } from '$engine/backgrounds/color.js';
 import { WIDTH_DEFAULT, GUTTER_DEFAULT } from '../lib/content-width.js';
@@ -59,17 +58,13 @@ let site = $state(null);
 /** Mirror of the site draft's grid: square cells, one size */
 let grid = $state({ size: 16, snap: true });
 
-/** The window width from which the content actually reaches the design
- *  width. Shown under the sample, since it is not "width plus margins"
- *  when the margin is relative. */
+/** The window width from which the content reaches the design width, shown under the sample. */
 let bindsFrom = $derived(bindingWidth(layoutWidth, layoutGutter));
 
 let siteStore = null;
 
 /**
- * Reactive mirror of the site DRAFT (pages, nav, theme): the panels read
- * and mutate this. `site` is the PUBLISHED state and is only used as the
- * diff baseline when publishing (deleted/moved pages).
+ * The reactive site draft the panels read and change; `site` is the published state, a publish's baseline for deleted and moved pages.
  */
 let siteDraft = $state(null);
 
@@ -86,11 +81,7 @@ let siteFrame = 0;
 let siteWithPage = false;
 
 /**
- * The site draft for the preview. ALWAYS through this: siteDraft is a
- * Svelte proxy, and postMessage (structured clone) throws DataCloneError
- * on proxies - $state.snapshot yields a plain object.
- * It is sent at once, or with `soon` in the next frame, together with every other change made before it; `startup` marks the send made as the preview reports ready.
- * With `page` the open page goes with it, where one change moved both, so the canvas draws the page once rather than once for each.
+ * Sends a snapshot of the site draft to the preview, at once or with `soon` in the next frame; `startup` marks the ready send, and `page` sends the open page too.
  * @param {{soon?: boolean, startup?: boolean, page?: boolean}} [options]
  */
 function pushSiteToPreview({ soon = false, startup = false, page = false } = {}) {
@@ -112,13 +103,7 @@ function pushSiteToPreview({ soon = false, startup = false, page = false } = {})
   send({ startup });
 }
 
-/* The slideshow layer: the image list is edited like the other
-   background layers, but with multi-select upload (the whole batch in
-   ONE undo step). */
-
-/** The bg contexts for the three targets (section/nav/footer). The
- *  section uses the sectionBg mirror; nav/footer read reactively from
- *  siteDraft. */
+/** The background contexts of the nav and the footer, read from siteDraft; a section's is its own. */
 function navBgMutate(key, fn) {
   siteMutate(key, () => { siteDraft.nav.style ??= {}; fn(siteDraft.nav.style); });
 }
@@ -130,13 +115,10 @@ const footerBgCtx = { mutate: footerMutate, keyPrefix: 'footerbg', keyId: 'foote
 /** The palette as the canvas actually shows it (active mode, alt merge via the engine). */
 const previewPalette = $derived(siteDraft?.theme ? (activeTokens(siteDraft.theme, previewState.previewMode).color ?? {}) : {});
 
-/** The theme colors as quick picks in the color picker (the picker
- *  resolves token names itself, so no hexFor conversion is needed).
- *  The samples follow the preview's active light/dark mode. */
+/** The theme colours as quick picks in the colour picker, by token name, in the preview's light or dark mode. */
 const themeSwatches = () => Object.entries(previewPalette);
 
-/** The grid controls: changes are stored in the site draft and pushed
- *  live. The grid is only a snapping tool; changing it never moves content. */
+/** The grid controls: a change is stored in the site draft and sent live; the grid only snaps and never moves content. */
 function setGrid(field, value) {
   historyState.pushHistory('grid:site');
   grid = { ...grid, [field]: value };
@@ -144,18 +126,11 @@ function setGrid(field, value) {
   siteStore.save();
   historyState.updateDirty();
   pushSiteToPreview();
-  // sendSite rerenders the page; turn the grid overlay back on afterwards
-  // (postMessage is ordered, so this arrives after the rerender).
+  // The grid overlay is turned on again after sendSite's redraw, which arrives first.
   if (shellState.gridOn) previewState.bridge?.sendShowGrid(true);
 }
 
-/**
- * Shared flow for all site changes from the panels (pages, nav, theme):
- * history BEFORE the mutation, then save, mark and push live to the
- * preview. Keys with the edit: prefix are merged in the undo history
- * (bursts of keystrokes/color drags become one undo step).
- */
-/** A change to the site draft as one undo step; `pages` names other pages whose drafts the change writes as well, so the step holds them (history.svelte.js pushHistory); `preview` false leaves the canvas as it stands, for a change that shows nowhere on the pages. */
+/** A change to the site draft as one undo step, pushed before `fn` runs; `pages` names other pages it writes, and `preview` false leaves the canvas as it stands. */
 function siteMutate(key, fn, { pages, preview = true } = {}) {
   historyState.pushHistory(key, pages ? { pages } : undefined);
   fn();
@@ -165,8 +140,7 @@ function siteMutate(key, fn, { pages, preview = true } = {}) {
 }
 
 /**
- * The site's colour sets (theme.colorSets, lib/colour-sets.js), which every colour picker offers: each change one undo step, a name typed one step for the typing (`edit:`).
- * The sets show nowhere on the pages, so the canvas is not drawn again for them, and the words being written keep their selection while a set is made or changed.
+ * The site's colour sets (theme.colorSets) every colour picker offers: each change one undo step, a typed name one `edit:` step, and the canvas not drawn again.
  */
 function changeColourSets(key, change) {
   if (!siteDraft?.theme) return false;
@@ -219,7 +193,7 @@ async function readSitePictures() {
   return sitePictures(await readSiteDocs());
 }
 
-/** Pins a command into the site's shared shortcuts, or takes it out (site.shortcuts, the command palette's first group for everyone who edits the site); a pin the list cannot take (lib/command-palette.js togglePinned) changes nothing. */
+/** Pins a command into the site's shared shortcuts (site.shortcuts, the command palette's first group), or takes it out; a refused pin changes nothing. */
 function toggleShortcut(id) {
   const list = siteDraft.shortcuts ?? [];
   const next = togglePinned(list, id);
@@ -238,9 +212,7 @@ function setUpdateNotice(v) {
 
 let newPageTitle = $state('');
 
-/* "New page from template": the grid below the create field picks what
-   the next new page starts from; null is a blank page, a 'preset:<id>'
-   is a built-in starter pack, anything else is a user page template. */
+/* What the next new page starts from: null for a blank page, 'preset:<id>' for a built-in starter pack, else a page template's id. */
 let newPageTemplate = $state(null);
 
 /** Mirrors guard.js: directories that can never become pages. */
@@ -255,7 +227,7 @@ function pageSlugError(slug, ignoreId = null) {
   return null;
 }
 
-/** A new page's slug, which is its id for good: refused as any address is, and where its draft would be stored under another part's key (lib/saved-model.js pageIdTaken). An address changed later keeps the id, so only a new page is held to this. */
+/** A new page's slug, its id for good: refused as any address is, and where its draft would share another part's key (pageIdTaken in lib/saved-model.js). */
 function newPageError(slug) {
   return pageSlugError(slug) ?? (pageIdTaken(slug) ? ta('error.reservedName', { slug }) : null);
 }
@@ -281,17 +253,13 @@ async function makePage() {
   const slug = slugify(title, '');
   const err = newPageError(slug);
   if (err) return err;
-  // The terms of sale are written in the site's language with the site's facts (lib/site-seed.js), read before the page is made; the name is checked again after the wait.
+  // The terms of sale's seed words are read before the page is made (lib/site-seed.js), and the name is checked again after the wait.
   const seed = template === 'preset:terms' ? await termsSeed(siteDraft) : undefined;
   if (seed) {
     const again = newPageError(slug);
     if (again) return again;
   }
-  // Starter packs are built fresh (create() yields new ids and
-  // translated seeds); user templates store origin ids, so the clone
-  // re-ids everything and sets meta to the new page (the re-id rule in
-  // SCHEMA.md). The liftPageFile wash makes templates stored under older
-  // schema versions safe.
+  // A starter pack is built fresh; a page template is lifted to the current schema (liftPageFile) and cloned with new ids and the new page's meta.
   const templatePage = template && !template.startsWith('preset:')
     ? templatesState.templateStores[template]?.data?.page : null;
   const fresh = template?.startsWith('preset:')
@@ -303,7 +271,7 @@ async function makePage() {
     siteDraft.pages.push({ id: slug, title, path: `/${slug}`, file: `content/pages/${slug}.json` });
     // New pages go straight into the menu; the Nav panel can remove them.
     siteDraft.nav.items.push({ label: title, page: slug });
-    // The footer links the privacy page on every page once the site has one; a page chosen before that is deleted or hidden, which links nothing, gives way to the new one.
+    // The footer links the new privacy page where none is chosen, or the chosen one is deleted or hidden.
     if (template === 'preset:privacy' && !siteDraft.pages.some((p) => p.id === siteDraft.footer?.privacyPage && !p.hidden)) {
       siteDraft.footer ??= { version: 1, show: false, text: '', align: 'center' };
       siteDraft.footer.privacyPage = slug;
@@ -332,8 +300,7 @@ async function savePageAsTemplate(entry) {
 }
 
 /**
- * A copy of a page as a new draft page under the next free slug, opened as a draft, in one undo step that takes the copy's draft with it; the copy stays out of the menu until the Nav panel adds it.
- * The page settings' «Duplicate the page» copies the page as this browser holds it, named «Copy of …»; «Keep both» in the Drafts window gives the saved version and a name of its own (`source`, `title`).
+ * A page copied as a new draft page under the next free slug, in one undo step with its draft, out of the menu; `source` and `title` give its data and name.
  */
 async function duplicatePage(entry, { source = null, title = null } = {}) {
   const from = source ?? (entry.id === pageState.pageId
@@ -378,9 +345,7 @@ function renamePage(entry, rawTitle) {
   return null;
 }
 
-/** Hide from search engines: the flag lives in the PAGE REGISTRY
- *  (site.json), so publishing can filter the sitemap without loading all
- *  the page files. Any page by its id; the open page without one. */
+/** «Hide from search engines»: the flag on the page's entry in site.json, which the sitemap is filtered by; any page by its id, the open page without one. */
 function setPageNoindex(checked, id = pageState.pageId) {
   const entry = siteDraft.pages.find((p) => p.id === id);
   if (!entry) return;
@@ -399,7 +364,7 @@ function toggleNavOnPage(pageId, show) {
   });
 }
 
-/** Per-page visibility of the announcement strip: it shows on all pages except those in nav.announcement.hideOn (the Nav panel's Announcement group and the page's settings). */
+/** Per-page visibility of the announcement strip: it shows on all pages except those in nav.announcement.hideOn. */
 function toggleAnnouncementOnPage(pageId, show) {
   if (!siteDraft.nav.announcement) return;
   siteMutate('nav', () => {
@@ -432,7 +397,7 @@ function toggleFooterOnPage(pageId, show) {
   });
 }
 
-/** «Make front page»: the page takes / and the first place, the old front page its own id as its address (lib/page-settings.js frontPageSwap); the menu's links point at the pages and follow. */
+/** «Make front page»: the page takes / and the first place, the old front page its own id as its address (frontPageSwap); the menu's links follow. */
 function makeFrontPage(id) {
   const chosen = siteDraft.pages.find((p) => p.id === id);
   const swap = frontPageSwap($state.snapshot(siteDraft.pages), id);
@@ -446,7 +411,7 @@ function makeFrontPage(id) {
     const front = siteDraft.pages.find((p) => p.id === id);
     if (front) delete front.hidden;
   });
-  // In the same undo step the redirects follow: the rules that led to the chosen page lead to /, a hidden page's own rule goes with its hiding, its published address is sent to /, and a rule from the old front page's new address goes.
+  // The redirects follow in the same undo step: rules to the chosen page and its published address lead to /, and rules from its hidden path and swap.from go.
   redirectsState.mutateRedirects((rules) => {
     let next = pageMoved(rules, oldPath, '/');
     if (wasHidden) next = withoutFrom(next, oldPath);
@@ -470,7 +435,7 @@ const TITLE_FORMAT_OPTIONS = $derived(TITLE_FORMATS.map((id) => [id, ta(`opt.tit
 /** How the menu is reached on a page it stays off (nav.hideMode), as the Nav panel and the page's settings offer it. */
 const NAV_HIDE_MODE_OPTIONS = $derived(['hidden', 'hover', 'ghost', 'tab'].map((m) => [m, ta(`opt.navHide.${m}`)]));
 
-/** A page's name or address as it is typed, by `<page id>:title` or `<page id>:slug`, shared by every field that shows it (the Pages panel's row and the page settings): the text, and the reason once the write turned it down. Dropped as the Pages panel or the page settings close, so the fields show what stands again. */
+/** A page's typed name or address by `<page id>:title` or `<page id>:slug`, shared by its fields, with the reason a write refused it; dropped as they close. */
 let typedPageFields = $state({});
 
 /** What a page's name or address field shows: the text typed into it, else the page's own. */
@@ -514,16 +479,13 @@ function setPageSlug(entry, rawSlug) {
   if (entry.path === '/' || `/${slug}` === entry.path) return null;
   const err = slug ? pageSlugError(slug, entry.id) : ta('error.pageNeedsAddress');
   if (err) return err;
-  // Only the address changes; the id (and thus the draft key and file
-  // name) remains, so internal references (nav) never break. Publishing
-  // cleans the old address's index.html via the diff against the
-  // published site.json.
+  // Only the address changes; the id, and with it the draft key, the file name and the menu's links, stays.
   const oldPath = entry.path;
   const published = publishedPathOf(entry.id);
   siteMutate('pages', () => {
     entry.path = `/${slug}`;
   });
-  // In the same undo step, the redirects follow the page: the rules that led to the old address lead to the new one, a hidden page's own rule moves with it, and the address the published site knows keeps working (on by default; the page settings' switch takes it away).
+  // The redirects follow in the same undo step: rules to the old address lead to the new, a hidden page's rule moves, and the published address keeps working.
   redirectsState.mutateRedirects((rules) => {
     let next = pageMoved(rules, oldPath, entry.path);
     if (entry.hidden) next = next.map((r) => (r.from === oldPath ? { ...r, from: entry.path } : r));
@@ -534,7 +496,7 @@ function setPageSlug(entry, rawSlug) {
   return null;
 }
 
-/** The address a page has on the published site, or null for a page the published site does not have, or lists hidden without its file (lib/not-live.js); a page hidden there has one too, answering with its redirect. */
+/** The page's address on the published site, or null where the published site lacks the page or lists it hidden without its file (lib/not-live.js). */
 function publishedPathOf(id) {
   if (stillNotLive(readNotLive(), site?.pages ?? []).has(id)) return null;
   return site?.pages?.find((p) => p.id === id)?.path ?? null;
@@ -559,8 +521,7 @@ function destinationsFor(entry) {
 }
 
 /**
- * Hides a page from visitors, or shows it again (pages[].hidden): a hidden page stays in the admin, but publishing leaves it out of the nav, the sitemap and its address.
- * Hiding a page the published site shows asks where its visitors go; the answer is a temporary (302) redirect from its address, which showing the page again takes away. All in one undo step.
+ * Hides a page from visitors or shows it again (pages[].hidden), in one undo step; hiding a published page asks where its visitors go, as a 302 redirect.
  */
 async function setPageHidden(entry, hide) {
   if (!entry || entry.path === '/') return;
@@ -597,7 +558,7 @@ function setHiddenTarget(entry, to) {
 }
 
 /**
- * Deletes a page; one the published site shows asks first where its visitors go, and the answer is a permanent redirect from its address, the rules that led to the page following it. One undo step.
+ * Deletes a page in one undo step; a published page first asks where its visitors go, as a 301 redirect from its address that the rules to the page follow.
  */
 async function deletePage(entry) {
   if (entry.path === '/') return; // the front page can never be deleted
@@ -619,11 +580,7 @@ async function deletePage(entry) {
     if (siteDraft.footer?.privacyPage === entry.id) delete siteDraft.footer.privacyPage;
     if (siteDraft.site.commerce?.termsPage === entry.id) delete siteDraft.site.commerce.termsPage;
     siteDraft.pages = siteDraft.pages.filter((p) => p.id !== entry.id);
-    // Items with a submenu survive their own page being deleted: the
-    // target is removed and the item becomes a pure opener, so the
-    // children (which can point to living pages) do not vanish silently.
-    // Submenu items that pointed to the page are cleaned up; items left
-    // with neither target nor children are removed entirely.
+    // An item with a submenu outlives its page as an opener; submenu items to the page go, and an item left with no target or children goes.
     siteDraft.nav.items = siteDraft.nav.items.filter((i) => i.page !== entry.id || i.children);
     for (const item of siteDraft.nav.items) {
       if (item.page === entry.id) delete item.page;
@@ -645,7 +602,7 @@ async function deletePage(entry) {
 }
 
 /**
- * The site icon (favicon) and its kept original: the icon baked by the image editor (a small WebP, materialized on publish) and the original with the settings it is baked with, so a new edit starts from the original. An empty icon takes both away.
+ * The site icon baked by the image editor, and its kept original with the settings it is baked with, so a new edit starts from it; an empty icon takes both away.
  * @param {string} icon
  * @param {object|null} source
  */
@@ -659,7 +616,7 @@ function setSiteIcon(icon, source) {
 }
 
 /**
- * A logo baked by the image editor, with its kept original: the nav's (in `value` for an image logo, `image` beside the text, and an image logo when it was text alone) or the footer's brand (`logo`, shown with the title when no mode was chosen). An empty logo takes both away and leaves the name in text, as the panels' own remove does.
+ * A logo baked by the image editor with its kept original, for the nav or the footer's brand; an empty logo takes both away and leaves the name in text.
  * @param {'nav'|'footer'} place
  * @param {string} image
  * @param {object|null} source
@@ -703,8 +660,7 @@ function setLogoPicture(place, image, source) {
   });
 }
 
-/** Visitor measurement (site.analytics): a site value published with the
- *  site, edited behind the gear; an empty token removes the field. */
+/** Visitor measurement (site.analytics), published with the site; an empty token removes the field. */
 function setAnalyticsToken(value) {
   const token = String(value ?? '').trim();
   siteMutate('edit:site-analytics', () => {
@@ -713,19 +669,13 @@ function setAnalyticsToken(value) {
   });
 }
 
-/** The content width (site.layout.contentWidth, ADR-0018): the design
- *  width the blocks' percentages are measured against. The model
- *  (limits, quick picks, reference screens, band calculation) lives as
- *  pure functions in lib/content-width.js, so the sample computes on
- *  the same thing the engine does. */
+/** The content width (site.layout.contentWidth, ADR-0018) the blocks' percentages are measured against; its model is lib/content-width.js. */
 let layoutWidth = $derived(siteDraft?.layout?.contentWidth ?? WIDTH_DEFAULT);
 
 /** The side margin in percent of the window width (vw), not px. */
 let layoutGutter = $derived(siteDraft?.layout?.gutter ?? GUTTER_DEFAULT);
 
-/** The visitor language (site.lang, ADR-0012): the legacy value 'no' is
- *  shown as Bokmål; a hand-edited value outside the list is preserved as
- *  its own option at the top so opening the panel breaks nothing. */
+/** The visitor language (site.lang, ADR-0012): the legacy 'no' shows as bokmål, and a value outside the list stands as its own option at the top. */
 function siteLangValue() {
   const cur = siteDraft.site.lang ?? 'no';
   return cur === 'no' ? 'nb' : cur;
@@ -741,7 +691,6 @@ function siteLangOptions() {
 /** The id of the site's calendar (site.calendars) whose card stands open in the Site panel; one at a time. */
 let openSiteCalendar = $state(null);
 
-/** A calendar's colour as CSS for a swatch: a hex value as it is, a theme token through its variable, none as the accent the engine falls back to. */
 /** The calendar whose name field gets the caret once its row stands open: the one just added. */
 let focusSiteCalendar = $state(null);
 
@@ -755,7 +704,7 @@ const siteLinks = () => siteDraft?.site?.links ?? [];
 /** The link whose label gets the caret once its row is drawn: the one just added. */
 let focusSiteLink = $state(null);
 
-/* The Site panel's folds stand open by the row kit's fold store (lib/folds.svelte.js); the handle's siteCalendarsOpen, siteLinksOpen and siteShopOpen read and set them, for the buttons that lead there. */
+/* The Site panel's folds open through lib/folds.svelte.js, read and set by the handle's siteCalendarsOpen, siteLinksOpen and siteShopOpen. */
 
 /** Set by the shop's «Shop currency» link: the Site panel brings the currency field into view and focuses it, then clears it. */
 let focusShopCurrency = $state(false);
@@ -817,20 +766,13 @@ let siteZoneBad = $state(false);
 /** Whether the shop currency typed last is not a three-letter code (the Site panel marks the field). */
 let siteCurrencyBad = $state(false);
 
-// The admin tab shows the site icon when it exists, otherwise the Urd
-// mark (same SVG as in admin/index.html; it cannot be read from the
-// link element, because favicon-boot.js may already have swapped it).
-// Only known icon shapes are let through (data:image or a site-relative
-// path), so draft data can never become an active URL.
+// The Urd mark admin/index.html shows, for the admin tab of a site without an icon.
 const URD_MARK_ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Cpath d='M19.2 49.6V14.4l25.6 10.4V49.6' fill='none' stroke='%2315b39a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
 
-// Anchored regex instead of startsWith: CodeQL recognizes RegExp.test as
-// a barrier, so the alerts on this flow are closed.
+// The icon addresses let into the admin tab, as an anchored pattern: a base64 data:image, or a path on the site.
 const SAFE_ICON_RE = /^(?:data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/(?!\/)[\w%./-]*)$/;
 
-/* The link launcher (nav.launcher): the shortcuts behind the launcher
- * button. The last removed shortcut takes the object with it, so a site
- * without a launcher carries no field. */
+/* The link launcher (nav.launcher): the shortcuts behind its button. */
 
 function clearLauncherImage(i) {
   siteMutate('nav', () => {
@@ -846,7 +788,7 @@ function footerMutate(key, fn) {
   });
 }
 
-/** The «Back to top» button's design (site.layout.toTop.design, the engine's totop.js), picked in the design picker, one undo step; the standard is stored as nothing. */
+/** The «Back to top» button's design (site.layout.toTop.design, totop.js), in one undo step; the standard design is stored as nothing. */
 function setToTopDesign(id) {
   if (!TOTOP_DESIGNS.includes(id)) return;
   siteMutate('site-totop', () => {
@@ -868,9 +810,6 @@ function applyFooterPreset(id) {
   });
 }
 
-/* Rich footer (additive): brand, columns, social links, bottom line and
- * background. Mirrors the nav handlers, but through footerMutate. */
-
 function moveNavItemTo(from, to) {
   const items = siteDraft.nav.items;
   if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return;
@@ -883,9 +822,7 @@ function moveNavChildTo(i, from, to) {
   siteMutate('nav', () => { const [it] = children.splice(from, 1); children.splice(to, 0, it); });
 }
 
-/** Inverts the lightness of a #rrggbb color (HSL: L -> 1-L); anything
- *  else passes untouched. Used as a SUGGESTION for the alt theme - the
- *  owner adjusts it afterwards. */
+/** Inverts the lightness of a #rrggbb colour (HSL, L becomes 1 - L) for the alt theme's suggestion; anything else passes as it is. */
 function invertLightness(hex) {
   const m = /^#([0-9a-f]{6})$/i.exec(hex ?? '');
   if (!m) return hex;
@@ -937,10 +874,7 @@ function removeAltTheme() {
 /** Resolves a token value to hex for preview (token names are looked up in the palette). */
 const themeHex = (v, pal) => (v && pal && pal[v]) ? pal[v] : v;
 
-/* Ready-made theme suggestions: fill all color tokens + light/dark in
-   one click, then the owner fine-tunes freely (a starting point, like
-   the section themes). Fonts/radii are untouched. Natt is dark-first
-   (scheme dark); the rest are light with a dark alt. */
+/* Ready-made theme suggestions: every colour token in light and dark at one click, fonts and radii untouched; Night is dark first, the rest light with a dark alt. */
 const THEME_PRESET_KEYS = ['bg', 'surface', 'text', 'accent', 'accent-text'];
 
 const THEME_PRESETS = $derived([
@@ -1018,8 +952,7 @@ export function effects() {
   });
 
   $effect(() => {
-    // Until the draft is loaded, favicon-boot.js controls the tab;
-    // touching it here would make the icon flash.
+    // Until the draft is loaded, favicon-boot.js sets the tab's icon.
     if (!siteDraft?.site) return;
     const href = siteDraft.site.icon;
     const link = document.querySelector('link[rel="icon"]');

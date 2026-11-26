@@ -1,6 +1,6 @@
 /**
- * Undo and redo: one stack over the page, the site, the collections, the templates and the plugins, and what waits to be published with the dirty flag that follows it.
- * Split out of App.svelte in 0.7.26.5; the other parts reach it through the handle below, and the shell merges every module's handle into the editor handle.
+ * Undo and redo over every draft, and what waits to be published with the dirty flag that follows it.
+ * The other parts reach it through the handle below.
  */
 import { untrack } from 'svelte';
 import { createDraftStore, dropDraft, flushDrafts, onDraftsWritten } from '../lib/draftStore.js';
@@ -66,7 +66,7 @@ function markPublished(parts = null) {
 /** When a part last went out, for the steps its row lists. */
 const publishedAtOf = (name) => Math.max(publishedAt, publishedParts[name] ?? 0);
 
-/** Whether the site settings wait: a draft that differs from the live settings other than in the entries of pages not live yet that went out hidden (lib/not-live.js), which go out shown with their page. */
+/** Whether the site settings wait: a draft that differs from the live settings other than in the hidden entries of pages not live yet. */
 function siteWaits() {
   if (!siteState.siteStore?.hasDraft()) return false;
   const kept = stillNotLive(readNotLive(), siteState.site?.pages ?? []);
@@ -77,7 +77,7 @@ function siteWaits() {
 function updateDirty() {
   // Read without tracking, so an effect that saves never follows its own count.
   edits = untrack(() => edits) + 1;
-  // Drafts on ALL pages count, not just the current one; a newly published page waiting for its deploy counts only where it was edited since it went. The open page counts by its store too, also before its draft is written.
+  // Every page's draft counts, the open page's store too; a page waiting for its deploy counts where edited since it went.
   const pages = [...(siteState.siteDraft?.pages ?? [])];
   if (pageState.pageId && !pages.some((p) => p.id === pageState.pageId)) pages.push({ id: pageState.pageId });
   const pageDraft = (id) => (pageState.pendingPublished.has(id)
@@ -98,7 +98,7 @@ function updateDirty() {
   dirty = unpublished.length > 0;
 }
 
-/** Takes the owner to a part that waits to be published (lib/UnpublishedRows.svelte): the page onto the canvas, a collection into its panel, the rest to the panel or the dialog that holds it. */
+/** Takes the owner to a part that waits to be published: the page onto the canvas, the rest to the panel or the dialog that holds it. */
 function goToUnpublished(part) {
   if (part.kind === 'page') {
     // A page saved elsewhere that this browser's site settings do not list has nowhere to go to.
@@ -117,16 +117,8 @@ function goToUnpublished(part) {
 }
 
 /**
- * Undo/redo: snapshot-based history over the page, site, collection and
- * plugin drafts. pushHistory is called BEFORE every mutation; the keys
- * are used to merge bursts of the same action (each keystroke in a text
- * block, each tick of a slider, must not become its own undo step;
- * lib/history-model.js joinsLast). Each step is { snap, view, pages, key,
- * at, made, typed, pageId }: the state before the change, the selection and
- * caret it was made with (put back by an undo), the pages beside the open
- * one whose drafts the state holds, the kind of change, when it last grew
- * and when it was made, whether it was typing, and the page it was made on
- * (the list of steps).
+ * The undo steps, each the state before a change with its selection, pages, key and times.
+ * pushHistory runs before every change.
  */
 const history = [];
 
@@ -146,13 +138,13 @@ let lastHistoryKey = null;
 /** While a change runs as a step of its own (asOwnStep), and the number that sets it apart (ownStepKey). */
 let ownStepDepth = 0;
 let ownSteps = 0;
-/** The key of the step of its own running now: its first change's, which every change after it in the step takes, so several changes are one step (a capability's way back clears several settings). */
+/** The key of the step of its own running now: its first change's, which every later change in the step takes. */
 let ownStepNow = null;
 
 /** Keys whose next change is a step of its own, for a change the preview makes and hands back after the call that asked for it has returned (ownStepNext). */
 const ownNext = new Set();
 
-/** Runs `fn` as an undo step of its own: a setting's way back never joins the change before it, so an undo right after brings that change back, and the next change never joins it. */
+/** Runs `fn` as an undo step of its own, which joins neither the change before it nor the next. */
 function asOwnStep(fn) {
   if (ownStepDepth === 0) {
     ownSteps += 1;
@@ -166,7 +158,7 @@ function asOwnStep(fn) {
   }
 }
 
-/** Makes the next change under `key` a step of its own, as asOwnStep does for a change made at once: the whole text's font and size come back from the preview as the text's edit (setTextStyle in page.svelte.js). */
+/** Makes the next change under `key` a step of its own, for a change the preview hands back later. */
 function ownStepNext(key) {
   ownNext.add(key);
 }
@@ -226,8 +218,7 @@ function storedDraftHash(pageId) {
 }
 
 /**
- * The state the steps lead to, hashed (lib/history-model.js keptHolds): the steps it was taken with, and the open page apart from the rest, with their pictures as tokens, and that page's stored draft.
- * After a step the drafts have just been written, so the stored draft is taken as the page held, or none; as the page goes (`exact`) the stored text itself is read, which can differ where a page was changed without a write.
+ * Writes the mark of the state the steps lead to: the steps, the open page and the rest hashed, and the page's stored draft, read itself where `exact`.
  */
 function writeMark(exact = false) {
   const { pageId, page, ...rest } = stateObject();
@@ -250,7 +241,7 @@ function keepOnLeave(event) {
 }
 
 /**
- * Takes up the steps kept from the last session, once the drafts are loaded: only when the drafts are the ones the steps were kept with, so an undo never writes back over drafts discarded or a site published since.
+ * Takes up the steps kept from the last session, once the drafts are loaded, where the drafts are still the ones they were kept with.
  */
 async function loadKept() {
   try {
@@ -310,13 +301,7 @@ function snapshot(pageIds = []) {
 
 /** Every draft's state as one object, the open page first: what a snapshot holds, and what the kept history's mark hashes. */
 function stateObject() {
-  // pageId is included: undo across page switches must put the page
-  // content back on the PAGE it came from, not into the current page's draft.
-  // Collections/plugins are null until their init flow has FINISHED (the
-  // collectionsReady flag, not merely the index store existing: the stores
-  // fill asynchronously afterwards, and a snapshot from that window would
-  // miss collections that an undo would then delete); restore skips the
-  // null parts.
+  // The page's id goes with it; the collections and templates are null until all their stores are filled, and a restore skips them.
   return {
     pageId: pageState.pageId,
     page: pageState.store.data,
@@ -354,8 +339,7 @@ function startAnew() {
 }
 
 /**
- * Records the state before a change, as a step undo goes back to; a change that joins the step before it (joinsLast) records nothing.
- * A step whose change turned out to change nothing gives way to the next, and the redo steps it set aside come back.
+ * Records the state before a change as a step; a change that joins the step before records nothing, and a step that changed nothing gives way.
  * @param {string} key The kind of change, which decides what joins
  * @param {{caret?: {blockId: string, offset: number}|null, pages?: string[]}} [options] The caret the change was typed at, and pages beside the open one the change writes, whose drafts the step holds
  */
@@ -402,15 +386,13 @@ function restore(snap) {
   siteState.linkSiteDraft();
   siteState.siteStore.save();
   siteState.grid = { snap: true, ...siteState.siteDraft.grid };
-  // Collections/templates/plugins are restored BEFORE the page-switch
-  // branch below, otherwise cross-page undo would lose those parts of the snapshot.
+  // The collections, templates, plugins and redirects are restored before the page switch below.
   restoreCollections(collectionsIndex, collections ?? {});
   restoreTemplates(templatesIndex, templates ?? {});
   restorePlugins(plugins);
   redirectsState.restoreRedirects(redirects);
 
-  // The snapshot belongs to another page (undo across a page switch): put
-  // the page content back as a draft THERE, and switch to it.
+  // A step made on another page writes that page's draft and switches to it.
   if (snapPageId && snapPageId !== pageState.pageId && siteState.siteDraft.pages.some((p) => p.id === snapPageId)) {
     if (siteChanged) siteState.pushSiteToPreview();
     shellState.writeDraftKey(`urd-draft-${snapPageId}`, JSON.stringify(page));
@@ -424,12 +406,10 @@ function restore(snap) {
   pageState.store.save();
   updateDirty();
   shellState.updateAttention();
-  // The panel mirrors must follow the restored data, otherwise the
-  // Properties/section panel shows stale values and the undo looks dead.
+  // The panels' mirrors follow the restored data.
   pageState.syncSelectedBlock();
   pageState.syncSectionMirrors(pageState.store.data.sections.find((s) => s.id === pageState.activeSectionId));
-  // Undo can remove the page you are on (an undone page creation):
-  // then switch to the front page instead of being left hanging.
+  // Where the undo took away the open page, the front page opens.
   if (!siteState.siteDraft.pages.some((p) => p.id === pageState.pageId)) {
     if (siteChanged) siteState.pushSiteToPreview();
     pageState.selectPage(siteState.siteDraft.pages[0].id, { keepHistory: true });
@@ -440,8 +420,7 @@ function restore(snap) {
   }
 }
 
-/** Restore the collection drafts from a snapshot (null = taken before init, skip).
- *  Missing stores are recreated against the published baseline; stores outside the snapshot are removed. */
+/** Restores the collection drafts from a snapshot, null skipped; a missing store is made again, and a store outside the snapshot removed. */
 function restoreCollections(indexSnap, collectionsSnap) {
   if (!collectionsState.collectionsIndexStore || !indexSnap) return;
   const current = media.stringify({
@@ -460,9 +439,7 @@ function restoreCollections(indexSnap, collectionsSnap) {
   }
   for (const [id, data] of Object.entries(collectionsSnap)) {
     if (!collectionsState.collectionStores[id]) {
-      // Undone deletion: the baseline is the published state, or "does
-      // not exist" (null) for a collection that never got published
-      // (mirrors addCollection, so hasDraft() stays true until publish).
+      // An undone deletion: the baseline is the published state, or null for a collection never published.
       const baseline = collectionsState.publishedCollections[id] ?? null;
       collectionsState.collectionStores[id] = createDraftStore(`urd-draft-collection-${id}`, () => baseline, shellState.draftSaveError, `urd-draft-samling-${id}`);
     }
@@ -474,8 +451,7 @@ function restoreCollections(indexSnap, collectionsSnap) {
   collectionsState.syncCollectionsView();
 }
 
-/** Restore the template drafts from a snapshot (null = taken before init, skip).
- *  Mirrors restoreCollections, with a "does not exist" baseline for never-published templates. */
+/** Restores the template drafts from a snapshot as restoreCollections does the collections. */
 function restoreTemplates(indexSnap, templatesSnap) {
   if (!templatesState.templatesIndexStore || !indexSnap) return;
   const current = media.stringify({
@@ -504,8 +480,7 @@ function restoreTemplates(indexSnap, templatesSnap) {
   templatesState.pushTemplatesToPreview();
 }
 
-/** Restore the plugin draft from a snapshot (null = taken before init, skip).
- *  Diff-guarded: only a real plugin change should cost a preview reboot. */
+/** Restores the plugin draft from a snapshot, null skipped; the preview reloads only where it changed. */
 function restorePlugins(pluginsSnap) {
   if (!pluginsState.pluginsStore || !pluginsSnap) return;
   if (media.stringify(pluginsState.pluginsStore.data) === media.stringify(pluginsSnap)) return;
@@ -516,7 +491,7 @@ function restorePlugins(pluginsSnap) {
 }
 
 /**
- * Goes back one step that changed something: steps at the end that hold the state as it is now changed nothing and are passed (lib/history-model.js emptyTail), with the redo a last empty step set aside given back.
+ * Goes back one step that changed something, passing the steps at the end that hold the state as it is now.
  */
 function undo() {
   // The stored drafts of the pages a step names are read and written: a change waiting to be written goes first.
@@ -559,8 +534,7 @@ function redo() {
 }
 
 /**
- * The list of steps' jump: back to just after the step at that place in the history, or forward through the redo steps to one of them, as that many undos or redos with the state drawn once at the end.
- * The pages beside the open one that any passed step wrote are carried along, each with its draft as the walk leaves it, and the selection put back is the last passed step's (lib/history-model.js walkSteps).
+ * The list of steps' jump: that many undos or redos, the state drawn once at the end and the last passed step's selection put back.
  * @param {'back'|'forward'} way
  * @param {number} count How many steps to go
  */
@@ -599,7 +573,7 @@ export const historyState = {
   get lastHistoryKey() { return lastHistoryKey; },
   set lastHistoryKey(v) { lastHistoryKey = v; },
   get restores() { return restores; },
-  /** The steps as the buttons and the list show them: the history newest first, and the redo steps nearest first; each with its kind of change, its page and its time. */
+  /** The steps as the buttons and the list show them: the history newest first, the redo steps nearest first. */
   get steps() {
     void stepsTick;
     const describe = (step) => ({ key: step.key ?? '', at: step.at ?? 0, pageId: stepPage(step), pages: step.pages ?? [], typed: stepTyped(step) });

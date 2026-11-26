@@ -1,14 +1,4 @@
-/* The admin's one way to move a row in a list by dragging it, in the row kit (ADR-0016).
-   A row is pressed, held and dragged by itself: by the head of a card that opens, or anywhere on a plain row outside its fields; the grip is its sign.
-   Under the pointer stands the row's card, one line with its sign, its name and its detail, whatever stands open in the row; the row stays dimmed in its place.
-   Where it will land stands a dashed slot of one line with the card's faint copy, or, chosen in the Urd settings («Moving rows», the root's data-drag-mark), a line between the rows.
-   While a row is dragged the whole admin accepts the drop, so a release beside the list lands the row where the mark stood; Escape is the only cancel, and moves nothing.
-   Every mark moves smoothly: the slot grows in and shrinks away, and the line fades in and glides; under reduced motion each stands at once.
-   As a row lands the slot is gone at once and the rows glide from their old places to their new ones, the landed row from where its mark stood.
-   The landed row flashes the accent once and a screen reader hears where it went; a move by the keys ends the same way through `landed`.
-   A list takes it in three places: `{@attach drag.list}` on the list, whose rows that move carry `data-drag-id` and stand directly in it; `{@attach drag.handle(id)}` on what a row is dragged by; and the slot, drawn where `drag.at(id, pos)` says, as an element with `{@attach drag.slot}` (and `out:slotOut` where it may shrink away).
-   Where the row lands is reckoned by lib/row-drag.js, and the list moves the row in the `land` it gives.
-   A tree (the Nav panel's menu) gives its own `reckon`, which may also land a row `into` another; its rows are keyed by their paths ('2', '2.0') and carry their level as `data-row-level`, so the line after a row stands after the row's whole branch, one step in for `into`, its rows glide by their own elements as the move lands, and a landed row is counted among its siblings. */
+/* The admin's one way to drag a row in a list: `drag.list` on a list of `data-drag-id` rows, `drag.handle(id)` on what drags a row, `drag.slot` on the slot. */
 import { tick } from 'svelte';
 import { ta } from '$engine/i18n.js';
 import { flatDropAt, reorderRows } from '../row-drag.js';
@@ -176,8 +166,7 @@ export class RowDrag {
     return !this.#line && this.drag !== null && this.drop?.id === String(id) && this.drop.pos === pos;
   }
 
-  /** The list: the mark follows the pointer among the rows that move, and a drop on the list lands the row.
-      Over the slot itself nothing is reckoned anew, so the rows a moving slot pushes never change the landing place under a still pointer. */
+  /** The list: the mark follows the pointer among its rows, a drop lands the row, and over the slot the landing place stays. */
   list = (el) => {
     this.#list = el;
     const over = (e) => {

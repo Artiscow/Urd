@@ -17,6 +17,10 @@
  * assets/urd/ re-export from the current version, that _headers has the
  * version-neutral immutable rules, and that the base.css stamp in the shells
  * matches the file content.
+ *
+ * The admin shell's icon: the Urd mark the editor shows for a site without
+ * one is the shell's own, and only a base64 picture or a path on the site
+ * reaches the tab, in the editor and in favicon-boot.js alike.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -275,4 +279,33 @@ test('the shell loads the site\'s theme.css after base.css, and the engine\'s bo
   assert.ok(boot, 'the shell loads boot.js');
   assert.match(boot.attrs, /\stype="module"/);
   assert.match(boot.attrs, /\sblocking="render"/);
+});
+
+test('a site without an icon shows the Urd mark in the admin tab, the mark the admin shell starts with', () => {
+  const site = readFileSync(new URL('../editor/src/state/site.svelte.js', import.meta.url), 'utf8');
+  const mark = site.match(/^const URD_MARK_ICON = "([^"]+)";$/m)?.[1];
+  assert.ok(mark?.startsWith('data:image/svg+xml,'), 'the editor holds the mark');
+  const links = [...page('admin/index.html').matchAll(/<link\b[^>]*\srel="icon"[^>]*>/g)].map(([tag]) => tag.match(/\shref="([^"]*)"/)?.[1]);
+  assert.deepEqual(links, [mark]);
+  assert.match(site, /if \(typeof href !== 'string' \|\| !href\) \{\s*link\.href = URD_MARK_ICON;\s*return;\s*\}/);
+});
+
+test('only a base64 picture or a path on the site reaches the admin tab\'s icon, in the editor and before it has loaded alike', () => {
+  const site = readFileSync(new URL('../editor/src/state/site.svelte.js', import.meta.url), 'utf8');
+  const pattern = site.match(/^const SAFE_ICON_RE = \/(.+)\/;$/m)?.[1];
+  assert.ok(pattern, 'the editor holds the pattern');
+  const safe = new RegExp(pattern);
+  for (const href of ['data:image/png;base64,iVBORw0KGgo=', 'data:image/svg+xml;base64,PHN2Zy8+', '/media/images/icon-1a2b3c4d.webp', '/favicon.ico']) {
+    assert.equal(safe.test(href), true, href);
+  }
+  for (const href of [
+    'javascript:alert(1)', 'JavaScript:alert(1)', ' javascript:alert(1)', 'data:text/html;base64,PHNjcmlwdD4=', 'data:text/html,<script>alert(1)</script>',
+    'data:image/svg+xml,<svg onload="alert(1)"/>', '//evil.example/icon.png', 'https://evil.example/icon.png', 'http://evil.example/icon.png',
+    '/\\evil.example/icon.png', 'media/icon.png', '/media/icon.png\njavascript:alert(1)', '/media/icon.png"><script>',
+  ]) {
+    assert.equal(safe.test(href), false, href);
+  }
+  assert.match(site, /if \(!SAFE_ICON_RE\.test\(href\)\) return;\s*link\.href = href;/, 'the editor sets only what passes');
+  const boot = readFileSync(new URL('admin/favicon-boot.js', TEMPLATE), 'utf8');
+  assert.ok(boot.includes(`if (!/${pattern}/.test(icon)) return;\n    document.querySelector('link[rel="icon"]').href = icon;`), 'and so does favicon-boot.js, with the same pattern');
 });
