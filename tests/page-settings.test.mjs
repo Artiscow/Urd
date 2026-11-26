@@ -3,9 +3,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 
-register('./_svelte-loader.mjs', import.meta.url);
 import { engineImport } from './_engine.mjs';
 const { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf, metaOf, withMeta, withShareSource, frontPageSwap, refusedPageFields, refusedPageFieldLine } = await import('../editor/src/lib/page-settings.js');
 

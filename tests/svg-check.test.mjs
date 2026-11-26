@@ -4,12 +4,11 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 import { engineImport } from './_engine.mjs';
 import { svgProblem as guardCheck } from '../template/functions/_lib/svg-check.js';
 import { isAllowedContent } from '../template/functions/_lib/guard.js';
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { svgProblem, svgDataText, svgToDataUrl } = await engineImport('imageTools.js');
 const { readCsv } = await engineImport('collections-csv.js');
 const { materializeField } = await import('../editor/src/lib/materialize.js');

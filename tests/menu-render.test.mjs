@@ -8,7 +8,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 import { readFileSync } from 'node:fs';
 import { engineImport } from './_engine.mjs';
 
@@ -20,7 +20,6 @@ globalThis.innerWidth = 1600;
 globalThis.innerHeight = 900;
 globalThis.matchMedia ??= () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { render } = await import('svelte/server');
 const { capabilityOfPin, capability } = await import('../editor/src/menu/capabilities.js');
 const { keepCapability, dropCapability } = await import('../editor/src/menu/capabilities.svelte.js');

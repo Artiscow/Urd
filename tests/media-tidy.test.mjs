@@ -4,9 +4,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { tidyMedia, rootMediaFiles, strandedReferences, tidyRoom, TIDY_ROOM, COMMIT_FILES } = await import('../editor/src/lib/media-tidy.js');
 
 const LISTING = [

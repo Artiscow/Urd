@@ -8,7 +8,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 import { readFileSync } from 'node:fs';
 
 const store = new Map();
@@ -18,7 +18,6 @@ globalThis.innerWidth = 1600;
 globalThis.innerHeight = 900;
 globalThis.matchMedia ??= () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { render } = await import('svelte/server');
 const { liftSiteFile } = await import('$engine/migrate.js');
 const NAMES = ['Pages', 'Nav', 'Site', 'Theme', 'Footer', 'Blocks', 'Properties', 'Collections', 'Plugins', 'History', 'Update'];

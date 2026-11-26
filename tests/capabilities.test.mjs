@@ -4,10 +4,9 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 import { readFileSync } from 'node:fs';
 import { engineImport } from './_engine.mjs';
-register('./_svelte-loader.mjs', import.meta.url);
 
 const { CAPABILITIES, capability, carries, capabilityOfPin, hoverOf } = await import('../editor/src/menu/capabilities.js');
 const ELEMENT_MENU = readFileSync(new URL('../editor/src/menu/ElementMenu.svelte', import.meta.url), 'utf8');

@@ -14,7 +14,7 @@ The running task list is in [BACKLOG.md](../BACKLOG.md) (in Norwegian). The phas
 |---|---|---|
 | Git | Everything | Yes |
 | A text editor | Everything | Yes |
-| Node.js 18+ (with npm) | Editor development (Svelte/Vite) and tests | Only for editor/tests |
+| Node.js at the version `.nvmrc` names (with npm) | Editor development (Svelte/Vite) and tests | Only for editor/tests |
 | Python 3 (or another static file server) | Viewing the website locally | Optional |
 | Wrangler (`npx wrangler`) | Testing the publishing functions locally | From v0.2 |
 

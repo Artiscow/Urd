@@ -8,6 +8,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.99 - acorn declared, and Node 26 pinned in one file for CI and local work - 26 November 2026
+
+- The engine notes' test parsed with acorn borrowed from Svelte's and Vite's dependencies, so an upgrade that dropped it would fail every test run. editor/package.json declares it as a dev dependency at 8.18.0, the version the tests and the build use.
+- Only CI named the Node version, 22, so local work could drift from it. A root `.nvmrc` names Node 26, the current LTS line, both workflows read it, and the development documents point to it instead of «Node.js 18+».
+- On Node 26 the tests' module loaders warned that `module.register()` is deprecated (DEP0205), and a test that reads node's own `localStorage` warned that no storage file was named. The loaders run on `registerHooks()`, each test importing the one it needs, and that test sets node's `localStorage` aside for its call.
+
+The independent review before the commit found these:
+
+1. The site-paths loader's comment said its hooks ran in their own thread, the opposite of `registerHooks()`, which runs them in the test's thread; it says so now.
+2. The Svelte loader's rewritten header broke its lines mid-sentence; it stands one sentence to a line.
+3. Two tests' comments on the loader stood apart from it once its `register()` call went; each stands above the loader's import.
+4. Nothing on the local machine read `.nvmrc`, so a round on Node 22 could pass where CI on 26 fails. `scripts/verify.mjs` notes a round run on another Node line than the pin, and counts `.nvmrc` as shared, so a change to it takes the full round.
+
 ### 0.7.9.4 - Blend modes on the image block and an overlay on the video, with fixes to the phone canvas, the crop and the menus found in testing - 26 November 2026
 
 - The image block had looks and an overlay but no blend mode, and a video file no overlay (0.7.9 «Image looks»). The image block blends with what lies behind it in one of 15 modes with a strength (`blend`, `blendStrength`), a video file takes an overlay with a strength, and the image editor gives a video's cover an overlay; in the editor a stand-in under a blended block draws the blend (preview-blend.js), so the block's bar and handles are never blended.

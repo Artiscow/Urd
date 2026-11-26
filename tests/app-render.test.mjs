@@ -9,7 +9,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 
 const store = new Map();
 globalThis.localStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
@@ -21,7 +21,6 @@ globalThis.location ??= { search: '', origin: 'http://localhost', href: 'http://
 globalThis.navigator ??= { language: 'nb' };
 globalThis.document ??= { documentElement: { dataset: {}, style: { setProperty() {} }, classList: { add() {}, remove() {}, toggle() {} } }, addEventListener() {}, removeEventListener() {}, querySelector: () => null, querySelectorAll: () => [] };
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { render } = await import('svelte/server');
 
 test('every state module loads, and no module reads another\'s handle while they load', async () => {

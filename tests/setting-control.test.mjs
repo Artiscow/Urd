@@ -4,10 +4,9 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 import { readFileSync } from 'node:fs';
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { render } = await import('svelte/server');
 const { default: SettingControl } = await import('../editor/src/settings/SettingControl.svelte');
 const { SETTINGS_GROUPS } = await import('../editor/src/lib/settings-model.js');

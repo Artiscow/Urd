@@ -12,7 +12,7 @@ Den løpende oppgavelisten ligger i [BACKLOG.md](BACKLOG.md). Fasene og målene 
 |---|---|---|
 | Git | Alt | Ja |
 | En teksteditor | Alt | Ja |
-| Node.js 18+ (med npm) | Editor-utvikling (Svelte/Vite) og tester | Kun for editor/tester |
+| Node.js i versjonen `.nvmrc` oppgir (med npm) | Editor-utvikling (Svelte/Vite) og tester | Kun for editor/tester |
 | Python 3 (eller annen statisk filserver) | Se nettsiden lokalt | Valgfritt |
 | Wrangler (`npx wrangler`) | Teste publiserings-functions lokalt | Fra v0.2 |
 

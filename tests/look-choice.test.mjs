@@ -5,10 +5,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { register } from 'node:module';
-import { engineImport } from './_engine.mjs';
 // The design sources reach the engine through the editor's alias, which the loader resolves.
-register('./_svelte-loader.mjs', import.meta.url);
+import './_svelte-loader.mjs';
+import { engineImport } from './_engine.mjs';
 
 const { looksInPlace, LOOKS_WHOLE, LOOKS_SHOWN } = await import('../editor/src/lib/look-choice.js');
 const { pictureList, blockDesigns, blockDesignSource, blockPhoneDesignSource, calendarDesignSource, footerPresetSource } = await import('../editor/src/lib/design-sources.js');

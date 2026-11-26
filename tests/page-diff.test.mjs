@@ -3,9 +3,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { pageDiff } = await import('../editor/src/lib/page-diff.js');
 
 const text = (id, html, y = 0) => ({ id, type: 'text', props: { html }, frames: { desktop: { x: 10, y, w: 40, h: 60 } } });

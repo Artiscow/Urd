@@ -95,5 +95,13 @@ test('a glyph takes a colour when it holds a character drawn as text; emoji alon
 
 test('icon recents: own storage key, and an empty list without storage', () => {
   assert.notEqual(ICON_RECENT_KEY, GLYPH_RECENT_KEY);
-  assert.deepEqual(readRecentIcons(), []);
+  // No storage: node's own localStorage, which warns when no file is named for it, stands aside for the call.
+  const own = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', { value: undefined, configurable: true, writable: true });
+  try {
+    assert.deepEqual(readRecentIcons(), []);
+  } finally {
+    if (own) Object.defineProperty(globalThis, 'localStorage', own);
+    else delete globalThis.localStorage;
+  }
 });

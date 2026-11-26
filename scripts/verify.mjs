@@ -11,8 +11,9 @@
  * test files that name them (by file name, or by the folder of a new file),
  * builds the editor only when its source or an engine module it bundles
  * changed, and validates only when the schemas or the content changed. A
- * change that touches the test harness or the package files falls back to
- * the full round, so a quick run never hides what a shared change breaks.
+ * change that touches the test harness, the package files or the Node pin
+ * (.nvmrc) falls back to the full round, so a quick run never hides what a
+ * shared change breaks. A round run on another Node line than the pin says so.
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -60,7 +61,7 @@ const ENGINE_DIR = `template/assets/engine/${ENGINE}/`;
 const GENERIC = new Set(['src/', 'editor/', 'template/', 'assets/', 'engine/', `${ENGINE}/`, 'content/']);
 
 /** Paths whose change means a shared change: the quick round falls back to the full one. */
-const SHARED = [/^tests\/_/, /^package(-lock)?\.json$/, /^editor\/package(-lock)?\.json$/, /^editor\/vite\.config\.js$/, /^scripts\/verify\.mjs$/, /^\.github\//];
+const SHARED = [/^tests\/_/, /^package(-lock)?\.json$/, /^editor\/package(-lock)?\.json$/, /^editor\/vite\.config\.js$/, /^scripts\/verify\.mjs$/, /^\.github\//, /^\.nvmrc$/];
 
 /**
  * The files under template/functions/ that import a given one, one static
@@ -159,6 +160,10 @@ function step(label, command, args, cwd = ROOT) {
   const run = spawnSync(command, args, { cwd, stdio: 'inherit' });
   return run.status === 0;
 }
+
+// The Node line the repo is pinned to (.nvmrc), which CI runs: a round on another line may pass here and fail there.
+const pinned = existsSync(new URL('.nvmrc', ROOT)) ? readFileSync(new URL('.nvmrc', ROOT), 'utf8').trim() : '';
+if (pinned && process.versions.node.split('.')[0] !== pinned.split('.')[0]) console.log(`note  node ${process.versions.node} runs this round; .nvmrc pins ${pinned}, which CI runs`);
 
 const paths = process.argv.includes('--paths') ? givenPaths : changedPaths();
 const plan = mode === 'full' ? { full: true, reason: 'full round', tests: new Map(), build: true, validate: true } : select(paths);

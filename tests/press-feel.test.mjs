@@ -5,9 +5,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { PRESS_FEELS, pressFeelOf, ripple } = await import('../editor/src/lib/press-feel.js');
 
 test('pressFeelOf: the six feels, Ripple for anything else', () => {

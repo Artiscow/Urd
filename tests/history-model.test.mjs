@@ -3,9 +3,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { joinsLast, emptyTail, stepKind, walkSteps, stepTyped, stepPage, keptHolds, MERGE_MS, FOLLOW_MS, HISTORY_LIMIT, ownStepKey } = await import('../editor/src/lib/history-model.js');
 import { engineImport } from './_engine.mjs';
 const dict = (await engineImport('locales/admin/en-GB.js')).default.strings;

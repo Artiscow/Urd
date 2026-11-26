@@ -1,8 +1,7 @@
 // The image editor's rules (lib/picture-edit.js): what each kind of picture keeps and where, the crop window, a pointer on the turned picture, the zoom a corner gives, and the resets.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
-register('./_svelte-loader.mjs', import.meta.url);
+import './_svelte-loader.mjs';
 const {
   readPicture, writePicture, storedStyle, cropWindow, pointOnPicture, croppedWindow, styleForWindow, frameForCrop, turned, resetStyle, sectionChanged, ratioValue, movedFrame, NEUTRAL,
   sharpness, dataUrlBytes, isDrawing, withShared, phoneForCrop, SHARED_KEYS, sourceOf, bakeLayout, isBaked, KIND_TOOLS, logoBakeSize, LOGO_LONGEST, FILTER_LOOKS, LAYER_KEYS, pickedColour,

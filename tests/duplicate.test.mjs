@@ -3,9 +3,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { copySlug, duplicatedSection } = await import('../editor/src/lib/duplicate.js');
 
 const PAGES = [

@@ -5,10 +5,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { register } from 'node:module';
-
 // The page settings' layouts reach the engine through the editor's alias, which the loader resolves, and the state module is compiled as the editor builds it.
-register('./_svelte-loader.mjs', import.meta.url);
+import './_svelte-loader.mjs';
 
 /** The browser's storage, which the state reads as it loads. */
 const local = new Map();

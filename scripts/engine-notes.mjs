@@ -10,7 +10,7 @@
  *     node scripts/engine-notes.mjs same <module>...         proves the code unchanged against the committed version, its comments free to move
  *
  * `--base <rev>` names the committed version (HEAD), and `--all` stands for every module a visitor's page loads (visitorModules).
- * The parser is acorn, which the editor's dependencies hold (editor/node_modules).
+ * The parser is acorn, a dev dependency of the editor (editor/package.json), read from editor/node_modules.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, realpathSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';

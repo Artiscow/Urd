@@ -3,9 +3,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { layoutKey, layoutKeys, uncheckedSections, seeSections } = await import('../editor/src/lib/phone-check.js');
 
 const text = (id, y = 0, h = 60) => ({ id, type: 'text', props: { html: '<p>Words</p>' }, frames: { desktop: { x: 10, y, w: 40, h } } });

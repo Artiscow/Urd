@@ -11,7 +11,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, existsSync, readFileSync } from 'node:fs';
-import { register } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { engineImport, ENGINE_DIR } from './_engine.mjs';
@@ -379,7 +378,7 @@ test('loadPackStrings: built-in languages and unknown codes give null (never a c
 });
 
 test('the admin dictionary: the bokmål base under the language\'s own words, read together; a language pack over the base; bokmål where there is neither', async () => {
-  register('./_site-paths.mjs', import.meta.url);
+  await import('./_site-paths.mjs');
   registerPackLanguages('lang-sv', [{ code: 'sv', name: 'Svenska', admin: true }]);
   const words = async (url) => (await import(url.href)).default.strings;
   const nb = await words(new URL('locales/admin/nb.js', ENGINE_DIR));

@@ -3,9 +3,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 
-register('./_svelte-loader.mjs', import.meta.url);
 const { setLinkOn, linkOf, hasLink, readLink, writeLink, linkReady, linkSummary, linkText, linkProblem, webHref, emailHref, emailLike } = await import('../editor/src/lib/link-edit.js');
 const { heldPdf, heldName, isFileHref, fileLabel, siteFiles, publishHeldFiles } = await import('../editor/src/lib/file-links.js');
 

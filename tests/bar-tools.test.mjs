@@ -5,9 +5,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { register } from 'node:module';
+import './_svelte-loader.mjs';
 import { engineImport } from './_engine.mjs';
-register('./_svelte-loader.mjs', import.meta.url);
 
 const { BAR_GROUPS, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, BAR_ICONS, barTools, isBarOnly } = await engineImport('bar-tools.js');
 const { onlyOf } = await import('../editor/src/lib/only-group.js');
