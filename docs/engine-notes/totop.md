@@ -12,6 +12,12 @@ The button scrolls to the page's top, smoothly only where motion is welcome; it 
 
 How the words alone answer the mouse, as the menu's links do (nav.style.hover), the first the standard: the colour, an underline, a pill, a lift, or a lift with a glow.
 
+## `toTopOf`
+
+The button's own mark in place of the arrow, as the icon block draws its own: a picture uploaded and edited (`image`), else a drawn icon from Urd's set (`icon`), else a character (`glyph`); none of them, the arrow.
+A shaped design's outline is the shape the owner chose or drew (`shape`, shape-model.js), or without one the design's own: the circle, the rounded square or the ring, with the waves of `waves` and `count`.
+The mark's size (`iconSize`) is a percent of its size in the design, the arrow's alike; a picture on a shaped design stands inside the button's edge or fills the whole button (`fill`), where a mark can stand over it (`over`): the arrow, else a drawn icon or a character, at the mark's size.
+
 ## `toTopShapeOf`
 
 The shape a shaped design shows, as a shape's values: the owner's own, or without one the nearest to what the design draws by itself (the circle, the rounded square, and the waves of `waves` and `count`), which the shape window starts from.

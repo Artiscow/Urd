@@ -1,31 +1,6 @@
 /**
- * Background layer: image gallery. One set of pictures, uploaded or read from
- * a shared folder, drawn in one of four layouts: frames floating over the
- * section (ApeironLF's hero style D, the default), one picture filling the
- * section with a cross-fade to the next, rolling bands (style A) or a mosaic
- * wall (style B). On top of the layout every picture wears a shape (cut with
- * clip-path), a look (what surrounds it: a shadow, a polaroid card, borders,
- * tape, a stamp edge and more) and a tone (a filter on the picture itself),
- * three choices that combine freely. Each layout takes the motions it can
- * carry: frames drift diagonally or straight up, breathe (Ken Burns),
- * cross-fade to the next picture one frame at a time, or bounce off the edges;
- * a filling picture breathes or drifts; a band rolls by itself.
- *
- * Every picture is three boxes: the box (placed and moved), the skin (the
- * visible surface, clipped to the shape and carrying the look) and the face
- * (the picture, clipped to the shape too and carrying the tone). A look that
- * sets the face in shows the skin around it, so a border follows any shape.
- *
- * The scatter, the mosaic spans and the order of the pictures are all drawn
- * from one seed (gallery-layout.js, photo-source.js): the owner's fixed one,
- * or the visit's, so «random» is new on every page load and still while the
- * page is open. The motions are CSS animations on the frames; the only script
- * that runs afterwards is the picture swap at the foot of a fade, and the band
- * needs no measuring at all since its period is a setting.
- *
- * With no pictures the layer draws its frames around drawn example pictures,
- * which base.css shows only inside the editor, so the whole layout can be set
- * up before the photos arrive.
+ * Background layer: image gallery, one set of pictures as floating frames, a filling cross-fade, rolling bands or a mosaic, each with a shape, look and tone.
+ * Notes: docs/engine-notes/backgrounds/slideshow.md (Urd repository).
  */
 import { canAutoplay, normalizeInterval, stepIndex } from '../gallery-model.js';
 import { isSafeImage } from '../nav-model.js';
@@ -56,13 +31,7 @@ export const slideshowLayer = {
   pictures: true,
   defaults: () => ({ images: [], fit: 'cover', opacity: 0.85, blur: 0, ...V2_FIELDS }),
   migrations: {
-    // 1 -> 2: the styles, the motions and pictures from a shared folder. The
-    // defaults stand FIRST and the stored props last, for the reason the image
-    // layer's 2 -> 3 step gives: the editor writes into layer props without
-    // lifting them, so a layer still stored as version 1 can already carry a
-    // choice that the lift must not overwrite. A version 1 layer was the
-    // filling cross-fade, so that is the style it keeps, with the interval
-    // and the opacity a version 1 layer had when it stored none.
+    // 1 -> 2: the styles, the motions and pictures from a shared folder, the defaults first and the stored props last; a version 1 layer keeps the filling cross-fade.
     1: (props) => ({ ...V2_FIELDS, style: 'fill', motion: 'none', interval: 6, opacity: 1, ...props }),
   },
   /**
@@ -100,24 +69,14 @@ function draw(el, props, options) {
   const shape = galleryShape(props.shape);
   const look = galleryLook(props.look);
   el.classList.add('urd-bg-slideshow', `urd-gallery-${style}`, `urd-gallery-tone-${galleryTone(props.tone)}`);
-  // The shape and the look are the host's classes; gallery.css carries them down
-  // to every skin and face, so a band tile and a floating frame wear the same.
+  // The shape and the look are the host's classes; gallery.css carries them down to every skin and face, so a band tile and a floating frame wear the same.
   if (style !== 'fill') el.classList.add(`urd-gallery-shape-${shape}`, `urd-gallery-look-${look}`);
   el.style.setProperty('--urd-frame-radius', `${clampRadius(props.radius)}px`);
   if (!images.length) el.classList.add('urd-bg-demo');
   el.style.opacity = String(props.opacity ?? 0.85);
   const colour = frameColor(look, props.frameColor);
   if (colour) el.style.setProperty('--urd-frame-color', resolveColor(colour));
-  // The area the pictures may use: the whole section, or the section without
-  // the announcement strip and the menu bar at its top, whose heights nav.js
-  // measures onto the root. The layer's own box is moved down by that much,
-  // so the scatter, the travel and the bounce all work inside the smaller
-  // area and no picture is ever cut at a bar's edge. The offset is CSS, so a
-  // bar that changes height moves the area without a re-render.
-  // The announcement's part is kept out unless the layer says otherwise (the
-  // default is off), the menu's is used unless the layer says otherwise (on).
-  // The menu sits below the strip, so keeping the menu out keeps the strip
-  // out with it, whatever the strip's own switch says.
+  // The area the pictures may use: the section, less the announcement strip (kept out by default) and the menu bar (used by default), moved down in CSS.
   const kept = props.underNav === false
     ? ['var(--urd-announce-h, 0px)', 'var(--urd-nav-own-h, 0px)']
     : props.underAnnounce !== true ? ['var(--urd-announce-h, 0px)'] : [];
@@ -140,8 +99,7 @@ function draw(el, props, options) {
 }
 
 /**
- * Paints one picture on a face: the one at `index`, asked for at the width
- * the face needs, or a drawn example when the frame is empty.
+ * Paints one picture on a face: the one at `index`, asked for at the width the face needs, or a drawn example when the frame is empty.
  */
 function paint(face, images, index, width, slot) {
   const img = images[index];
@@ -153,8 +111,7 @@ function paint(face, images, index, width, slot) {
 
 function renderFill({ el, props, images, motion, reduced, dpr, dwell }) {
   const demo = !images.length;
-  // Three drawn example pictures, so the cross-fade can be seen while it is
-  // being set up.
+  // Three drawn example pictures, so the cross-fade can be seen while it is being set up.
   const list = demo ? placeholderPhotos(3) : images;
   // A slide covers the section, which spans the window: that is the width to ask for.
   const width = photoWidth(window.innerWidth, dpr);
@@ -165,8 +122,7 @@ function renderFill({ el, props, images, motion, reduced, dpr, dwell }) {
   const fade = Math.max(0, Number(props.fade) || 0);
   el.style.setProperty('--urd-bgg-fade', `${fade}s`);
 
-  // The fill keeps the image layer's motion classes: the cross-fade animates
-  // `opacity` and the motion `transform`, so the two never collide.
+  // The fill keeps the image layer's motion classes: the cross-fade animates `opacity` and the motion `transform`, so the two never collide.
   const fillMotion = bgMotion(motion === 'drift' ? 'drift' : motion === 'kenburns' ? 'kenburns' : 'none');
   const makeSlide = (on) => {
     const div = el2('div', on ? 'urd-bg-slide on' : 'urd-bg-slide');
@@ -178,15 +134,13 @@ function renderFill({ el, props, images, motion, reduced, dpr, dwell }) {
   };
   const paintSlide = (slide, img) => {
     slide.style.backgroundImage = `url("${demo ? img.src : photoSrcAt(img.src, width)}")`;
-    // An example picture is tiled at its own size rather than stretched over
-    // the section, so it reads as a picture and not as a giant glyph.
+    // An example picture is tiled at its own size rather than stretched over the section, so it reads as a picture and not as a giant glyph.
     slide.style.backgroundSize = demo ? '240px auto' : bgSize(props.fit);
     slide.style.backgroundRepeat = demo ? 'repeat' : 'no-repeat';
     slide.style.backgroundPosition = demo ? '' : bgPosition(img.x, img.y);
   };
 
-  // Same load guard as the image layer: keep the layer invisible until the first
-  // image has finished loading, so it never appears in stripes.
+  // Same load guard as the image layer: keep the layer invisible until the first image has finished loading, so it never appears in stripes.
   const probe = new Image();
   if (options?.first) probe.setAttribute('fetchpriority', 'high');
   probe.src = demo ? list[0].src : photoSrcAt(list[0].src, width);
@@ -211,8 +165,7 @@ function renderFill({ el, props, images, motion, reduced, dpr, dwell }) {
   // The fade must have time to finish before the next swap.
   const ms = Math.max(normalizeInterval(dwell, { fallback: PICTURE_TIME.dflt }), fade + 0.5) * 1000;
   const timerId = setInterval(() => {
-    // The timer dies with the slides it drives: a folder answer redraws the
-    // layer while the layer element itself stays in the DOM.
+    // The timer dies with the slides it drives: a folder answer redraws the layer while the layer element itself stays in the DOM.
     if (!first.isConnected) {
       clearInterval(timerId);
       return;
@@ -241,8 +194,7 @@ function renderFill({ el, props, images, motion, reduced, dpr, dwell }) {
 }
 
 /**
- * A picture's skin and face inside a box, the chain every layout draws: the
- * shape and the look come down from the host through CSS.
+ * A picture's skin and face inside a box, the chain every layout draws: the shape and the look come down from the host through CSS.
  */
 function dress(box, images, index, width, slot) {
   const skin = el2('div', 'urd-gallery-skin');
@@ -256,11 +208,7 @@ function dress(box, images, index, width, slot) {
 /* ---------- Frames: the floating layout ---------- */
 
 /**
- * The travel of a drifting frame, in container units so it spans the section
- * whatever its size: it starts fully outside one edge and ends fully outside
- * the opposite one, so the jump back at the end of a cycle is never seen.
- * A frame's centre sits at x/y per cent of the section, so -x cqw brings it
- * to the left edge and a further 60 % of its own width takes it out of sight.
+ * The travel of a drifting frame in container units: from fully outside one edge to fully outside the opposite one, so the loop's jump is never seen.
  */
 function travel(place, motion) {
   const { x, y, heading } = place;
@@ -280,10 +228,7 @@ function travel(place, motion) {
 }
 
 /**
- * Gives a frame its motion. `frame` is the positioned box, `skin` the visible
- * picture box inside it, `face` the picture: the travel and the fade ride on
- * the box, the bounce's second axis on the skin, and the breathing on the face,
- * so no two of them ever share a transform.
+ * Gives a frame its motion: the travel and the fade on the box, the bounce's second axis on the skin and the breathing on the face, one transform each.
  */
 function animate({ frame, skin, face }, place, i, ctx) {
   const { motion, moves, time } = ctx;
@@ -303,8 +248,7 @@ function animate({ frame, skin, face }, place, i, ctx) {
     frame.style.animationDuration = `${time}s`;
     frame.style.animationDelay = phase;
   } else if (motion === 'bounce') {
-    // Two axes with two periods, so the path never repeats soon: the box goes
-    // across, the skin goes up and down.
+    // Two axes with two periods, so the path never repeats soon: the box goes across, the skin goes up and down.
     frame.style.left = '0';
     frame.style.top = '0';
     frame.style.translate = '0 0';
@@ -320,14 +264,7 @@ function animate({ frame, skin, face }, place, i, ctx) {
 }
 
 /**
- * The cross-fade: every frame fades in and out on its own cycle, spread evenly
- * around the clock, and at the foot of each cycle, when it is invisible, it
- * comes back as a new picture, and where `relocate` is given (the floating
- * layout) in a new place too. The picture is the one that has waited longest
- * among those no frame is showing, so the whole folder goes round in turn; if
- * every picture is on show, the one that has waited longest apart from its
- * own, so a frame never fades back in with what it faded out with unless
- * there is only one picture.
+ * The cross-fade: each frame fades on its own cycle and comes back unseen as the picture that has waited longest, in a new place when `relocate` is given.
  * @param {Array<object>} frames The frames, each with its box, face, index and place
  * @param {object} ctx
  * @param {(i: number, gen: number, others: Array<object>) => object} [relocate] A fresh place for frame i
@@ -370,11 +307,7 @@ function mountFades(frames, ctx, relocate) {
 }
 
 /**
- * Puts a frame where a placement says, and remembers where that is. The
- * centre is held at least half a frame (and a little more, for the lean)
- * from every edge of the area, so a frame at the rim of the scatter stands
- * wholly inside the area rather than hanging half over its edge and being cut
- * there, which would read as a picture behind the menu or past the section.
+ * Puts a frame where a placement says and remembers it, its centre held a little more than half a frame from every edge, so it stands wholly inside the area.
  */
 function placeFrame(f, place) {
   const halfW = (place.w / 2) * 1.15;
@@ -404,9 +337,7 @@ function renderFrames(ctx) {
     animate(f, place, i, ctx);
     return f;
   });
-  // A fresh place for a frame that has faded out: a new throw of the whole
-  // scatter, and of six such throws the one that lands farthest from the
-  // frames still showing, so the frame does not come back on top of one.
+  // A fresh place for a faded-out frame: of six throws of the scatter, the one farthest from the frames still showing.
   const relocate = (i, gen, others) => {
     let best = null;
     let bestGap = -1;

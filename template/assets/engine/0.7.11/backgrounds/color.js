@@ -1,6 +1,6 @@
 /**
- * Background layer: solid color. The value can be a theme token ('surface')
- * or a raw color ('#151a23').
+ * Background layer: solid color.
+ * The value can be a theme token ('surface') or a raw color ('#151a23').
  */
 import { resolveColor } from '../theme.js';
 

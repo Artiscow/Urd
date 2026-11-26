@@ -15,7 +15,7 @@ import { feature } from './features.js';
  * Draws the background layers into host as div.urd-bg-layer, bottom-up; shared by sections, nav and footer, and an unknown or failing layer is skipped.
  * @param {HTMLElement} host The element the layers are built into
  * @param {{layers?: Array<{type: string, version?: number, props?: object}>}} [background]
- * @param {{later?: boolean, first?: boolean}} [options] `later` (a section below the first, on a visitor's page as it arrives): a layer whose definition loads pictures (`pictures: true`) is placed at once and drawn as its section comes within a screen of the viewport, or before the page is printed, so the pictures below the first screen wait for their turn; without an IntersectionObserver it is drawn at once. `first` (the page's first section on a visitor's page): the layer is told so, and fetches its picture ahead of the rest.
+ * @param {{later?: boolean, first?: boolean}} [options] `later`: a picture layer is drawn as its section nears the viewport; `first`: the page's first section, whose picture is fetched ahead of the rest
  */
 export function renderBackgroundLayers(host, background, { later = false, first = false } = {}) {
   const Urd = window.Urd;
@@ -258,8 +258,7 @@ function fitContent(el, designH, block, ratio = canvasRatio(el)) {
   const child = contentChild(el);
   if (!child) return;
   const size = drawnScale(block);
-  // The width-floor types (image, video, shape, icon) shrink by their frame
-  // (fitFloorPx), never by a zoom of the content.
+  // The width-floor types (image, video, shape, icon) shrink by their frame (fitFloorPx), never by a zoom of the content.
   if ((block.fit !== 'shrink' && block.fit !== 'both') || FIT_BY_WIDTH.has(block.type)) {
     applyZoom(child, size);
     return;
@@ -463,8 +462,9 @@ const phoneFitWatch = typeof ResizeObserver === 'function' ? new ResizeObserver(
   }
 }) : null;
 
-/** The editing chrome inside a block never counts as content, and neither
- *  does a dialog, which is drawn over the page and never in the block. */
+/**
+ * The editing chrome inside a block never counts as content, and neither does a dialog, which is drawn over the page and never in the block.
+ */
 export const BLOCK_CHROME = '.urd-anchor, .urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-stop, .urd-edit-readout, .urd-sticky-badge, .urd-mobile-pin, .urd-phone-words, .urd-hint-chip, .urd-hint-card, .urd-phone-num, .urd-block-ruler, dialog';
 
 /**
@@ -536,8 +536,7 @@ function unfoldedHeight(el) {
 export const EDITOR_ONLY = '.urd-collection-image-adder, .urd-product-adder, .urd-collection-placeholder:empty, .urd-cal-gone';
 
 /**
- * Runs a measure of a block as a visitor sees it: with the editor's own
- * parts hidden for the length of the call, when the block holds any.
+ * Runs a measure of a block as a visitor sees it: with the editor's own parts hidden for the length of the call, when the block holds any.
  * @template T
  * @param {HTMLElement} el The block element
  * @param {() => T} measure
@@ -671,8 +670,7 @@ export function suspendPush() {
 }
 
 /**
- * The push shift a block is drawn with, in px (0 without a push): the
- * distance between its frame's y and its drawn top.
+ * The push shift a block is drawn with, in px (0 without a push): the distance between its frame's y and its drawn top.
  * @param {HTMLElement} el The block element
  * @returns {number}
  */
@@ -690,8 +688,7 @@ export function pushDrawnOf(el) {
 }
 
 /**
- * The growth past its frame the last push pass measured for a block, in px,
- * as a visitor sees it; 0 when its content fits.
+ * The growth past its frame the last push pass measured for a block, in px, as a visitor sees it; 0 when its content fits.
  * @param {HTMLElement} host The section element
  * @param {string} id The block id
  * @returns {number}
@@ -822,13 +819,12 @@ export function phoneCellCss({ col, cols }) {
  * Translates a mobile placement (frames.mobile) to CSS for the row grid (ADR-0019): followed, overridden, pinned to rows or in cells.
  * @param {{x?: number, w?: number, row?: number, rows?: number, col?: number, cols?: number, height?: number, space?: number, z?: number, rot?: number}|null} placement
  * @param {{x: number, y: number, w: number, h: number, z?: number, rot?: number}} desktop The block's desktop frame
- * @param {{autoGrow?: boolean, gap?: number, byWidth?: boolean, designWidth?: number}} [opts] autoGrow: text and data blocks with natural height; gap: the space under a flowing block in px (mobileGapOf), MOBILE_GAP without it; byWidth: a block whose size is its frame (FIT_BY_WIDTH), with designWidth the width its desktop frame's percent is of
+ * @param {{autoGrow?: boolean, gap?: number, byWidth?: boolean, designWidth?: number}} [opts] autoGrow: a block of natural height; gap: the space under a flowing block in px; byWidth: a block sized by its frame, its percent of designWidth
  * @returns {object} Style map for Object.assign(el.style, ...)
  */
 export function mobilePlacementToCss(placement, desktop, opts = {}) {
   const css = {};
-  // z and rot both fall back to the desktop frame: the placement
-  // overrides only the fields it actually contains.
+  // z and rot both fall back to the desktop frame: the placement overrides only the fields it actually contains.
   const rot = placement?.rot ?? desktop.rot;
   if (rot) css.transform = `rotate(${rot}deg)`;
   const z = placement?.z ?? desktop.z;
@@ -885,9 +881,8 @@ export function mobilePlacementToCss(placement, desktop, opts = {}) {
 }
 
 /**
- * Renders a whole page into root. Each section gets its own <section>
- * element, so renderSection can rerender a single section alone later.
- *
+ * Renders a whole page into root.
+ * Each section gets its own <section> element, so renderSection can rerender a single section alone later.
  * @param {object} page Page file (content/pages/*.json), already parsed
  * @param {object} site site.json
  * @param {HTMLElement} root
@@ -956,13 +951,12 @@ function sideColumn() {
 }
 
 /**
- * Renders (or rerenders) a single section - the basis for incremental preview.
+ * Renders a single section anew; one too narrow for its words on the desktop shows its phone layout (phoneHandoff, ADR-0034).
  *
  * @param {object} section Section data
  * @param {object} site site.json
  * @param {HTMLElement} host The section element (cleared and rebuilt)
- * @param {{preview?: boolean, viewport?: 'desktop'|'mobile', measure?: boolean}} [opts] `measure`: a copy drawn out of sight only to be measured (the phone drag's preview in preview-edit.js), drawn as the preview draws its blocks, without the editing layer and without animations, so its blocks stand in their end state.
- * On the desktop a section whose words would stand narrower than they read well shows its phone layout under that window width (phoneHandoff, ADR-0034), marked `urd-handoff` with the width in `data-urd-handoff`, its texts keeping the desktop's measure, and is drawn again as the window crosses it.
+ * @param {{preview?: boolean, viewport?: 'desktop'|'mobile', measure?: boolean}} [opts] `measure`: a copy drawn out of sight only to be measured, as the preview draws its blocks but without the editing layer or animations
  */
 export function renderSection(section, site, host, opts = {}) {
   const Urd = window.Urd;
@@ -987,8 +981,8 @@ export function renderSection(section, site, host, opts = {}) {
   // The DOM id makes the section a spot a link lands on by its id; a name is a marker drawn further down.
   if (typeof section.id === 'string' && section.id) host.id = section.id;
   const spots = anchorTargets(section, viewport);
-  // Ready-made section theme (role set, additive field): overrides the section's
-  // color tokens on host, the blocks inherit them. Resets on Standard/absence.
+  // Ready-made section theme (role set, additive field): overrides the section's color tokens on host, the blocks inherit them.
+  // Resets on Standard/absence.
   applySectionTheme(host, section.theme);
   host.replaceChildren();
 
@@ -1052,8 +1046,7 @@ export function renderSection(section, site, host, opts = {}) {
       const pinned = Number.isFinite(block.frames.mobile?.row);
       el.className = pinned ? 'urd-block urd-block-pinned' : 'urd-block urd-block-flow';
       el.dataset.blockId = block.id;
-      // The decor mark is read by the stagger animation (decor is ornament
-      // and must not delay the content wave).
+      // The decor mark is read by the stagger animation (decor is ornament and must not delay the content wave).
       if (block.decor) el.dataset.decor = '1';
       const key = block.sticky?.group || `solo-${block.id}`;
       const sticks = Boolean(block.sticky) && Boolean(pins?.pinsOnPhone(leads.get(key)));
@@ -1099,8 +1092,7 @@ export function renderSection(section, site, host, opts = {}) {
       if (cell) syncCellWords(cell);
       else if (pinned && own) el.classList.toggle('urd-cell-words', el.dataset.urdWords === '1');
 
-      // A block with columns or cards lays itself out by its own width (base.css),
-      // and a block with its own height places its content in the box.
+      // A block with columns or cards lays itself out by its own width (base.css), and a block with its own height places its content in the box.
       if (followsWidth(drawn)) el.dataset.urdWidth = 'own';
       const align = heightAlign(drawn);
       if (align !== 'top') el.dataset.urdAlign = align;
@@ -1170,9 +1162,7 @@ export function renderSection(section, site, host, opts = {}) {
       const el = document.createElement('div');
       el.className = 'urd-block';
       el.dataset.blockId = block.id;
-      // The decor mark is read by the stagger animation (decor is ornament
-      // and must not delay the content wave); the mobile flow filters on
-      // the field itself.
+      // The decor mark is read by the stagger animation (decor is ornament and must not delay the content wave); the mobile flow filters on the field itself.
       if (block.decor) el.dataset.decor = '1';
       const frame = block.frames.desktop;
       applyFrameCss(el, frame, fitFloorPx(block, canvas._urdDesignW));
@@ -1191,8 +1181,7 @@ export function renderSection(section, site, host, opts = {}) {
         el.classList.add('urd-sticky-able');
         el.dataset.stickyOffset = String(block.sticky.offset);
         el.dataset.stickyUntil = block.sticky.until ?? '';
-        // Additive fields: mode ('screen' docks to the window), dock point
-        // and group id (blocks with the same id are pinned together).
+        // Additive fields: mode ('screen' docks to the window), dock point and group id (blocks with the same id are pinned together).
         el.dataset.stickyMode = block.sticky.mode ?? 'scroll';
         el.dataset.stickyDock = block.sticky.dock ?? 'bottom-right';
         el.dataset.stickyGroup = block.sticky.group ?? '';
@@ -1216,14 +1205,13 @@ export function renderSection(section, site, host, opts = {}) {
   renderAnimation(Urd, host, section.animation, ctx);
   renderAnimation(Urd, host, section.hover, ctx);
 
-  // Mobile attention: editorial marking, preview only (visitors
-  // ignore the flag, see docs/SCHEMA.md#mobile-review).
+  // Mobile attention: editorial marking, preview only (visitors ignore the flag, see docs/SCHEMA.md#mobile-review).
   if (ctx.preview && section.responsive?.mobile?.attention?.needed) {
     host.classList.add('urd-attention');
   }
 
-  // In preview mode the editing layer (drag/resize/delete) is attached
-  // after every render. Set by urd.js; never present for visitors.
+  // In preview mode the editing layer (drag/resize/delete) is attached after every render.
+  // Set by urd.js; never present for visitors.
   if (ctx.preview && !ctx.measure) window.UrdPreviewEdit?.enhanceSection(host, section, grid);
   // Sticky blocks are remeasured (incremental rerender of a single section).
   feature('sticky')?.refreshSticky();
@@ -1410,8 +1398,8 @@ function renderAnimation(Urd, el, animation, ctx, apply = feature('animations')?
 }
 
 /**
- * Neutral placeholder for unknown/failing blocks. The data behind it is
- * untouched; this is display only (see promise 2 and ADR-0005).
+ * Neutral placeholder for unknown/failing blocks.
+ * The data behind it is untouched; this is display only (see promise 2 and ADR-0005).
  * @param {HTMLElement} el
  * @param {string} type
  */

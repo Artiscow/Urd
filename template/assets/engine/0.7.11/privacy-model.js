@@ -1,23 +1,17 @@
 /**
- * The facts the privacy page is written from (0.7.24.2): who is responsible
- * for the site, what each form sends and to whom, what the checkout does and
- * through which payment providers, whether visitors are measured, which
- * third parties' frames the pages hold, and who hosts the site. Read from
- * site.json and the page files, so the page follows the settings; pure, so
- * blocks/privacy.js only writes it out (tests/privacy-model.test.mjs).
+ * The facts the privacy page is written from, read from site.json and the page files: who is responsible, what forms and checkouts send, and to whom.
+ * Notes: docs/engine-notes/privacy-model.md (Urd repository).
  */
 import { siteContact, contactDesign } from './contact-model.js';
 import { providerOf, embedUrl } from './embed-cover.js';
 import { parseLocation } from './osm.js';
 import { CALENDAR_FEED_MINUTES, PREFETCH_MINUTES } from './keep-minutes.js';
 
-/** How long a calendar block keeps a feed's events and a page fetched ahead of a press on its link is kept in the browser, as the modules that keep them read it (keep-minutes.js). */
+/** How long a calendar block keeps a feed's events and a page fetched ahead of a press is kept in the browser (keep-minutes.js). */
 export { CALENDAR_FEED_MINUTES, PREFETCH_MINUTES };
 
 /**
- * What the site keeps in the visitor's own browser (ADR-0029 decision 4), each with the engine modules that keep it and how long (`until`): the privacy page names every one that applies, in its words `privacy.browser.<id>`, with the period's words `privacy.browser.until.<until>` after them.
- * The periods: `tab` while the tab is open (sessionStorage), `changed` until the visitor changes it, `taken` until the visitor takes the choice back, `renewed` until the owner changes the announcement, `ordered` until the order is placed or the cart is emptied (`emptied` where no checkout empties it: none, or one that opens an email draft), `paid` while a payment is under way, `minutes` for the minutes in `minutes`, never past the tab's closing.
- * A module that stores something in a visitor's browser stands here, or the guard in tests/privacy-registry.test.mjs fails, as it does for a kind without its period or its words.
+ * What the site keeps in the visitor's browser (ADR-0029), each with the modules that keep it and how long (`until`); the privacy page names each that applies.
  */
 export const BROWSER_KEEPS = [
   { id: 'pages', modules: ['prefetch.js'], until: 'minutes', minutes: PREFETCH_MINUTES },
@@ -35,8 +29,7 @@ export const BROWSER_KEEPS = [
 export const BROWSER_UNTIL = ['tab', 'changed', 'taken', 'renewed', 'ordered', 'emptied', 'paid', 'minutes'];
 
 /**
- * Where each company the privacy page names says how long it keeps what it gets (ADR-0029 decision 4): the most precise part of its own terms it publishes, by the section's name as published, read on `checked`.
- * A company the page names stands here, or tests/privacy-registry.test.mjs fails; a link is checked again when the company's terms move.
+ * Where each company the privacy page names says how long it keeps what it gets: the most precise section of its published terms, read on `checked`.
  */
 export const KEEP_TERMS = {
   youtube: { company: 'Google', url: 'https://policies.google.com/technologies/retention', section: 'How Google retains data we collect', checked: '2026-11-06' },
@@ -49,7 +42,7 @@ export const KEEP_TERMS = {
 };
 
 /**
- * Where the «how long» of every kind the privacy page tells comes from: `owner` for what the owner sets in the Legal panel (RETENTION_KINDS), `code` for what the visitor's browser keeps (BROWSER_KEEPS), `terms` for what another company keeps (KEEP_TERMS). The guard holds every kind to one of them.
+ * Where the «how long» of each kind the privacy page tells comes from: `owner` (RETENTION_KINDS), `code` (BROWSER_KEEPS) or `terms` (KEEP_TERMS).
  */
 export const KEEP_SOURCES = {
   owner: ['forms', 'newsletter', 'orders'],
@@ -61,8 +54,7 @@ export const KEEP_SOURCES = {
 export const ANALYTICS_HOSTS = ['static.cloudflareinsights.com', 'cloudflareinsights.com'];
 
 /**
- * Whether one of a page's scripts is Cloudflare Web Analytics' beacon: added by Urd with a token (seo.js mountAnalytics), or by Cloudflare itself, which turns its visit counting on for a domain on its free plan unless the owner turns it off there.
- * Each address is parsed and its host compared exactly.
+ * Whether one of a page's scripts is Cloudflare Web Analytics' beacon, added by Urd or by Cloudflare itself; each address is parsed, its host compared exactly.
  * @param {Iterable<string>} srcs The scripts' addresses
  * @returns {boolean}
  */
@@ -77,8 +69,7 @@ export function cloudflareBeacon(srcs) {
 }
 
 /**
- * What the privacy page names an outside host by (ADR-0029): the counting of visits, a frame's provider by the covers' list, or null for a host the page does not name.
- * Every host the site's CSP lets a page reach must have a name here (tests/privacy-registry.test.mjs).
+ * What the privacy page names an outside host by (ADR-0029): the counting of visits, a frame's provider, or null for a host the page does not name.
  * @param {string} host
  * @returns {string|null}
  */
@@ -91,7 +82,7 @@ export function privacyNameOfHost(host) {
 /** The payment providers a checkout can hold, in the order the page names them. */
 export const PAYMENT_PROVIDERS = ['vipps', 'stripe', 'paypal', 'manual'];
 
-/** The providers a checkout's `payments` names: Vipps MobilePay also where the card button goes through Vipps, Stripe where it goes through Stripe, PayPal, and the manual ways (an invoice, a transfer). */
+/** The providers a checkout's `payments` names: Vipps MobilePay, Stripe or PayPal, also behind the card button, and the manual ways (invoice, transfer). */
 export function paymentProviders(payments) {
   const pay = payments ?? {};
   const on = {
@@ -190,12 +181,11 @@ export function pageFacts(entry, page, { siteGeo = false } = {}) {
 }
 
 /**
- * The kinds the association keeps whose period the owner sets in the Legal panel (`site.retention`, 0.7.31.2, ADR-0029 decision 4), each with the choices it takes beside a set period; a kind left out is not decided.
- * Orders (0.7.31.3) take the duty the association is under: `bookkeeping` (bokføringsloven § 13, five years after the end of the financial year, the sales record kept apart), `nif` (a sports club under NIFs lov § 2-11, the same five years) or a period of the owner's own where no act asks for the order to be kept.
+ * The kinds whose period the owner sets in the Legal panel (`site.retention`, ADR-0029), each with the choices it takes beside a set period.
  */
 export const RETENTION_KINDS = { forms: ['period', 'closed'], newsletter: ['unsubscribe', 'period'], orders: ['bookkeeping', 'nif', 'period'] };
 
-/** The countries whose bookkeeping duties the orders' choices name (researched 6 November 2026, Lovdata); elsewhere an order is kept for the owner's own period or the kind is not decided. */
+/** The countries whose bookkeeping duties the orders' choices name; elsewhere an order is kept for the owner's own period or is not decided. */
 export const ORDER_LAW_COUNTRIES = ['NO'];
 
 /**
@@ -212,7 +202,7 @@ export const RETENTION_UNITS = ['months', 'years'];
 export const RETENTION_MAX = 99;
 
 /**
- * A kind's period as stored, read safely: `{until: 'period', count, unit}`, `{until: 'closed'}` (form messages), `{until: 'unsubscribe'}` (the newsletter) or `{until: 'bookkeeping'}` and `{until: 'nif'}` (orders); null for not decided, which a stored value that is none of these reads as too.
+ * A kind's period as stored, read safely: a set period, `closed`, `unsubscribe`, `bookkeeping` or `nif`; null for not decided or any other value.
  * @param {object} site site.json
  * @param {'forms'|'newsletter'|'orders'} kind
  * @returns {{until: string, count?: number, unit?: string}|null}
@@ -232,10 +222,7 @@ export function retentionOf(site, kind) {
  * @param {object} site site.json
  * @param {Array<{entry: object, page: object}>} pages Every page in the registry with its file; one that could not be read is left out
  * @returns {{controller: object, forms: object[], checkout: object|null, analytics: boolean, embeds: string[], atOnce: string[], host: 'cloudflare', retention: {forms: object|null, newsletter: object|null, orders: object|null}, browser: {theme: boolean, shop: boolean, calendar: boolean, announcement: boolean}}}
- *   retention is how long the association keeps the form messages, the newsletter list and the orders (retentionOf), null where it is not decided;
- *   embeds are the third parties whose frames the pages hold, atOnce those of them some page loads with the page (`askFirst: false`) rather than behind the cover;
- *   browser says what the site keeps in the visitor's own browser beside the embed choice: the light or dark choice where the theme has both, the cart with the last order where a page sells, a calendar's events and height where a page has one, and the closing of the announcement strip where there is one (BROWSER_KEEPS);
- *   forms hold the footer's newsletter sign-up first (`footer: true`), then every page's forms
+ *   The facts by part: retention (retentionOf), embeds and atOnce (the frames' providers), browser (BROWSER_KEEPS) and forms, the footer's sign-up first
  */
 export function privacyModel(site, pages) {
   const contact = siteContact(site);

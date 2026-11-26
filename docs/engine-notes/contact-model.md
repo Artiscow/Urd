@@ -8,6 +8,7 @@ The site owner's legal and contact details (site.site.contact, additive from 0.7
 They are typed once in the admin's Legal panel and read by the footer, the contact block and its vCard, the checkout's seller, the terms of sale, the privacy page and the Organization JSON-LD.
 Pure functions with no DOM and no language: the render layer adds the words through t() (ADR-0012), and tests/contact.test.mjs covers them.
 
+
 ## `const CONTACT_DESIGNS`
 
 The contact block's designs, the plain lines first: each id is the block's class `urd-contact-<id>`, which contact.css styles where the design has rules of its own, and a label `opt.contact.<id>` in the admin dictionaries.
@@ -16,6 +17,10 @@ The contact block's designs, the plain lines first: each id is the block's class
 ## `normaliseId`
 
 The stored form of a value for an id: free text trimmed with single spaces (in a register entry uppercased, the prefix in its own case, the letters set apart from the number, and the prefix added when the number is typed alone), or the characters of a number uppercased (lowercased for `fn`) with the separators removed and the prefix in place.
+
+## `validateId`
+
+A profile only warns where the check digit fails, since some registers issue numbers that fail it.
 
 ## `legalParts`
 

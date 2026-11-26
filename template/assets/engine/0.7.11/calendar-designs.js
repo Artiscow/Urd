@@ -1,10 +1,6 @@
 /**
- * The calendar block's designs: the pure model behind the Design picker and the Style tab in the Properties panel, and the renderer's look-up.
- * A design is a look on top of a data view (list, cards, month, agenda or next): it names the colour slots the owner can override, the static texts the owner can rewrite in the preview, and whether its boxes carry an edge stripe.
- * The owner's choices are additive props on the block (`design`, `colors`, `stripe`, `texts`, `fieldStyle`, `showSignup`, `showMore`, `programHref`, `showOpen`, `options`); a block without them renders the plain design on the theme's colours.
- * The module is bundled by the editor and loaded by the block on its first render (with ics.js, outside the visitor closure), so it never touches the DOM and never calls ta().
- *
- * A design is five things, added together: an entry in CAL_DESIGNS below (its view, the colour slots by section with the plain colours first, the static texts, the stripe and the flags); a renderer exported under the design's id from its blocks/calendar-<module>.js; its rules in its family's sheet (blocks/calendar-<module>.css) or, where families share them, calendar.css, under its own class names, that read every slot as `--urd-cal-s-<slot>` with the design's own default; a drawing in calendar-thumb.js; a picture under template/admin/designs/<id>.webp made by scripts/design-pictures.mjs for the design picker; and the label, slot and section keys in the nb, en-GB and tr admin dictionaries. tests/calendar-designs.test.mjs holds the entries, the renderers, the drawings and the keys against each other; tests/stylesheets.test.mjs holds each family's sheet to its own designs, and the looks are checked by eye.
+ * The calendar block's designs: the pure model behind the Design picker and the Style tab, and the renderer's look-up, free of the DOM and of ta().
+ * Notes: docs/engine-notes/calendar-designs.md (Urd repository).
  */
 
 import { isSafeHref, resolveLink } from './nav-model.js';
@@ -16,10 +12,7 @@ export const CAL_VIEWS = ['list', 'cards', 'month', 'agenda', 'next', 'week', 'd
 export const CAL_FIELDS = ['title', 'date', 'time', 'place', 'description', 'category', 'number'];
 
 /**
- * Every word a design draws that is not calendar data, with the site dictionary key it falls back to: the labels and buttons, the words of an event's time and its countdown, the words the block draws around the design, and the texts with a number in them («In {n} days», «{n} events»).
- * The owner rewrites them by clicking them in the preview; the block stores the HTML under the text's key in `props.texts`, a text with plural forms under the form shown («count.other»), with its numbers kept as `{n}`.
- * A text with plural forms names its dictionary key without the form (`calendar.count` for `calendar.count.one` and `calendar.count.other`).
- * `null` marks a text that has no words of its own: the owner writes it, and the editor shows a hint in its place until then (CAL_HINT_TEXTS).
+ * Every word a design draws that is not calendar data, by the site dictionary key it falls back to; the owner's rewrites stand in `props.texts`.
  */
 export const CAL_TEXTS = {
   next: 'calendar.next',
@@ -117,8 +110,7 @@ export const CAL_TEXTS = {
 export const CAL_PLURAL_TEXTS = ['count', 'todayCount', 'nextN', 'inDays', 'unitDays', 'unitHours', 'unitMin'];
 
 /**
- * The texts that are content a design ships with rather than words for a thing every calendar has (an announcement, the empty state's pill, the regular event's labels, the period line of the receipt, the seventies poster and Art deco, and the receipt's venue, admission and thanks).
- * The owner can remove such a line by emptying it in the preview: it is stored as `false`, never drawn for a visitor, and stands as a faint hint in the editor.
+ * The texts that are content a design ships with; one the owner empties is stored as `false` and never drawn for a visitor.
  */
 export const CAL_CONTENT_TEXTS = ['noticeLabel', 'noticeTitle', 'noticeText', 'emptyKicker', 'emptyTitle', 'series', 'forWhom', 'openAll', 'period', 'venue', 'admission', 'admissionPrice', 'thanks'];
 
@@ -165,15 +157,12 @@ const BLOCK_TEXTS = ['noMatch', 'earlier', 'showAll', 'showFewer', 'zoneOf', 'zo
 const COMMON_TEXTS = ['all', 'signup', 'subscribe', 'subscribeMulti', 'addGoogle', 'swUpcoming', 'swWeek', 'swMonth', ...BLOCK_TEXTS, ...TIME_TEXTS, ...EVENT_TEXTS];
 
 /**
- * The design families the picker groups by (`family` in the list), in the picker's order; the label key is `calendar.family.<id>`.
- * The stylised families (fairy tale, future, graphic styles, nature, objects) join the list after retro as they are built.
+ * The design families the picker groups by, in its order; the label key is `calendar.family.<id>`.
  */
 export const CAL_FAMILIES = ['modern', 'next', 'ap', 'retro'];
 
 /**
- * A design's own theme words (`theme` in the list): the texts the design has words of its own for («Departures» for «Coming up»), each under the dictionary key `calendar.theme.<design>.<text>` (with the plural forms after it, as the common key has them).
- * The block draws the theme word in the site's own language, else the common word in that language, else the bokmål theme word (themeString in i18n.js), and the owner's rewrite stands over both.
- * «Word choice: neutral» (the shared option `wordChoice`) swaps every theme word for the common one.
+ * The dictionary key of a design's own theme word for a text, which the block draws in place of the common word.
  */
 export function calThemeKey(designId, key) {
   return `calendar.theme.${designId}.${key}`;
@@ -186,8 +175,7 @@ export function calThemeTexts(props) {
 }
 
 /**
- * True when a design that rewrites calendar data (`rewrites` in the list: a date as 04.10, a title in capitals in the text itself, a place cut to the row's width, a sentence built around the time and place) may do so: the shared option `rewrite`, on unless the owner switched it off.
- * Off, the design shows the calendar's own text; a design without `rewrites` never rewrites and reads true.
+ * True when a design that rewrites calendar data may do so: the shared option `rewrite`, on unless the owner switched it off.
  */
 export function calRewrites(props) {
   return calOptions(props).rewrite !== false;
@@ -199,14 +187,12 @@ export function calDesignFamilies() {
 }
 
 /**
- * How a design behaves on a phone (`phone` in the list): `fits` reads as it is, `flows` lays its columns under each other in the calendar's sheets, and `switch` cannot be read there and draws a phone design instead (calPhoneView).
+ * How a design behaves on a phone: `fits` reads as it is, `flows` stacks its columns, and `switch` draws a phone design instead (calPhoneView).
  */
 export const CAL_PHONE_MODES = ['fits', 'flows', 'switch'];
 
 /**
- * The phone designs of their own: the lists a block can draw on a phone besides the designs themselves, each in the picker under its family.
- * `agenda` is the neutral stacked list the block draws itself in its own set (renderPhoneAgenda); the others are renderers of their own a design lends, exported under their id from the module named (blocks/calendar-<module>.js) and drawn in the set of the design they belong to (`home`). None of them scrolls sideways.
- * `family` groups them in the picker (the label key `calendar.family.<id>`, the neutral family first); `ownSubscribe` marks one that places the subscribe buttons itself. The label key is `calendar.phone.<id>`, its description `calendar.phone.<id>.about`, the picker's picture admin/designs/phone-<id>.webp.
+ * The phone designs of their own: the neutral list the block draws itself (`agenda`), and the lists designs lend from their modules.
  * @type {Array<{id: string, labelKey: string, family: string, module?: string, home?: string, ownSubscribe?: boolean}>}
  */
 export const CAL_PHONE_DESIGNS = [
@@ -216,15 +202,14 @@ export const CAL_PHONE_DESIGNS = [
   { id: 'marqueeRows', labelKey: 'calendar.phone.marqueeRows', family: 'retro', module: 'retro', home: 'marquee', ownSubscribe: true },
 ];
 
-/** The views a design can stand on and still be drawn on a phone by a block of another view: the ones that list what is coming; a design of a span view (week, month, day, year) needs the block's own window and joins only a block of the same view. */
+/** The views whose designs a block of another view can draw on a phone: the ones that list what is coming. */
 const PHONE_ANY_VIEWS = ['list', 'cards', 'agenda', 'next'];
 
 /** A design as an entry in the phone or card list: drawn as itself, in its own set, with its own options and words (`look` is the design whose look it is). */
 const asEntry = (design) => ({ id: design.id, labelKey: design.labelKey, family: design.family, module: design.module, set: design.set, view: design.view, ownSubscribe: design.ownSubscribe === true, desktop: true, look: design.id });
 
 /**
- * The phone designs a block can choose from: the neutral list, every design that reads on a phone and fits the block's view (the block's own design among them, under its own name), and the phone designs designs lend; by family afterwards (calPhoneFamilies).
- * A design that cannot be read on a phone (`phone: 'switch'`) is never among them, so no phone design scrolls sideways.
+ * The phone designs a block can choose from: the neutral list, every design that reads on a phone and fits the block's view, and the ones designs lend.
  * @returns {Array<{id: string, labelKey: string, family: string, module?: string, set?: string, view?: string|null, home?: string, look?: string, ownSubscribe?: boolean, desktop?: boolean}>}
  */
 export function calPhoneCandidates(props) {
@@ -240,7 +225,7 @@ export function calPhoneDesignDef(id, props) {
   return candidates.find((d) => d.id === id) ?? candidates.find((d) => d.id === calPhoneView(props)) ?? candidates[0];
 }
 
-/** A list of designs by family, in the picker's order: the neutral ones first, the cards several designs share next, then the families as the design picker has them. */
+/** A list of designs by family in the picker's order: the neutral ones, the shared cards, then the design families. */
 function byFamily(list) {
   return ['neutral', 'sets', ...CAL_FAMILIES].map((family) => ({ family, labelKey: `calendar.family.${family}`, designs: list.filter((d) => d.family === family) })).filter((f) => f.designs.length);
 }
@@ -251,8 +236,7 @@ export function calPhoneFamilies(props) {
 }
 
 /**
- * The phone design a block draws on a phone: the owner's choice (`phoneView`) when it is one of the block's candidates, else the design's own default (`phoneDefault`), else the design itself when it reads on a phone and the neutral list when it cannot.
- * The legacy values read as the design itself: `phoneView: 'self'` and the switch `phoneDesign: false` (a design that cannot be read on a phone then takes its default, since no phone design scrolls sideways).
+ * The phone design a block draws: the owner's `phoneView` among its candidates, else the design's `phoneDefault`, else the design itself or the neutral list.
  * @returns {string} An id among calPhoneCandidates
  */
 export function calPhoneView(props) {
@@ -264,8 +248,7 @@ export function calPhoneView(props) {
 }
 
 /**
- * The card designs of their own: `neutral` is the plain card of the calendar's own set, in its own colours and without a design's dress; the others are decorators a design lends, exported under `cards` by the module named, run on the card in the set of the design they belong to (`home`).
- * The label key is `calendar.cardDesign.<id>`, its description `calendar.cardDesign.<id>.about`, the picker's picture admin/designs/card-<id>.webp.
+ * The card designs of their own: the neutral card in the calendar's own set, and the decorators designs lend under their module's `cards`.
  * @type {Array<{id: string, labelKey: string, family: string, module?: string, home?: string}>}
  */
 export const CAL_CARD_DESIGNS = [
@@ -276,8 +259,7 @@ export const CAL_CARD_DESIGNS = [
 ];
 
 /**
- * The cards of the designs that have no card of their own yet, by colour set: a set that two or more of them share gives one card, named for the set (`set-<set>`, family `sets`); a design alone in its set without a card of its own gives its own entry, which is its set's card.
- * A design gets a card of its own (`ownCard` in the list) in its design round, and then leaves its set's card.
+ * The cards shared by colour set: one for each set that two or more designs without a card of their own share (`set-<set>`, family `sets`).
  */
 function setCards() {
   const bySet = new Map();
@@ -291,8 +273,7 @@ function setCardOf(design) {
 }
 
 /**
- * The card designs a block can choose from: the neutral card, the cards several designs share (one per colour set), every design's own card (the block's own design among them under its own name), and the card designs designs lend; by family afterwards (calCardFamilies).
- * A design with a card of its own carries its module, whose `cards` may dress the card further.
+ * The card designs a block can choose from: the neutral card, the shared set cards, every design's own card and the cards designs lend.
  * @returns {Array<{id: string, labelKey: string, family: string, module?: string, set?: string, home?: string, look?: string, desktop?: boolean, setCard?: boolean, designs?: string[]}>}
  */
 export function calCardCandidates() {
@@ -314,8 +295,7 @@ export function calCardFamilies() {
 }
 
 /**
- * The card design a block's card wears: the owner's choice (`card`) when it is one in the list, else the design's own default (`cardDefault`), else the design's own card, or its set's card while it has none of its own.
- * A stored design id whose design shares its set's card reads as that set's card.
+ * The card design a block's card wears: the owner's `card` when listed, else the design's `cardDefault`, else its own card or its set's.
  * @returns {string} An id among calCardCandidates
  */
 export function calCardDesign(props) {
@@ -329,7 +309,7 @@ export function calCardDesign(props) {
 }
 
 /**
- * How the card wears its design: the set it is drawn in, the card classes (`urd-cal-dlg-<design>` for the design whose card it is, and the lent card's own), and whether the owner's colours on the calendar reach it (only when the card is the calendar's own design's, its set's, or the neutral one).
+ * How the card wears its design: the set it is drawn in, its card classes, and whether the owner's calendar colours reach it.
  * @returns {{set: string, classes: string[], ownColours: boolean}}
  */
 export function calCardDress(props) {
@@ -346,16 +326,7 @@ export function calCardDress(props) {
 const slot = (key, section = 'colors') => ({ key, labelKey: `calendar.slot.${key}`, section });
 
 /**
- * The designs, in the order the picker lists them.
- * `view: null` follows the block's own view (the plain design draws every view); a design with a view of its own fixes it, and the editor writes that view into the block so an engine without the design still draws the right data.
- * `module` names the renderer file the block loads for the design (blocks/calendar-<module>.js, exporting a function under the design's id); the plain design's views live in the block itself.
- * `ownSubscribe` marks a design that places the subscribe buttons inside its own layout, so the block draws no row under it, `ownFilter` one that draws its own calendar switches instead of the chip row, and `notice` one that can show the announcement note (`props.notice { show, href, as }` with the texts noticeLabel, noticeTitle and noticeText; `noticeBand` marks a design that can draw it as an alert band instead, `as: 'band'`).
- * `empty: 'ap'` gives the design ApeironLF's empty state (a pill, a dashed box and the subscribe button) in place of the plain one.
- * `program` marks a design that draws a link to the whole programme when the block has an address for it (`props.programHref`), and `open` one that writes «Open to everyone» on an event without a sign-up (`props.showOpen`).
- * `theme` lists the texts a design has words of its own for (calThemeKey), and `rewrites` marks a design that rewrites calendar data unless the owner switches it off (calRewrites).
- * `phoneDefault` names the phone design the block draws on a phone until the owner picks another (CAL_PHONE_DESIGNS, calPhoneView), and `cardDefault` the card design its card wears until the owner picks another (CAL_CARD_DESIGNS, calCardDesign; the module exports a decorator per card design it lends under `cards`).
- * `limit` is the number of events a new calendar in the design starts with, and the count it takes when it is chosen while the calendar keeps the count it started with (else six, eight in the agenda).
- * `ownCard` marks a design whose card has a look of its own from its design round (`urd-cal-dlg-<id>` in calendar.css or its family's sheet, and a decorator under the module's `cards` where the look needs parts of its own); a design without shares its set's card (calCardCandidates).
+ * The designs, in the order the picker lists them, each with its view, renderer module, colour slots, texts, colour set and flags.
  * @type {Array<{id: string, labelKey: string, view: string|null, module?: string, family: string, phone: string, stripe: boolean, theme?: string[], rewrites?: boolean, limit?: number, slots: Array<{key: string, labelKey: string, section: string}>, texts: string[]}>}
  */
 export const CAL_DESIGNS = [
@@ -917,11 +888,7 @@ export const CAL_DESIGNS = [
 ];
 
 /**
- * The settings that belong to one design each, stored together under the block's `options`.
- * A `choice` holds one of its values, a `switch` true or false, an `hour` a whole hour from 0 to 24 or nothing (the design then finds the span itself).
- * `def` is what a block without the option draws.
- * The label key is `calendar.opt.<key>`, a choice's values `calendar.opt.<key>.<value>`.
- * `when` names the values of the design's other options the option needs to matter, so the editor shows it only then (calOptionShown).
+ * The settings that belong to one design each, stored under the block's `options`: a choice, a switch or an hour, each with its default and label key.
  */
 const choice = (key, values, def, when) => ({ key, kind: 'choice', values, def, labelKey: `calendar.opt.${key}`, ...(when ? { when } : {}) });
 const toggle = (key, def) => ({ key, kind: 'switch', def, labelKey: `calendar.opt.${key}` });
@@ -945,7 +912,7 @@ export const CAL_OPTIONS = {
 };
 
 /**
- * The options every design with the trait has, stored under `options` like the design's own and listed after them (calOptionDefs): the word choice on a design with theme words (`theme`), and the rewriting switch on a design that rewrites calendar data (`rewrites`).
+ * The options a design's traits give it, listed after its own: the word choice for theme words and the rewriting switch.
  */
 export const CAL_SHARED_OPTIONS = {
   theme: tipped(choice('wordChoice', ['theme', 'neutral'], 'theme')),
@@ -953,8 +920,7 @@ export const CAL_SHARED_OPTIONS = {
 };
 
 /**
- * The colour sets: every design belongs to one, and the event card, the switcher's week and month, the finding tools and the phone view are drawn per set in the calendar's sheets (`urd-cal-set-<id>` on the block, ADR-0011).
- * A design overrides its set by redefining a set variable under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
+ * The colour sets: every design belongs to one, and the card, the switcher, the finding tools and the phone view are drawn per set (`urd-cal-set-<id>`).
  */
 export const CAL_SETS = ['theme', 'apCream', 'apNavy', 'agendaDark', 'board', 'darkGlass', 'cork', 'poster', 'bento', 'lightGlass', 'pad', 'index', 'departures', 'marquee', 'receipt', 'seventies', 'deco'];
 
@@ -963,7 +929,7 @@ export const CAL_SWITCH_WEEKS = ['weekStrip', 'weekPlan', 'layers'];
 export const CAL_SWITCH_MONTHS = ['month', 'sidepanel', 'apMonth'];
 
 /**
- * The designs behind the switcher's Week and Month buttons: the owner's choice (`switcherViews`) when it is one of the designs a button can hold, else the one matching the block's set (the ApeironLF month on the Ap sets, the plain month elsewhere, the week strip for the week).
+ * The designs behind the switcher's Week and Month buttons: the owner's `switcherViews` when valid, else the week strip and the month of the block's set.
  * @returns {{week: string, month: string}}
  */
 export function calSwitcherViews(props) {
@@ -976,7 +942,6 @@ export function calSwitcherViews(props) {
 
 /**
  * Where the description is drawn: in the event's own row (`rows`) or only in the card that opens at a press (`card`).
- * Only a design with room in its rows (`excerpt`) draws it there; the legacy per-design option `description: false` reads as `card`.
  */
 export function calDescription(props) {
   if (props?.description === 'card' || props?.description === 'rows') return props.description;
@@ -1000,8 +965,7 @@ export function calOptionDefs(designId) {
 }
 
 /**
- * The design's options as the block draws them: every option of the design with the owner's value when it is valid, else the default.
- * Options that belong to another design are left out.
+ * The design's options as the block draws them: the owner's valid value for each, else its default; other designs' options are left out.
  * @returns {Record<string, string|boolean|number|null>}
  */
 export function calOptions(props) {
@@ -1050,24 +1014,21 @@ export function calLimitStart(props) {
 export const CAL_SWITCH_VIEWS = ['list', 'cards', 'agenda', 'next'];
 
 /**
- * True when the block shows the view switcher: the owner has switched it on (`switcher: true`) and the block's view is one that lists what is coming.
- * The switcher lets a visitor turn the block to the week or the month and back, without changing what is stored.
+ * True when the block shows the view switcher: switched on (`switcher: true`) on a view that lists what is coming.
  */
 export function calSwitcher(props) {
   return props?.switcher === true && CAL_SWITCH_VIEWS.includes(calView(props));
 }
 
 /**
- * True when the block folds the events beyond its max count under «Show all»: a list view (the plain list and the list designs) with the fold left on (`showMore`, on unless switched off).
- * The regular-event design lists one event's dates and folds them itself.
+ * True when a list view folds the events beyond its max count under «Show all» (`showMore`, on unless switched off).
  */
 export function calFolds(props) {
   return props?.showMore !== false && calView(props) === 'list' && calDesign(props?.design).module !== 'more';
 }
 
 /**
- * The address of the whole programme, for a design that links to it (`program`): a page of the site, an anchor or a full address, through the shared safe-URL gate.
- * Null when the block has none, the design draws no such link, or the value is not an address.
+ * The address of the whole programme for a design that links to it, through the shared safe-URL gate; null when there is none.
  */
 export function calProgramHref(props) {
   if (!calDesign(props?.design).program) return null;
@@ -1076,7 +1037,7 @@ export function calProgramHref(props) {
 }
 
 /**
- * The link the announcement goes to (`props.notice`, one link: a page, a spot on it, or an address through the shared safe-URL gate, with a new tab and rel words), resolved by resolveLink, or null when it has none or it goes nowhere.
+ * The link the announcement goes to (`props.notice`), resolved by resolveLink, or null when it has none or it goes nowhere.
  * @param {object} props The block's props
  * @param {Array<{id: string, path: string}>} [pages] The page register
  * @returns {ReturnType<typeof resolveLink>|null}
@@ -1120,8 +1081,7 @@ export function calColorCss(value) {
 }
 
 /**
- * The CSS variables for the owner's colour overrides: `--urd-cal-s-<slot>` for every slot of the design that holds a valid colour.
- * The base style reads each slot with the theme's colour as the fallback, so an unset slot follows the theme.
+ * The CSS variables for the owner's colour overrides: `--urd-cal-s-<slot>` for every slot holding a valid colour; an unset slot follows the theme.
  * @returns {Record<string, string>}
  */
 export function calSlotVars(design, colors) {
@@ -1133,16 +1093,15 @@ export function calSlotVars(design, colors) {
   return out;
 }
 
-/**
- * The edge stripe on the design's boxes: on or off (the owner's choice, else the design's own), and the stripe's colour as CSS when the owner set one.
- * Without a colour the stripe takes the event's calendar colour, else the accent.
- * @returns {{show: boolean, color: string|null}}
- */
 /** True when the block draws a phone design on a phone rather than the design itself (calPhoneView). */
 export function calPhoneDesign(props) {
   return calPhoneView(props) !== calDesign(props?.design).id;
 }
 
+/**
+ * The edge stripe on the design's boxes: on or off, and the owner's colour as CSS; without one it takes the event's calendar colour, else the accent.
+ * @returns {{show: boolean, color: string|null}}
+ */
 export function calStripe(design, stripe) {
   const show = typeof stripe?.show === 'boolean' ? stripe.show : design.stripe;
   return { show, color: show ? calColorCss(stripe?.color) : null };
@@ -1153,8 +1112,7 @@ export const CAL_SIZE = { min: 8, max: 120 };
 const SAFE_FAMILY = /^[\w\s,'"-]{1,80}$/;
 
 /**
- * Inline style for one event field from the owner's settings: font (a stack from the font list or a plain family name), size in px, bold, italic, underline and colour.
- * Only the set and valid parts are written, so the design's own styling stays for the rest.
+ * Inline style for one event field from the owner's settings: font, size, bold, italic, underline and colour, only the set and valid parts.
  * @param {{font?: string, size?: number, bold?: boolean, italic?: boolean, underline?: boolean, color?: string}|undefined} style
  * @returns {Record<string, string>} camelCase style properties
  */
@@ -1186,8 +1144,7 @@ export function calBlankHtml(html) {
 }
 
 /**
- * The owner's words for a text: their HTML, `false` for a content line the owner removed (CAL_CONTENT_TEXTS), or null when the dictionary's words apply.
- * A text with plural forms is read from its form's slot first, then from the key alone, where its words stood before the text had forms.
+ * The owner's words for a text: their HTML, `false` for a removed content line, or null when the dictionary's words apply.
  */
 export function calTextValue(texts, key, form) {
   const slots = form && CAL_PLURAL_TEXTS.includes(key) ? [calTextSlot(key, form), key] : [key];
@@ -1203,8 +1160,7 @@ export function calTextValue(texts, key, form) {
 }
 
 /**
- * A text cut at its placeholders: the plain stretches as strings and each placeholder of `names` as `{name}`.
- * A placeholder that is not among the names stays part of the text.
+ * A text cut at its placeholders: the plain stretches as strings and each placeholder of `names` as `{name}`; other placeholders stay text.
  * @returns {Array<string|{name: string}>}
  */
 export function calSplitTokens(text, names) {
@@ -1222,8 +1178,7 @@ export function calSplitTokens(text, names) {
 }
 
 /**
- * True when the owner has rewritten or removed at least one of the design's texts.
- * The words of a text without words of its own (the announcement's title and text) are the owner's content, not a rewrite, and never count.
+ * True when the owner has rewritten or removed at least one of the design's texts; the words of a text without words of its own never count.
  */
 export function calHasTextOverrides(design, texts) {
   return Object.keys(texts ?? {}).some((slot) => {
@@ -1233,7 +1188,7 @@ export function calHasTextOverrides(design, texts) {
   });
 }
 
-/** The texts after «Reset the texts»: the default words everywhere, keeping only the owner's own words in the texts that have none (an announcement is never deleted by a reset); undefined when nothing is kept. */
+/** The texts after «Reset the texts»: the default words, keeping the owner's words in the texts that have none of their own; undefined when nothing is kept. */
 export function calResetTexts(texts) {
   const kept = {};
   for (const key of Object.keys(CAL_HINT_TEXTS)) {

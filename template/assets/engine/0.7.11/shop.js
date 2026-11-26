@@ -110,8 +110,8 @@ export function cartReprice(items, lines) {
 }
 
 /**
- * Adds a line to the basket: if the key is already there the quantity is
- * raised, otherwise the line is appended. Always returns a new list.
+ * Adds a line to the basket: if the key is already there the quantity is raised, otherwise the line is appended.
+ * Always returns a new list.
  * @param {Array} items
  * @param {{key: string, id: string, title: string, price: number, qty?: number, variant?: string, image?: string}} item
  */
@@ -204,7 +204,7 @@ export const ORDER_KEY = 'urd-last-order';
  * The record a printable order confirmation is drawn from, all plain data: lines, total, currency, contact details, payment, provider, reference and time.
  * @param {Array} items The basket lines (readCart)
  * @param {{name?: string, email?: string, phone?: string, comment?: string}} contact
- * @param {{currency?: string, payment?: string, provider?: string, reference?: string, at?: string, total?: number}} [extra] payment is the instruction's text, provider the layer's provider that took the money, and total the amount the provider confirms, which stands in place of the basket's sum
+ * @param {{currency?: string, payment?: string, provider?: string, reference?: string, at?: string, total?: number}} [extra] payment: the instruction's text; provider: the one that took the money; total: the amount it confirms, in place of the basket's sum
  */
 export function orderRecord(items, contact, extra = {}) {
   const field = (value) => String(value ?? '').trim().slice(0, 200);

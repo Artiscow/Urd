@@ -1,9 +1,11 @@
+/**
+ * Rich text kept to an allowlist: the HTML a text, a paste or a feed may hold, rebuilt from an inert document, and the plain text read out of it.
+ * Notes: docs/engine-notes/sanitize.md (Urd repository).
+ */
 import { resolveLink, isSafeHref, isSafeImage } from './nav-model.js';
 
 /**
- * The HTML a rich text may hold (SCHEMA.md «Rich text»): the one allowlist the drawing of a text and a paste into one share.
- * `elements` names each element kept and the attributes it may carry beside the `shared` ones; `styles` the properties a `style` attribute keeps, and `pasted` those a paste keeps with a value of its own, the others only as one of the theme's (`var(--urd-…)`), so pasted words follow the site's fonts, sizes and colours; `dropped` the elements left out with everything in them.
- * Any other element gives way to its content, so its words stay.
+ * The HTML a rich text may hold (SCHEMA.md «Rich text»), shared by drawing a text and pasting into one: its elements, attributes and styles.
  */
 export const RICH_TEXT = {
   elements: {
@@ -57,8 +59,7 @@ const VALUE_CHECKS = {
 };
 
 /**
- * A `style` attribute kept to the properties of RICH_TEXT.styles with plain values; empty when none is left.
- * From a paste only RICH_TEXT.pasted keep a value of their own, and the others one of the theme's.
+ * A `style` attribute kept to RICH_TEXT.styles with plain values, a paste keeping its own value only for RICH_TEXT.pasted; empty when none is left.
  * @param {string} value
  * @param {boolean} [pasted]
  */
@@ -77,9 +78,7 @@ export function richStyle(value, pasted = false) {
 }
 
 /**
- * A rich text rebuilt from the allowlist (RICH_TEXT): the children of `source`, a parsed tree that is never drawn, become new elements made with `doc`, each with only its allowed attributes and only after their values pass their checks.
- * An element of another namespace (an SVG's or MathML's) is left out with its content, and so is one in `dropClasses`, the editing handles older texts can hold.
- * With the page register a link to a page or a spot on it (data-urd-page, data-urd-target, written by the link editor) gets the address the page has now, so a change of the page's address never breaks it; a link that opens a new tab never reaches back to the page (noopener).
+ * Rebuilds a rich text from the allowlist (RICH_TEXT): each child of `source` becomes a new element made with `doc`, with only its allowed, checked attributes.
  * @param {Node} source
  * @param {Document} doc
  * A paste (`pasted`) keeps its own words' look in part only (richStyle), and a `font` element's face, colour and size not at all.
@@ -145,7 +144,7 @@ export function buildRich(source, doc, { pages = null, dropClasses = [], pasted 
 }
 
 /**
- * A rich text as the page draws it (text blocks, FAQ answers, collection and product titles and text, the calendar's own words): parsed in an inert document, where nothing in it loads or runs, and rebuilt from the allowlist (buildRich).
+ * A rich text as the page draws it: parsed in an inert document, where nothing loads or runs, and rebuilt from the allowlist (buildRich).
  * @param {string} html
  * @param {{pages?: Array<{id: string, path: string}>|null, dropClasses?: string[]}} [options]
  * @returns {DocumentFragment}
@@ -177,7 +176,7 @@ export function cleanRichHtml(html) {
 }
 
 /**
- * What a paste or a drop into an editable text inserts, or null to leave it to the browser: a field that is not rich (`plaintext-only`) and a paste with no HTML are left alone, a plain paste (Ctrl+Shift+V) inserts the words, and HTML goes in cleaned (cleanRichHtml), or as its words where nothing of it is left.
+ * What a paste or a drop into an editable text inserts, or null to leave it to the browser: plain words, or HTML cleaned by cleanRichHtml.
  * @param {string|null} editable The field's contenteditable value
  * @param {boolean} plain
  * @param {string} html The clipboard's or the drop's text/html
@@ -197,9 +196,7 @@ const KEPT_TAGS = new Set(['P', 'BR', 'UL', 'OL', 'LI', 'B', 'STRONG', 'I', 'EM'
 const DROPPED_TAGS = new Set(['SCRIPT', 'STYLE', 'HEAD', 'TITLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPUT', 'BUTTON', 'SELECT', 'TEXTAREA', 'SVG', 'MATH', 'IMG', 'PICTURE', 'VIDEO', 'AUDIO', 'CANVAS', 'LINK', 'META', 'BASE', 'TEMPLATE', 'NOSCRIPT']);
 
 /**
- * HTML from a source nobody on the site wrote (a calendar feed), as a fragment built from an allowlist: paragraphs, line breaks, lists, bold, italic, underline, quotes and links to http, https and mailto addresses, with no attribute carried over.
- * A heading becomes a bold paragraph, any other wrapper gives way to its content, and scripts, styles, forms, pictures and embedded content are left out with everything in them.
- * The markup is parsed in an inert document, so nothing in it loads or runs.
+ * HTML from a source nobody on the site wrote (a calendar feed), parsed in an inert document and rebuilt from a small allowlist with safe links.
  */
 export function safeHtmlFragment(html) {
   const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
@@ -242,7 +239,7 @@ export function safeHtmlFragment(html) {
 }
 
 /**
- * Plain text from rich text (cart lines, emptiness checks, panel summaries): the markup is parsed in an inert document and the text content read out, so no tag remnants can survive the way they can with a regex pass.
+ * Plain text from rich text, read from the text content of the markup parsed in an inert document, so no tag remnants survive.
  */
 export function plainText(html) {
   const doc = new DOMParser().parseFromString(String(html ?? ''), 'text/html');
@@ -250,8 +247,7 @@ export function plainText(html) {
 }
 
 /**
- * The lines of a text that may be written as rich text, such as a feed's event description: markup (a tag or an entity) is parsed in an inert document, a line break and the end of a block become new lines, and the text content is read out.
- * Text without markup comes back as it is.
+ * The lines of a text that may hold markup, such as a feed's description, parsed in an inert document with breaks and block ends as new lines.
  */
 export function plainLines(text) {
   const source = String(text ?? '');

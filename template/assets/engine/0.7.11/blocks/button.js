@@ -1,6 +1,6 @@
 /**
- * Core block: button.
- * One link (resolveLink in nav-model.js): a page in the page registry (page), a spot on it (target), or an address (href), with a new tab and rel words; page is looked up in ctx.site.pages at render time.
+ * Core block: button, one link (resolveLink in nav-model.js) to a page, a spot on it, or an address, with a new tab and rel words.
+ * Notes: docs/engine-notes/blocks/button.md (Urd repository).
  */
 import { resolveLink, linkAttrs } from '../nav-model.js';
 import { resolveColor } from '../theme.js';
@@ -23,7 +23,7 @@ export const buttonBlock = {
     const a = document.createElement('a');
     a.className = `urd-button urd-button-${props.style}`;
     a.textContent = props.label;
-    // The owner's colours over the design's, each a theme name or an own colour: the fill, the words, the outline and the fill under the pointer. One left empty follows the design and the theme.
+    // The owner's colours over the design's: the fill, the words, the outline and the hover fill; one left empty follows the design and the theme.
     const own = { '--urd-btn-bg': props.bg, '--urd-btn-text': props.color, '--urd-btn-border': props.borderColor, '--urd-btn-hover': props.hoverBg };
     for (const [name, value] of Object.entries(own)) if (typeof value === 'string' && value) a.style.setProperty(name, resolveColor(value));
     if (typeof props.borderColor === 'string' && props.borderColor) a.classList.add('urd-button-own-border');

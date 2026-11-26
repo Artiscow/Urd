@@ -1,10 +1,6 @@
 /**
- * Core block: a countdown towards a point in time (typically an event). Four
- * unit boxes (days/hours/minutes/seconds) ticking with setInterval; the ticking
- * is logic, not animation (ADR-0011), so reduced motion needs no special
- * handling. A target in the past shows the done text. The unit words are their
- * own keys instead of Intl.RelativeTimeFormat (Northern Sami is missing from ICU
- * and would fall back to a bare number).
+ * Core block: a countdown towards a point in time, four unit boxes ticking with setInterval, and the done text once the target has passed.
+ * Notes: docs/engine-notes/blocks/countdown.md (Urd repository).
  */
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady, t } from '../i18n.js';

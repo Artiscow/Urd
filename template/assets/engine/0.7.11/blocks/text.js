@@ -1,8 +1,7 @@
 /**
- * Core block: text. Rich text (HTML written by the site owner through the editor)
- * with alignment. The content is the owner's own and is treated as trusted; it is
- * the same trust model as the owner being able to edit the files in the repo
- * directly.
+ * Core block: text, the owner's rich text with its alignment.
+ * The content is the owner's own and trusted, as the files in the repo are.
+ * Notes: docs/engine-notes/blocks/text.md (Urd repository).
  */
 import { setRichHtml, EDIT_HANDLES } from '../sanitize.js';
 import { boxStyleCss } from '../box-style.js';
@@ -52,18 +51,14 @@ export const textBlock = {
   /**
    * @param {HTMLElement} el The block element (positioned by render.js)
    * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number, design?: string, accent?: string, headingColor?: string, cardColor?: string, rules?: boolean, corners?: string, headingFont?: string}} props
-   *   design (additive from 0.7.24.2.4): the design the text is drawn in; a text block is plain text, and the terms block (below) a document design (doc-look.js) with its look beside it
+   *   design: the design the text is drawn in, plain text for a text block and a document design (doc-look.js) for the terms block.
    * @param {object} ctx Render context
    * @param {string} [design] The design it is drawn in: plain text for a text block, unless one from before page v8 still holds a document design
    */
   render(el, props, ctx, design = textDesign(props.design)) {
-    // The text lives in its own inner element: the editing handles that
-    // preview-edit puts on the block must NEVER end up inside the editable
-    // content (or in the stored props.html).
+    // The text lives in its own inner element, so the editing handles preview-edit puts on the block never end up in the editable content or props.html.
     const content = document.createElement('div');
-    // The text box variant: the same block, but the content sits in a card
-    // (the theme's surface color, border, radius). Optional field; older data
-    // lacks it and renders without the card.
+    // The text box variant: the content sits in a card (the theme's surface colour, border, radius); without `box` it is drawn plain.
     content.className = props.box ? 'urd-text urd-text-box' : 'urd-text';
     // The block's own words, which «Long words» reaches (ADR-0034, base.css).
     content.dataset.urdText = '';
@@ -76,8 +71,8 @@ export const textBlock = {
       content.style.setProperty('--urd-text-hyphens', props.words === 'whole' ? 'manual' : 'auto');
       content.style.setProperty('--urd-text-wrap', props.words === 'whole' ? 'normal' : 'break-word');
     }
-    // «Force readable text» on the desktop (ADR-0034): the lines of a plain text wrap at a measure, each paragraph by the text's alignment or its own (base.css); the document designs keep their own layout.
-    // A section showing its phone layout on a desktop page (render.js ctx.handoff) keeps it, its row as wide as the desktop's canvas.
+    // «Force readable text» on the desktop (ADR-0034): a plain text's lines wrap at a measure, by its alignment (base.css).
+    // A phone layout on a desktop keeps it.
     if (design === 'plain' && (ctx.viewport !== 'mobile' || ctx.handoff) && forcesReadable(ctx.section, 'desktop')) {
       content.dataset.urdMeasure = '';
       content.dataset.urdAlign = props.align === 'center' || props.align === 'right' ? props.align : 'left';
@@ -85,16 +80,14 @@ export const textBlock = {
     // Optional font and size per text block (additive; empty = inherited from the theme).
     if (props.font) content.style.fontFamily = props.font;
     if (props.size) content.style.fontSize = `${props.size}px`;
-    // Optional line and letter spacing per field (additive; empty = inherited).
-    // The line height is unitless (it scales with the font size); the letter
-    // spacing is px and can be negative (tighter than normal).
+    // Optional line and letter spacing (empty = inherited): the line height unitless, the letter spacing in px and possibly negative.
     if (props.lineHeight) content.style.lineHeight = String(props.lineHeight);
     if (typeof props.letterSpacing === 'number' && props.letterSpacing !== 0) {
       content.style.letterSpacing = `${props.letterSpacing}px`;
     }
-    // The words, rebuilt from the rich-text allowlist (sanitize.js), the same for every block that draws rich text: nothing executable reaches the page, and the editing handles and buttons an older Urd could leave in a text are left out (stored clean on the next edit).
+    // The words, rebuilt from the rich-text allowlist (sanitize.js): nothing executable reaches the page, and editing handles and buttons are left out.
     setRichHtml(content, props.html, ctx.site?.pages ?? [], { dropClasses: EDIT_HANDLES });
-    // A document design (doc-look.js) draws the text in a root of its own, with the contents beside it where the design has them; plain text stands alone as it always has.
+    // A document design (doc-look.js) draws the text in a root of its own, with the contents beside it where the design has them; plain text stands alone.
     const prefix = `urd-doc-${el.dataset.blockId ?? 'text'}`;
     let doc = null;
     let contentsKey = '';
@@ -152,10 +145,8 @@ export const textBlock = {
     /** The box the words fill: the document's root where there is one, with the contents row above the text in a narrow block. */
     const box = doc ?? content;
 
-    // Click-and-type: in preview mode (inside the editor's iframe) the text is directly editable, and every change is posted to the editor, which owns the draft.
-    // The block id sits on the block element (set by render.js).
-    // In the phone view the words written are the phone's own (ADR-0033): the edit says so, and the desktop frame is left as it is.
-    // A block whose words the phone cannot keep (PHONE_WORDS, the terms of sale among them) is not written in the phone view.
+    // Click-and-type: in the editor's preview the text is editable, each change posted to the editor.
+    // In the phone view the words are the phone's own (ADR-0033).
     const phoneView = ctx.viewport === 'mobile';
     const ownType = ctx.section?.blocks.find((b) => b.id === el.dataset.blockId)?.type ?? 'text';
     if (ctx.preview && (!phoneView || PHONE_WORDS[ownType])) {
@@ -177,12 +168,9 @@ export const textBlock = {
       content.addEventListener('input', () => {
         const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
-        // Grow with the content and give the room back: the frame takes the height the words need, never less than it had before the typing began, and the blocks below move by the push rules from where they stood then (ADR-0024 decision 4), posted in the typing's undo step.
-        // The start holds while the section's frames are ones the typing wrote, the last few included, so a redraw a keystroke behind keeps it; any other change starts afresh.
-        // The words are measured with the box at its own height, since the text fills a box taller than them, and converted from the content's zoom (a text set to shrink) to the block's.
+        // Grow with the content: the frame takes the height the words need, never less than before the typing, and the blocks below move by the push rules (ADR-0024).
         const block = ctx.section.blocks.find((b) => b.id === el.dataset.blockId);
-        // A text drawn as questions follows its rows as drawn (push-model.js foldsIntoQuestions): the editor fits its frame after the typing, so the typing grows nothing here.
-        // On the phone the words grow the row they stand in, and the desktop frame is not theirs to write.
+        // A text drawn as questions is fitted by the editor after the typing, and on the phone the words grow their row, so neither grows the desktop frame here.
         if (!phoneView && block?.frames?.desktop && design !== 'questions') {
           const now = framesKey(ctx.section);
           let start = typingFrom.get(block.id);
@@ -211,10 +199,7 @@ export const textBlock = {
               const otherEl = el.parentElement?.querySelector(`:scope > .urd-block[data-block-id="${CSS.escape(other.id)}"]`);
               if (otherEl) otherEl.style.top = `${frame.y}px`;
             }
-            // The section is left alone: a section with a height of its own
-            // lets the text hang past its edge (sections never clip, and the
-            // height is the user's); one without follows its blocks' frames
-            // (writePush in render.js).
+            // The section is left alone: one with a height of its own lets the text hang past its edge, one without follows its blocks' frames (writePush in render.js).
             post({ type: 'urd-move', sectionId: ctx.section.id, blockId: other.id, frame, coalesce: true, groupKey: block.id });
           }
           start.written = [...start.written.slice(-7), framesKey(ctx.section)];
@@ -239,12 +224,12 @@ export const textBlock = {
       });
     }
 
-    // The height a text needs is measured by the push pass on the desktop (render.js applyPush, which every desktop section has) and by the phone's flow on the phone, so a text whose wrapping changed with the width, the font or the language grows its box there.
+    // The height a text needs is measured by the push pass on the desktop (render.js applyPush) and by the phone's flow, so a rewrapped text grows its box.
   },
 };
 
 /**
- * Core block: the terms of sale (0.7.24.8). The owner's own text, written on the page as a text block's is, always drawn in one of the document designs (doc-look.js TERMS_DESIGNS) with its look; the renderer is the text block's.
+ * Core block: the terms of sale, the owner's own text always drawn in a document design (doc-look.js TERMS_DESIGNS) by the text block's renderer.
  */
 export const termsBlock = {
   version: 1,

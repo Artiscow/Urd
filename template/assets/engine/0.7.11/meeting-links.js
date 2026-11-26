@@ -1,7 +1,7 @@
 /**
- * Which address leads to a video meeting: the services known by their host, and the hosts a site adds for a server of its own (`site.meetingHosts`, for Jitsi, Nextcloud Talk, BigBlueButton and the like, which have no host in common).
- * A host is always compared exactly, or as a subdomain of a listed host, never by a substring.
- * Pure and DOM-free; ics.js builds on it, and the editor bundles it for the list a site stores.
+ * Which address leads to a video meeting: the services known by their host, and a site's own (`site.meetingHosts`).
+ * A host matches exactly or as a subdomain.
+ * Notes: docs/engine-notes/meeting-links.md (Urd repository).
  */
 
 /** The services with a host of their own. */
@@ -13,8 +13,7 @@ export const MEETING_HOSTS = [
 const HOST = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
 
 /**
- * A site's own meeting hosts as a clean list: each entry a host name («meet.example.org»), read from a host or a whole address, in lower case, without repeats.
- * Anything that is not a host with a dot in it is left out.
+ * A site's own meeting hosts as a clean list of lower-case host names, read from a host or a whole address, without repeats or anything without a dot.
  * @param {unknown} value an array of strings, or one string divided by commas, spaces or lines
  * @returns {string[]}
  */

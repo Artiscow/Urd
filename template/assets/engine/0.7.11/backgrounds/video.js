@@ -1,21 +1,13 @@
 /**
- * Background layer: video (feature map C6). Self-hosted mp4/webm loop from
- * media/ (or a data URL for unpublished uploads in a draft; publishing
- * materializes it into a file, the same flow as the image layer).
- * Privacy-friendly: the file is git-owned, no third-party hosts.
- *
- * Playback: autoplay requires muted + playsinline; the loop is paused outside
- * the viewport via a shared IntersectionObserver (logic, not animation,
- * ADR-0011). With prefers-reduced-motion video never plays: the poster is
- * shown as a still image, and without a poster the layer is left out so the
- * layers below show through - always an end state, never hidden content.
+ * Background layer: video.
+ * A self-hosted mp4 or webm loop, muted and paused outside the viewport; under reduced motion its poster stands or the layer is left out.
+ * Notes: docs/engine-notes/backgrounds/video.md (Urd repository).
  */
 
 import { isSafeImage } from '../nav-model.js';
 import { bgPosition, mountLayerParallax } from './image.js';
 
-/* The source goes straight into the video element's src: the same anchored guard
-   pattern as the image layers (isSafeImage), limited to media/ paths and video data URLs. */
+/* The source goes straight into the video's src, so an anchored pattern holds it to media/ paths and video data URLs, as isSafeImage does. */
 const SAFE_VIDEO_RE = /^(?:data:video\/[\w.+-]+;base64,[A-Za-z0-9+/=]+|\/media\/[\w%./-]+\.(?:mp4|webm))$/i;
 
 /** @param {unknown} src @returns {boolean} */
@@ -33,8 +25,7 @@ function observeVideo(video) {
         videoObserver.unobserve(entry.target);
         continue;
       }
-      // play() can be rejected by the autoplay policy; the poster / first frame
-      // then stays, which is a clean end state.
+      // play() can be rejected by the autoplay policy; the poster / first frame then stays, which is a clean end state.
       if (entry.isIntersecting) entry.target.play().catch(() => {});
       else entry.target.pause();
     }
@@ -85,9 +76,7 @@ export const videoLayer = {
     video.loop = true;
     video.playsInline = true;
     video.setAttribute('playsinline', '');
-    // The observer starts playback (never the autoplay attribute), and with
-    // preload=metadata the film itself is loaded only when the section approaches
-    // the viewport - a video below the fold otherwise costs the whole file on load.
+    // The observer starts playback, never the autoplay attribute, and preload=metadata loads the film only when the section approaches the viewport.
     video.preload = 'metadata';
     video.disablePictureInPicture = true;
     // Pure decoration: the background is never announced by screen readers.
@@ -97,8 +86,7 @@ export const videoLayer = {
     fillStyle(video, props.fit, props.x, props.y);
     el.appendChild(video);
     observeVideo(video);
-    // Parallax (additive): the image layer's machinery; cover overscans the edges,
-    // contain shifts freely with space around it.
+    // Parallax (additive): the image layer's machinery; cover overscans the edges, contain shifts freely with space around it.
     if (props.parallax > 0) mountLayerParallax(video, props.parallax, 0, props.fit === 'contain' ? 'contain' : 'cover');
   },
 };

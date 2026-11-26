@@ -58,8 +58,8 @@ function launcherTiles(links, view, longNames = 'cut') {
 }
 
 /**
- * The heading above the tiles: the owner's own words, or the translated
- * default. Off with showTitle false.
+ * The heading above the tiles: the owner's own words, or the translated default.
+ * Off with showTitle false.
  * @param {{titleShow: boolean, title: string}} model
  * @returns {HTMLSpanElement|null}
  */

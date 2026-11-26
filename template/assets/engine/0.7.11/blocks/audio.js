@@ -1,8 +1,7 @@
 /**
- * Core block: audio. Native `<audio controls>` with a git-owned file from
- * media/ (the CSP's default-src 'self' covers playback; no third party, no
- * tracking). Optional title above the player; preload="metadata" so only the
- * duration is fetched before playback.
+ * Core block: audio, a native `<audio controls>` with a file from media/ and an optional title.
+ * preload="metadata" fetches only the duration before playback.
+ * Notes: docs/engine-notes/blocks/audio.md (Urd repository).
  */
 // Called only in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';

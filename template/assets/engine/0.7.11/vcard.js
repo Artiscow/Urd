@@ -1,7 +1,6 @@
 /**
- * The site's contact details as a vCard 3.0 (RFC 2426), for the contact block's «Add to contacts» button and its QR design.
- * The card is the organisation's own: its name as FN and ORG with an empty person name, the address, the phone, the email and the site's address.
- * Pure and DOM-free (tests/vcard.test.mjs); loaded by the block only when a design or the button needs it, so it stays outside the visitor closure.
+ * The site's contact details as a vCard 3.0 (RFC 2426), for the contact block's «Add to contacts» button and its QR design; pure and DOM-free.
+ * Notes: docs/engine-notes/vcard.md (Urd repository).
  */
 import { siteContact, telHref } from './contact-model.js';
 
@@ -44,8 +43,7 @@ function countryName(code, lang) {
 }
 
 /**
- * The vCard for the site, or null when it holds nothing beyond a name.
- * A file folds its long lines and types its address, phone and email as the work ones; `compact`, for a QR code, keeps the lines whole and leaves the types out, which every reader takes and which makes the code smaller.
+ * The vCard for the site, or null when it holds nothing beyond a name; `compact`, for a QR code, keeps the lines whole and leaves the types out.
  * @param {object} site
  * @param {{url?: string, compact?: boolean, parts?: string[]|null}} [opts] `url` is the site's own address; `parts` the parts the card carries (address, phone, email), all when omitted
  * @returns {string|null}

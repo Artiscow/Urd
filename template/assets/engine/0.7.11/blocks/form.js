@@ -1,18 +1,10 @@
 /**
- * Core block: form. A contact form following the ApeironLF model: by
- * default it sends through the visitor's email client (mailto, zero setup),
- * or to an optional endpoint (the owner's Apps Script or Pages Function)
- * via fetch. A honeypot field guards against bots. The settings (send mode,
- * recipient, fields, texts) are edited in the Properties panel; the help
- * chip (ADR-0008) explains the conventions.
- *
- * Visitor input is NEVER set as HTML (only .value/textContent). Endpoint mode
- * requires the owner to open connect-src for the endpoint in _headers; the
- * tooltip in Properties says so.
+ * Core block: form, sent through the visitor's email client (mailto) or to an optional endpoint, with a honeypot against bots.
+ * Visitor input is never HTML.
+ * Notes: docs/engine-notes/blocks/form.md (Urd repository).
  */
 import { isSpam, validate, buildMailto, buildPayload } from '../form-model.js';
-// t() for visitor texts (the site language), ta() for the editor chrome and
-// the seed defaults (the admin language); never called at module level.
+// t() for visitor texts (the site language), ta() for the editor chrome and the seed defaults (the admin language); never called at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
 
 const el2 = (tag, className, textContent) => {
@@ -25,9 +17,7 @@ const el2 = (tag, className, textContent) => {
 /* ---------- Form rendering ---------- */
 
 function fieldControl(field) {
-  // A visitor-facing dropdown is a NATIVE select with color-scheme (ADR-0009
-  // covers editing UI only); an empty placeholder option is what makes the
-  // required check possible.
+  // A visitor's dropdown is a native select with color-scheme (ADR-0009 covers editing UI); its empty placeholder makes the required check possible.
   if (field.type === 'select') {
     const control = el2('select', 'urd-form-input urd-form-select');
     const placeholder = el2('option', null, t('form.choose'));
@@ -62,8 +52,8 @@ function fieldControl(field) {
 /** One form row for the field: structure and control vary with the type. */
 function fieldRow(field, controls) {
   const star = field.required ? ' *' : '';
-  // Radio group: fieldset/legend instead of a wrapping label, one radio per
-  // option sharing a name. Harvesting reads the group's :checked.
+  // Radio group: fieldset/legend instead of a wrapping label, one radio per option sharing a name.
+  // Harvesting reads the group's :checked.
   if (field.type === 'radio') {
     const row = el2('fieldset', 'urd-form-row urd-form-fieldset');
     row.appendChild(el2('legend', 'urd-form-label', field.label + star));
@@ -137,8 +127,7 @@ function renderForm(host, props, ctx) {
     event.preventDefault();
     status.className = 'urd-form-status';
     status.textContent = '';
-    // Per-type harvesting: a checkbox is boolean, a radio group reads
-    // :checked, and the rest read .value.
+    // Per-type harvesting: a checkbox is boolean, a radio group reads :checked, and the rest read .value.
     const values = {};
     for (const field of fields) {
       const control = controls[field.id];
@@ -169,7 +158,7 @@ function renderForm(host, props, ctx) {
       return;
     }
 
-    // Endpoint mode shows the owner's receipt text, or that the message was sent; mailto mode always says that the visitor sends the opened draft, since nothing has been sent yet.
+    // Endpoint mode shows the owner's receipt text or that the message was sent; mailto mode says the visitor sends the opened draft.
     const done = (text) => {
       status.classList.add('ok');
       status.textContent = text;
@@ -228,8 +217,7 @@ function renderFormBlock(el, props, ctx) {
 }
 
 /**
- * The seed rule (ADR-0012): the field labels are written into props at
- * insertion time, translated ONCE with the admin language.
+ * The seed rule (ADR-0012): the field labels are written into props at insertion time, translated ONCE with the admin language.
  */
 export const defaultFormFields = () => [
   { id: 'name', label: ta('form.fieldName'), type: 'text', required: true },

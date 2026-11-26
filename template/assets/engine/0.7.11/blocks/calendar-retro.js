@@ -1,7 +1,6 @@
 /**
- * The calendar block's retro designs (milestone 0.7.19.23): looks from a past of paper, boards and screens, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules and colour set in calendar.css under its own class names.
- * A design's theme words are drawn through ui.tx like any text: the block swaps in the design's own words where it has them (calThemeTexts in calendar-designs.js), and a design that rewrites calendar data asks ui.rewrite first.
- * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
+ * The calendar block's retro designs: looks of paper, boards and screens, each a renderer over the block's ui helpers with its rules in calendar.css.
+ * Notes: docs/engine-notes/blocks/calendar-retro.md (Urd repository).
  */
 import { dates } from '../i18n.js';
 import { daysBetween, isMultiDay } from '../calendar-format.js';
@@ -13,8 +12,8 @@ const two = (n) => String(n).padStart(2, '0');
 const laterOf = (occs, props, ics) => occs.slice(ics.nextCount(props.nextCount), ics.nextCount(props.nextCount) + ics.laterCount(props.laterCount));
 
 /**
- * «Add to calendar» as a button on the event's box: it opens the event's card, where the ways to add it stand (this one event to Google or as a file, or the whole calendar).
- * Null on a cancelled event, and when the owner left «Add to calendar» out of the card (showAdd).
+ * «Add to calendar» as a button that opens the event's card, where the ways to add it stand.
+ * Null on a cancelled event, and when the card leaves it out (showAdd).
  */
 function addButton(occ, props, ui, box, className) {
   if (occ.cancelled || props.showAdd === false) return null;
@@ -37,8 +36,7 @@ function laterRow(occ, ui, className) {
 }
 
 /**
- * R1 Tear-off pad: a paper pad under the month's bar, the day huge over its weekday, the next event on the page with its countdown, time and place, excerpt and buttons, and the events after it as dashed rows; the torn pages show as a stack at the bottom edge.
- * The countdown's words are the design's own («Today in {n} days», the theme word inDays).
+ * R1 Tear-off pad: the day huge over its weekday, the next event with its countdown and details, the events after it as dashed rows, a stack of torn pages under.
  */
 export function pad(host, occs, props, ics, ui) {
   const [hero] = occs;
@@ -88,8 +86,7 @@ export function pad(host, occs, props, ics, ui) {
 }
 
 /**
- * R2 Index cards: typewritten cards on lined paper, each a little askew, numbered in their head with the category beside, the event as «Date:», «Time:» and «Place:» lines with the sign-up or «Open to everyone» and «Repeats» as lines of the same kind, the excerpt under them, and a stamp across a cancelled event.
- * The line words and the number are the design's own (the theme words cardNo, colDate, colTime, colPlace, signup, openToAll and recurring).
+ * R2 Index cards: typewritten cards on lined paper, a little askew and numbered, the facts as «Date:», «Time:» and «Place:» lines, a stamp on a cancelled event.
  */
 export function index(host, occs, props, ics, ui) {
   const box = ui.el('div', 'urd-cal-index');
@@ -153,7 +150,7 @@ const depDate = (d, ui) => (ui.rewrite ? `${two(d.getDate())}.${two(d.getMonth()
 const depTime = (occ, ui) => (occ.allDay ? ui.tx('allDay') : ui.rewrite ? document.createTextNode(ui.startClock(occ)) : ui.time(occ));
 
 /**
- * An event's status on the board: the sign-up word with a sign-up to show (amber), else «open to everyone» where the design says it, else nothing; a cancelled event says so in the alert colour.
+ * An event's status on the board: the sign-up word (amber), else «open to everyone» where the design says it, else nothing; a cancellation in the alert colour.
  * @returns {{node: Node|null, tone: string}}
  */
 function statusOf(occ, props, ui) {
@@ -196,8 +193,7 @@ function depExcerpt(occ, ui) {
 }
 
 /**
- * R3 Departure board: a dark board of split-flap rows under an amber heading and the time it was updated, the columns headed Date, Time, Event, Place and Status, each row the event's start as 04.10 and 18:00, its title and place cut to the flaps and set in capitals by the style sheet, and its status (the sign-up, open to everyone, or cancelled in the alert colour); the first row carries the excerpt. With rewriting off the rows hold the calendar's own text whole, wrapping as it must.
- * The heading, the status words and the subscribe link are the design's own (the theme words now, signup, openToAll and subscribe).
+ * R3 Departure board: split-flap rows headed Date, Time, Event, Place and Status under an amber heading; without rewriting the rows hold the calendar's own text.
  */
 export function departures(host, occs, props, ics, ui) {
   const rewrite = ui.rewrite;
@@ -302,8 +298,7 @@ function wrapWords(text, n) {
 }
 
 /**
- * R4 Cinema marquee: a cinema's letter board in a red frame between two rows of bulbs, «Now showing» over the next event in large letters with its countdown, the date, time and place on one line beside the sign-up, the excerpt, and «Coming soon» over the events after it as rows of date, title and time.
- * The heading words and the sign-up are the design's own (the theme words now, later and signup); the capitals are the style sheet's.
+ * R4 Cinema marquee: a letter board in a red frame between rows of bulbs, «Now showing» over the next event, and «Coming soon» over the events after it.
  */
 export function marquee(host, occs, props, ics, ui) {
   const [hero] = occs;
@@ -354,7 +349,7 @@ export function marquee(host, occs, props, ics, ui) {
   host.appendChild(sign);
 }
 
-/** The marquee on a phone: the letter board in its red frame as a list, «Now showing» with the countdown over a row per event (its date and time, title and place, the first with its excerpt and sign-up), and the subscribe link at the foot. */
+/** The marquee on a phone: the letter board as a list, «Now showing» with the countdown over a row per event, and the subscribe link at the foot. */
 export function marqueeRows(host, occs, props, ics, ui) {
   const box = ui.el('div', 'urd-cal-mqp');
   const head = ui.el('div', 'urd-cal-mqp-head');
@@ -434,7 +429,7 @@ function rcExcerpt(occ, ui) {
   return text;
 }
 
-/** The receipt's rows: per event the date, the title and the time in the columns the rows share with the dot leader between them (the calendar's sheets), the place and status under them, and the first event's excerpt under that. */
+/** The receipt's rows: per event the date, the title and the time with the dot leader between, the place and status under, and the first event's excerpt. */
 function rcRows(occs, ui) {
   const rows = ui.el('div', 'urd-cal-rc-rows');
   occs.forEach((occ, i) => {
@@ -461,7 +456,7 @@ function rcTotal(ui, words, value) {
   return line;
 }
 
-/** The days to the next event: the number and the word for days in the receipt's own words («Next in ... 3 days»), the countdown in the neutral ones («Next ... In 3 days»). */
+/** The days to the next event, in the receipt's own words («Next in ... 3 days») or as the countdown in the neutral ones («Next ... In 3 days»). */
 function rcNextIn(occ, ui) {
   if (ui.opt.wordChoice === 'neutral') return ui.countdown(occ);
   const n = Math.max(0, daysBetween(ui.today().getTime(), occ.start));
@@ -471,8 +466,7 @@ function rcNextIn(occ, ui) {
 }
 
 /**
- * R5 Receipt: a till receipt on paper with a torn bottom edge, in a monospace face: the heading over the period and the venue, the events as rows of date, title, dot leader and time with the place and status under each and the first one's excerpt, the totals (the number of events, the days to the next one and the admission in large type), and the barcode that is the subscribe link over the thanks. In the fold the receipt goes on with the rows alone.
- * The heading, the totals' words, the sign-up and the subscribe link are the design's own (the theme words program, countLabel, nextShort, signup and subscribe); the period, the venue, the admission and the thanks are content lines the owner can remove. With rewriting on the date is 04.10, the time the start alone, and the title and excerpt are set in capitals and the title cut to its row by the style sheet; off, the rows hold the calendar's own text.
+ * R5 Receipt: a till receipt with a torn edge in a monospace face: the heading, the events as dot-leader rows, the totals, and the subscribe link as a barcode.
  */
 export function receipt(host, occs, props, ics, ui) {
   const paper = ui.el('div', ui.rewrite ? 'urd-cal-rc' : 'urd-cal-rc urd-cal-rc-plain');
@@ -513,9 +507,7 @@ export function receipt(host, occs, props, ics, ui) {
 }
 
 /**
- * R6 Seventies poster: a rounded cream poster with a sunrise of arcs at its top, the heading in a rounded face over a spaced line, and a mustard panel holding one cream pill per event (the day over the short month in a round badge, orange, mustard and brown in turn, the title with the time and place under it, the first event's excerpt, and the sign-up at the pill's end), with the subscribe link under the panel.
- * The heading, the sign-up and the subscribe link are the design's own (the theme words now, signup and subscribe), and the line under the heading is content the owner can rewrite or remove (`period`).
- * The rest of a folded list is drawn as a panel on a poster of its own, the badges' turn carried on.
+ * R6 Seventies poster: a cream poster under a sunrise of arcs, the heading over a spaced line, and a mustard panel of one cream pill per event with a date badge.
  */
 export function seventies(host, occs, props, ics, ui) {
   const poster = ui.el('div', ui.rest ? 'urd-cal-sv urd-cal-sv-rest' : 'urd-cal-sv');
@@ -568,7 +560,7 @@ export function seventies(host, occs, props, ics, ui) {
   host.appendChild(poster);
 }
 
-/** An Art deco row: the day in gold over its month, the title with its time and place under it, and the countdown at the right; the first row of the list carries the excerpt. */
+/** An Art deco row: the day in gold over its month, the title with its time and place, and the countdown at the right; the list's first row carries the excerpt. */
 function decoRow(occ, ui, first) {
   const d = dayOf(occ);
   const title = ui.field('strong', 'title', occ.title, 'urd-cal-deco-title');
@@ -597,9 +589,7 @@ function decoRow(occ, ui, first) {
 }
 
 /**
- * R7 Art deco: a programme in a gold double frame on black, a sunburst over the heading and the season line under it, the events as rows of the day in gold, the title with its time and place, and the countdown, the first with its excerpt; the first event's sign-up and the subscribe links stand at the foot.
- * The heading and the sign-up are the design's own words (the theme words now and signup), the season line is the shared period text (`period`, content the owner can rewrite or remove), and the capitals are the style sheet's.
- * The events a list folds away are drawn as rows alone, without the heading and the foot.
+ * R7 Art deco: a programme in a gold double frame on black, a sunburst over the heading, the events as rows, and the sign-up and subscribe links at the foot.
  */
 export function deco(host, occs, props, ics, ui) {
   const box = ui.el('div', ui.rest ? 'urd-cal-deco urd-cal-deco-rest' : 'urd-cal-deco');
@@ -653,7 +643,7 @@ const DECO_FAN = Array.from({ length: 11 }, (_, i) => {
 
 /** The card's parts, each a decorator the block runs on the event's card after it is built (ui.dressCard), in the common words. */
 export const cards = {
-  /** R4 Cinema marquee's own card: a cinema ticket, the date, title and facts on its face and the stub down its right side with the day standing; the bulbs over it and the tear line under it are the calendar sheets'. */
+  /** R4 Cinema marquee's own card: a cinema ticket, the date, title and facts on its face and the stub down its right side with the day standing. */
   marquee(dialog, occ, ui) {
     const d = dayOf(occ);
     const ticket = ui.el('div', 'urd-cal-mq-cardticket');
@@ -668,7 +658,7 @@ export const cards = {
     ticket.append(face, stub);
   },
   /**
-   * R5 Receipt's own card: the receipt's number over the title (the event's place in the calendar's list, the theme word cardNo), the facts as dot-leader lines with the date first and the category last, named as the receipt's columns, and the thanks at its foot; the torn edge and the capitals are the calendar sheets', the capitals of the calendar's data only with rewriting.
+   * R5 Receipt's own card: the receipt's number over the title, the facts as dot-leader lines named as the receipt's columns, and the thanks at its foot.
    */
   receipt(dialog, occ, ui) {
     if (!ui.rewrite) dialog.classList.add('urd-cal-rc-own');
@@ -701,7 +691,7 @@ export const cards = {
     const thanks = ui.line(ui.el('p', 'urd-cal-rc-cardthanks'), 'thanks');
     if (thanks) dialog.appendChild(thanks);
   },
-  /** R6 Seventies poster's own card: a band of stripes across its top with the event's calendar as its label, the row of matches under the band and the halftone strip at the foot drawn by the style sheet. */
+  /** R6 Seventies poster's own card: a band of stripes with the event's calendar as its label; the matches and the halftone strip are the style sheet's. */
   seventies(dialog, occ, ui) {
     const band = ui.el('div', 'urd-cal-sv-cardband');
     const chip = dialog.querySelector('.urd-cal-dialog-meta .urd-cal-chip');
@@ -712,7 +702,7 @@ export const cards = {
     }
     dialog.insertBefore(band, dialog.querySelector('.urd-cal-dialog-date'));
   },
-  /** R7 Art deco's own card: a fan piece in each corner of the gold double frame, a fan of thin rays over the date, and a rule with a diamond under the title; the frame is the calendar sheets'. */
+  /** R7 Art deco's own card: a fan piece in each corner of the gold frame, a fan of rays over the date, and a rule with a diamond under the title. */
   deco(dialog, occ, ui) {
     dialog.append(...['tl', 'tr', 'bl', 'br'].map((corner) => decoSvg(`urd-cal-deco-corner urd-cal-deco-corner-${corner}`, '0 0 38 38', DECO_CORNER)));
     dialog.querySelector('.urd-cal-dialog-date')?.before(decoSvg('urd-cal-deco-cardfan', '0 0 120 34', DECO_FAN));

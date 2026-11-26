@@ -27,6 +27,8 @@ points in the window and stays there regardless of scrolling. The margin
 applies only to the edges the box docks to; center axes are centered and
 ignore it.
 
+The window's inset is the menu's own band, a sticky top bar's height or a side column's width; the docks lie inside it, so a docked box is never drawn behind the menu.
+
 ## `nearestDock`
 
 The nearest dock point for a box dropped in the window: the center point

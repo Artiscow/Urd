@@ -116,8 +116,7 @@ export function navItems(site) {
     }
     const hasTarget = !!(item.page || item.href || item.target);
     const kind = children.length === 0 ? 'link' : hasTarget ? 'split' : 'toggle';
-    // A toggle item has no link of its own - resolveItem would flag it as
-    // missing, so openers are modeled without an href.
+    // A toggle item has no link of its own - resolveItem would flag it as missing, so openers are modeled without an href.
     const own = kind === 'toggle'
       ? { label: item.label, href: '', external: false, missing: false }
       : resolveItem(item, pages);
@@ -145,7 +144,7 @@ export function burgerModel(style = {}) {
 }
 
 /**
- * Whether the menu stays off a page (nav.hideOn, additive from 0.7.13.21): the page ids the owner listed, read the way footer.js reads footer.hideOn.
+ * Whether the menu stays off a page (nav.hideOn): the page ids the owner listed, read the way footer.js reads footer.hideOn.
  * @param {{hideOn?: string[]}} [nav] site.nav
  * @param {string} [pageId] The page being rendered
  * @returns {boolean}
@@ -309,8 +308,7 @@ export function navScrollState(mode, anchor, y, prevHidden, { shrinkAt, hold = f
   const HIDE_TRAVEL = 96;
   const SHOW_TRAVEL = 16;
   const scrolled = y > TOP_ZONE;
-  // How far down the shrink starts is its own distance (nav.style.shrinkAt);
-  // the top zone is what the clear surface and the hide read.
+  // How far down the shrink starts is its own distance (nav.style.shrinkAt); the top zone is what the clear surface and the hide read.
   const shrinkZone = clampNum(shrinkAt, NAV_SIZE_BOUNDS.shrinkAt) ?? TOP_ZONE;
   if (mode === 'shrink') return { compact: y > shrinkZone, hidden: false, scrolled, anchor: y };
   if (mode !== 'hide') return { compact: false, hidden: false, scrolled, anchor: y };
@@ -508,26 +506,26 @@ export function navClasses(site, { mobile = false } = {}) {
   }
   const hover = site.nav.style?.hover;
   if (hover && hover !== 'standard') classes += ` urd-nav-hover-${hover}`;
-  // Size (additive since v0.6): md is the default and yields no class.
+  // Size: md is the default and yields no class.
   // The values are allowlisted - class names must never be built from free strings.
   const size = site.nav.style?.size;
   if (['sm', 'lg', 'xl'].includes(size)) classes += ` urd-nav-size-${size}`;
   // Text alignment of the items in the side column (default left).
   const salign = site.nav.style?.sideAlign;
   if (['center', 'right'].includes(salign)) classes += ` urd-nav-salign-${salign}`;
-  // Vertical placement of the menu list in the column (default top). Its
-  // own field, not nav.layout: layout is the top bar's concept.
+  // Vertical placement of the menu list in the column (default top).
+  // Its own field, not nav.layout: layout is the top bar's concept.
   const splace = site.nav.style?.sidePlacement;
   if (['middle', 'bottom'].includes(splace)) classes += ` urd-nav-splace-${splace}`;
   // Submenu design (default is the card style).
   const sub = site.nav.style?.subStyle;
   if (['flat', 'pills', 'lines', 'flyout'].includes(sub)) classes += ` urd-nav-sub-${sub}`;
-  // A second submenu level stands as a headed group in a column layout or the flyout (additive from 0.7.13.21).
+  // A second submenu level stands as a headed group in a column layout or the flyout.
   if (subGrouped(site.nav.style)) classes += ' urd-nav-sub-grouped';
   // Inset (ADR-0023): the top bar's contents line up with the content edge while its background keeps the full width.
   const isBar = !isFloating(variant) && variant !== 'side-left' && variant !== 'side-right';
   if (site.nav.style?.inset !== false && isBar) classes += ' urd-nav-inset';
-  // The logo image follows the scroll shrink (additive since v0.7).
+  // The logo image follows the scroll shrink.
   if (site.nav.style?.shrinkLogo === true) classes += ' urd-nav-shrink-logo';
   // Border and shadow as allowlisted classes: the column draws no border, and the pill has its glow instead of a shadow.
   const isSide = variant === 'side-left' || variant === 'side-right';
@@ -535,10 +533,9 @@ export function navClasses(site, { mobile = false } = {}) {
   if (['bottom', 'top', 'both', 'all'].includes(borderSide) && !isSide) classes += ` urd-nav-border-${borderSide}`;
   const shadow = site.nav.style?.shadow;
   if (['soft', 'strong'].includes(shadow) && isBar) classes += ` urd-nav-shadow-${shadow}`;
-  // The tool cluster's side (additive since v0.7): end is the default and
-  // yields no class.
+  // The tool cluster's side: end is the default and yields no class.
   if (site.nav.style?.tools?.side === 'start') classes += ' urd-nav-tools-start';
-  // The phone's own (additive from 0.7.3.25): allowlisted, and only at the mobile breakpoint. The logo's place counts only for a bar that shows a logo.
+  // The phone's own: allowlisted, and only at the mobile breakpoint. The logo's place counts only for a bar that shows a logo.
   const phone = mobile && site.nav.style?.mobile && typeof site.nav.style.mobile === 'object' ? site.nav.style.mobile : {};
   if (phone.logo === 'center' && site.nav.logo?.show !== false) classes += ' urd-nav-logo-center';
   if (phone.logo === 'hidden') classes += ' urd-nav-logo-off';
@@ -582,8 +579,7 @@ export function announcementModel(announcement, pages = [], pageId = null) {
 }
 
 /**
- * The border's width in px (nav.style.border.width), clamped to 1-8;
- * anything invalid yields 1.
+ * The border's width in px (nav.style.border.width), clamped to 1-8; anything invalid yields 1.
  */
 export function clampBorderWidth(width) {
   const n = Number(width);
@@ -592,8 +588,7 @@ export function clampBorderWidth(width) {
 }
 
 /**
- * The bounds of the size fields (nav.style.*, nav.logo.*), shared with the
- * schema and the editor's nav-size module (a parity test ties them together).
+ * The bounds of the size fields (nav.style.*, nav.logo.*), shared with the schema and the editor's nav-size module (a parity test ties them together).
  */
 export const NAV_SIZE_BOUNDS = {
   padY: [0, 64],
@@ -652,8 +647,7 @@ export function navSizeVars(style = {}, logo = {}, { mobile = false } = {}) {
   if (padX !== undefined) vars['--urd-nav-pad-x'] = `${padX}px`;
   const gap = clampNum(s.gap, NAV_SIZE_BOUNDS.gap);
   if (gap !== undefined) vars['--urd-nav-gap'] = `${gap}px`;
-  // The pill width applies above the breakpoint only: on a phone the pill
-  // keeps the full width minus its air, as without the field.
+  // The pill width applies above the breakpoint only: on a phone the pill keeps the full width minus its air, as without the field.
   if (!mobile) {
     if (s.pillWidth === 'content') {
       vars['--urd-nav-pill-w'] = 'min(var(--urd-canvas-w, 100%), calc(100% - 2 * var(--urd-canvas-gutter-desktop, 0px)))';
@@ -666,12 +660,10 @@ export function navSizeVars(style = {}, logo = {}, { mobile = false } = {}) {
   if (shrinkTo !== undefined) vars['--urd-nav-shrink-to'] = String(shrinkTo);
   const shrinkMs = clampNum(s.shrinkMs, NAV_SIZE_BOUNDS.shrinkMs);
   if (shrinkMs !== undefined) vars['--urd-nav-shrink-ms'] = `${shrinkMs}ms`;
-  // The floating menu's corner rounding; the CSS reads it only on the
-  // floating variants, with each variant's preset as the fallback.
+  // The floating menu's corner rounding; the CSS reads it only on the floating variants, with each variant's preset as the fallback.
   const radius = clampNum(s.radius, NAV_SIZE_BOUNDS.radius);
   if (radius !== undefined) vars['--urd-nav-radius'] = `${radius}px`;
-  // The text size is a variable rather than an inline font-size, so the
-  // scroll shrink can scale it the way it scales the padding.
+  // The text size is a variable rather than an inline font-size, so the scroll shrink can scale it the way it scales the padding.
   const textSize = clampNum(m.textSize ?? s.textSize, NAV_SIZE_BOUNDS.textSize);
   if (textSize !== undefined) vars['--urd-nav-text-size'] = `${textSize}px`;
   const l = logo ?? {};
@@ -691,8 +683,7 @@ export function hostClasses(site) {
   const clear = style.atTop === 'clear' ? ['urd-nav-clear'] : [];
   if (isFloating(v)) return { host: ['urd-nav-float', ...clear], body: [] };
   if (v === 'side-left' || v === 'side-right') {
-    // The column's own choices (additive from v0.7): submenus open from the
-    // start, the arrow on them, and the tool cluster's alignment.
+    // The column's own choices: submenus open from the start, the arrow on them, and the tool cluster's alignment.
     const column = [];
     if (sideSubMode(style) === 'expanded') column.push('urd-nav-side-subs-open');
     if (style.sideSubArrow === true) column.push('urd-nav-side-sub-arrow');
@@ -701,9 +692,8 @@ export function hostClasses(site) {
       ? { host: ['urd-nav-side-host', 'urd-nav-side-host-left', ...column], body: ['urd-side-left'] }
       : { host: ['urd-nav-side-host', 'urd-nav-side-host-right', ...column], body: ['urd-side-right'] };
   }
-  // Overlay only applies to the full-width bar: the host is taken out of the
-  // flow so the top section slides up under the menu. Floating/side already
-  // sit outside.
+  // Overlay only applies to the full-width bar: the host is taken out of the flow so the top section slides up under the menu.
+  // Floating/side already sit outside.
   if (site.nav.overlay) return { host: ['urd-nav-overlay', ...clear], body: [] };
   return { host: clear, body: [] };
 }
@@ -800,8 +790,7 @@ export function subsAfterRender(ids, was, expandedNow) {
 }
 
 /**
- * The side column's width in px (nav.style.width), clamped to sensible
- * bounds; anything invalid yields the default width 250.
+ * The side column's width in px (nav.style.width), clamped to sensible bounds; anything invalid yields the default width 250.
  * @param {number|string|undefined} width
  * @returns {number}
  */

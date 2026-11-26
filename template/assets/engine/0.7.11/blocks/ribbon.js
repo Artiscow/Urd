@@ -1,27 +1,7 @@
 /**
- * Core block: ribbon. A band of words that rolls across the page, the frieze
- * every builder has and none of them needs a library for. The band is up to
- * three stripes: a thin one above, the main one, and a thin one below. Each
- * stripe holds the words, the separator mark over and over, or nothing but
- * colour, so a plain rule above a rolling line is one block rather than three.
- *
- * The motion is the background loop layer's idiom (.urd-bg-loop-runner in
- * base.css): a stripe's track holds its content in two equal periods inside a
- * clipping row and is translated by half its width, so one period lands
- * exactly where the previous one started and the loop has no seam. A period
- * is as many copies as it takes to reach across the band (ribbonPeriods and
- * syncTrackCopies), and every copy but the first is aria-hidden, so the words
- * are read once. For `roll` the duration is the measured width of one period
- * divided by the speed (ribbonDuration), for `sway` the width of the one copy
- * that drifts out and back, and for `step` the item count times the dwell
- * (ribbonStepDuration), since a ticker is timed per word and not per pixel,
- * with keyframes measured per word (stepFrames). A ResizeObserver measures
- * again when the width changes.
- *
- * ADR-0011 gating: under prefers-reduced-motion the words stand as a static
- * row, and while the editing chrome is on the band stands still so the words
- * can be read and edited. The panel's «Play the motion» (urd-demo-motion) and
- * Clean view both show the real thing.
+ * Core block: ribbon.
+ * A band of up to three stripes whose words roll, sway or step across the page in a seamless loop, still under reduced motion or editing.
+ * Notes: docs/engine-notes/blocks/ribbon.md (Urd repository).
  */
 import { growSectionTo } from '../render.js';
 import {
@@ -61,8 +41,8 @@ function sepNode(sep) {
 }
 
 /**
- * One copy of a stripe's content. The separator sits after every item, so the
- * last one meets the first across the seam with the same spacing.
+ * One copy of a stripe's content.
+ * The separator sits after every item, so the last one meets the first across the seam with the same spacing.
  * @param {string} mode text or marks
  * @param {Array<string>} items
  * @param {{kind: string, value: string}} sep
@@ -90,11 +70,7 @@ function buildRun(mode, items, sep, editable) {
 }
 
 /**
- * Lays a band out over its reach (ribbonWidth, bandReach): the content
- * surface or the window's full width, measured from the section and the
- * canvas, since vw would count the scrollbar too. The block's own box needs
- * nothing. The ancestors are looked up when called, after the block is in
- * the page.
+ * Lays a band out over its reach (ribbonWidth, bandReach): the content surface or the window's full width, measured from the section and the canvas.
  * @param {HTMLElement} host The band's element inside the block
  * @param {HTMLElement} el The block element
  * @param {string} [width] The block's `width`
@@ -113,13 +89,7 @@ export function fitBandReach(host, el, width) {
 }
 
 /**
- * The copies of a run that fill a track: two periods of `periods` copies each,
- * the first copy being the run itself. Without `build` a copy is a clone the
- * reader never meets (aria-hidden and inert, and stripped of the editing
- * hooks), so the words are read once. With `build` the caller makes each copy
- * itself, for content that carries listeners a clone would lose (the
- * gallery's tiles: their load guard and their click); such a copy answers the
- * pointer, and is kept out of the reading and tab order instead of inert.
+ * Fills a track with two periods of `periods` copies of the run, the first the run itself, the others kept from the reader and the tab order.
  * @param {HTMLElement} track
  * @param {HTMLElement} run The first copy, built by the caller
  * @param {number} periods From ribbonPeriods
@@ -149,10 +119,7 @@ export function syncTrackCopies(track, run, periods, build) {
 let stepSeq = 0;
 
 /**
- * The ticker's own keyframes: one stop per item at the item's measured left
- * edge, held with a step-end timing, so every jump lands on a word and not on
- * a fraction of the width. The frames cover one period of `periods` copies
- * and end a whole period in, where the next copy stands exactly as the first.
+ * The ticker's own keyframes: one step-end stop per item at its measured left edge, over one period, so every jump lands on a word.
  * @param {HTMLElement} stripe Where the style element lives
  * @param {HTMLElement} run The first copy
  * @param {number} periods From ribbonPeriods
@@ -181,13 +148,6 @@ function stepFrames(stripe, run, periods, runWidth) {
   return name;
 }
 
-/**
- * One stripe: a clipping row with a track that holds its content as many
- * times as the band needs (syncTrackCopies). A `plain` stripe is colour alone
- * and has no track to measure or move, and a swaying stripe drifts out and
- * back with its one copy.
- * @returns {{el: HTMLElement, measure: () => void, run: HTMLElement|null}}
- */
 export const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>';
 export const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
 
@@ -195,14 +155,7 @@ export const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-h
 const PAUSED_BANDS = new Set();
 
 /**
- * The band's pause (WCAG 2.2.2: moving content that lasts more than five
- * seconds needs a pause that stays). A real button with aria-pressed at the
- * band's right edge in the «button» form; in the «touch» form it is there for
- * the keyboard only, shown while it has focus, and a touch on the band pauses
- * it, a later tap on its empty space plays it again. The pointer over the band
- * and focus inside it hold it for as long as they stay (urd-ribbon-pausable in
- * base.css). Shared with the gallery's band view; the calendar's Band design
- * has its own (bandPause in calendar-next.js).
+ * The band's pause (WCAG 2.2.2): a button with aria-pressed, or in the «touch» form a keyboard-only button and a touch on the band; shared with the gallery.
  * @param {HTMLElement} host The band's box: urd-ribbon-paused goes here, and the button into it
  * @param {'button'|'touch'} mode The form, from ribbonPause
  * @param {{pause: string, play: string}} keys The visitor dictionary keys for the two labels
@@ -250,11 +203,14 @@ export function bandPauseControl(host, mode, keys) {
   return button;
 }
 
+/**
+ * One stripe: a clipping row whose track holds its content as many times as the band needs (syncTrackCopies); a `plain` stripe is colour alone.
+ * @returns {{el: HTMLElement, measure: () => void, run: HTMLElement|null}}
+ */
 function buildStripe({ mode, items, sep, motion, still, props, editable, count, colour }) {
   const el = document.createElement('div');
   el.className = `urd-ribbon-stripe urd-ribbon-motion-${motion}`;
-  // One colour serves both kinds of stripe: a plain one paints its surface
-  // with currentColor, and a stripe with content inks its words and marks.
+  // One colour serves both kinds of stripe: a plain one paints its surface with currentColor, and a stripe with content inks its words and marks.
   if (colour) el.style.color = resolveColor(colour);
   if (props.fade !== false && motion !== 'none') el.classList.add('urd-ribbon-fade');
   if (props.pauseOnHover !== false && motion !== 'none') el.classList.add('urd-ribbon-pausable');
@@ -363,24 +319,19 @@ export const ribbonBlock = {
     if (props.variant !== 'plain') host.style.background = resolveColor(props.bg || 'accent');
     const ink = resolveColor(props.color || (props.variant === 'plain' ? 'text' : 'accent-text'));
     host.style.color = ink;
-    // The outline strokes with the resolved colour, never currentColor: an
-    // outlined word has no fill, so currentColor would be transparent too.
+    // The outline strokes with the resolved colour, never currentColor: an outlined word has no fill, so currentColor would be transparent too.
     host.style.setProperty('--urd-ribbon-ink', ink);
 
-    // The chrome's hold is a CSS rule on the body (preview.css): Clean view never
-    // re-renders, so a class decided here would stick. What is decided here is
-    // only what cannot change without a new render.
+    // The chrome's hold is a CSS rule on the body (preview.css); only what cannot change without a new render is decided here.
     const reduced = reducedMotion();
     const stripes = [];
-    // The thin stripes run against the main one, the way the gallery's second
-    // row does: two bands going the same way read as one wide band.
+    // The thin stripes run against the main one, the way the gallery's second row does: two bands going the same way read as one wide band.
     const opposed = { ...props, direction: props.direction === 'right' ? 'left' : 'right' };
     const sep = separatorMark(props.sep, props.sepText);
     const countFor = (mode) => (mode === 'marks' ? MARK_RUN : Math.max(1, items.length));
     const add = (mode, own, classes, canEdit, colour) => {
       if (mode === 'none') return;
-      // Each stripe decides for itself whether it has something to move: a
-      // stripe of marks rolls with no words at all.
+      // Each stripe decides for itself whether it has something to move: a stripe of marks rolls with no words at all.
       const count = countFor(mode);
       const stripe = buildStripe({
         mode, items, sep, motion, still: !ribbonMoves({ count, motion, reducedMotion: reduced }), props: own, editable: canEdit, count, colour,
@@ -389,8 +340,7 @@ export const ribbonBlock = {
       host.appendChild(stripe.el);
       stripes.push(stripe);
     };
-    // On the edges the thin stripes lie on the band's own border instead of
-    // taking a share of its height.
+    // On the edges the thin stripes lie on the band's own border instead of taking a share of its height.
     if (stripePlace(props.stripePlace) === 'edge' && (above !== 'none' || below !== 'none')) host.classList.add('urd-ribbon-edges');
     add(above, opposed, ['urd-ribbon-thin', 'urd-ribbon-above'], false, props.aboveColor);
     add(main, props, ['urd-ribbon-main'], editable && main === 'text', null);
@@ -401,15 +351,13 @@ export const ribbonBlock = {
     }
     el.appendChild(host);
 
-    // A band that reaches past its block (the content surface or the window)
-    // is laid out in the frame below: render runs before the block is in the DOM.
+    // A band that reaches past its block (the content surface or the window) is laid out in the frame below: render runs before the block is in the DOM.
     const wide = ribbonWidth(props.width) !== 'content';
     if (wide) host.classList.add('urd-ribbon-wide');
     const fitWide = () => fitBandReach(host, el, props.width);
 
     if (editable && main === 'text') {
-      // Click-and-type on each word in the main stripe; the list and its order
-      // live in the panel.
+      // Click-and-type on each word in the main stripe; the list and its order live in the panel.
       const mainRun = host.querySelector('.urd-ribbon-main .urd-ribbon-run');
       for (const word of mainRun?.querySelectorAll('.urd-ribbon-item') ?? []) {
         try {
@@ -439,10 +387,7 @@ export const ribbonBlock = {
       });
     }
 
-    // Everything that has to be measured waits for the frame after the block
-    // has been put in the page: the width of each track, the reach of a
-    // full-width band, and the height the block needs (auto-grow, where the
-    // blocks below are moved by the push pass, ADR-0024).
+    // Measures in the frame after the block is in the page: each track's width, a full-width band's reach and the height the block needs (ADR-0024).
     requestAnimationFrame(() => {
       if (!el.isConnected) return;
       for (const stripe of stripes) stripe.measure();

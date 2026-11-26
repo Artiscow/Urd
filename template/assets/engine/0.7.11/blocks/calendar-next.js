@@ -1,7 +1,6 @@
 /**
- * The calendar block's «Coming up» designs (milestone 0.7.19): nine looks on the next view, each built around the next event (and the ones after it as the block's `nextCount` and `laterCount` say), every one a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in calendar.css under its own class names.
- * The announcement (`props.notice` with the texts `noticeLabel`, `noticeTitle` and `noticeText`) is an optional part of the designs that declare `notice`.
- * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
+ * The calendar block's «Coming up» designs: nine looks on the next view built around the next event, each a renderer over the block's ui helpers (makeUi).
+ * Notes: docs/engine-notes/blocks/calendar-next.md (Urd repository).
  */
 import { t, dates } from '../i18n.js';
 import { bandReach } from '../ribbon-model.js';
@@ -23,9 +22,7 @@ function countdownParts(occ, now = Date.now()) {
 const TICKERS = new Map();
 
 /**
- * Runs fn now and once a minute while the node stays on the page. A new
- * timer first stops the ones whose node a redraw has taken off the page, so
- * a calendar drawn again keeps one timer, not one per drawing.
+ * Runs fn now and once a minute while the node stays on the page; a new timer first stops those whose node a redraw has taken off the page.
  */
 function everyMinute(node, fn) {
   for (const [old, id] of TICKERS) {
@@ -71,9 +68,7 @@ function laterRow(occ, ui, className) {
 }
 
 /**
- * The announcement note, when the design shows one and the owner has switched it on.
- * Its title and text are the owner's own words: a note without either is never drawn for a visitor, and stands with its hints in the editor.
- * A text longer than the note holds opens the announcement in full in a card (`ui.notice`).
+ * The announcement note, when the design shows one and the owner has switched it on; one without a title or a text is drawn in the editor alone.
  */
 function noticeNode(props, ui, className) {
   if (props.notice?.show !== true) return null;
@@ -276,10 +271,7 @@ const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden=
 const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
 
 /**
- * The band's pause (WCAG 2.2.2: moving content that lasts more than five seconds needs a pause that stays). A real button with
- * aria-pressed, shown at the band's edge in the «button» form; in the «touch» form it is there for the keyboard only, shown when
- * it has focus, while a touch on the band pauses it and a tap on its empty space plays it again. A pointer over the band and focus
- * inside it pause it for as long as they stay (the calendar's sheets).
+ * The band's pause button (WCAG 2.2.2): shown at the band's edge in the «button» form, and for the keyboard alone in the «touch» form.
  */
 function bandPause(wrap, track, key, touch) {
   const button = document.createElement('button');
@@ -317,8 +309,7 @@ function bandPause(wrap, track, key, touch) {
 }
 
 /**
- * Lays the band over the content surface or the whole page (`reach`, as the ribbon block does with its width, bandReach), measured from the section and the canvas.
- * The calendar's size zooms its content, so the width and the offset are written in the calendar's own pixels.
+ * Lays the band over the content surface or the whole page (`reach`), measured from the section and the canvas in the calendar's own pixels.
  * @param {HTMLElement} wrap The band
  * @param {string} reach `canvas` or `page`
  * @returns {HTMLElement|null} The section, whose width the band follows; null when there is none
@@ -359,10 +350,7 @@ export function band(host, occs, props, ics, ui) {
   };
   const run = fill(ui.el('div', 'urd-cal-band-run'));
   track.appendChild(run);
-  // The run rolls when it is wider than the band: a second run follows it so the loop has no seam, and the band gets its pause.
-  // The second run opens the cards as the first does, so a press anywhere on the band reaches an event; it is hidden from assistive technology and left out of the tab order, where the first run stands.
-  // With rolling switched off, or with reduced motion, the band stands still and scrolls sideways by hand.
-  // A band that reaches past its block (the content width or the whole page) is laid out before it measures whether it rolls, and again when its section changes width.
+  // The run rolls when it is wider than the band, a hidden second run after it for a seamless loop; with rolling off or reduced motion it scrolls by hand.
   const reach = ui.opt.reach === 'canvas' || ui.opt.reach === 'page' ? ui.opt.reach : null;
   if (reach) requestAnimationFrame(() => {
     if (!wrap.isConnected) return;
@@ -609,7 +597,7 @@ function tileFacts(dialog, ui, className) {
 }
 
 export const cards = {
-  /** N1 Billboard: the card as a lit billboard on its legs, a pulse before the date and the facts as tiles; the frame, the lamps and the legs are the calendar sheets'. */
+  /** N1 Billboard: the card as a lit billboard on its legs, a pulse before the date and the facts as tiles. */
   billboard(dialog, occ, ui) {
     const date = dialog.querySelector('.urd-cal-dialog-date');
     if (date) {

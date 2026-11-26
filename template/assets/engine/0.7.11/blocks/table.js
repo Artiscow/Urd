@@ -1,16 +1,12 @@
 /**
- * Core block: table (opening hours, price lists). A semantic `<table>` in an
- * overflow-x wrapper, so wide tables scroll in their own surface instead of
- * tipping the page over. Cells are edited straight on the canvas (click and
- * type); rows and columns are added and removed in Properties. The style
- * choices (header row, striped rows, lines) live in the Style tab.
+ * Core block: table, a semantic `<table>` in an overflow-x wrapper so a wide table scrolls in its own surface; cells are edited on the canvas.
+ * Notes: docs/engine-notes/blocks/table.md (Urd repository).
  */
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
 
 /**
- * Rectangularises the rows (pure, node-testable): all rows the same length
- * (short ones padded with empty cells), at least 1 x 1, strings only.
+ * Rectangularises the rows (pure, node-testable): all rows the same length (short ones padded with empty cells), at least 1 x 1, strings only.
  * @param {unknown} rows props.rows as they stand in the data
  * @returns {string[][]}
  */
@@ -80,8 +76,7 @@ export const tableBlock = {
     host.appendChild(table);
 
     if (editable) {
-      // Click and type per cell; the whole row set is read from the DOM on
-      // change, so props always mirror what the table actually holds.
+      // Click and type per cell; the whole row set is read from the DOM on change, so props always mirror what the table actually holds.
       const collect = () => [...table.rows].map((tr) => [...tr.cells].map((cell) => cell.textContent ?? ''));
       for (const tr of table.rows) {
         for (const cell of tr.cells) {

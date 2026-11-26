@@ -60,9 +60,6 @@ const colourOf = (value) => (typeof value === 'string' && value.trim() ? value.t
  * The button's settings as they apply, each read from `site.layout.toTop` or its standard.
  * @param {object|null|undefined} site site.json
  * @param {typeof import('./shape-model.js')|null} [shapes] The shape model, which reads the owner's own shape; without it the design's own outline stands
- * The button's own mark in place of the arrow, as the icon block draws its own: a picture uploaded and edited (`image`), else a drawn icon from Urd's set (`icon`), else a character (`glyph`); none of them, the arrow.
- * A shaped design's outline is the shape the owner chose or drew (`shape`, shape-model.js), or without one the design's own: the circle, the rounded square or the ring, with the waves of `waves` and `count`.
- * The mark's size (`iconSize`) is a percent of its size in the design, the arrow's alike; a picture on a shaped design stands inside the button's edge or fills the whole button (`fill`), where a mark can stand over it (`over`): the arrow, else a drawn icon or a character, at the mark's size.
  * @returns {{show: boolean, design: string, place: 'corner'|'content', side: 'left'|'right', size: string, phoneSize: string|null, colors: Record<string, string|null>, after: string, phone: boolean, text: string, waves: number, count: number, hover: string, press: string|null, line: string, lineWidth: number, glyph: string, icon: string|null, image: string|null, iconSize: number, fill: string, over: {icon: string|null, glyph: string}|null, shape: ReturnType<typeof import('./shape-model.js').shapeOf>|null}}
  */
 export function toTopOf(site, shapes = null) {

@@ -4,8 +4,7 @@
  */
 import { t } from './i18n.js';
 
-// Simple email shape (not RFC complete, the same as the form block): something
-// before @, something after, and a dot in the domain.
+// Simple email shape (not RFC complete, the same as the form block): something before @, something after, and a dot in the domain.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** @param {unknown} value @returns {boolean} */

@@ -1,20 +1,13 @@
 /**
- * Core block: statistic / key figure. One number with an optional prefix and
- * suffix and a label below; three blocks side by side give the number trio from
- * the statistics preset. What it adds over plain text blocks is the count-up
- * animation on first entrance (IntersectionObserver, one-shot): the number counts
- * from zero to the final value with the number format preserved. ADR-0011 gating:
- * without support, with prefers-reduced-motion, and in editing mode the number
- * stands in its FINAL STATE - the animation is pure decoration and never a
- * requirement.
+ * Core block: statistic.
+ * A number with a prefix, suffix and label that counts up on first entrance, standing in its final state where motion is off (ADR-0011).
+ * Notes: docs/engine-notes/blocks/stats.md (Urd repository).
  */
 // Only called in preview (after the admin dictionary is loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
 
 /**
- * Parses the display value as a number (pure, node-testable): the digits with an
- * optional decimal separator (comma or period), grouped with spaces or thin
- * spaces ("4 800", "1 234,5"). Anything else gives null (no animation).
+ * Parses the display value as a number: digits with an optional decimal comma or period, grouped with spaces or thin spaces; anything else gives null.
  * @param {string} value The display value from props
  * @returns {{num: number, decimals: number}|null}
  */
@@ -29,8 +22,7 @@ export function parseStatValue(value) {
 }
 
 /**
- * Formats a number during the count in the SAME form as the target value: the
- * same number of decimals, the same decimal separator and the same grouping.
+ * Formats a number during the count in the SAME form as the target value: the same number of decimals, the same decimal separator and the same grouping.
  * @param {number} n The number to show
  * @param {string} reference The target value as it stands in props
  * @param {number} decimals The number of decimals from parseStatValue
@@ -39,8 +31,7 @@ export function parseStatValue(value) {
 export function formatStatValue(n, reference, decimals) {
   const ref = String(reference ?? '');
   const comma = ref.includes(',');
-  // The grouping character is taken from the target value itself (normal, hard or
-  // narrow space), so the form never changes during the count.
+  // The grouping character is taken from the target value itself (normal, hard or narrow space), so the form never changes during the count.
   const group = ref.match(/\d([\s  ])\d/)?.[1] ?? null;
   let text = n.toFixed(decimals);
   if (comma) text = text.replace('.', ',');
@@ -84,8 +75,7 @@ export const statsBlock = {
   render(el, props, ctx) {
     const host = document.createElement('div');
     host.className = `urd-stats urd-stats-${statVariant(props.variant)}`;
-    // The figure stands in a box of its own, the width the narrow rules ask
-    // (stats.css), so the figure follows the width the content is laid out in.
+    // The figure stands in a box of its own, the width the narrow rules ask (stats.css), so the figure follows the width the content is laid out in.
     const box = document.createElement('div');
     box.className = 'urd-stats-box';
     box.appendChild(host);
@@ -109,9 +99,7 @@ export const statsBlock = {
     host.append(row, label);
 
     if (ctx.preview) {
-      // Click-and-type on the value and the label; prefix and suffix live in the panel.
-      // In the phone view the label is written as the phone's own (PHONE_WORDS, ADR-0033), and the number, the same fact on every screen, is written on the desktop.
-      // Each change hands back the fields as they stand on the page, so one typed earlier is never handed back as it was drawn.
+      // Click-and-type on the value and the label, the phone view writing the label as the phone's own (ADR-0033); a change hands back the fields as they stand.
       const fields = editable ? [[value, 'value'], [label, 'label']] : [[label, 'label']];
       for (const [node] of fields) {
         try {
@@ -141,8 +129,7 @@ export const statsBlock = {
       });
     }
 
-    // Count-up on first entrance: only for visitors, only when the value is a
-    // number, and never under reduced motion - otherwise the final state stands.
+    // Count-up on first entrance: only for visitors, only when the value is a number, and never under reduced motion - otherwise the final state stands.
     const parsed = parseStatValue(props.value);
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     if (props.countUp !== false && parsed && parsed.num > 0 && !editable && !reduce

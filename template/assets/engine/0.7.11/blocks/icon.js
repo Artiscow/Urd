@@ -1,7 +1,6 @@
 /**
- * Core block: icon. A glyph/emoji in a chosen size and theme color, for
- * bullet lists, contact rows and small decorative elements. Emoji carry
- * their own colors; the theme color applies to text glyphs (★ ✓ → and so on).
+ * Core block: icon. A glyph or emoji in a chosen size and theme color; an emoji keeps its own colors, a text glyph takes the theme's.
+ * Notes: docs/engine-notes/blocks/icon.md (Urd repository).
  */
 import { resolveColor } from '../theme.js';
 import { isSafeImage } from '../nav-model.js';
@@ -18,8 +17,7 @@ export const iconBlock = {
    * @param {{glyph: string, color: string, size: number, image?: string|null, icon?: string|null}} props
    */
   render(el, props) {
-    // Custom uploaded icon (additive field): the image renders at the glyph size and wins over the glyph until it is removed.
-    // An unsafe source is treated as no source, the same path as an image that fails to load.
+    // An uploaded icon (additive) at the glyph's size, in its place until removed; an unsafe source counts as none, as an image that fails to load does.
     if (isSafeImage(props.image)) {
       const img = document.createElement('img');
       img.src = props.image;
@@ -40,10 +38,8 @@ export const iconBlock = {
       el.appendChild(img);
       return;
     }
-    // Drawn SVG icon from the library (additive field): sharp at every
-    // size and follows the theme color. An unknown id (data from a newer
-    // Urd) falls back silently to the glyph. The outer element keeps the
-    // .urd-icon centering inside the frame; the inner element carries the size.
+    // A drawn SVG icon (additive) in the theme color at any size; an unknown id falls back to the glyph.
+    // The outer span centres it, the inner one sizes it.
     if (typeof props.icon === 'string' && props.icon) {
       const svg = iconSvg(props.icon);
       if (svg) {

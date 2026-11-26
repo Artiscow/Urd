@@ -276,8 +276,7 @@ export const SECTION_THEMES = {
   },
   inverse: {
     '--urd-color-bg': 'var(--urd-base-text)',
-    // 78/22 (not 88/12): the cards (surface) need enough separation from
-    // the inverted background, or they turn muddy.
+    // 78/22 (not 88/12): the cards (surface) need enough separation from the inverted background, or they turn muddy.
     '--urd-color-surface': 'color-mix(in srgb, var(--urd-base-text) 78%, var(--urd-base-bg))',
     '--urd-color-text': 'var(--urd-base-bg)',
   },
@@ -317,12 +316,12 @@ export const SECTION_THEME_LABELS = {
   highlighted: 'sectionTheme.highlighted',
 };
 
-/** Every token key any role can set - used to reset before a new role. */
+/** Every token key any role can set, reset before a new role is applied. */
 const SECTION_THEME_KEYS = [...new Set(Object.values(SECTION_THEMES).flatMap(Object.keys))];
 
 /**
- * The token overrides for a role (pure function, node-tested). Standard,
- * absence and an unknown role yield no overrides ({}).
+ * The token overrides for a role (pure function, node-tested).
+ * Standard, absence and an unknown role yield no overrides ({}).
  * @param {string|undefined} role
  * @returns {Record<string, string>}
  */
@@ -344,9 +343,7 @@ export function applySectionTheme(host, role) {
 }
 
 /**
- * WCAG relative luminance (0..1) of a #rrggbb/#rgb color, or null for a
- * value that is not a hex (token names/color-mix cannot be measured
- * statically).
+ * WCAG relative luminance (0..1) of a #rrggbb/#rgb color, or null for a value that is not a hex (token names/color-mix cannot be measured statically).
  * @param {string} hex
  * @returns {number|null}
  */
@@ -383,9 +380,8 @@ export function inkOn(value) {
 }
 
 /**
- * WCAG contrast ratio (1..21) between two hex colors, or null when one of
- * them is not a measurable hex (token names/color-mix). Pure function,
- * node-tested.
+ * WCAG contrast ratio (1..21) between two hex colors, or null when one of them is not a measurable hex (token names/color-mix).
+ * Pure function, node-tested.
  * @param {string} a @param {string} b
  * @returns {number|null}
  */

@@ -1,9 +1,6 @@
 /**
- * Core block: the association's contact details (type id `contact`, 0.7.24.5).
- * It draws what the Legal panel holds under Who you are (site.contact, contact-model.js), so a changed phone number shows on every page at once.
- * The details are an <address> in one of the designs of CONTACT_DESIGNS: the plain lines, icon rows, a card, three tiles, a fact list, action buttons, beside a map that loads on a tap, a strip, a poster, the contact points by role, or beside a QR code that saves the contact.
- * Two options work with the designs: a button that saves the details as a contact card (vCard), and a bar docked to the bottom of a phone's screen with the call, email and map actions.
- * Each design has its narrow layout in contact.css by the block's own width (a container query), so a phone and a narrow frame both get it.
+ * Core block: the site's contact details (`contact`), from the Legal panel's Who you are (contact-model.js), as an <address> in a design of CONTACT_DESIGNS.
+ * Notes: docs/engine-notes/blocks/contact.md (Urd repository).
  */
 // ta() is only called in preview (after the admin dictionary has loaded), t() only at render: never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
@@ -14,9 +11,7 @@ import { loadBlockSheet } from '../core-types.js';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
- * The block's content from the site's details: the name (the legal name, else the site's title), the address lines, the phone and email links and the legal line's parts, each only when the block shows it and the site has it; the contact points by role and the point on the map, which the roles and map designs draw.
- * The site's title stands in for the name only beside another detail, so a site without contact details shows nothing.
- * Pure; the render draws it.
+ * The block's content from the site's details, each part where the block shows it and the site has it; the title names it only beside another. Pure.
  * @param {object} site
  * @param {{parts?: string[], design?: string}} props
  * @returns {{name: string, address: string[], phone: object|null, email: object|null, legal: Array<object>, points: Array<object>, geo: {lat: number, lon: number}|null, shown: string[]}|null} null when nothing would show
@@ -203,7 +198,7 @@ function drawButtons(box, model, extras, site) {
   if (model.legal.length) box.append(node('span', 'urd-contact-legal', legalText(model.legal)));
 }
 
-/** Beside a map: the details with a directions link, and OpenStreetMap's map behind a cover that loads it only on a tap, or with the page where the owner chose so (`askFirst: false`). */
+/** Beside a map: the details with a directions link, and OpenStreetMap's map behind a cover until a tap, or with the page (`askFirst: false`). */
 function drawMap(box, model, extras, site, ctx, props = {}) {
   const details = node('span', 'urd-contact-side');
   details.append(label(t('contact.findUs')));
@@ -370,9 +365,7 @@ function saveButton(site, name, model) {
 }
 
 /**
- * The bar docked to the bottom of a phone's screen: call, email and the map, each when the site has it.
- * It is a manual popover, so the top layer places it over the page whatever the block's ancestors are transformed by; without the Popover API it stays fixed by its rules in contact.css.
- * One bar per page: a block whose bar finds another one open leaves its own out.
+ * The bar docked to the bottom of a phone's screen with call, email and map, a manual popover in the top layer; one bar per page.
  */
 function dockBar(model, site) {
   const bar = node('nav', 'urd-contact-dock');

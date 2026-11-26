@@ -1,20 +1,6 @@
 /**
- * Core block: FAQ accordion. Built on the native <details name> element: the
- * answer unfolds on a click on the question row (summary), the browser owns the
- * open/closed state and the keyboard and screen reader semantics, and `name`
- * gives exclusive unfolding (one open answer at a time) without JS. Find-in-page
- * opens a match automatically. Soft unfolding via ::details-content where the
- * browser supports it (faq.css, behind @supports); otherwise the answer unfolds
- * instantly.
- *
- * For visitors a click anywhere on the summary row opens it. In the editor the
- * texts are directly editable, so there a click on the question text places the
- * caret; only the arrow icon unfolds.
- *
- * Open and closed answers are view state, never content: the editor fits the
- * block's frame to the collapsed height (the fit leaves open details out,
- * render.js), and an unfolded answer grows the display only, the push pass
- * moving the blocks below (ADR-0024, ADR-0025).
+ * Core block: FAQ accordion on the native <details name>, the browser owning the open state and keyboard; open answers are view state, never content.
+ * Notes: docs/engine-notes/blocks/faq.md (Urd repository).
  */
 import { setRichHtml, EDIT_HANDLES } from '../sanitize.js';
 import { boxStyleCss } from '../box-style.js';
@@ -22,12 +8,7 @@ import { boxStyleCss } from '../box-style.js';
 import { ta, adminLocaleReady } from '../i18n.js';
 
 /**
- * The group name for the FAQ elements (pure, node-testable). Without `multi` all
- * the questions in the block share one name, which gives native exclusive
- * unfolding (one open answer at a time); with `multi` the name is empty so
- * several can stay open. The name is bound to the block id so two FAQ blocks on
- * the same page do not switch each other off.
- *
+ * The group name for the FAQ elements: one per block without `multi`, so one answer is open at a time, and empty with it. Pure (node-testable).
  * @param {string} blockId The block id
  * @param {boolean} multi Whether several answers can be open at the same time
  * @returns {string} The name attribute, or '' when it should not be set
@@ -102,15 +83,12 @@ export const faqBlock = {
       const q = document.createElement('span');
       q.className = 'urd-faq-q';
       q.textContent = entry.q ?? '';
-      // The arrow icon is decorative: summary is the native toggle itself, so
-      // the icon must not be announced separately (aria-hidden).
+      // The arrow icon is decorative: summary is the native toggle itself, so the icon must not be announced separately (aria-hidden).
       const chevron = document.createElement('span');
       chevron.className = 'urd-faq-toggle';
       chevron.setAttribute('aria-hidden', 'true');
       chevron.innerHTML = CHEVRON;
-      // Without the stop, pointerdown would bubble to the block's drag and
-      // selection listeners. Only bubbling is stopped, not the default action,
-      // so the native toggle (click) still fires.
+      // Stops pointerdown bubbling to the block's drag and selection listeners, keeping the default, so the native toggle still fires.
       chevron.addEventListener('pointerdown', (event) => event.stopPropagation());
       head.append(q, chevron);
 
@@ -124,8 +102,7 @@ export const faqBlock = {
       host.appendChild(item);
 
       if (editable) {
-        // Click-and-type like the text block: the question is plain text, the
-        // answer rich text (.urd-text[contenteditable] gives the formatting bar).
+        // Click-and-type like the text block: the question is plain text, the answer rich text (.urd-text[contenteditable] gives the formatting bar).
         try {
           q.contentEditable = 'plaintext-only';
         } catch {
@@ -134,9 +111,7 @@ export const faqBlock = {
         answer.contentEditable = 'true';
         q.addEventListener('input', postItems);
         answer.addEventListener('input', postItems);
-        // A click on the question text places the caret rather than unfolding;
-        // only the arrow icon toggles (native toggle on summary via the chevron
-        // click).
+        // A click on the question text places the caret rather than unfolding; only the arrow icon toggles (native toggle on summary via the chevron click).
         head.addEventListener('click', (event) => {
           if (!chevron.contains(event.target)) event.preventDefault();
         });
@@ -148,8 +123,7 @@ export const faqBlock = {
     });
 
     if (editable) {
-      // The help chip (ADR-0008): the block has special functions and explains itself.
-      // adminLocaleReady: the first render can happen before boot has loaded the dictionary.
+      // The help chip (ADR-0008), loaded with adminLocaleReady, since the first render can come before boot has loaded the dictionary.
       Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
         if (!el.isConnected || el.querySelector('.urd-hint-chip')) return;
         attachHint(el, {

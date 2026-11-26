@@ -1,7 +1,6 @@
 /**
- * The calendar block's month, week, day and year designs (milestone 0.7.19): eight looks that each show a span of time rather than a count of events, every one a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in calendar.css under its own class names.
- * The data is `ui.all`, the whole filtered window the block loaded for the view (ics.js windowStart), so a design can move through its weeks or months on its own.
- * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
+ * The calendar block's month, week, day and year designs: eight looks that each show a span of time, every one a renderer over the block's ui helpers.
+ * Notes: docs/engine-notes/blocks/calendar-time.md (Urd repository).
  */
 import { t, tp, dates } from '../i18n.js';
 import { resolveColor } from '../theme.js';
@@ -98,8 +97,7 @@ export function weekStrip(host, occs, props, ics, ui) {
 }
 
 /**
- * The hours a plan shows: from the earliest event (at most 8) to past the latest (at least 18).
- * The owner's own first and last hour replace the 8 and the 18; an event outside them still widens the span.
+ * The hours a plan shows: from the earliest event (at most 8, or the owner's first hour) to past the latest (at least 18, or the owner's last hour).
  */
 function hourSpan(occs, opt = {}) {
   let from = Number.isInteger(opt.hourFrom) ? Math.min(opt.hourFrom, 23) : 8;
@@ -552,14 +550,13 @@ function arcPath(cx, cy, r, a0, a1) {
 /** The events a year wheel's month list shows before «Show all». */
 const WHEEL_SHOWN = 5;
 
-/** 08 Year wheel: twelve months on a ring, a dot per event, the past months dimmed and the current one in the accent; a list for the picked month, its first events shown and the rest behind «Show all». */
+/** 08 Year wheel: twelve months on a ring with a dot per event, and a list for the picked month with the rest behind «Show all». */
 export function yearWheel(host, occs, props, ics, ui) {
   const today = ui.today();
   let picked = today.getMonth();
   // Whether the picked month's list shows all its events; a month picked anew starts with its first.
   let whole = false;
-  // The month at the top of the wheel is the owner's choice, and the wheel reads the season that starts there and holds today:
-  // with August at the top, August this year to July next year. A month's place is counted from the top.
+  // The month at the top of the wheel is the owner's choice, and the wheel reads the season that starts there and holds today.
   const firstMonth = ics.seasonTop(ui.opt.firstMonth, today);
   const season = ics.seasonRange(firstMonth, today.getTime());
   const first = new Date(season.from).getFullYear();

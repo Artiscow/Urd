@@ -1,13 +1,6 @@
 /**
- * Core block: checkout (the shop).
- * The order summary is read from the basket (shop.js), the contact fields (name, email, phone, comment) are validated, and the order is sent as an email draft (mailto, zero setup), as JSON to an optional endpoint, or to the optional payment layer (ADR-0020, ADR-0028: Vipps, a card at Vipps or Stripe, PayPal).
- * The order lines and the total are repeated right above the order buttons, and the buttons' texts say that ordering is a purchase or a payment: angrerettloven § 16 asks for both, and without the wording the buyer is not bound.
- * The buttons are described by the summary, so a screen reader that tabs to them hears the order and the total.
- * Under the buttons the seller is named from the Legal panel's contact details (angrerettloven § 8 d), unless the block leaves it out (`seller: false`).
- * After an order, by any path, the page shows a printable confirmation with the order lines, the total, the buyer, how it is paid, the seller with the organisation number, and the standard withdrawal form (angrerettloven § 18 and § 20); it is kept in this tab's sessionStorage, so a refresh keeps it.
- * The honeypot field stops simple bots (filled in = discarded silently).
- * Payment instructions (a Vipps number, a bank account, pay at pickup) are shown in the form above the order summary: one as a line, two or more as a choice the buyer makes before ordering, and the chosen one is named in the order and repeated after it is sent.
- * An external endpoint requires connect-src in _headers (ADR-0006).
+ * Core block: checkout, the basket's order with the buyer's contact fields, sent as an email draft, to an endpoint or through the payment layer (ADR-0028).
+ * Notes: docs/engine-notes/blocks/checkout.md (Urd repository).
  */
 import {
   readCart, writeCart, cartTotal, formatPrice, orderLines, orderSummary,
@@ -106,12 +99,7 @@ function sellerLines(seller) {
 }
 
 /**
- * The printable confirmation of an order: a heading with the date and the
- * reference, the lines and the total, the buyer, how it is paid, the seller
- * (angrerettloven § 8 d, ehandelsloven § 8), the right of withdrawal and the
- * standard withdrawal form with the seller filled in (directive 2011/83/EU
- * annex I B, forskrift 2014-06-20-777 § 1), and a Print button. Printing
- * shows this section alone (base.css).
+ * The printable confirmation of an order: its lines and total, the buyer, the payment, the seller, the right of withdrawal and its form, and a Print button.
  */
 function buildConfirmation(record, seller, currency) {
   const box = el2('section', 'urd-checkout-confirmation');
@@ -203,9 +191,7 @@ export const checkoutBlock = {
   labelKey: 'blocks.checkout',
   defaults: () => ({ recipient: '', endpoint: '', currency: 'kr', seller: true, payments: { vipps: false, card: 'none', paypal: false, capture: 'ship', manual: [] } }),
   migrations: {
-    // 1 -> 2: the Vipps button flag and the Vipps number became the payments
-    // settings (ADR-0028): the flag is the Vipps provider, the number the
-    // first payment instruction.
+    // 1 -> 2: the Vipps button flag becomes the Vipps provider, and the Vipps number the first payment instruction (ADR-0028).
     1: ({ vippsCheckout, vipps, ...rest }) => ({
       ...rest,
       payments: {
@@ -289,7 +275,7 @@ export const checkoutBlock = {
     hpWrap.appendChild(hp);
     form.appendChild(hpWrap);
 
-    // The payment instructions above the order summary: one stands as a line; two or more are a radio group, as the form block draws one, and the buyer chooses before ordering.
+    // The payment instructions above the order summary: one stands as a line; two or more are a radio group the buyer chooses in before ordering.
     const methods = shownMethods(pays);
     const methodRadios = [];
     if (methods.length === 1) {
@@ -343,11 +329,7 @@ export const checkoutBlock = {
       status.classList.toggle('urd-checkout-error', Boolean(isError));
     };
 
-    // The optional payment layer (ADR-0020, ADR-0028): a button per provider
-    // sends the basket to the site's own function, which recomputes the total
-    // from the catalogue and answers with the address at the provider; the
-    // payment happens there, and the contact fields may stay empty, since
-    // the provider's page asks for them.
+    // The optional payment layer (ADR-0028): a button per provider sends the basket to the site's function, which answers with the address at the provider.
     const providerName = { vipps: 'Vipps', stripe: 'Stripe', paypal: 'PayPal' };
     const payButton = (labelKey, provider, method) => {
       const pay = el2('button', 'urd-checkout-vippspay urd-checkout-pay', t(labelKey));
@@ -391,7 +373,7 @@ export const checkoutBlock = {
           });
           const data = await res.json().catch(() => null);
           if (res.ok && data?.url) {
-            // The provider, the payment's reference, the provider's own id and the buyer key are kept for the return, which asks whether this payment went through; neither the id nor the key comes from the address, so a shared link confirms nothing and names no buyer.
+            // The provider, the reference, the provider's id and the buyer key are kept in this tab for the return, so a shared link confirms nothing.
             try { sessionStorage.setItem('urd-pay-reference', [provider, String(data.reference ?? ''), String(data.pid ?? ''), /^[0-9a-f]{32}$/.test(data.key ?? '') ? data.key : ''].join(':')); } catch { /* no storage: the basket then stays after the payment */ }
             location.href = data.url;
             return;
@@ -410,7 +392,7 @@ export const checkoutBlock = {
             pay.disabled = false;
             return;
           }
-          // A line whose size or colour no longer fits its product: it leaves the basket, and the buyer adds it again with a choice.
+          // A line whose size or colour does not fit its product: it leaves the basket, and the buyer adds it again with a choice.
           if (res.status === 400 && data?.code === 'orderChoice') {
             writeCart(cartDrop(readCart(), data.lines));
             setStatus(t('shop.choiceNeeded'), true);
@@ -423,7 +405,7 @@ export const checkoutBlock = {
             pay.disabled = false;
             return;
           }
-          // 503: the provider is not set up; 404: the site has no functions, so the payment is not set up either; 400: this provider cannot take the order (the currency, a product); else a failure that may pass.
+          // 503 or 404: the payment is not set up; 400: this provider cannot take the order; else a failure that may pass.
           setStatus(t(res.status === 503 || res.status === 404 ? 'shop.vippsUnavailable' : res.status === 400 ? 'shop.payRefused' : 'shop.sendFailed'), true);
         } catch {
           setStatus(t('shop.sendFailed'), true);
@@ -449,8 +431,7 @@ export const checkoutBlock = {
       });
     }
 
-    // Return from payment (?ordered=<reference>&via=<provider>): the basket is emptied and the buyer thanked only when the reference is the one this browser started and the provider's session endpoint says the payment went through, so neither a shared address nor a cancelled payment empties a basket.
-    // The parameters are cleaned away once the payment is settled, so a refresh does not ask again; while the answer is still open they stay, so a refresh asks once more.
+    // Return from payment (?ordered=&via=): the basket empties only when the reference is this browser's and the provider's endpoint says it is paid.
     const params = new URLSearchParams(location.search);
     const ordered = params.get('ordered');
     const via = params.get('via') ?? 'vipps';
@@ -468,11 +449,11 @@ export const checkoutBlock = {
       try { started = sessionStorage.getItem('urd-pay-reference') ?? ''; } catch { /* no storage */ }
       const [startedVia = '', startedRef = '', pid = '', key = ''] = started.split(':');
       if (PAY_PROVIDERS.includes(via) && startedVia === via && startedRef === ordered && /^urd-[0-9a-f]{24}$/.test(ordered)) {
-        // The provider may send the buyer back before the payment is settled, and the site's function may not answer at the first try, so the page asks a few times while the answer is open.
+        // The page asks a few times while the answer is open, since the buyer may return before the payment is settled.
         const ask = async (left) => {
           const query = `reference=${encodeURIComponent(ordered)}${pid ? `&pid=${encodeURIComponent(pid)}` : ''}`;
           // A POST, since PayPal's endpoint captures the approved order on this ask.
-          // The buyer key, kept from the start of the payment, lets this page alone read the buyer's details and the amount confirmed.
+          // The buyer key lets this page alone read the buyer's details and the amount.
           const data = await fetch(`/api/pay/${via}/session?${query}`, { method: 'POST', headers: key ? { 'x-urd-key': key } : {} }).then((res) => (res.ok ? res.json() : null)).catch(() => null);
           if (data?.paid) {
             // The confirmation is drawn from the basket before it empties, with the buyer the provider named and the amount it confirms.
@@ -500,8 +481,7 @@ export const checkoutBlock = {
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      // Nothing is ever sent from the editor, not even in the mobile view
-      // (ctx.preview, never editable: that one is false in the mobile viewport); the click says so.
+      // Nothing is ever sent from the editor, not even in the mobile view (ctx.preview, never editable: that one is false in the mobile viewport); the click says so.
       if (ctx.preview) {
         setStatus(ta('canvas.orderPreview'), false);
         return;

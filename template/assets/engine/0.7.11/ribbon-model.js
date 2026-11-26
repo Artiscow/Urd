@@ -1,13 +1,6 @@
 /**
- * Pure logic for the ribbon: the text marquee block and the gallery's ribbon
- * view share it. DOM-free, so all of it is tested with node --test
- * (tests/ribbon.test.mjs); the DOM building lives in blocks/ribbon.js and
- * blocks/gallery.js.
- *
- * The motion is one period of a doubled track: the items are built twice and
- * the track is translated by half its width, so the loop has no seam. The
- * duration is therefore the track's own width divided by the speed, which is
- * why it has to be computed rather than set.
+ * Pure logic for the ribbon, shared by the text marquee block and the gallery's ribbon view: one period of a doubled track, its duration computed from its width.
+ * Notes: docs/engine-notes/ribbon-model.md (Urd repository).
  */
 
 /** The drawn separators; anything else falls back to the dot. */
@@ -20,17 +13,12 @@ export const RIBBON_SEPARATORS = [...RIBBON_MARKS, 'none', 'custom'];
 export const RIBBON_SIZES = ['sm', 'md', 'lg', 'xl'];
 
 /**
- * How the band moves: `roll` is the continuous marquee, `sway` drifts back and
- * forth for a calmer band, `step` advances one item at a time like a ticker,
- * and `none` leaves the words standing.
+ * How the band moves: `roll` the continuous marquee, `sway` back and forth, `step` one item at a time, and `none` standing still.
  */
 export const RIBBON_MOTIONS = ['roll', 'sway', 'step', 'none'];
 
 /**
- * How far the band reaches: `canvas` the content surface (the default for a
- * new band or gallery band), `page` the window's full width, and `content`
- * the block's own box, which bands stored before 0.7.20.5 hold, so they keep
- * their look.
+ * How far the band reaches: `canvas` the content surface (a new band's default), `page` the window's full width, and `content` the block's own box.
  */
 export const RIBBON_WIDTHS = ['canvas', 'page', 'content'];
 
@@ -38,17 +26,13 @@ export const RIBBON_WIDTHS = ['canvas', 'page', 'content'];
 export const RIBBON_PAUSES = ['button', 'touch'];
 
 /**
- * What a stripe holds. The main stripe is never absent, so it has no `none`:
- * `text` is the words, `marks` only the separator over and over (a dotted
- * rule), and `plain` an empty stripe of colour.
+ * What the main stripe holds, never absent: `text` the words, `marks` the separator repeated, and `plain` an empty stripe of colour.
  */
 export const RIBBON_MAIN_MODES = ['text', 'marks', 'plain'];
 export const RIBBON_STRIPE_MODES = ['none', ...RIBBON_MAIN_MODES];
 
 /**
- * Where the thin stripes sit: `stack` puts them above and below the main one,
- * which then shares the band's height with them; `edge` lays them on the
- * band's own top and bottom edges, so the main stripe keeps the full height.
+ * Where the thin stripes sit: `stack` above and below the main one, sharing the band's height, or `edge` on the band's own top and bottom edges.
  */
 export const RIBBON_STRIPE_PLACES = ['stack', 'edge'];
 
@@ -65,8 +49,7 @@ export const RIBBON_SPEED = { min: 10, max: 300, dflt: 60 };
 export const RIBBON_TILT = 10;
 
 /**
- * The items worth drawing: trimmed, and the empty ones dropped, so a row the
- * owner has not filled in yet never leaves a hole in the band.
+ * The items worth drawing: trimmed, and the empty ones dropped, so a row the owner has not filled in yet never leaves a hole in the band.
  * @param {unknown} items
  * @returns {Array<string>}
  */
@@ -89,11 +72,7 @@ export function normalizeSpeed(value, { min = RIBBON_SPEED.min, max = RIBBON_SPE
 }
 
 /**
- * How many copies of the content one period holds. One period must reach
- * across the band, or the empty rest of the track rolls past; the track holds
- * two periods, so its half-way point is a whole number of copies and the loop
- * has no seam. Capped, so a hairline of content in a wide band never builds
- * hundreds of copies.
+ * How many copies of the content one period holds: enough to reach across the band, capped so a hairline of content never builds hundreds.
  * @param {unknown} runWidth The width of ONE copy, in px
  * @param {unknown} bandWidth The visible width of the stripe, in px
  * @returns {number} Copies per period, at least 1
@@ -106,9 +85,7 @@ export function ribbonPeriods(runWidth, bandWidth) {
 }
 
 /**
- * Seconds for one period, from the measured width of one copy of the track.
- * The floor keeps a short band from spinning: three short words at full speed
- * loop several times a second without it.
+ * Seconds for one period, from the measured width of one copy of the track, with a floor so a short band never spins.
  * @param {unknown} trackWidth The width of ONE copy, in px
  * @param {unknown} speed Pixels per second
  * @param {{min?: number}} [opts]
@@ -121,9 +98,8 @@ export function ribbonDuration(trackWidth, speed, { min = 4 } = {}) {
 }
 
 /**
- * What stands between two items: a drawn mark, the owner's own text, or
- * nothing. An own separator without text is nothing rather than a gap of
- * spaces.
+ * What stands between two items: a drawn mark, the owner's own text, or nothing.
+ * An own separator without text is nothing rather than a gap of spaces.
  * @param {unknown} sep
  * @param {unknown} sepText
  * @returns {{kind: 'draw'|'text'|'none', value: string}}
@@ -175,9 +151,7 @@ export function ribbonPause(pause) {
 }
 
 /**
- * Where a band that reaches past its block is laid out, in px from the
- * block's own left edge: across the content surface, or across the section,
- * which spans the window. Null for the block's own box.
+ * Where a band that reaches past its block is laid out, in px from the block's left edge: across the content surface or the section; null for its own box.
  * @param {'canvas'|'page'|'content'} width From ribbonWidth
  * @param {{sectionW: number, canvasW: number, canvasLeft: number, blockLeft: number}} m
  *   The section's and the canvas's widths, the canvas's left edge in the section, and the block's in the canvas
@@ -190,8 +164,7 @@ export function bandReach(width, m) {
 }
 
 /**
- * Whether the band moves at all: the motion has to be one that moves, there
- * has to be something to move, and reduced motion always wins.
+ * Whether the band moves at all: the motion has to be one that moves, there has to be something to move, and reduced motion always wins.
  * @param {{count?: number, motion?: string, reducedMotion?: boolean}} [opts]
  * @returns {boolean}
  */
@@ -226,9 +199,7 @@ export function normalizeDwell(seconds) {
 }
 
 /**
- * One period for the ticker: every item stands still for its dwell before the
- * next jump, so the duration follows the COUNT, not the width. A band timed by
- * width would hold the first word for a third of a long loop and look dead.
+ * One period for the ticker: every item stands still for its dwell before the next jump, so the duration follows the count, not the width.
  * @param {number} count Items in one copy of the track
  * @param {unknown} dwell Seconds per item
  * @returns {number} Seconds

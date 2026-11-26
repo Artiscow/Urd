@@ -21,17 +21,14 @@ export function groupBox(items) {
  * @param {string} dock 'top-left' … 'bottom-right' (vertical-horizontal)
  * @param {number} margin distance from the docked edges in px
  * @param {{w: number, h: number}} box the box measurements in px
- * @param {{w: number, h: number, inset?: {top?: number, left?: number, right?: number}}} view the window
- *   measurements in px, and the menu's own band (a sticky top bar's height, a side column's width):
- *   the docks lie inside it, so a docked box is never drawn behind the menu
+ * @param {{w: number, h: number, inset?: {top?: number, left?: number, right?: number}}} view The window in px, and the menu's band, which the docks lie inside
  * @returns {{left: number, top: number}} position in px from the window's left/top
  */
 export function dockPosition(dock, margin, box, view) {
   const [vert, horz] = String(dock || 'bottom-right').split('-');
   const m = Number.isFinite(margin) ? margin : 0;
   const inset = viewInset(view);
-  // If the box is larger than the window, the top/left edge wins: centering
-  // is then meaningless, and the content must not be pushed off screen.
+  // If the box is larger than the window, the top/left edge wins: centering is then meaningless, and the content must not be pushed off screen.
   const center = (available) => Math.max(0, available / 2);
   let top;
   if (vert === 'top') top = inset.top + m;
@@ -84,8 +81,7 @@ export function nearestDock(box, view) {
  *   until points at a later section; sections never clip).
  */
 export function stickyState(scrollY, m) {
-  // Invalid or too-early limit (above the block's natural place): pinning
-  // makes no sense, the block always stays where it is.
+  // Invalid or too-early limit (above the block's natural place): pinning makes no sense, the block always stays where it is.
   const parkY = m.limitBottom - m.sectionTop - m.blockH;
   if (parkY < m.blockY) return { mode: 'static' };
 

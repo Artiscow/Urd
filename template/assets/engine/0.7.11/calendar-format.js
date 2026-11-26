@@ -1,7 +1,6 @@
 /**
- * How the calendar block writes times and lays out weeks: the pure rules behind the clock (24 or 12 hours), the first day of the week, an event's end, a span over several days, the days left to an event, a percentage, and the time zone the times are shown in.
- * The clock is 24 hours unless the block asks for 12 (`clock`), and the site language decides the week unless the block says otherwise (`weekStart`); the site's own time zone, when set, is the zone every visitor sees the times in.
- * Loaded by the block on its first render, with ics.js and the design model, never in the visitor closure; it never touches the DOM.
+ * How the calendar block writes times and lays out weeks: the clock, the week's first day, an event's end and span, days left, a percentage and the time zone.
+ * Notes: docs/engine-notes/calendar-format.md (Urd repository).
  */
 
 /** A language tag Intl accepts: the legacy `no` is Bokmål, and an unknown tag is Bokmål too, so the site never follows the visitor's browser (ADR-0012). */
@@ -21,7 +20,7 @@ export function calClock12(props) {
 
 const weekStarts = new Map();
 
-/** The first day of the week as Date.getDay() counts (0 Sunday, 1 Monday): the block's choice, else the language's (read once per language, since the locale data costs on its first use), else Monday. */
+/** The first day of the week as Date.getDay() counts: the block's choice, else the language's (read once per language), else Monday. */
 export function calWeekStart(props, lang) {
   if (props?.weekStart === 'sun') return 0;
   if (props?.weekStart === 'mon') return 1;
@@ -64,8 +63,7 @@ function intlFormat(kind, lang, options) {
 const atClock = (hours, minutes) => new Date(Date.UTC(2026, 0, 5, hours, minutes));
 
 /**
- * A time of day as text: «18:00», or on a 12-hour clock as the language writes it («6:00 pm», «6:00 p.m.», «ÖS 6:00»).
- * The language decides the words for the half of the day and where they stand.
+ * A time of day as text: «18:00», or on a 12-hour clock as the language writes it («6:00 pm», «ÖS 6:00»).
  */
 export function formatClock(hours, minutes, clock12, lang) {
   if (!clock12) return `${two(hours)}:${two(minutes)}`;
@@ -83,7 +81,7 @@ export function formatPercent(fraction, lang) {
   return intlFormat('number', lang, { style: 'percent', maximumFractionDigits: 0 }).format(fraction);
 }
 
-/** The number of calendar days from one time's day to another's on the local clock: 1 from 23:30 to 01:00 the next night, whatever the hours between, and across a change of clock. */
+/** The number of calendar days from one time's day to another's on the local clock, whatever the hours between and across a change of clock. */
 export function daysBetween(fromMs, toMs) {
   const day = (ms) => {
     const d = new Date(ms);
@@ -122,8 +120,7 @@ export function isMultiDay(occ) {
 }
 
 /**
- * The start and the end of a timed event as clock texts.
- * `to` is null when the feed gave no end or when the end is the start; for an event that ends on a later day it is the end's clock, and the caller writes the day before it.
+ * The start and the end of a timed event as clock texts; `to` is null without an end or when the end is the start.
  * @returns {{from: string, to: string|null}}
  */
 export function timeRange(occ, clock12, lang) {
@@ -137,8 +134,7 @@ export function timeRange(occ, clock12, lang) {
 const isoDay = (d) => `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
 
 /**
- * The `datetime` of a `<time>`: the day («2026-10-05») for a Date, a time in ms or an event, and the moment itself («2026-10-05T16:00:00.000Z») for a timed event when its clock is what is written (`withClock`).
- * A cancelled event's time is the word «Cancelled», which is no time: null.
+ * The `datetime` of a `<time>`: the day, or the moment itself for a timed event whose clock is written (`withClock`); null for a cancelled event.
  */
 export function dateTimeAttr(when, withClock = false) {
   if (when instanceof Date || typeof when === 'number') {
@@ -176,8 +172,7 @@ export function zoneOffsetMs(zone, ms) {
 export const localOffsetMs = (ms) => -new Date(ms).getTimezoneOffset() * 60000;
 
 /**
- * A time moved so the browser's local clock reads what the zone's clock shows at that time.
- * The views read local hours and dates, so an event shifted this way is drawn in the zone's time whatever zone the visitor is in.
+ * A time moved so the browser's local clock reads what the zone's clock shows, so the views draw events in the zone's time wherever the visitor is.
  */
 export function shiftToZone(ms, zone) {
   const wall = ms + zoneOffsetMs(zone, ms);

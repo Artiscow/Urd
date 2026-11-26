@@ -8,6 +8,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+### 0.7.0.107 - Short comments in every module a visitor's page loads, their reasoning in the notes - 26 November 2026
+
+- 60 of the modules a visitor's page loads still held their long comments, about 420 of them, among them `blocks/calendar.js`'s header of 1,818 characters. Each is cut to a short version saying what the code does, its full text kept in docs/engine-notes/ under the name it explains, the code unchanged and the editor's bundle byte-identical.
+- The 25 modules done before held 144 comments the new check refuses, most of them lines wrapped mid-sentence, the rest release numbers and JSDoc tags of up to 806 characters; they are rewrapped and cut, a tag's full text kept in the module's notes.
+- Five comments stood over code they did not describe (the edge stripe, a ribbon's stripe, the card's placement, the basket drawer, a calendar link); each stands over its own code, and its note under its name.
+- tests/engine-notes.test.mjs drops its list of modules still to be done, as every module meets the limit, and the visitor modules join the comments test's scope.
+
+The independent review before the commit found these:
+
+1. Ten comments still dated a field by a release written with a `v` («additive since v0.6»), which the test's release pattern did not read; the dates are gone, and the pattern refuses «since», «from» or «until» before a release.
+2. The calendar card's placement note stood over `CARD_MAX_W`, the basket drawer's over `cartCheckoutHref` and a link's over `noticeLink`, the first two filed in the notes under those names; each comment and note moved to its own code.
+3. Two new notes named a single builder for a pattern (the product dialog, the gallery's views), and a third the canvas model of one; the patterns are described without them.
+4. The notes sections added by hand stood at the end of their files, against the order each file states; every notes file changed this round is sorted by the headings the notes tool gives its module's comments.
+5. The comment item's «Done when» named the list of modules still to be done, which is gone rather than empty; it names the notes test holding every module.
+
 ### 0.7.0.106 - Short comments in the engine's editing layer, its stylesheets and the site's pages - 26 November 2026
 
 - The engine's editing layer, its stylesheets, the HTML pages, the dictionaries and the plugin shells held 742 comments over the limit, among them 314 in `preview-edit.js` and 92 in `preview.css`, with `preview-blend.js`'s header almost as long as its code. They are cut in 111 files, 2,039 lines down to 1,324, the code unchanged and the editor's bundle byte-identical; the engine area joins the comments test's scope.

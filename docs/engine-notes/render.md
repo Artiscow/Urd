@@ -26,6 +26,8 @@ everywhere. Each layer is lifted via lift() before render; unknown types
 and render errors are skipped with a warning (backgrounds are decorative,
 they never topple the page).
 
+`later` (a section below the first, on a visitor's page as it arrives): a layer whose definition loads pictures (`pictures: true`) is placed at once and drawn as its section comes within a screen of the viewport, or before the page is printed, so the pictures below the first screen wait for their turn; without an IntersectionObserver it is drawn at once. `first` (the page's first section on a visitor's page): the layer is told so, and fetches its picture ahead of the rest.
+
 ## `applySiteLayout`
 
 Writes the site's layout tokens on the root element (ADR-0018). The canvas
@@ -367,6 +369,8 @@ and the whole height for any other, a picture or a film then filling it.
 A flowing block's own room above it (`space`) is its top margin, added to
 the space between blocks; a pinned block has none.
 
+The options: `autoGrow` for text and data blocks with a natural height; `gap`, the space under a flowing block in px (mobileGapOf), MOBILE_GAP without it; `byWidth`, a block whose size is its frame (FIT_BY_WIDTH), with `designWidth` the width its desktop frame's percent is of.
+
 ## `mobilePlacementToCss › const rows`
 
 Pinned: explicit row tracks. Without rows the span is derived from
@@ -377,6 +381,11 @@ tracks (grid stretch), and when the content grows, the tracks grow too.
 
 Flowing: auto-placed. Partial overrides apply only to the fields
 actually present in the placement. A block in cells stands in its cell's whole width (phoneCellCss places the cell).
+
+## `mobilePlacementToCss › const gap`
+
+A flowing block's own room above it on the phone (`space`, migrate.js phoneSpace) is drawn as its top margin, added to the space between blocks under the block before it.
+A negative room takes from that space and never more than all of it, so a block never overlaps the one above; the room is set by dragging the block over its own place in the phone view (preview-edit.js flowDrag).
 
 ## `mobilePlacementToCss › const own`
 
@@ -389,11 +398,6 @@ A block whose size is its frame, in cells narrower than the row: its desktop sha
 ## `mobilePlacementToCss › if (own`
 
 Its content's height, or at least its own height on the phone, the content growing it past; a picture or a film with a shape takes its own height whole, and fills it.
-
-## `mobilePlacementToCss › const gap`
-
-A flowing block's own room above it on the phone (`space`, migrate.js phoneSpace) is drawn as its top margin, added to the space between blocks under the block before it.
-A negative room takes from that space and never more than all of it, so a block never overlaps the one above; the room is set by dragging the block over its own place in the phone view (preview-edit.js flowDrag).
 
 ## `mobilePlacementToCss › const height`
 
@@ -414,6 +418,12 @@ An id already on the page is left where it is, so the first spot to claim a name
 ## `sideColumn`
 
 The width a side menu's column takes beside the page, in px: the body's room for it (base.css `urd-side-left`, `urd-side-right`), as nav.js sets it; 0 without one.
+
+## `renderSection`
+
+`measure` draws a copy out of sight only to be measured (the phone drag's preview in preview-edit.js): drawn as the preview draws its blocks, without the editing layer and without animations, so its blocks stand in their end state.
+
+On the desktop a section whose words would stand narrower than they read well shows its phone layout under that window width (phoneHandoff, ADR-0034), marked `urd-handoff` with the width in `data-urd-handoff`, its texts keeping the desktop's measure, and is drawn again as the window crosses it.
 
 ## `renderSection › const ctx`
 

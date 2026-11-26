@@ -48,8 +48,7 @@ export function setCollectionsDraft(collections) {
 }
 
 /**
- * Whether the editor's collection drafts hold a collection of a kind, as the
- * shop gate reads it (block-palette.js shopOn): false before the drafts arrive.
+ * Whether the editor's collection drafts hold a collection of a kind, as the shop gate reads it (block-palette.js shopOn): false before the drafts arrive.
  * @param {string} kind
  * @returns {boolean}
  */

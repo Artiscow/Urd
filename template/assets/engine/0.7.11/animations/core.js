@@ -5,8 +5,9 @@
 
 const entranceDefaults = () => ({ duration: 600, delay: 0 });
 
-/* Default step time (ms) between the targets in group entrances: the stagger
-   default and per-card animation (applyCardAnimation) share the same rhythm. */
+/*
+ * Default step time (ms) between the targets in group entrances: the stagger default and per-card animation (applyCardAnimation) share the same rhythm.
+ */
 const STAGGER_STEP = 90;
 
 export const coreAnimations = {

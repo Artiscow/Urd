@@ -35,9 +35,10 @@ export function matchLang(raw) {
   return null;
 }
 
-/** Is the code one of Urd's built-in languages? Language packs
- *  (language-packs.js) can never override them: a plugin must not be able
- *  to hijack bokmål. */
+/**
+ * Is the code one of Urd's built-in languages?
+ * Language packs (language-packs.js) can never override them: a plugin must not be able to hijack bokmål.
+ */
 export function isBuiltinLang(code) {
   return SUPPORTED_LANGS.includes(String(code ?? ''));
 }
@@ -68,8 +69,7 @@ export function validateLanguages(list) {
 }
 
 /**
- * The language a value ASKS for: a built-in match first, otherwise a code
- * that may belong to a language pack (kept as-is), otherwise bokmål.
+ * The language a value ASKS for: a built-in match first, otherwise a code that may belong to a language pack (kept as-is), otherwise bokmål.
  * @param {unknown} raw
  * @returns {string}
  */

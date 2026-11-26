@@ -11,8 +11,9 @@ const MAX_AGE_MS = PREFETCH_MINUTES * 60 * 1000;
 /** Upper bound on parked pages, so a long hover session never grows the store. */
 const MAX_ENTRIES = 8;
 
-/** The session store, or null where the browser blocks storage access
- *  (the accessor itself throws in some private modes). */
+/**
+ * The session store, or null where the browser blocks storage access (the accessor itself throws in some private modes).
+ */
 export function sessionStore() {
   try {
     return globalThis.sessionStorage ?? null;
@@ -64,8 +65,8 @@ function writeStore(storage, store) {
 }
 
 /**
- * Parks one page file. Entries older than MAX_AGE_MS are dropped on the way,
- * and the oldest go first when the store exceeds MAX_ENTRIES.
+ * Parks one page file.
+ * Entries older than MAX_AGE_MS are dropped on the way, and the oldest go first when the store exceeds MAX_ENTRIES.
  * @param {string} file The register's file path
  * @param {string} text The raw JSON text as served
  * @param {string|null} etag The ETag the server sent, for the revalidation
@@ -101,8 +102,8 @@ export function readPrefetched(file, storage, now = Date.now()) {
 }
 
 /**
- * Fetches a page file and parks it. Failures are silent: the next boot
- * simply fetches the file itself.
+ * Fetches a page file and parks it.
+ * Failures are silent: the next boot simply fetches the file itself.
  */
 export async function prefetchPage(file, { fetchFn = fetch, storage, now } = {}) {
   try {

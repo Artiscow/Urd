@@ -1,6 +1,7 @@
 /**
- * Background layer: glow. A radial light spot placed relatively within the
- * section (x/y in 0..1), for depth and focus.
+ * Background layer: glow.
+ * A radial light spot placed relatively within the section (x/y in 0..1), for depth and focus.
+ * Notes: docs/engine-notes/backgrounds/glow.md (Urd repository).
  */
 import { resolveColor } from '../theme.js';
 
@@ -16,10 +17,7 @@ export const glowLayer = {
    */
   render(el, props) {
     const color = resolveColor(props.color);
-    // Old layers can be missing the fields (lift does not fill in defaults): fall back
-    // to the default values. Without this, position and radius become NaN%, and CSS
-    // discards the whole gradient, giving an invisible layer instead of one with the
-    // default look.
+    // A layer missing its fields takes the default values, so position and radius are never NaN% and the gradient is drawn.
     const x = props.x ?? 0.5;
     const y = props.y ?? 0.3;
     const radius = props.radius ?? 0.5;

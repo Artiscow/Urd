@@ -1,7 +1,6 @@
 /**
- * What a calendar loads beyond its own drawing (blocks/calendar.js): its feeds, the parts every calendar draws with, the renderer of each design family, and the readying of all of them before a page is drawn.
- * Kept apart from calendar.js, with only the boot's own modules imported, so the boot can ready a calendar beside its module (CORE_BLOCK_READY in core-types.js), a wave sooner than calendar.js and its own imports come in.
- * Fetching ALWAYS goes through the site's own feed proxy (/api/ics): feed hosts send no CORS, and the site's CSP allows connect-src 'self' only.
+ * What a calendar loads beyond its own drawing: its feeds, its parts, each design family's renderer, and the readying of them all before a page is drawn.
+ * Notes: docs/engine-notes/blocks/calendar-load.md (Urd repository).
  */
 import { ta, taApiError } from '../i18n.js';
 import { loadStylesheet, placeInOrder } from '../sheets.js';
@@ -11,7 +10,7 @@ import { CALENDAR_FEED_MINUTES } from '../keep-minutes.js';
 
 const CACHE_TTL = CALENDAR_FEED_MINUTES * 60 * 1000;
 
-/** The feeds on their way, by address: a calendar readied before the page is drawn (prepareCalendar) and its drawing, or two calendars of one feed, share one request. */
+/** The feeds on their way, by address, so a calendar's readying and its drawing, or two calendars of one feed, share one request. */
 const ASKING = new Map();
 
 /**
@@ -48,7 +47,7 @@ async function askSource(url, key) {
   return text;
 }
 
-/** The feeds a calendar's readying asked for, by address, each taken once by the first drawing that reads that feed, so the drawing never asks again for one the readying could not keep (a failed request, or a browser that keeps nothing). */
+/** The feeds a calendar's readying asked for, by address, each taken once by the first drawing that reads that feed. */
 const READIED = new Map();
 
 /**
@@ -70,14 +69,14 @@ const SHEETS = { calendar: './calendar.css', list: './calendar-list.css', cards:
 /** Loads one of the calendar's sheets in its place among the others, in the order SHEETS keeps, whatever order they come in. */
 const loadSheet = (name) => loadStylesheet(new URL(SHEETS[name], import.meta.url).href, placeInOrder('calendar', Object.keys(SHEETS).indexOf(name)));
 
-/** The renderer module of each design family, loaded when a calendar draws one (literal paths, so the modules stay out of the visitor closure and the preload list). */
+/** The renderer module of each design family, loaded when a calendar draws one, by literal paths outside the visitor closure and the preload list. */
 export const DESIGN_MODULES = { plain: () => import('./calendar-plain.js'), list: () => import('./calendar-list.js'), cards: () => import('./calendar-cards.js'), time: () => import('./calendar-time.js'), next: () => import('./calendar-next.js'), more: () => import('./calendar-more.js'), retro: () => import('./calendar-retro.js') };
 
-/** The parts once they are in (calendarParts), and the renderer modules loaded, by name: a calendar whose code is all in draws in the task that draws the page (renderCalendar in calendar.js). */
+/** The parts once they are in, and the renderer modules loaded, by name, so a calendar whose code is all in draws in the page's own task. */
 export let partsIn = null;
 export const designsIn = new Map();
 
-/** The parser, the design model, the formats and the links every calendar draws with, and the rules every calendar draws with (calendar.css), loaded together, kept once they are in. */
+/** The parser, the design model, the formats, the links and calendar.css every calendar draws with, loaded together and kept once in. */
 export const calendarParts = () => Promise.all([import('../ics.js'), import('../calendar-designs.js'), import('../calendar-format.js'), import('../map-links.js'), import('../meeting-links.js'), loadSheet('calendar')]).then((parts) => (partsIn = parts));
 
 /** A renderer module by its name in DESIGN_MODULES, with its family's sheet, kept once both are in. */
@@ -86,11 +85,11 @@ export const loadDesign = (name) => (DESIGN_MODULES[name] ? Promise.all([DESIGN_
   return mod;
 }) : undefined);
 
-/** The renderer modules a calendar draws with, by name in DESIGN_MODULES: its design's own, the week strip for the view switcher, and its phone's and its card's design where they are a module's own (calPhoneView, calCardDesign); null where there is none. */
+/** The renderer modules a calendar draws with, by name: its design's, the switcher's week strip, and its phone's and its card's design where they have one. */
 export const designModules = (cd, props) => [cd.calDesign(props.design).module, cd.calSwitcher(props) ? 'time' : null, cd.calPhoneDesignDef(cd.calPhoneView(props), props).module, cd.calCardDesignDef(cd.calCardDesign(props)).module, drawsPlain(cd, props) ? 'plain' : null];
 
 /**
- * Whether a calendar draws with the plain views (calendar-plain.js): a design without a renderer of its own, the switcher's plain month, or on a phone the stacked agenda or a look without a renderer.
+ * Whether a calendar draws with the plain views: a design without a renderer, the switcher's plain month, or on a phone the stacked agenda or a look without one.
  * @returns {boolean}
  */
 function drawsPlain(cd, props) {
@@ -104,8 +103,7 @@ function drawsPlain(cd, props) {
 }
 
 /**
- * Readies what a calendar draws with before the page is drawn (prepareBlocks in core-types.js): its parts and its rules, the renderers its settings draw with, and its feeds asked for, which its drawing then takes (fetchSource).
- * The calendar then stands in its own design from the page's first drawing, its events filling it as they come; the page never waits for a feed.
+ * Readies a calendar's parts, rules, renderers and feeds before the page is drawn, so it stands in its own design at once; the page never waits for a feed.
  * @param {object} props
  * @param {{site?: object}} ctx
  * @returns {Promise<void>}

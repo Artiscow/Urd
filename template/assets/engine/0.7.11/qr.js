@@ -1,7 +1,7 @@
 /**
- * A QR code encoder of Urd's own (ISO/IEC 18004), for the contact block's QR design: text in byte mode (UTF-8), error correction level M by default, the smallest version that holds it, and the mask with the lowest penalty.
- * Pure and DOM-free (tests/qr.test.mjs): `qrMatrix` gives the modules as rows of booleans (true is dark), `qrSvgPath` one SVG path for the dark ones.
- * Loaded by the block only for the QR design, so it stays outside the visitor closure.
+ * A QR code encoder of Urd's own (ISO/IEC 18004) for the contact block's QR design: byte mode, level M by default, the smallest version and the best mask.
+ * Pure.
+ * Notes: docs/engine-notes/qr.md (Urd repository).
  */
 
 const LEVELS = { L: 0, M: 1, Q: 2, H: 3 };
@@ -179,7 +179,7 @@ const MASKS = [
   (x, y) => (((x + y) % 2) + ((x * y) % 3)) % 2 === 0,
 ];
 
-/** One row or column's penalty: runs of five or more of one colour, and patterns like a finder's with four light modules on a side (the quiet zone counts as light). */
+/** One row or column's penalty: runs of five or more of one colour, and finder-like patterns with four light modules on a side. */
 function linePenalty(get, size) {
   let score = 0;
   let run = 1;
@@ -301,7 +301,7 @@ export function qrMatrix(text, levelName = 'M') {
 }
 
 /**
- * The dark modules as one SVG path in module units, each horizontal run one rectangle, for a viewBox of the matrix's size (plus the quiet zone the drawing adds around it).
+ * The dark modules as one SVG path in module units, each horizontal run one rectangle, for a viewBox of the matrix's size.
  * @param {boolean[][]} matrix
  * @returns {string}
  */

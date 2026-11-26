@@ -1,10 +1,6 @@
 /**
- * Pure OSM logic for the map block (no DOM): reading a position the owner
- * pastes in (coordinates or an OpenStreetMap link), building the embed URL
- * and the larger-map link. Everything here is unit-tested in node.
- *
- * Privacy: the map is embedded as a plain OSM iframe (no tracking, no
- * third-party tiles); Urd's own _headers opens frame-src for openstreetmap.org.
+ * Pure OSM logic for the map block: reading a pasted position, and building the embed URL and the larger-map link; the map is a plain OSM iframe.
+ * Notes: docs/engine-notes/osm.md (Urd repository).
  */
 
 const clampLat = (n) => Math.max(-85, Math.min(85, n));

@@ -1,14 +1,6 @@
 /**
- * Core block: quote/testimonial. Semantic <figure>/<blockquote> with the
- * attribution in <figcaption>, which the quote preset (two text boxes)
- * cannot give. Two variants: "large" (a centered spread with a quotation
- * glyph, bare or set in a card with `card`) and "short" (a testimonial card
- * with an optional portrait). The quotation glyph is drawn in CSS (::before),
- * never as content.
- *
- * In the editor the quote, the name and the role are directly editable
- * (click and type); the portrait is chosen in the properties panel.
- * Auto-grow adjusts the display only; the push pass moves the blocks below (ADR-0024).
+ * Core block: quote/testimonial, a <figure> with its <blockquote> and attribution, in a `large` or a `short` variant, its texts edited in place.
+ * Notes: docs/engine-notes/blocks/quote.md (Urd repository).
  */
 // Called only in preview (after the admin dictionary has loaded): never at module level.
 import { ta } from '../i18n.js';
@@ -40,7 +32,7 @@ export const quoteBlock = {
    * @param {HTMLElement} el
    * @param {{text: string, attribution: string, role: string, variant?: string, image?: string, imageStyle?: object, accent?: string|null,
    *          card?: boolean}} props
-   *   imageStyle: the portrait's settings from the image editor (picture.js pictureStyle), additive from 0.7.29.4
+   *   imageStyle: the portrait's settings from the image editor (picture.js pictureStyle), additive
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
@@ -56,7 +48,7 @@ export const quoteBlock = {
     const post = (msg) => window.parent?.postMessage(msg, location.origin);
     const editable = Boolean(ctx.preview) && ctx.viewport !== 'mobile';
 
-    // The portrait in its round frame, with the image editor's settings (imageStyle, additive from 0.7.29.4) drawn by picture.js.
+    // The portrait in its round frame, with the image editor's settings (imageStyle, additive) drawn by picture.js.
     if (kort && props.image) {
       const frame = document.createElement('span');
       frame.className = 'urd-quote-portrait';
@@ -95,8 +87,7 @@ export const quoteBlock = {
     host.appendChild(body);
 
     if (ctx.preview) {
-      // Click and type: all three fields are plain text; in the phone view what is written is the phone's own (PHONE_WORDS, ADR-0033).
-      // Each change hands back the three fields as they stand on the page, so one typed earlier is never handed back as it was drawn.
+      // Click and type: all three fields are plain text, the phone's own in the phone view (ADR-0033); each change hands back all three as they stand.
       const fields = [[quote, 'text'], [name, 'attribution'], [role, 'role']];
       for (const [node] of fields) {
         try {

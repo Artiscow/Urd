@@ -1,15 +1,6 @@
 /**
- * Core block: privacy (0.7.24.2). The site's privacy page, written from the
- * site's settings and its pages (privacy-model.js) each time it is drawn, so
- * it follows what the owner switches on: who is responsible, what each form
- * sends and to whom, the shop and its payment providers, the measuring, the
- * videos and maps from other companies, the host, the visitor's rights, and
- * the visitor's own choices on this site (the providers they have let load
- * at once, each taken back with one press). Its settings are whether it opens
- * with the page's heading, its design and its look (doc-look.js); the owner
- * changes what it says by changing the site.
- * The page files are read over the network as published; in the editor's
- * preview the other pages' drafts are not seen until they are published.
+ * Core block: privacy. The site's privacy page, written each time it is drawn from the site's settings and its published pages (privacy-model.js).
+ * Notes: docs/engine-notes/blocks/privacy.md (Urd repository).
  */
 import { t, ta, adminLocaleReady, siteTextLang } from '../i18n.js';
 import { privacyModel, cloudflareBeacon, BROWSER_KEEPS, KEEP_TERMS } from '../privacy-model.js';
@@ -44,7 +35,7 @@ async function loadPages(site, fetchFn = fetch) {
   return entries.map((entry, i) => ({ entry, page: pages[i] })).filter(({ page }) => page);
 }
 
-/* The third parties beside the frames' providers (which embed-cover.js names, with their privacy terms): the payment providers and the host, each with its name and its own privacy terms. */
+/* The third parties beside the frames' providers (embed-cover.js): the payment providers and the host, each with its name and its privacy terms. */
 const OTHER_PARTIES = {
   cloudflare: ['Cloudflare', 'https://www.cloudflare.com/privacypolicy/'],
   vipps: ['Vipps MobilePay', 'https://vipps.no/personvern/'],
@@ -134,7 +125,7 @@ function otherNames(model) {
   return [...pay, ...model.embeds.map(providerName), OTHER_PARTIES.cloudflare[0]];
 }
 
-/** A set period in the browser's own words for the unit («12 months», «12 måneder»), in the language of the sentence it stands in (`key`), so a site whose language lacks the sentence reads it whole in bokmål. */
+/** A set period in the browser's own words for the unit («12 months»), in the language of the sentence it stands in (`key`). */
 function periodText(r, key) {
   try {
     return new Intl.NumberFormat(siteTextLang(key), { style: 'unit', unit: r.unit === 'years' ? 'year' : 'month', unitDisplay: 'long' }).format(r.count);
@@ -170,7 +161,7 @@ function lawLink([name, url]) {
   return a;
 }
 
-/** How long the association keeps a kind, as a sentence: the period or the criterion the owner chose, or, not decided, that it is not and where to ask (the association's email where it has one). */
+/** How long a kind is kept, as a sentence: the period or criterion the owner chose, or, not decided, where to ask (the site's email where it has one). */
 function keepLine(model, kind) {
   const r = model.retention?.[kind];
   if (r) return t(KEEP_LINE[kind][r.until], r.until === 'period' ? { period: periodText(r, KEEP_LINE[kind][r.until]) } : undefined);
@@ -229,7 +220,7 @@ function collectedNodes(model) {
 /** The counting of visits: what it reads, on what basis, and how long Cloudflare keeps it (`keep`; the ledger's table says that in its own column). */
 const analyticsNodes = ({ keep = true } = {}) => [paragraphWith(t('privacy.analytics.text'), [nameLink('cloudflare', 'Cloudflare Web Analytics')]), ...(keep ? [keepTermsNode('cloudflare')] : [])];
 
-/** The host: what it keeps, where it may process it, and how long (`keep`: where the counting of visits stands, its line has told Cloudflare's terms already, and the ledger's table says it in its own column). */
+/** The host: what it keeps, where it may process it, and how long (`keep`, left out where another line or the ledger's table says it). */
 const hostNodes = ({ keep = true } = {}) => [paragraphWith(t('privacy.host.text'), [nameLink('cloudflare', 'Cloudflare Pages')]), ...(keep ? [keepTermsNode('cloudflare')] : [])];
 
 /** The checkout's payment providers, how long each keeps what it gets (`keep`; the ledger's table says that in its own column), and its manual ways to pay. */
@@ -242,7 +233,7 @@ function paymentNodes(s, { keep = true } = {}) {
   return nodes;
 }
 
-/** The frames from other companies: behind a cover until a press, or with the page, and how long the companies keep what they learn (`keep`; the ledger's table says that in its own column). */
+/** The frames from other companies: behind a cover until a press, or with the page, and how long the companies keep what they learn (`keep`). */
 function embedNodes(model, { keep = true } = {}) {
   const asking = model.embeds.filter((id) => !model.atOnce.includes(id));
   const links = model.embeds.map((id) => nameLink(id, providerName(id)));
@@ -255,16 +246,14 @@ function embedNodes(model, { keep = true } = {}) {
 }
 
 /**
- * The ledgers (the designs that set out what is collected): a row for each thing the site or another party gets, with why, who gets it and how long it is kept (GDPR article 13: the purposes, the recipients and the period).
- * Rows that differ only in who gets them (the frames' companies) are one row with every company named.
- * `ledger` draws them as a table of three columns, who gets it under the why; `ledger-cards` as a card each, its lines named.
+ * The ledgers: a row for each thing the site or another party gets, with why, who gets it and how long it is kept; `ledger` a table, `ledger-cards` cards.
  */
 function ledgerNodes(model, design) {
   const owner = model.controller.name || t('privacy.controller.owner');
   // Who gets what a form or the checkout sends: the service it goes to, the address it is emailed to, or the one responsible.
   const who = (item) => item.host || item.recipient || owner;
   const rows = [];
-  /* A row's recipients are names, or [id, name] for another company, whose own terms tell how long it keeps it (`keep` null: the row links them, one company to a row). */
+  /* Adds a row, its recipients names or [id, name] for another company; with `keep` null each company gets a row of its own, linking its terms. */
   const add = (what, why, recipients, keep) => {
     const names = [recipients].flat().map((r) => (Array.isArray(r) ? { id: r[0], name: r[1] } : { name: r }));
     const same = keep === null ? null : rows.find((r) => r.what === what && r.why === why && r.keep === keep);
@@ -369,8 +358,7 @@ function glanceNodes(model) {
 const capitalise = (text) => (text ? text[0].toLocaleUpperCase() + text.slice(1) : text);
 
 /**
- * The page's parts, each a key (its heading's and its question's), what it holds, and what stands above it (`lead`).
- * The ledgers set out what is collected under who is responsible, and the host's row stands among them, so the controller's and the host's parts are left out there.
+ * The page's parts, each a key, what it holds and what stands above it (`lead`); the ledgers leave out the controller's and the host's parts.
  */
 function pageParts(model, design) {
   const c = model.controller;
@@ -387,7 +375,7 @@ function pageParts(model, design) {
   else parts.push({ key: 'controller', nodes: controller }, { key: 'what', nodes: collectedNodes(model) });
 
   // What the site keeps in the visitor's own browser.
-  // The cart is emptied by an order only through a checkout that sends it itself; one that opens an email draft leaves it, as does a shop without a checkout. A payment's reference is kept only where a provider takes the payment.
+  // The cart is emptied by an order only where the checkout sends it itself.
   const shop = model.browser.shop;
   const pays = (model.checkout?.providers ?? []).some((id) => id !== 'manual');
   const empties = Boolean(model.checkout?.host) || pays;
@@ -499,7 +487,7 @@ export const privacyBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{heading?: boolean, design?: string, accent?: string, headingColor?: string, cardColor?: string, rules?: boolean, corners?: string, headingFont?: string, font?: string}} props heading: the block opens with the page's heading in the site's language (additive from 0.7.24.2.2; the template's block carries it); design and the look beside it (additive from 0.7.24.2.4, doc-look.js): the layout the page is drawn in and how it is dressed; the words are the site's
+   * @param {{heading?: boolean, design?: string, accent?: string, headingColor?: string, cardColor?: string, rules?: boolean, corners?: string, headingFont?: string, font?: string}} props heading: it opens with the page's heading in the site's language; design and the look beside it (doc-look.js): the layout and how it is dressed
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {
@@ -507,9 +495,7 @@ export const privacyBlock = {
     applyDocLook(host, privacyDesign(props?.design), props);
     host.append(...heading(props), el2('p', 'urd-privacy-intro urd-doc-lead', t('privacy.intro')));
     el.appendChild(host);
-    // The facts need the pages: drawn once they are read, and with the site alone where none can be.
-    // The counting of visits is told where the site switches it on, and where Cloudflare has put its beacon on the page itself.
-    // Busy while the pages are read, as a collection is: the block holds its reserved height, the editor's fit waits for it, and a visitor's footer joins once it is drawn (urd.js boot).
+    // Busy until the pages are read, then drawn; the counting of visits is told where the site switches it on or Cloudflare's beacon stands on the page.
     host.setAttribute('aria-busy', 'true');
     loadPages(ctx.site).then((pages) => {
       host.removeAttribute('aria-busy');

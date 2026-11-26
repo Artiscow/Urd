@@ -1,12 +1,6 @@
 /**
- * Core block: collection (the data-block pattern, ADR-0007). Renders the entries
- * of a collection from content/samlinger/ in one of three views: cards (a
- * responsive grid), list (rows with a date badge) or archive (grouped by year).
- *
- * The content is structured DATA and renders with textContent, never innerHTML.
- * Fetching the data is asynchronous: render draws the shell synchronously and
- * fills it once the collection is loaded; a missing collection gives a calm empty
- * state, never a crash.
+ * Core block: collection (ADR-0007). Draws a collection's entries from content/samlinger/ as cards, a list or a yearly archive, once they are loaded.
+ * Notes: docs/engine-notes/blocks/collection.md (Urd repository).
  */
 import { getCollection, sortEntries, groupByYear, dateBadge } from '../collections.js';
 import { setRichHtml } from '../sanitize.js';
@@ -23,8 +17,9 @@ let pagesNow = [];
 
 const post = (msg) => window.parent?.postMessage(msg, location.origin);
 
-/** Click-and-type on the title/text right in the block: the change is posted to the editor, which owns the collection draft.
- *  The title is stored as plain text; the entry text is rich (html: true) and stores safe HTML (ADR-0007). */
+/**
+ * Click-and-type on an entry's title or text in the preview, each change posted to the editor, which owns the collection draft.
+ */
 function editable(node, entryId, field, html = false) {
   if (!editCtx) return node;
   node.contentEditable = 'true';
@@ -36,7 +31,7 @@ function editable(node, entryId, field, html = false) {
   return node;
 }
 
-/** Image editing in the preview: a click asks the admin's image editor (PictureEditor.svelte) to open on the entry's picture, with the picture's box as drawn here. The settings live in entry.imageStyle (additive). */
+/** A click on an entry's picture in the preview opens the admin's image editor on it, with the picture's box as drawn here. */
 function wireImageEdit(target, entry) {
   if (!editCtx) return;
   const collection = editCtx.collection;
@@ -47,8 +42,9 @@ function wireImageEdit(target, entry) {
   });
 }
 
-/** Entry text: rich (a safe HTML subset, the same sanitizing as text blocks). The urd-text class
- *  gives the floating text editor for free in preview. Empty fields show as editable placeholders. */
+/**
+ * An entry's text as rich HTML, sanitized as a text block's, with the floating text editor in preview; an empty one shows as a placeholder.
+ */
 function textOrPlaceholder(entry) {
   if (!entry.text && !editCtx) return null;
   const node = el2('div', 'urd-text urd-collection-text');
@@ -81,8 +77,9 @@ const el2 = (tag, className, textContent) => {
   return node;
 };
 
-/** Title: rich text (a safe HTML subset) with the full text editor in preview (the urd-text class
- *  gives the floating bar). With a link it renders as an anchor for visitors; in the editor the text is edited. */
+/**
+ * An entry's title as rich text, edited in preview with the floating bar; with a link it is an anchor for visitors.
+ */
 function titleNode(entry) {
   // One link (resolveLink): a page, a spot on it, or an address through the shared safe-URL gate; one that goes nowhere gives a title without a link.
   const link = entry.page || entry.href || entry.target ? resolveLink(entry, pagesNow) : null;
@@ -101,8 +98,7 @@ function titleNode(entry) {
 const SHAPE_ASPECTS = { wide: '16 / 9', square: '1 / 1', portrait: '3 / 4', circle: '1 / 1' };
 
 /**
- * An entry's picture with its settings (imageStyle, drawn by picture.js) and its description, and the frame's shape and rounding.
- * node is the frame (a span with the img inside), or the img alone, whose parent is then its frame.
+ * Draws an entry's picture with its settings (picture.js), its description, and the frame's shape and rounding; `node` is the frame or the img in it.
  */
 export function applyEntryImageStyle(node, entry) {
   const img = node instanceof HTMLImageElement ? node : node.querySelector?.('img');
@@ -205,8 +201,7 @@ function emptyState(el, ctx, message) {
 export const collectionBlock = {
   version: 1,
   autoGrow: true,
-  // Collection consumer: the urd-collections message re-renders only sections
-  // with blocks carrying this flag (the scroll position is preserved).
+  // Collection consumer: the urd-collections message re-renders only sections with blocks carrying this flag (the scroll position is preserved).
   usesCollections: true,
   label: 'Collection',
   labelKey: 'blocks.collection',
@@ -226,9 +221,7 @@ export const collectionBlock = {
       return;
     }
 
-    // Busy while the entries are fetched: the block holds its frame's height
-    // on the desktop and the height measured for the phone there (base.css),
-    // and the editor's fit waits for it.
+    // Busy while the entries are fetched: the block holds its height (base.css) and the editor's fit waits for it.
     host.setAttribute('aria-busy', 'true');
     getCollection(props.collection).then((data) => {
       // The block may have been re-rendered or removed while the data was fetched.

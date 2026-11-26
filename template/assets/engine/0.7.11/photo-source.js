@@ -1,17 +1,6 @@
 /**
- * Pictures from a shared folder somewhere else: parsing the address the owner
- * pastes, and building the calls to the site's own proxy.
- *
- * Fetching ALWAYS goes through the site's own routes (/api/photos for the
- * list, /api/photo for the bytes), the calendar block's model: the folder
- * hosts send no CORS, the site's CSP allows `connect-src 'self'` only, and an
- * API key must never reach the browser. Serving the pictures from the site's
- * own origin also keeps `img-src 'self' data:` untouched, so a deployed site
- * needs no CSP change to use this.
- *
- * The parsing is pure and node-tested (tests/photo-source.test.mjs). Hosts are
- * compared exactly against a parsed URL, never with a substring test, and every
- * id is matched with an anchored regex.
+ * Pictures from a shared folder elsewhere: parsing the address the owner pastes, and the calls to the site's own proxy routes (/api/photos, /api/photo).
+ * Notes: docs/engine-notes/photo-source.md (Urd repository).
  */
 
 /** The folder kinds an address can resolve to. */
@@ -21,26 +10,17 @@ export const PHOTO_PROVIDERS = ['drive', 'gphotos', 'nextcloud', 'json'];
 export const FOLDER_MAX = { min: 1, max: 60, dflt: 24 };
 
 /**
- * How many pictures the folder is asked for, whatever is shown: the pool a
- * random draw and a newest-first cut are taken from. One size for everyone,
- * so the edge cache holds one answer per folder rather than one per setting.
+ * How many pictures a folder is asked for, whatever is shown: the pool a random draw and a newest-first cut are taken from.
  */
 export const FOLDER_POOL = 200;
 
 /**
- * Which pictures are shown: the first by name, the newest first, or a fresh
- * random draw on every visit. `name` and `newest` are sorted by the proxy;
- * `random` is drawn here, with one seed per page load, so the proxy's answer
- * stays cacheable and the set does not reshuffle on every re-render.
+ * Which pictures are shown: the first by name, the newest first, or a random draw per visit; the proxy sorts the first two, and the draw is made here.
  */
 export const FOLDER_ORDERS = ['name', 'newest', 'random'];
 
 /**
- * The widths the byte route serves, the same ladder as functions/_lib/photos.js
- * (a test holds the two equal). A layer asks for the step its use needs: a
- * full-width background the width of the window, a small floating frame the
- * width of that frame, so a hero is never a blur and a thumbnail never a
- * download of two thousand pixels.
+ * The widths the byte route serves, the same ladder as functions/_lib/photos.js; a layer asks for the step its use needs.
  */
 export const PHOTO_WIDTHS = [480, 800, 1200, 1600, 2000];
 
@@ -57,13 +37,7 @@ export function clampFolderMax(max) {
 }
 
 /**
- * What the pasted address points at, or null when nothing recognisable does.
- *
- * Recognised: a Google Drive folder (the sharing link or the bare id), a
- * Google Photos shared album (the full link and the short one), a Nextcloud or
- * ownCloud public share, and any https address ending in .json that answers
- * with a list of pictures.
- *
+ * What the pasted address points at: a Google Drive folder, a Google Photos album, a Nextcloud or ownCloud share, or an https .json list; else null.
  * @param {unknown} address
  * @returns {{provider: string, id?: string, host?: string, url?: string}|null}
  */
@@ -137,9 +111,7 @@ export function photosApiUrl(source, order) {
 }
 
 /**
- * The pictures a folder answered with, in the layers' own image shape. The
- * proxy has already built each `src` as a path on this site, and anything else
- * is dropped rather than trusted.
+ * The pictures a folder answered with, in the layers' own image shape; any `src` that is not a path on this site is dropped.
  * @param {unknown} data The body from /api/photos
  * @param {unknown} [max]
  * @returns {Array<{src: string, name: string}>}
@@ -167,8 +139,8 @@ function rng(seed) {
 }
 
 /**
- * A Fisher-Yates shuffle from a seed: the same seed gives the same order, so
- * a page keeps its draw across re-renders. Pure, returns a new list.
+ * A Fisher-Yates shuffle from a seed: the same seed gives the same order, so a page keeps its draw across re-renders.
+ * Pure, returns a new list.
  * @template T
  * @param {T[]} list
  * @param {unknown} seed
@@ -185,8 +157,8 @@ export function seededShuffle(list, seed) {
 }
 
 /**
- * The pictures in the order asked for: as the proxy sorted them for `name`
- * and `newest`, a seeded draw for `random`. Pure.
+ * The pictures in the order asked for: as the proxy sorted them for `name` and `newest`, a seeded draw for `random`.
+ * Pure.
  * @template T
  * @param {T[]} photos
  * @param {unknown} order
@@ -198,9 +170,7 @@ export function orderPhotos(photos, order, seed) {
 }
 
 /**
- * One seed per page load, so the random draw and the random scatter hold
- * still while the page is open and come out new on the next visit. Shared
- * with the layer's layout, so the two are one throw.
+ * One seed per page load, shared by the random draw and the layer's scatter.
  */
 let visitSeed = 0;
 export function seedForVisit() {
@@ -213,9 +183,7 @@ export function seedForVisit() {
 }
 
 /**
- * The ladder step for a picture drawn `cssPx` wide on a screen with `dpr`
- * device pixels per CSS pixel: the first step that is not smaller, so the
- * picture is never scaled up, capped at the top of the ladder.
+ * The ladder step for a picture drawn `cssPx` wide at `dpr`: the first step that is not smaller, capped at the top of the ladder.
  * @param {unknown} cssPx
  * @param {unknown} [dpr]
  * @returns {number}
@@ -226,8 +194,8 @@ export function photoWidth(cssPx, dpr = 1) {
 }
 
 /**
- * A picture path that asks the byte route for a width. Only the site's own
- * route takes a width; an uploaded picture or a data URL is returned as it is.
+ * A picture path that asks the byte route for a width.
+ * Only the site's own route takes a width; an uploaded picture or a data URL is returned as it is.
  * @param {string} src
  * @param {number} width A step from PHOTO_WIDTHS
  * @returns {string}
@@ -242,12 +210,7 @@ export function photoSrcAt(src, width) {
 /* ---------- Fetching (the proxy plus a short-lived cache) ---------- */
 
 /**
- * The preview re-renders on every draft message, so the answer is kept: a
- * folder that answered for ten minutes, a folder that could not be read for
- * half a minute (long enough that a slider does not fire a call per tick,
- * short enough that a share the owner just opened is seen soon). A call that
- * is still out is kept too, so a render while it is pending joins it rather
- * than starting another.
+ * How long an answer is kept: ten minutes for a folder that answered, half a minute for one that could not be read; a pending call is kept too.
  */
 const CACHE_TTL = 10 * 60 * 1000;
 const FAIL_TTL = 30 * 1000;
@@ -255,8 +218,8 @@ const memory = new Map();
 const pending = new Map();
 
 /**
- * The address a layer should read its pictures from, or '' when it holds its
- * own uploads. Pure.
+ * The address a layer should read its pictures from, or '' when it holds its own uploads.
+ * Pure.
  * @param {{source?: string, folder?: string}} props
  * @returns {string}
  */
@@ -265,9 +228,7 @@ export function folderAddress(props) {
 }
 
 /**
- * What is already known about a folder, without going out for it. The preview
- * re-renders on every draft message, so a layer that had to wait for a promise
- * each time would flash its example pictures on every keystroke.
+ * What is already known about a folder, without going out for it, so a re-render draws at once.
  * @param {string} address
  * @param {unknown} [max]
  * @returns {{photos: Array<{src: string, name: string}>, error: string|null, code: string|null}|null}
@@ -285,9 +246,7 @@ function fresh(hit) {
 }
 
 /**
- * The pictures in a shared folder. Never throws: a folder that cannot be read
- * answers with an empty list and the reason, and the layer keeps its example
- * pictures. Without functions (local development) that is the quiet path too.
+ * The pictures in a shared folder; never throws: a folder that cannot be read answers with an empty list and the reason.
  * @param {string} address The address the owner pasted
  * @param {unknown} [order] name, newest or random (the last is drawn from the name pool)
  * @param {{force?: boolean}} [opts] `force` goes out again whatever is kept (the panel's Check button)
@@ -324,26 +283,20 @@ export function loadFolderPhotos(address, order, { force = false } = {}) {
 /* ---------- The layers' shared render shape ---------- */
 
 /**
- * The pictures a layer should draw right now: the folder's, in the order
- * asked for and cut to `folderMax`, when it has answered; otherwise the
- * layer's own uploads.
+ * The pictures a layer draws now: the folder's, ordered and cut to `folderMax`, once it has answered; otherwise the layer's own uploads.
  * @param {{source?: string, folder?: string, order?: string, folderMax?: unknown, images?: Array<object>}} props
  * @returns {Array<{src: string, x?: number, y?: number}>}
  */
 export function picturesFor(props) {
   const address = folderAddress(props);
   const folder = address ? peekFolderPhotos(address, props.order) : null;
-  // A folder that has not answered, or answered with nothing, leaves the
-  // layer with its own uploads.
+  // A folder that has not answered, or answered with nothing, leaves the layer with its own uploads.
   if (!folder?.photos.length) return props.images ?? [];
   return orderPhotos(folder.photos, props.order, seedForVisit()).slice(0, clampFolderMax(props.folderMax));
 }
 
 /**
- * Draws a layer now from what is in hand, and again when its folder answers.
- * The proxy cannot answer in the same tick as render, and renderBackgroundLayers
- * appends the element after render returns, so the redraw waits for the
- * element to be connected and gives up quietly when it has been replaced.
+ * Draws a layer now from what is in hand, and again when its folder answers, unless the element has been replaced by then.
  * @param {HTMLElement} el The layer element
  * @param {object} props
  * @param {(el: HTMLElement, props: object) => void} draw The layer's own drawing

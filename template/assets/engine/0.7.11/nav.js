@@ -21,8 +21,7 @@ let navController = null;
 // The current render's phone menu as the next render reads it, so a menu open in the editor's preview stays open through a change of a setting.
 let readMenu = null;
 
-// The current render's scroll-state pass, so a switch between the editor's
-// views can apply the top-zone state at once instead of at the next scroll.
+// The current render's scroll-state pass, so a switch between the editor's views can apply the top-zone state at once instead of at the next scroll.
 let navScrollRefresh = null;
 
 /** Recomputes the scroll classes (compact, hidden, scrolled) for the current render. */
@@ -156,8 +155,7 @@ export function renderNav(site, host, pageId) {
   const signal = navController.signal;
   navScrollRefresh = null;
   lastRender = { site, host, pageId };
-  // The site's own breakpoint; the listener and the burger class are wired
-  // further down, where the nav element exists.
+  // The site's own breakpoint; the listener and the burger class are wired further down, where the nav element exists.
   const mobileMq = window.matchMedia(`(max-width: ${site.breakpoints?.mobile ?? 640}px)`);
 
   // An open full-screen menu stays open through the render, its dialog and bar kept, while this render wants it too and the phone state holds.
@@ -234,8 +232,7 @@ export function renderNav(site, host, pageId) {
   host.classList.toggle('urd-nav-announce-scroll', announceScrolls);
 
   const nav = keptNav ?? document.createElement('nav');
-  // layout (additive since v0.5): where the menu items sit; the logo, where
-  // it is shown, is first and doubles as the "Home" button.
+  // layout: where the menu items sit; the logo, where it is shown, is first and doubles as the "Home" button.
   nav.className = navClasses(effSite, { mobile: mobileMq.matches });
   // The burger follows the actual width through the nav's own class, since in the preview the editor's viewport choice owns body.urd-mobile.
   mobileMq.addEventListener('change', () => renderNav(lastRender.site, lastRender.host, lastRender.pageId), { signal });
@@ -251,8 +248,7 @@ export function renderNav(site, host, pageId) {
   for (const cls of ['urd-side-left', 'urd-side-right']) {
     document.body.classList.toggle(cls, hc.body.includes(cls));
   }
-  // The side column's width: set on body so both the column and the
-  // content padding read the same value.
+  // The side column's width: set on body so both the column and the content padding read the same value.
   const isSide = hc.body.length > 0;
   if (isSide) {
     document.body.style.setProperty('--urd-nav-side-width', `${clampSideWidth(site.nav.style?.width)}px`);
@@ -282,15 +278,12 @@ export function renderNav(site, host, pageId) {
     const applyScroll = () => {
       const menuOpen = nav.classList.contains('urd-nav-open');
       const y = window.scrollY;
-      // With the mobile panel open the menu keeps its full size, stays
-      // visible and draws its surface, so the panel has something to hang
-      // from.
+      // With the mobile panel open the menu keeps its full size, stays visible and draws its surface, so the panel has something to hang from.
       const state = menuOpen
         ? { compact: false, hidden: false, scrolled: true, anchor: y }
         : navScrollState(wantsScroll ? scrollMode : undefined, anchor, y, hidden,
           { shrinkAt: effSite.nav.style?.shrinkAt, hold: performance.now() < jumpHoldUntil });
-      // The turning point the travel is measured from; navScrollState owns
-      // where it goes, the render only carries it between frames.
+      // The turning point the travel is measured from; navScrollState owns where it goes, the render only carries it between frames.
       anchor = state.anchor;
       hidden = state.hidden;
       host.classList.toggle('urd-nav-compact', state.compact);
@@ -319,11 +312,9 @@ export function renderNav(site, host, pageId) {
     backdrop.className = 'urd-nav-bg';
     renderBackgroundLayers(backdrop, navBg);
     nav.insertBefore(backdrop, keptSheet);
-    // The layers define the surface: the nav element's own background is
-    // made transparent (blur/frosted glass still works through it).
+    // The layers define the surface: the nav element's own background is made transparent (blur/frosted glass still works through it).
     nav.style.setProperty('--urd-nav-bg', 'transparent');
-    // The submenu and mobile panel inherit the color layers as one flattened
-    // veil, so the dropdown follows the bar's tone instead of the default veil.
+    // The submenu and mobile panel inherit the color layers as one flattened veil, so the dropdown follows the bar's tone instead of the default veil.
     const layerVeil = navLayerVeil(navBg.layers);
     if (layerVeil) nav.style.setProperty('--urd-nav-sub-bg', layerVeil);
   } else if (surface.bg) {
@@ -335,9 +326,7 @@ export function renderNav(site, host, pageId) {
   // The submenu and phone panel get their own surface, the colour veil without the image unless subImage is on; a layer background skips it.
   const subBg = navSubSurface(site.nav.style);
   if (subBg && !hasNavBgLayers) nav.style.setProperty('--urd-nav-sub-bg', subBg);
-  // Hover colors (additive since v0.6): the effect color (underline/pill
-  // surface/glow) and the text color on hover; without a choice the accent
-  // color applies.
+  // Hover colors: the effect color (underline/pill surface/glow) and the text color on hover; without a choice the accent color applies.
   if (site.nav.style?.hoverColor) {
     nav.style.setProperty('--urd-nav-hover', resolveColor(site.nav.style.hoverColor));
   }
@@ -350,8 +339,7 @@ export function renderNav(site, host, pageId) {
   if (Number.isFinite(glowStrength)) {
     nav.style.setProperty('--urd-nav-hover-glow', `${Math.round(Math.min(1, Math.max(0, glowStrength)) * 100)}%`);
   }
-  // The pill items' own color (subStyle pills); without a choice the
-  // submenu surface is used.
+  // The pill items' own color (subStyle pills); without a choice the submenu surface is used.
   if (site.nav.style?.subPillColor) {
     nav.style.setProperty('--urd-nav-sub-pill', resolveColor(site.nav.style.subPillColor));
   }
@@ -361,9 +349,7 @@ export function renderNav(site, host, pageId) {
   // Size (ADR-0023): thickness, padding, gap, text size, pill width and shrink as custom properties from navSizeVars, the phone's values chosen at the breakpoint.
   const size = navSizeVars(effSite.nav.style, site.nav.logo, { mobile: mobileMq.matches });
   for (const [name, value] of Object.entries(size.vars)) nav.style.setProperty(name, value);
-  // Border (additive since v0.7): the side is a class from navClasses; the
-  // width and colour are variables with a hairline in the text colour as
-  // the default.
+  // Border: the side is a class from navClasses; the width and colour are variables with a hairline in the text colour as the default.
   const border = effSite.nav.style?.border;
   if (border && typeof border === 'object') {
     nav.style.setProperty('--urd-nav-border-w', `${clampBorderWidth(border.width)}px`);
@@ -385,8 +371,7 @@ export function renderNav(site, host, pageId) {
     if (logoDef.radius) img.style.borderRadius = `${logoDef.radius}px`;
     return img;
   };
-  // The logo text can be styled independently of the theme (additive fields
-  // since v0.5); the default is the theme's heading font in bold.
+  // The logo text can be styled independently of the theme; the default is the theme's heading font in bold.
   const logoText = () => {
     const span = document.createElement('span');
     span.textContent = logoDef.value || site.site.title;
@@ -397,8 +382,7 @@ export function renderNav(site, host, pageId) {
     return span;
   };
 
-  // An unsafe image source falls back to the logo text (same guard as the
-  // nav background and the favicon), so the menu never lacks a brand mark.
+  // An unsafe image source falls back to the logo text (same guard as the nav background and the favicon), so the menu never lacks a brand mark.
   if (logoDef.type === 'image' && isSafeImage(logoDef.value)) {
     logo.appendChild(logoImg(logoDef.value));
   } else if (logoDef.type === 'both' && isSafeImage(logoDef.image)) {
@@ -433,13 +417,11 @@ export function renderNav(site, host, pageId) {
   const launcherPart = feature('launcher');
   const launcherWrap = launcher && launcherPart ? launcherPart.buildLauncher(launcher, signal) : null;
   if (launcherWrap) toolEls.launcher = launcherWrap.el;
-  // A shortcut whose target is not a usable link still gets its tile, but the
-  // tile goes nowhere: say so, the way an unknown page in the menu is reported.
+  // A shortcut whose target is not a usable link still gets its tile, but the tile goes nowhere: say so, the way an unknown page in the menu is reported.
   const broken = launcher?.links.filter((link) => link.missing).length ?? 0;
   if (broken) console.warn(`Urd: ${broken} launcher shortcut(s) have no usable target`);
 
-  // The cart in the menu (the shop, additive nav.cart): a button with a
-  // count badge that opens the same cart drawer as the cart block.
+  // The cart in the menu (the shop, additive nav.cart): a button with a count badge that opens the same cart drawer as the cart block.
   if (site.nav?.cart?.show) {
     const cartCfg = site.nav.cart;
     const cartBtn = document.createElement('button');
@@ -483,8 +465,7 @@ export function renderNav(site, host, pageId) {
     toolEls.cart = cartBtn;
   }
 
-  // The light/dark button: there when the theme has an alt counterpart to
-  // switch to, unless the owner has taken it out of the cluster.
+  // The light/dark button: there when the theme has an alt counterpart to switch to, unless the owner has taken it out of the cluster.
   if (site.theme?.alt?.tokens && site.nav.style?.tools?.theme !== false) {
     const themeBtn = document.createElement('button');
     themeBtn.className = 'urd-nav-theme';
@@ -504,8 +485,7 @@ export function renderNav(site, host, pageId) {
     toolEls.theme = themeBtn;
   }
 
-  // The site's links (links-model.js) as icons in the cluster, when the
-  // owner switched the tool on.
+  // The site's links (links-model.js) as icons in the cluster, when the owner switched the tool on.
   if (site.nav?.style?.tools?.links === true) {
     const links = siteLinks(site);
     if (links.length) {
@@ -547,8 +527,7 @@ export function renderNav(site, host, pageId) {
     word.textContent = burgerName;
     burger.appendChild(word);
   }
-  // The burger ends the row, except when the cluster stands at the start,
-  // where it takes the outer edge so it sits leftmost on mobile.
+  // The burger ends the row, except when the cluster stands at the start, where it takes the outer edge so it sits leftmost on mobile.
   if (effSite.nav.style?.tools?.side === 'start' && !isSide) tools.prepend(burger);
   else tools.appendChild(burger);
   // A cluster with nothing but the burger takes no room on desktop.
@@ -566,8 +545,7 @@ export function renderNav(site, host, pageId) {
   // On the sheet's close the strip is back in the host, so setNavH measures the clearance again; this runs after buildSheet's own close listener.
   if (sheet) sheet.dialog.addEventListener('close', () => setNavH(), { signal });
   const isMobileOpen = () => (sheet ? sheet.dialog.open : nav.classList.contains('urd-nav-open'));
-  // The mobile state as the CSS sees it: the breakpoint, content folding, or
-  // the editor's viewport choice in the preview (body.urd-mobile).
+  // The mobile state as the CSS sees it: the breakpoint, content folding, or the editor's viewport choice in the preview (body.urd-mobile).
   const isMobileState = () => mobileMq.matches || nav.classList.contains('urd-nav-mobile') || document.body.classList.contains('urd-mobile');
   const subMode = mobileSubMode(site.nav.style);
   const expandedSubs = () => (subMode === 'expanded' && isMobileState()) || (hc.host.includes('urd-nav-side-subs-open') && !isMobileState());
@@ -581,8 +559,7 @@ export function renderNav(site, host, pageId) {
     burger.setAttribute('aria-expanded', String(open));
     // Every submenu starts open in the expanded mode.
     if (open && expandedSubs()) for (const entry of subs) setOpen(entry, true);
-    // The top-zone surface follows the panel: a bar that is clear at the top
-    // draws its surface while the panel hangs from it.
+    // The top-zone surface follows the panel: a bar that is clear at the top draws its surface while the panel hangs from it.
     navScrollRefresh?.();
   };
   if (sheet) sheet.dialog.addEventListener('close', () => burger.setAttribute('aria-expanded', 'false'), { signal });
@@ -603,12 +580,10 @@ export function renderNav(site, host, pageId) {
       }
     }
   };
-  // The column can keep every submenu open from the start (nav.style.sideSubs);
-  // without the arrow (nav.style.sideSubArrow) nothing closes them.
+  // The column can keep every submenu open from the start (nav.style.sideSubs); without the arrow (nav.style.sideSubArrow) nothing closes them.
   const columnExpanded = hc.host.includes('urd-nav-side-subs-open');
   const columnFixedOpen = columnExpanded && !hc.host.includes('urd-nav-side-sub-arrow');
-  // A child's own submenu stands as a headed group when the submenu is laid
-  // out in columns or as the flyout (navClasses sets the class the CSS reads).
+  // A child's own submenu stands as a headed group when the submenu is laid out in columns or as the flyout (navClasses sets the class the CSS reads).
   const grouped = subGrouped(site.nav.style);
   /** Whether an opener stands open with nothing to close it: off the phone a headed group or the open column without arrows; on the phone, all open without arrows. */
   const isFixed = (entry) => (isMobileState() ? subMode === 'expanded' && !phoneMenu.arrow : columnFixedOpen || entry.grouped);
@@ -669,8 +644,8 @@ export function renderNav(site, host, pageId) {
   };
 
   /**
-   * One menu item as a list row, its submenu built the same way one level
-   * down. `path` is the item's place in the menu and names the submenu.
+   * One menu item as a list row, its submenu built the same way one level down.
+   * `path` is the item's place in the menu and names the submenu.
    * @param {object} item From navItems
    * @param {number} depth 0 in the bar, 1 to 3 in the submenus
    * @param {string} path
@@ -689,9 +664,7 @@ export function renderNav(site, host, pageId) {
       return li;
     }
 
-    // Item with a submenu: 'split' = link plus its own arrow button (the
-    // page stays reachable); 'toggle' = one button carries both the title
-    // and the arrow.
+    // Item with a submenu: 'split' = link plus its own arrow button (the page stays reachable); 'toggle' = one button carries both the title and the arrow.
     li.classList.add('urd-nav-has-sub');
     const subId = `urd-nav-sub-${path}`;
     const button = document.createElement('button');
@@ -741,8 +714,7 @@ export function renderNav(site, host, pageId) {
     button.addEventListener('click', () => {
       if (isFixed(entry)) return;
       const open = !li.classList.contains('open');
-      // The accordion closes the others, except in the expanded mobile mode
-      // where every submenu stands on its own.
+      // The accordion closes the others, except in the expanded mobile mode where every submenu stands on its own.
       if (!expandedSubs()) closeAll(entry);
       setOpen(entry, open);
     }, { signal });
@@ -753,8 +725,8 @@ export function renderNav(site, host, pageId) {
       li.addEventListener('pointerenter', (event) => {
         if (event.pointerType !== 'mouse' || isMobileState()) return;
         clearTimeout(closeTimer);
-        // In the column, other accordions stay open: closing moves the items
-        // under the pointer. Closing happens collectively when the menu is left.
+        // In the column, other accordions stay open: closing moves the items under the pointer.
+        // Closing happens collectively when the menu is left.
         if (!isColumn) closeAll(entry);
         setOpen(entry, true);
       }, { signal });
@@ -767,8 +739,7 @@ export function renderNav(site, host, pageId) {
       }
     }
 
-    // Tabbing out of the item closes the submenu - focus must never leave
-    // an open menu behind.
+    // Tabbing out of the item closes the submenu - focus must never leave an open menu behind.
     li.addEventListener('focusout', (event) => {
       if (expandedSubs() || isFixed(entry)) return;
       if (!li.contains(event.relatedTarget)) setOpen(entry, false);
@@ -797,8 +768,7 @@ export function renderNav(site, host, pageId) {
   if (nav.parentNode !== host) host.appendChild(nav);
   // The menu height while it is not shrunk, kept across the scroll shrink.
   let navHBase = 0;
-  // Measured at once, so the first paint already has the menu's clearance;
-  // the observer below keeps it current.
+  // Measured at once, so the first paint already has the menu's clearance; the observer below keeps it current.
   setNavH();
 
   // The phone menu comes back as the previous render left it while the phone state holds: open, its submenus and its scroll; else a kept sheet closes.
@@ -832,8 +802,7 @@ export function renderNav(site, host, pageId) {
     const pageH = announceEl?.classList.contains('urd-announce-page') ? announceH : 0;
     const h = isSide ? pageH : nav.offsetTop + nav.offsetHeight - scrolledAway;
     document.documentElement.style.setProperty('--urd-nav-h', `${h}px`);
-    // A render that starts mid-page measures the menu already shrunk; that
-    // first measurement stands until an unshrunk one arrives.
+    // A render that starts mid-page measures the menu already shrunk; that first measurement stands until an unshrunk one arrives.
     if (!navHBase || !host.classList.contains('urd-nav-compact')) navHBase = h;
     document.documentElement.style.setProperty('--urd-nav-h-base', `${navHBase}px`);
     host.style.setProperty('--urd-announce-h', `${announceH}px`);
@@ -877,8 +846,7 @@ export function renderNav(site, host, pageId) {
         foldNeeds = nav.scrollWidth;
         nav.classList.add('urd-nav-mobile');
       } else {
-        // The bar is back: the submenus the expanded mobile mode opened
-        // close with the panel, and the headed groups stand open again.
+        // The bar is back: the submenus the expanded mobile mode opened close with the panel, and the headed groups stand open again.
         contentFolded = false;
         setMobileOpen(false);
         closeAll();
@@ -903,9 +871,7 @@ export function renderNav(site, host, pageId) {
     clearRo.disconnect();
   });
 
-  // The column's hover closing: all accordions close together when the
-  // pointer leaves the whole menu; re-entering within the delay cancels
-  // the closing.
+  // The column's hover closing: all accordions close together when the pointer leaves the whole menu; re-entering within the delay cancels the closing.
   if (isColumn && mouseHover && hoverCloses && !columnExpanded) {
     let columnTimer = null;
     nav.addEventListener('pointerenter', (event) => {
@@ -971,9 +937,8 @@ export function renderNav(site, host, pageId) {
     }
   }, { signal });
 
-  // A click outside the nav closes the submenus, the launcher and the
-  // mobile panel. Submenus that stand open by choice (the expanded column)
-  // keep standing.
+  // A click outside the nav closes the submenus, the launcher and the mobile panel.
+  // Submenus that stand open by choice (the expanded column) keep standing.
   document.addEventListener('pointerdown', (event) => {
     if (host.contains(event.target)) return;
     if (!expandedSubs()) closeAll();
@@ -1167,9 +1132,8 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
   let logoNext = null;
   // Where the announcement came from, so it goes back there on close; it is read through a getter, since the cross in the sheet can remove it.
   let announceHome = null;
-  // Each tool's place in the cluster, so it returns to it. Restored last
-  // to first: a tool's next sibling may be another moved tool, which is
-  // back in place by then.
+  // Each tool's place in the cluster, so it returns to it.
+  // Restored last to first: a tool's next sibling may be another moved tool, which is back in place by then.
   let toolHomes = [];
   dialog.addEventListener('close', () => {
     touchLock?.abort();
@@ -1198,8 +1162,7 @@ function buildSheet(nav, { list, tools, burger, logo, announce, withTheme, withC
       logoNext = logo.nextSibling;
       head.insertBefore(logo, close);
     }
-    // Above the head rather than in it: the head is a right-aligned row for
-    // the cross, while the strip is a full-width band.
+    // Above the head rather than in it: the head is a right-aligned row for the cross, while the strip is a full-width band.
     const strip = announce?.();
     if (strip?.parentNode) {
       announceHome = { parent: strip.parentNode, next: strip.nextSibling };

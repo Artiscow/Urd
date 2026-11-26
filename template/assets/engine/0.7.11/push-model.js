@@ -301,8 +301,7 @@ export const DRAWS_NOTHING = new Set(['spacer']);
 export const SIZE = { min: 0.4, max: 2, step: 0.05 };
 
 /**
- * The bounds the owner may give the base text of a sized block, in px, and
- * the page's own base text, 16 px (base.css sets no root size).
+ * The bounds the owner may give the base text of a sized block, in px, and the page's own base text, 16 px (base.css sets no root size).
  */
 export const SIZE_TEXT = { min: 6, max: 200, base: 16 };
 
@@ -350,8 +349,8 @@ export function phoneFrame(block) {
 }
 
 /**
- * The scale a block's content is drawn at: its size times its type's scale
- * (TYPE_SCALE). The frame follows the size alone.
+ * The scale a block's content is drawn at: its size times its type's scale (TYPE_SCALE).
+ * The frame follows the size alone.
  * @param {{type?: string, size?: number}} block
  * @returns {number}
  */

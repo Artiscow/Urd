@@ -1,34 +1,12 @@
 /**
- * Background layer: image. Shows a file from media/ (or a data URL for
- * unpublished uploads in a draft; publishing materializes it into a file,
- * the same flow as the image block).
- *
- * Position and size are CSS-native via `background-position` and
- * `background-size` on an inner `.urd-bg-image` element (same model as the
- * image gallery layer), NOT via transform. Transform is used only for parallax.
- *
- * Fields (all additive with safe defaults):
- * - fit: 'cover' (fill+crop), 'custom' (background-size %, width-relative - shrinks
- *   AND enlarges, is not cropped by the section height), 'contain' (show all), 'repeat'.
- * - x/y (0..1, 0.5 = centered): focal point via background-position percentages. The
- *   point stays visible whatever the section format, with no empty space.
- * - size (fraction, 1 = 100% of the width): only in 'custom' mode.
- * - look, brightness, contrast, saturate (additive from 0.7.29.4, the image editor): the
- *   picture's finish as a filter (picture.js), the looks a filter draws alone.
- * - blur (px): mood background behind text. opacity (0..1). parallax (0..1): the layer
- *   lags behind on scroll. bleed: let the parallax flow into the neighbouring sections.
- * - motion ('none' | 'kenburns' | 'drift') with motionSpeed (seconds per cycle): the
- *   layer moves on its own. It paints on an element inside the parallax carrier, since
- *   the two would otherwise fight over `transform`.
+ * Background layer: an image from media/ (or a draft's data URL), placed and sized by CSS on an inner element, with a finish, parallax, bleed and motion.
+ * Notes: docs/engine-notes/backgrounds/image.md (Urd repository).
  */
 
 import { isSafeImage } from '../nav-model.js';
 import { pictureStyle, pictureFilter, placeholderPhoto } from '../picture.js';
 
-/** Maximum vertical travel (fraction of the viewport height) a parallax layer gets at
- *  full strength. Generous, since the free-placement image (scale + position) does not
- *  HAVE to fill the section: it shifts cleanly with no overscan/zoom, so the movement
- *  can be large. */
+/** Maximum vertical travel of a parallax layer at full strength, as a fraction of the viewport height. */
 const MAX_SHIFT = 0.4;
 
 /** How the layer moves on its own, beside the parallax. */
@@ -38,8 +16,8 @@ export const BG_MOTIONS = ['none', 'kenburns', 'drift'];
 export const BG_MOTION_TIME = { min: 6, max: 60, dflt: 20 };
 
 /**
- * The motion, with stillness for anything unknown, so an unusable value can
- * never become a class name. Pure function (node-tested).
+ * The motion, with stillness for anything unknown, so an unusable value can never become a class name.
+ * Pure function (node-tested).
  * @param {unknown} motion
  * @returns {'none'|'kenburns'|'drift'}
  */
@@ -60,8 +38,9 @@ export function normalizeMotionSpeed(seconds) {
 }
 
 /**
- * The background-position string for a focal point (0.5/0.5 = centered). Pure
- * function (node-tested). Same mapping as the image gallery layer.
+ * The background-position string for a focal point (0.5/0.5 = centered).
+ * Pure function (node-tested).
+ * Same mapping as the image gallery layer.
  * @param {number} x Focal point, horizontal 0..1
  * @param {number} y Focal point, vertical 0..1
  * @returns {string}
@@ -71,10 +50,7 @@ export function bgPosition(x, y) {
 }
 
 /**
- * The background-size value. The free-placement model (`plain`/`tile`) uses a
- * width-relative SCALE (`{size*100}%`, height = auto keeps the aspect ratio), so the
- * user sets the size themselves. `cover`/`contain` are kept as keywords (image
- * gallery layer and backwards compatibility). Pure function (node-tested).
+ * The background-size value: a width-relative scale for the free-placement fits, `cover` and `contain` as keywords. Pure function (node-tested).
  * @param {'plain'|'tile'|'cover'|'contain'|'custom'|'repeat'} fit
  * @param {number} [size] Scale as a fraction (1 = 100% of the section width)
  * @returns {string}
@@ -87,9 +63,7 @@ export function bgSize(fit, size) {
 }
 
 /**
- * clip-path for a layer from the bleed direction. The sides are ALWAYS clipped at the
- * edge (no horizontal bleed → no sideways scrolling); top/bottom open on the bleed side
- * so a parallax layer can flow into the neighbouring section. Pure function (node-tested).
+ * clip-path for a layer from the bleed direction: the sides always clipped, top or bottom open on the bleed side. Pure function (node-tested).
  * @param {'none'|'up'|'down'|'both'} [bleed]
  * @returns {string}
  */
@@ -102,9 +76,7 @@ export function bleedClip(bleed) {
 }
 
 /**
- * Vertical overscan (px) for a parallax layer: exactly the travel the layer needs
- * to shift without revealing its edges. Proportional to the strength, so a low
- * strength gives minimal enlargement. Capped against the section height. Pure function (node-tested).
+ * Vertical overscan (px) for a parallax layer: the travel it needs at its strength, capped against the section height. Pure function (node-tested).
  * @param {number} sectionH The section height
  * @param {number} viewportH Viewport height
  * @param {number} speed Strength 0..1
@@ -116,9 +88,7 @@ export function parallaxPad(sectionH, viewportH, speed, capFrac = 0.18) {
 }
 
 /**
- * translateY (px) for a parallax layer: the section center measured against the
- * viewport center, multiplied by the strength, clamped to [-pad, pad] so it never
- * shifts outside the overscan. Pure function (node-tested).
+ * translateY (px) for a parallax layer: the section center against the viewport center, times the strength, clamped to the overscan. Pure (node-tested).
  * @param {number} rectTop The section top in viewport coordinates
  * @param {number} sectionH The section height
  * @param {number} viewportH Viewport height
@@ -134,8 +104,7 @@ export function parallaxOffset(rectTop, sectionH, viewportH, speed, pad) {
   return Math.max(-lim, Math.min(lim, raw)) || 0;
 }
 
-// Active parallax layers: ONE module-level scroll/resize listener shifts them via
-// rAF. Detached layers (after a re-render) are weeded out when apply returns false.
+// Active parallax layers, shifted via rAF by one module-level scroll and resize listener; a detached layer is dropped when apply returns false.
 const parallaxAppliers = new Set();
 let parallaxListening = false;
 let parallaxRaf = 0;
@@ -156,16 +125,7 @@ function registerParallax(apply) {
 }
 
 /**
- * Attaches parallax to the image element: one rAF-driven listener shifts it on
- * scroll via `translateY`. The overscan (top/bottom) keeps the shift from revealing
- * the edges; it is at least `blurMargin` (the blur fringe) and grows to the
- * parallax travel. OFF on mobile and with prefers-reduced-motion (the layer then
- * stands still, only the blur fringe is kept).
- * Fill modes (cover/tile) MUST overscan (they fill the section, so a gap at the
- * edge is unacceptable; overscan costs no zoom on a tile, a little on cover). The
- * free model (plain/custom/contain) shows the image with space around it, so there NO
- * overscan is needed: the image shifts cleanly, without zoom, and the whole strength
- * range is noticeable.
+ * Attaches rAF-driven parallax to the image element via `translateY`, overscanning the fill modes; it stands still on mobile and with reduced motion.
  * @param {HTMLElement} img The image element
  * @param {number} speed Strength 0..1
  * @param {number} blurMargin The blur fringe in px (0 without blur)
@@ -186,8 +146,8 @@ function mountParallax(img, speed, blurMargin, fit) {
     }
     const rect = (section ?? img).getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
-    // `limit` clamps the movement (dy). Fill modes have a tight cap (the overscan =
-    // inverse zoom); the free model can move much further (no overscan).
+    // `limit` clamps the movement (dy).
+    // Fill modes have a tight cap (the overscan = inverse zoom); the free model can move much further (no overscan).
     const limit = parallaxPad(rect.height, vh, speed, fills ? 0.18 : 0.6);
     setInset(fills ? Math.max(blurMargin, limit) : blurMargin);
     const dy = parallaxOffset(rect.top, rect.height, vh, speed, limit);
@@ -195,31 +155,21 @@ function mountParallax(img, speed, blurMargin, fit) {
     return true;
   };
   registerParallax(apply);
-  // `renderBackgroundLayers` puts the layer in the DOM AFTER render(), so the first
-  // apply above runs before the section is measurable (overscan = 0). Run it again
-  // once the layer is connected and measurable, otherwise the image only grows on
-  // the next scroll.
+  // Applies again once the layer is in the DOM and measurable, since the first apply runs before the section has a size.
   if (typeof requestAnimationFrame === 'function') {
     requestAnimationFrame(() => requestAnimationFrame(apply));
   }
 }
 
 /**
- * Does the browser support scroll-driven animations? Then the compositor drives
- * the parallax via `animation-timeline: view()` (CSS), and we avoid both the scroll
- * listener and the rAF pump (mountParallaxCss). Otherwise we fall back to the
- * rAF-driven mountParallax. Also gated in CSS with `@supports`.
+ * Whether the browser supports scroll-driven animations, so CSS (`animation-timeline: view()`) drives the parallax instead of the rAF fallback.
  */
 function supportsScrollTimeline() {
   return typeof CSS !== 'undefined' && typeof CSS.supports === 'function'
     && CSS.supports('animation-timeline', 'view()');
 }
 
-// CSS parallax: the travel (--urd-px-shift) and the overscan (top/bottom) are set
-// once and on RESIZE, never on scroll. The shift itself is scrubbed by the view()
-// timeline in base.css on the compositor thread. A shared resize listener with the
-// same cleanup as the rAF fallback: detached layers are weeded out when the measure
-// function returns false.
+// CSS parallax: the travel and overscan are measured once and on resize, never on scroll; a detached layer is dropped when its measure returns false.
 const parallaxMeasurers = new Set();
 let measureBound = false;
 let measureRaf = 0;
@@ -239,12 +189,7 @@ function registerMeasure(measure) {
 }
 
 /**
- * Attaches CSS parallax to the image element: the travel and the overscan are
- * computed from the section height and the viewport height (the same parallaxPad
- * formula as mountParallax), but the shift is scrubbed by `animation-timeline: view()`
- * in CSS - no scroll listener, no rAF per image. Still on mobile / with reduced
- * motion (CSS then sets animation:none; here the overscan is held at the blur fringe
- * so the layer sits cleanly in its end state).
+ * Attaches CSS parallax: the travel and overscan measured here, the shift scrubbed by `animation-timeline: view()`; still on mobile and with reduced motion.
  * @param {HTMLElement} img The image element
  * @param {number} speed Strength 0..1
  * @param {number} blurMargin The blur fringe in px (0 without blur)
@@ -261,8 +206,8 @@ function mountParallaxCss(img, speed, blurMargin, fit) {
     const still = reduce || document.body.classList.contains('urd-mobile');
     const rect = (section ?? img).getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
-    // Travel = parallaxPad (fill: tight cap; free: large cap). Overscan only in fill
-    // mode when the layer actually moves; otherwise the blur fringe is enough.
+    // Travel = parallaxPad (fill: tight cap; free: large cap).
+    // Overscan only in fill mode when the layer actually moves; otherwise the blur fringe is enough.
     const shift = parallaxPad(rect.height, vh, speed, fills ? 0.18 : 0.6);
     const inset = (fills && !still) ? Math.max(blurMargin, shift) : blurMargin;
     img.style.setProperty('--urd-px-shift', `${shift}px`);
@@ -271,8 +216,7 @@ function mountParallaxCss(img, speed, blurMargin, fit) {
     return true;
   };
   registerMeasure(measure);
-  // Same reason as mountParallax: the layer is put in the DOM after render(), so the
-  // first measurement must happen when the section is actually measurable.
+  // Same reason as mountParallax: the layer is put in the DOM after render(), so the first measurement must happen when the section is actually measurable.
   if (typeof requestAnimationFrame === 'function') {
     requestAnimationFrame(() => requestAnimationFrame(measure));
   }
@@ -294,10 +238,7 @@ export const imageLayer = {
       ...props,
       fit: props.fit === 'vanlig' ? 'plain' : props.fit === 'flislegg' ? 'tile' : props.fit === 'egen' ? 'custom' : props.fit,
     }),
-    // 2 -> 3: motion of its own beside the parallax. The defaults stand FIRST
-    // and the stored props last, because the editor writes into layer props
-    // without lifting them: a layer still stored as version 2 can already
-    // carry a chosen motion, and the lift must not overwrite it.
+    // 2 -> 3: motion of its own beside the parallax; the defaults stand first and the stored props last, so a motion already chosen is kept.
     2: (props) => ({ motion: 'none', motionSpeed: BG_MOTION_TIME.dflt, ...props }),
   },
   /**
@@ -306,20 +247,14 @@ export const imageLayer = {
    * @param {{first?: boolean}} [options] `first`: the layer stands in the page's first section (renderBackgroundLayers)
    */
   render(el, props, options) {
-    // The source goes straight into CSS url(), so it must pass the same guard as
-    // the nav background (shared isSafeImage). No picture yet means a drawn
-    // example that base.css shows only inside the editor, so the owner can set
-    // size, position and motion before choosing the photo.
+    // The source passes the shared isSafeImage guard before CSS url(); with no picture yet, a drawn example shows in the editor alone.
     const demo = !isSafeImage(props.src);
     if (demo) el.classList.add('urd-bg-demo');
     const src = demo ? placeholderPhoto(0) : props.src;
     el.style.opacity = String(props.opacity ?? 1);
     // Clipping: a directional clip-path driven by bleed (inset(0) = clip to the section).
     el.style.clipPath = bleedClip(props.bleed);
-    // Bleed DOWN/BOTH: the section below comes later in the DOM and paints its own
-    // background on top of what flows down. Lift the layer to z-index 1 so it paints
-    // OVER the next section's background (but still under its content, which sits at
-    // z>=1 later in the tree). Bleed UP already paints over the previous section (tree order).
+    // Bleed down or both lifts the layer to z-index 1, so it paints over the next section's background but under its content.
     el.style.zIndex = (props.bleed === 'down' || props.bleed === 'both') ? '1' : '';
 
     const img = document.createElement('div');
@@ -329,9 +264,7 @@ export const imageLayer = {
     img.style.right = '0';
     img.style.top = '0';
     img.style.bottom = '0';
-    // Motion and parallax both drive `transform`, so a moving layer paints on
-    // an element of its own inside the parallax carrier. A still layer paints
-    // on the carrier itself.
+    // Motion and parallax both drive `transform`, so a moving layer paints on an element of its own inside the parallax carrier.
     const motion = bgMotion(props.motion);
     const paint = motion === 'none' ? img : document.createElement('div');
     if (paint !== img) {
@@ -348,13 +281,9 @@ export const imageLayer = {
     paint.style.backgroundImage = `url("${src}")`;
     paint.style.backgroundSize = bgSize(props.fit, props.size);
     paint.style.backgroundRepeat = tile ? 'repeat' : 'no-repeat';
-    // Placement via background-position. The image is (usually) SMALLER than the
-    // section, so 0/100 % = flush left/right (intuitive), and x/y can go BELOW 0 /
-    // ABOVE 1 to put the subject partly or entirely outside the edge.
+    // Placement via background-position: 0 and 100 % are flush with the edges, and x or y past 0..1 puts the subject partly outside.
     paint.style.backgroundPosition = bgPosition(props.x, props.y);
-    // Blur: stretch the image a touch past the edge (clipped by the layer) so the
-    // transparent fringe blur() creates ends up outside. No deliberate zoom.
-    // The finish (a look and the adjustments) goes in the same filter, before the blur.
+    // The finish (a look and the adjustments) and the blur go in one filter; with blur the image is stretched a touch past the clipped edge.
     const finish = pictureFilter(pictureStyle({ look: props.look, brightness: props.brightness, contrast: props.contrast, saturate: props.saturate, blur: props.blur }));
     if (finish) paint.style.filter = finish;
     let blurMargin = 0;
@@ -366,9 +295,7 @@ export const imageLayer = {
       paint.style.bottom = `-${blurMargin}px`;
     }
 
-    // Same load guard as the image block: the layer is kept invisible until the image
-    // has finished loading, so it never appears in stripes.
-    // In a page's first section the picture is the first screen's, so the probe asks for it ahead of the rest, and the background reuses that request.
+    // The layer stays invisible until the image has loaded; in a page's first section the probe asks for the picture ahead of the rest.
     const probe = new Image();
     if (options?.first) probe.setAttribute('fetchpriority', 'high');
     probe.src = src;
@@ -380,15 +307,13 @@ export const imageLayer = {
     }
 
     el.appendChild(img);
-    // Parallax (additive since v0.6): the layer lags behind on scroll.
+    // Parallax: the layer lags behind on scroll.
     if (props.parallax > 0) mountLayerParallax(img, props.parallax, paint === img ? blurMargin : 0, props.fit ?? 'cover');
   },
 };
 
 /**
- * Hooks parallax onto a layer element (image or video, shared with the video layer):
- * modern browsers drive it with scroll-driven CSS (compositor thread, no scroll
- * listener); older ones fall back to the rAF-driven variant.
+ * Hooks parallax onto an image or video layer: scroll-driven CSS where the browser has it, else the rAF-driven fallback.
  * @param {HTMLElement} el The layer element
  * @param {number} speed Strength 0..1
  * @param {number} blurMargin The blur fringe in px (0 without blur)

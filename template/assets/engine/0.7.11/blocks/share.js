@@ -1,9 +1,6 @@
 /**
- * Core block: a row of links with icons (type id `share`, the share buttons
- * it was until 0.7.0.52). The site's links from the Site panel, with the
- * block's own after them, each an ordinary `<a>` with the link's name, drawn
- * with the icon library's SVGs or the owner's own image. Nothing is loaded
- * from anywhere (never a vendor SDK).
+ * Core block: a row of links with icons (type id `share`): the site's links, then the block's own, each an ordinary `<a>`, with nothing loaded from elsewhere.
+ * Notes: docs/engine-notes/blocks/share.md (Urd repository).
  */
 // Only called in preview (after the admin dictionary has loaded): never at module level.
 import { ta, adminLocaleReady } from '../i18n.js';
@@ -24,10 +21,7 @@ export const shareBlock = {
     color: '',
   }),
   migrations: {
-    // 1 -> 2: the share buttons (services for the page's address) became the
-    // links row. A block that showed the site's links keeps them, one that
-    // held its own list keeps that; the share services are dropped, since the
-    // block no longer shares a page.
+    // 1 -> 2: the share buttons become the links row; a block keeps the site's links or its own list, and the share services are dropped.
     1: ({ mode, services, source, links, ...rest }) => ({
       ...rest,
       useSite: source !== 'own',
@@ -58,8 +52,7 @@ export const shareBlock = {
       a.href = link.url;
       a.rel = 'noopener noreferrer';
       if (leavesSite(link.url)) a.target = '_blank';
-      // The drawn SVG is the engine's own, and an own image has passed the
-      // image guard and is quoted (linkIconHtml), so the markup is safe to set.
+      // The drawn SVG is the engine's own, and an own image has passed the image guard and is quoted (linkIconHtml), so the markup is safe to set.
       a.innerHTML = `<span class="urd-share-icon">${linkIconHtml(link)}</span><span class="urd-share-name"></span>`;
       a.querySelector('.urd-share-name').textContent = link.label;
       a.title = link.label;

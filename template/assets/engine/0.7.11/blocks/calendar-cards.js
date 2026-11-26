@@ -1,6 +1,6 @@
 /**
- * The calendar block's card designs (milestone 0.7.19): six looks on the cards view, each a renderer over the block's ui helpers (fields, static texts, buttons; see makeUi in calendar.js) with its own rules in calendar-cards.css (or calendar.css, where families share them) under its own class names.
- * Loaded by the block on the first render of a block that uses one of them, never in the visitor closure.
+ * The calendar block's card designs: six looks on the cards view, each a renderer over the block's ui helpers, its rules in calendar-cards.css or calendar.css.
+ * Notes: docs/engine-notes/blocks/calendar-cards.md (Urd repository).
  */
 import { t, dates } from '../i18n.js';
 

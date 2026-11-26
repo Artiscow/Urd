@@ -1,10 +1,9 @@
 /**
- * The link from a place written as text («The hall, Storgata 1, 7011 Trondheim») to a map: the map services a site can choose between (`site.mapService`), and the search each of them is given.
- * A link only: nothing is loaded from a service until the visitor follows it.
- * Pure and DOM-free, loaded by the blocks that draw a place and bundled by the editor for the list of services.
+ * The link from a place written as text to a map: the map services a site can choose between (`site.mapService`) and the search each is given.
+ * Notes: docs/engine-notes/map-links.md (Urd repository).
  */
 
-/** The services in the order they are offered, the default first. The search is appended to `url`, as a query value or, for HERE WeGo, as the last part of the path. `names` marks a service that knows venues by name, so the name is kept in its search. */
+/** The services in the order they are offered, the default first; the search is appended to `url`, and `names` keeps a venue's name in the search. */
 const SERVICES = {
   osm: { url: 'https://www.openstreetmap.org/search?query=', names: false },
   duckduckgo: { url: 'https://duckduckgo.com/?iaxm=maps&q=', names: true },
@@ -27,10 +26,7 @@ export function mapService(site) {
 const COUNTRY = /^(norge|noreg|norway|norga)$/i;
 
 /**
- * What a service is asked for.
- * A service with a register of venues gets the place as it is written.
- * One that knows addresses only gets it without a venue's name in front of its address («The hall, Storgata 1, 7011 Trondheim» is searched as «Storgata 1, 7011 Trondheim»); a place without a number in it is asked for as it is.
- * Norgeskart searches Norway alone and finds nothing with the country's name in the search.
+ * What a service is asked for: the place as written where it knows venues, else without the venue's name before the address, and never the country for Norgeskart.
  */
 export function mapQuery(place, service = 'osm') {
   let parts = String(place ?? '').split(',').map((part) => part.trim()).filter(Boolean);
@@ -51,9 +47,7 @@ const POINTS = {
 const validPoint = (geo) => Number.isFinite(geo?.lat) && Number.isFinite(geo?.lon) && Math.abs(geo.lat) <= 90 && Math.abs(geo.lon) <= 180;
 
 /**
- * The address that opens a place in a map service; an unknown service is OpenStreetMap.
- * With coordinates (`geo`, a feed's own point for the place) OpenStreetMap and Apple Maps open the point itself, which no search can miss; Google Maps keeps the search by words, where it knows the venue, and takes the point for a place without words.
- * A service without an address for a point searches by the words, and without words the point opens in OpenStreetMap.
+ * The address that opens a place in a map service (OpenStreetMap when unknown), opening the point itself where the service and the place's `geo` allow.
  */
 export function mapSearchUrl(place, service = 'osm', geo = null) {
   const id = Object.hasOwn(SERVICES, service) ? service : 'osm';

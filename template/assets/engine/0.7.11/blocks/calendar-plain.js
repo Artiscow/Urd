@@ -1,6 +1,6 @@
 /**
- * The calendar block's plain views: the list, the cards, «Coming up», the agenda and the month the plain design draws, and the phone's stacked agenda, each over the block's ui helpers (makeUi in calendar.js).
- * Loaded by the block for a calendar that draws one of them (designModules in calendar-load.js), never in the visitor closure.
+ * The calendar block's plain views: the list, the cards, «Coming up», the agenda and the month, and the phone's stacked agenda, over the block's ui helpers.
+ * Notes: docs/engine-notes/blocks/calendar-plain.md (Urd repository).
  */
 import { t, dates } from '../i18n.js';
 
@@ -202,8 +202,7 @@ function renderMonth(host, occs, props, ics, ui) {
 }
 
 /**
- * The phone design (calPhoneDesign): one stacked agenda for a design that cannot be read on a phone, drawn in the design's set.
- * A design that shows a span (a year) lists what is coming, counted by the block's max count, since its whole span is loaded.
+ * The phone design: one stacked agenda in the design's set for a design that cannot be read on a phone; a span design lists what is coming.
  */
 function renderPhoneAgenda(host, occs, props, ics, ui) {
   const wrap = ui.el('div', 'urd-cal-pa');

@@ -1,12 +1,7 @@
 /**
  * Dependency-free iCal parser and recurrence expander for the calendar block.
- * A PURE module (no DOM, no fetch): everything here is unit-testable in node, and blocks/calendar.js handles fetching and rendering.
- * Loaded dynamically by the block on the first render of a calendar, so it stays outside the visitor closure.
- *
- * The scope is the practical subset that club calendars use (Google Calendar, Outlook, Nextcloud): VEVENT with DTSTART/DTEND (UTC, TZID or all-day), RRULE with FREQ/INTERVAL/COUNT/UNTIL/BYDAY/BYMONTHDAY/BYMONTH/ BYSETPOS, RDATE, EXDATE and RECURRENCE-ID overrides.
- * Unknown properties are ignored quietly.
- *
- * Time zones are resolved with the Intl API (no tables): wall time in the zone is converted to UTC by estimating the offset, which is DST-correct.
+ * Pure (no DOM, no fetch), and loaded by the block on a calendar's first render.
+ * Notes: docs/engine-notes/ics.md (Urd repository).
  */
 
 import { meetingLinkIn, isMeetingLink } from './meeting-links.js';
@@ -71,8 +66,7 @@ function zoneFormatter(timeZone) {
 }
 
 /**
- * The Windows time-zone names Outlook writes as TZID, each with the IANA zone CLDR names for it (windowsZones, territory 001).
- * Intl knows the IANA names only, so a Windows name is read through this table; a name not here is read from the feed's VTIMEZONE block.
+ * The Windows time-zone names Outlook writes as TZID, each with its IANA zone, as Intl knows the IANA names only.
  */
 const WINDOWS_ZONES = {
   'Dateline Standard Time': 'Etc/GMT+12', 'UTC-11': 'Etc/GMT+11', 'Aleutian Standard Time': 'America/Adak', 'Hawaiian Standard Time': 'Pacific/Honolulu',
@@ -127,8 +121,7 @@ function offsetMinutes(value) {
 }
 
 /**
- * The wall time a VTIMEZONE component's change of clock happens at in a year: its DTSTART's month, day and time, moved by its yearly rule (BYMONTH with a signed BYDAY such as -1SU, or BYMONTHDAY) when it has one.
- * As a UTC stamp of the wall time, for comparing with another wall time; null when the component has not begun by that year.
+ * The wall time, as a UTC stamp, a VTIMEZONE component changes the clock at in a year, by its yearly rule; null before the component begins.
  */
 function changeAt(component, year) {
   const start = component.start;
@@ -161,8 +154,7 @@ function changeAt(component, year) {
 }
 
 /**
- * Wall time under a feed's own VTIMEZONE → UTC ms: the component (standard or daylight) whose latest change of clock stands before the wall time gives the offset.
- * The changes are compared as wall times, which is how the feed states them.
+ * Wall time under a feed's own VTIMEZONE → UTC ms, by the component whose latest change of clock, as wall time, stands before it.
  */
 function componentsToUtc(y, mo, d, h, mi, s, components) {
   const wallAsUtc = Date.UTC(y, mo - 1, d, h, mi, s);
@@ -180,9 +172,8 @@ function componentsToUtc(y, mo, d, h, mi, s, components) {
 }
 
 /**
- * Wall time in an IANA zone → UTC ms.
- * The offset is estimated with Intl and adjusted once more, which catches DST transitions.
- * An unknown zone falls back to local time.
+ * Wall time in an IANA zone → UTC ms, its offset estimated with Intl and adjusted once for DST.
+ * An unknown zone is read as local time.
  */
 function zonedToUtc(y, mo, d, h, mi, s, timeZone) {
   const formatter = zoneFormatter(timeZone);
@@ -218,8 +209,7 @@ function parseDateParts(value, params = {}) {
 }
 
 /**
- * Gives a date's parts the zone they are read in: the TZID as Intl knows it (a Windows name through its IANA zone), else the feed's own VTIMEZONE components under `zone`.
- * A TZID nothing resolves is read as local time.
+ * Gives a date's parts their zone: the TZID as Intl knows it (a Windows name through its IANA zone), else the feed's own VTIMEZONE, else local time.
  */
 function resolveZone(parts, timezones) {
   if (!parts?.tzid || parts.tzid === 'UTC') return parts;
@@ -241,8 +231,7 @@ export function partsToMs(parts) {
 }
 
 /**
- * `DURATION` → the length of an event: `{ days }` for whole days and weeks, else `{ ms }`; null when the value is not a duration.
- * The form is RFC 5545's: P2D, P1W, PT2H30M, P1DT2H.
+ * An RFC 5545 `DURATION` (P2D, PT2H30M) → `{ days }` for whole days and weeks, else `{ ms }`; null when the value is not a duration.
  */
 export function parseDuration(value) {
   const m = /^([+-])?P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(String(value).trim());
@@ -274,8 +263,7 @@ const BYDAY_CODES = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
 /* ---------- VEVENT parsing ---------- */
 
 /**
- * Parses a whole iCal text.
- * The events are RAW events, one per VEVENT with its recurrences not expanded (see expandEvents); the timezone is the feed's own (X-WR-TIMEZONE).
+ * Parses a whole iCal text into raw events, one per VEVENT with its recurrences unexpanded (see expandEvents), and the feed's own timezone.
  * @returns {{ name: string|null, timezone: string|null, events: object[] }}
  */
 export function parseIcs(text) {
@@ -346,8 +334,7 @@ export function parseIcs(text) {
         current.categories = [...(current.categories ?? []), ...prop.value.split(/(?<!\\),/).map((name) => unescapeText(name).trim()).filter(Boolean)];
         break;
       case 'URL': current.url = prop.value.trim(); break;
-      // The first picture attached by address: its type says it is a picture, or its address ends in a picture file.
-      // A file attached inline, and any other kind of file, is skipped.
+      // The first picture attached by address, known by its type or its file ending; an inline file or any other kind is skipped.
       case 'ATTACH': {
         const address = prop.value.trim();
         const type = String(prop.params.FMTTYPE ?? '').toLowerCase();
@@ -457,8 +444,8 @@ function periodsBefore(count, interval) {
 }
 
 /**
- * Generates wall-time starts for a rule, from DTSTART onwards (sorted).
- * `skipTo` (a time) lets a rule without COUNT begin at the period before that time instead of at its start, so a rule that began years ago still reaches the window within the guard.
+ * Generates a rule's wall-time starts from DTSTART on, sorted.
+ * `skipTo` lets a rule without COUNT begin at the period before that time, within the guard.
  */
 function* ruleStarts(startParts, rule, skipTo = null) {
   const guard = 3000;
@@ -508,8 +495,7 @@ function* ruleStarts(startParts, rule, skipTo = null) {
     const spansYear = !rule.bymonth && !rule.weekOrYearDays && Boolean(rule.byday?.length || rule.bymonthday?.length);
     const firstYear = aheadParts ? periodsBefore(aheadParts.y - startParts.y - 1, rule.interval) : 0;
     for (let i = firstYear, turns = 0; produced < guard && turns < guard; i += rule.interval, turns++) {
-      // The year's days: over the whole year when the rule names weekdays or month days without months,
-      // else in each of the rule's months (or the start's own) the days the rule names.
+      // The year's days: over the whole year when the rule names weekdays or month days without months, else the named days in each month.
       let year = [];
       if (spansYear) year = yearDays(startParts.y + i, startParts, rule);
       else {
@@ -528,8 +514,7 @@ function* ruleStarts(startParts, rule, skipTo = null) {
 }
 
 /**
- * The days of a month a rule names, in order: the nth (or nth from last) weekday of BYDAY, the days of BYMONTHDAY, else the day of the start.
- * A day the month does not have (the 31st, 29 February) is left out.
+ * The days of a month a rule names, in order: BYDAY's nth weekday, BYMONTHDAY, else the start's day; a day the month lacks is left out.
  */
 function monthDays(month, startParts, rule) {
   const dim = daysInMonth(month.y, month.mo);
@@ -558,9 +543,7 @@ function monthDays(month, startParts, rule) {
 }
 
 /**
- * The days of a year a yearly rule without BYMONTH names, in order (RFC 5545 §3.3.10): BYMONTHDAY in every month, with BYDAY
- * as a limit; else BYDAY over the whole year, where an ordinal counts from 1 January (-1 the year's last such weekday) and no
- * ordinal means every such weekday.
+ * The days of a year a yearly rule without BYMONTH names, in order (RFC 5545 §3.3.10): BYMONTHDAY in every month, limited by BYDAY, else BYDAY over the year.
  */
 function yearDays(y, startParts, rule) {
   if (rule.bymonthday?.length) {
@@ -594,7 +577,7 @@ function setPositions(days, positions) {
 }
 
 /**
- * The length of an event: whole days for an all-day event (its last day counted from its first; DTEND is the day after the last), else in ms (an hour when the feed gives no end).
+ * The length of an event: whole days for an all-day event (DTEND is the day after the last), else ms, an hour when the feed gives no end.
  */
 function lengthOf(event) {
   const duration = event.end ? null : event.duration;
@@ -618,12 +601,8 @@ function endAfter(startMs, length) {
 }
 
 /**
- * Expands raw events into concrete occurrences inside a window.
- * A RECURRENCE-ID event overrides its base occurrence (of the rule or of an RDATE), EXDATE removes one, and STATUS:CANCELLED marks one `cancelled: true` (the block shows it as cancelled or hides it).
- * An occurrence of an event with a recurrence rule or extra dates carries `recurring: true`, and one whose event has a DTEND `hasEnd: true`.
- * The end of an all-day occurrence is the start of its last day.
- * The result is sorted by start.
- *
+ * Expands raw events into occurrences inside a window, sorted by start.
+ * RECURRENCE-ID overrides one, EXDATE removes one, and STATUS:CANCELLED marks one cancelled.
  * @param {object[]} events from parseIcs
  * @param {{ from?: Date|number, to?: Date|number, max?: number }} window
  * @returns {Array<{ uid, summary, description, location, categories: string[], url, image, meeting, geo, descriptionHtml, start: number, end: number, allDay: boolean, recurring: boolean, cancelled: boolean, hasEnd: boolean }>}
@@ -775,8 +754,7 @@ export function findSignupLink(description) {
 }
 
 /**
- * Where an event is signed up for: the link a line of the description names, else the event's own address (what an event service gives as its page).
- * A link to a picture or to a video meeting is never the sign-up, and a link that merely stands in the description is not one either.
+ * Where an event is signed up for: the link a description line names, else the event's own address; never a picture or a video meeting.
  * @param {object} occ An occurrence with its description, address and meeting link
  * @param {string[]} [own] The site's own meeting hosts
  */
@@ -806,8 +784,7 @@ export function isoWeek(ms) {
 }
 
 /**
- * The twelve months a year view shows: from the first day of `firstMonth` (0 is January) in the season that holds `now`, so with
- * August at the top a day in March belongs to the season that began the August before.
+ * The twelve months a year view shows, from the first day of `firstMonth` (0 is January) in the season that holds `now`.
  * @param {number} [firstMonth] The month at the top, 0 to 11
  * @param {number} [now]
  * @returns {{from: number, to: number}} Local midnight of the season's first day, and of the next season's
@@ -820,8 +797,7 @@ export function seasonRange(firstMonth = 0, now = Date.now()) {
 }
 
 /**
- * The month a year design puts at the top, from its `firstMonth` option: a month number as text (0 is January), or `now` for
- * the month of `today`; January without the option.
+ * The month a year design puts at the top: `firstMonth` as a month number (0 is January), `now` for today's month, else January.
  * @param {string|undefined} option
  * @param {Date} [today]
  * @returns {number}
@@ -831,8 +807,7 @@ export function seasonTop(option, today = new Date()) {
 }
 
 /**
- * Where a view's window starts: the season for a year view (the calendar year unless `firstMonth` names another top month), the
- * month, the week or the day for those views, and six hours back for a list.
+ * Where a view's window starts: the season for a year view, the month, week or day for those views, and six hours back for a list.
  */
 export function windowStart(view, now = Date.now(), firstMonth = 0) {
   const d = new Date(now);
@@ -878,8 +853,8 @@ const nextDay = (ms) => {
 };
 
 /**
- * Wall-time parts as an iCal date property: a date for an all-day event, a UTC stamp for a UTC time, a wall time with its TZID for an IANA zone, a floating wall time otherwise.
- * A time under a feed's own VTIMEZONE has no name a calendar app knows, so it is written as the moment in UTC.
+ * Wall-time parts as an iCal date property: a date, a UTC stamp, a wall time with its TZID, or a floating time.
+ * A feed's own VTIMEZONE is written in UTC.
  */
 function partsProperty(name, parts) {
   const wall = `${parts.y}${pad(parts.mo)}${pad(parts.d)}T${pad(parts.h)}${pad(parts.mi)}${pad(parts.s)}`;
@@ -909,8 +884,8 @@ function stamps(occ) {
 }
 
 /**
- * One occurrence as an iCal file, for «Add to calendar»: a calendar with the one event, its title, place, description and address.
- * An occurrence of a repeating event carries its series (`series`: the feed's own start, end or length, rule and excluded dates, in the feed's zone), and the file is that series, so a calendar app imports the whole of it with its count, its end and its clock.
+ * One occurrence as an iCal file for «Add to calendar».
+ * An occurrence of a repeating event is written as its whole series, in the feed's zone.
  * @param {{start: number, end?: number, allDay?: boolean, title?: string, summary?: string, location?: string, description?: string, url?: string, uid?: string, series?: object|null}} occ
  */
 export function eventIcs(occ) {
@@ -948,8 +923,7 @@ const isoDate = (ms) => {
 };
 
 /**
- * One occurrence as a schema.org `Event` for the page's JSON-LD: the name, the start and the end (the days alone for an all-day event, its last day as the end), the place with its address or the meeting link, and whether it is cancelled and held online.
- * `real` is the true moment of an occurrence whose start is shown on another zone's clock.
+ * One occurrence as a schema.org `Event` for the page's JSON-LD: name, start, end, place or meeting link, and whether it is cancelled or online.
  * @param {object} occ An occurrence from expandEvents, with its title
  * @param {{pageUrl?: string, organizer?: string, organizerUrl?: string, meetingHosts?: string[]}} [site] The page the event is shown on, the organizer (the site's name, or the calendar's own organizer with its page) and the site's own meeting hosts
  * @returns {object|null} null without a name or a start
@@ -997,9 +971,7 @@ export function findImageLink(description) {
 }
 
 /**
- * A Nextcloud calendar's share link as the address of its iCal file.
- * The link the share dialog gives opens a web page (`/apps/calendar/p/<token>`, or `/embed/` for the embedding link), and the calendar's public address answers with the file only with `?export` behind it; both become `/remote.php/dav/public-calendars/<token>?export`, on a server at the root of its host or in a folder.
- * Any other address is returned as it is.
+ * A Nextcloud calendar's share link as its iCal file's address, `/remote.php/dav/public-calendars/<token>?export`; any other address as it is.
  */
 function nextcloudExport(address) {
   let url;
@@ -1012,8 +984,7 @@ function nextcloudExport(address) {
 }
 
 /**
- * Normalizes a source the way the owner writes it: webcal:// → https://, https is kept, http is lifted to https, and a bare Google calendar id (someone@gmail.com / ...@group.calendar.google.com) becomes its public ICS address.
- * An unknown form gives null.
+ * Normalizes a source as the owner writes it: webcal and http become https, a bare Google calendar id its public ICS address; else null.
  */
 export function normalizeSourceUrl(input) {
   const raw = String(input ?? '').trim();
@@ -1028,8 +999,8 @@ export function normalizeSourceUrl(input) {
 }
 
 /**
- * A source as the block reads it: the address alone, or an object with an address, a name and a colour.
- * A named calendar is a category of its own (its events wear the name as their chip, whatever their titles say), and a colour tints that calendar's chips and date badges.
+ * A source as the block reads it, an address or `{ url, name, color }`.
+ * A named calendar is a category of its own, and its colour tints its chips.
  * Pure.
  * @param {unknown} source A string, or `{ url, name?, color? }`
  * @returns {{url: string, name: string, color: string}}
@@ -1074,8 +1045,7 @@ export function calendarEntry(calendar) {
 }
 
 /**
- * The block's sources as the calendar reads them: an address of its own (a string or `{ url, name, color }`) as it is, a reference `{ calendar: id }` looked up in the site's registry.
- * A reference to a calendar that is not there and an entry without an address are dropped, and the same calendar twice is one source.
+ * The block's sources: an own address as it is, `{ calendar: id }` from the site's registry; missing ones dropped, repeats merged.
  * Pure.
  * @param {unknown} sources The block's `sources`
  * @param {unknown} calendars The site's `site.calendars`
@@ -1133,8 +1103,7 @@ export function laterCount(count) {
 }
 
 /**
- * The same event from two calendars is one event: occurrences that start at the same time under the same title (case and outer spaces aside) are merged into the first of them, which takes over a signup link or a location the later copy has and it lacks.
- * The order is kept.
+ * Merges occurrences with the same start and title into the first, which takes a signup link or place it lacks; the order is kept.
  * @param {Array<object>} occurrences With `start` and `title` (or `summary`)
  * @returns {Array<object>}
  */

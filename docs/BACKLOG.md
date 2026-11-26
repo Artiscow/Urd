@@ -609,7 +609,7 @@ An entry inherits the number of the backlog item the work belongs under, plus on
  */"
   This is almost as much as the code.
   I also see even more comments in code which are written as corrections, not comments of what code does. This just adds bloat and comments that will quickly be outdated. (example preview.css line 1093/1107)
-  Done when: `tests/comments.test.mjs` holds the engine, the editor and the functions in full, `PENDING` in tests/engine-notes.test.mjs is empty, and AGENTS.md and ADR-0037 state the rule.
+  Done when: `tests/comments.test.mjs` holds the engine, the editor and the functions in full, tests/engine-notes.test.mjs holds every module a visitor's page loads with none pending, and AGENTS.md and ADR-0037 state the rule.
 
 ## Known Limitations (documented, no fix planned)
 

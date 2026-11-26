@@ -200,7 +200,7 @@ function listed(units, ids) {
  * The phone order and what it is made of: the rule's order, the stacks as units, the exceptions and the custom order; blocks placed by hand are included.
  * @param {object[]} blocks The section's blocks
  * @param {string|{rule: string, list?: string[]|null, stacks?: string[][], loose?: string[]}} [setup] The section's rule, or its setup (phoneSetupOf)
- * @returns {{order: object[], placed: Set<string>, stacks: string[][], columns: string[][]}} The order; the blocks whose exception holds in it (a stack's first block for the stack); the stacks as they hold, each of two blocks or more; and the rule's columns, without the blocks taken out of them
+ * @returns {{order: object[], placed: Set<string>, stacks: string[][], columns: string[][]}} The order; the blocks whose exception holds (a stack's first for it); the stacks of two or more; the rule's columns without the blocks taken out
  */
 export function phoneParts(blocks, setup = 'top') {
   const { rule, list, stacks, loose } = setupFrom(setup);

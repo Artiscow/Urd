@@ -1,8 +1,7 @@
 /**
- * Core block: shape. Lines and arrows (direction via the frame's rot field),
- * circles/ellipses, rectangles and triangles. Decorative elements for free
- * composition. A line can carry a `label`: a word set in the middle of it,
- * the chapter divider.
+ * Core block: shape.
+ * Lines and arrows, ellipses, rectangles and triangles for free composition; a line can carry a `label` set in its middle, the chapter divider.
+ * Notes: docs/engine-notes/blocks/shape.md (Urd repository).
  */
 import { resolveColor } from '../theme.js';
 
@@ -26,9 +25,7 @@ export const shapeBlock = {
   render(el, props, ctx) {
     const color = resolveColor(props.color);
 
-    // The chapter divider: the line drawn on both sides of a word. The two
-    // strokes are the element's ::before and ::after (shape.css), so the word
-    // sits in the flow between them and the line keeps its thickness.
+    // The chapter divider: the line drawn on both sides of a word, its two strokes the element's ::before and ::after (shape.css).
     const label = props.kind === 'line' && typeof props.label === 'string' ? props.label.trim() : '';
     if (label) {
       const row = document.createElement('div');

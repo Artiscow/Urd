@@ -1,14 +1,9 @@
 /**
- * Core block: map. Privacy-friendly OpenStreetMap embedding: the owner
- * types an address (looked up through /api/geocode in admin), coordinates
- * or an OSM link, and the block embeds OSM's official iframe (no tracking,
- * no third-party tiles). The settings live in the Properties panel; the
- * help chip explains them (ADR-0008). Urd's own _headers allows the host;
- * on a host that blocks it the block says which frame-src line is missing.
+ * Core block: map. OpenStreetMap's own iframe for an address, coordinates or an OSM link, without tracking; where a CSP blocks it, the missing line is named.
+ * Notes: docs/engine-notes/blocks/map.md (Urd repository).
  */
 import { parseLocation, buildEmbedUrl, buildLargerMapUrl, OSM_HOST } from '../osm.js';
-// Called only at render (t) and in preview after the admin dictionary has
-// loaded (ta): never at module level.
+// Called only at render (t) and in preview after the admin dictionary has loaded (ta): never at module level.
 import { t, ta, adminLocaleReady } from '../i18n.js';
 import { coverFrame } from '../embed-cover.js';
 
@@ -20,15 +15,10 @@ const el2 = (tag, className, textContent) => {
 };
 
 /**
- * Catches a CSP violation on the iframe (a host without OpenStreetMap in
- * frame-src) and replaces the broken iframe with something calm: the
- * missing line in the editor, a link that opens the map for visitors.
- * Urd's own _headers allows OSM, so this normally never fires.
- * The contact block's map design watches its frame with it too.
+ * Replaces a map frame the CSP's frame-src blocks with something calm: the missing line in the editor, a link that opens the map for visitors.
  */
 export function watchCspBlock(host, frame, ctx, largerUrl) {
-  // The blocked host is compared EXACTLY (a parsed URL), never as a
-  // substring: a substring check would also match openstreetmap.org.example.com.
+  // The blocked host is compared EXACTLY (a parsed URL), never as a substring: a substring check would also match openstreetmap.org.example.com.
   const blockedHost = new URL(OSM_HOST).hostname;
   const onViolation = (event) => {
     let violatedHost = null;
@@ -64,18 +54,15 @@ export const mapBlock = {
   labelKey: 'blocks.map',
   defaults: () => ({ location: '', zoom: 15 }),
   migrations: {
-    // 1 -> 2 (ADR-0025): the map's box is its frame, so the height setting
-    // goes. The page lift has already moved it into the frame (migrate.js).
+    // 1 -> 2 (ADR-0025): the map's box is its frame, so the height setting goes.
+    // The page lift has already moved it into the frame (migrate.js).
     1: ({ height, ...props }) => props,
   },
   /**
-   * The map's box is its frame (ADR-0025 decision 2): the iframe fills the
-   * height the frame leaves over the «Larger map» line (map.css).
+   * The map's box is its frame (ADR-0025 decision 2): the iframe fills the height the frame leaves over the «Larger map» line (map.css).
    * @param {HTMLElement} el
    * @param {{location?: string, lat?: number, lon?: number, zoom?: number, askFirst?: boolean}} props
-   *   askFirst: false loads the map with the page instead of behind its cover (additive from 0.7.29.4)
-   *   `lat`/`lon` are written by the address search in admin; `location` is
-   *   parsed at render when they are missing (coordinates or an OSM link).
+   *   askFirst: false loads the map with the page, not behind its cover; `location` is parsed at render where the address search left no `lat`/`lon`
    * @param {object} ctx Render context
    */
   render(el, props, ctx) {

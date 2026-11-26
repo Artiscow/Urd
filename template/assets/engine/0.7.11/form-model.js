@@ -1,11 +1,7 @@
 /**
- * Pure form logic for the form block (no DOM, no fetch): validation,
- * honeypot, mailto building and payload shaping. Everything here is
- * unit-tested in node; blocks/form.js handles rendering and submission.
- *
- * Visitor input is NEVER treated as HTML: the values are URL-encoded for
- * mailto and sent as JSON to an optional endpoint. The honeypot is a hidden
- * field that bots fill in; when it is filled in, the submission is discarded.
+ * Pure form logic for the form block (no DOM, no fetch): validation, the honeypot, mailto building and payload shaping.
+ * Visitor input is never treated as HTML.
+ * Notes: docs/engine-notes/form-model.md (Urd repository).
  */
 
 /** A practical email check (not RFC-complete, but it catches the common mistakes). */
@@ -14,8 +10,8 @@ export function isEmail(value) {
 }
 
 /**
- * Honeypot: bots fill in every field, the hidden one included. When the
- * honeypot field is filled in, the submission is treated as spam.
+ * Honeypot: bots fill in every field, the hidden one included.
+ * When the honeypot field is filled in, the submission is treated as spam.
  * @param {string} honeypotValue
  * @returns {boolean} true = spam (discard the submission)
  */
@@ -33,28 +29,21 @@ export function isIsoDate(value) {
 }
 
 /**
- * Validates the collected values against the field definitions.
- * A checkbox carries a boolean value (required = it must be ticked); select
- * and radio fields with `options` accept only values from that list (a guard
- * against tampered submissions in endpoint mode); a date must be a valid ISO
- * date.
+ * Validates the values against the fields: a required checkbox must be ticked, a select or radio takes only its options, and a date must be a valid ISO date.
  * @param {Array<{id, label, type, required, options?: string[]}>} fields
  * @param {Record<string,string|boolean>} values
  * @param {{required?: string, email?: string, choice?: string, date?: string}} [messages] Message templates ({label} is substituted)
  * @returns {{ ok: boolean, errors: Record<string,string> }}
  */
 export function validate(fields, values, messages = {}) {
-  // The message templates can be overridden (blocks/form.js passes the
-  // visitor language's texts via t()); the defaults are English, so the
-  // node tests stand on their own.
+  // The message templates can be overridden (blocks/form.js passes the visitor language's texts); the defaults are English.
   const requiredMsg = messages.required ?? '{label} is required';
   const emailMsg = messages.email ?? 'Enter a valid email address';
   const choiceMsg = messages.choice ?? 'Choose one of the options';
   const dateMsg = messages.date ?? 'Enter a valid date';
   const errors = {};
   for (const field of fields) {
-    // Boolean before string coercion: String(false) is a non-empty string
-    // and would let a required, unticked box through.
+    // Boolean before string coercion: String(false) is a non-empty string and would let a required, unticked box through.
     if (field.type === 'checkbox') {
       if (field.required && values[field.id] !== true) {
         errors[field.id] = requiredMsg.replaceAll('{label}', field.label);
@@ -79,9 +68,9 @@ export function validate(fields, values, messages = {}) {
   return { ok: Object.keys(errors).length === 0, errors };
 }
 
-/** "Field: value" lines, one per field that has a value (plain text, for the
- *  email body). A ticked box becomes the yes word (opts.yes); an empty box is
- *  left out like any other empty field. */
+/**
+ * "Field: value" lines for the email body, one per field with a value; a ticked box becomes the yes word (opts.yes).
+ */
 function bodyLines(fields, values, opts = {}) {
   const yes = opts.yes ?? 'Yes';
   return fields
@@ -116,9 +105,7 @@ export function buildMailto(recipient, subject, fields, values, opts = {}) {
 }
 
 /**
- * Payload for an external endpoint: the field values plus sender context.
- * The honeypot is deliberately left out (it is a client-side guard only).
- * Checkbox fields are sent as real booleans, the rest as trimmed strings.
+ * Payload for an external endpoint: the field values plus sender context, without the honeypot; checkboxes as booleans, the rest as trimmed strings.
  * @returns {Record<string, string|boolean>}
  */
 export function buildPayload(fields, values, extra = {}) {

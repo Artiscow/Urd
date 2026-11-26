@@ -1,13 +1,6 @@
 /**
- * Background layer: gradient. Linear or radial. The colors are stops: each
- * color sits at a position along the gradient (at, 0 to 100), with its own
- * opacity (alpha, 0 to 1, omitted means opaque). Two colors at one position
- * give a hard color edge. Optional animation per shape.
- *
- * Version 1 gave each color a share of the space instead, a weight that was
- * normalized at render time and painted in the middle of its band; the 1 -> 2
- * migration turns those band centers into positions, so a stored gradient
- * looks the same.
+ * Background layer: a linear or radial gradient whose colors are stops, each at a position (0 to 100) with its own opacity; two at one position give a hard edge.
+ * Notes: docs/engine-notes/backgrounds/gradient.md (Urd repository).
  */
 import { resolveColor } from '../theme.js';
 
@@ -36,11 +29,7 @@ const clampAt = (v) => Math.min(100, Math.max(0, Number(v)));
 const r2 = (v) => Math.round(v * 100) / 100;
 
 /**
- * The stops as the CSS reads them: in position order, each with its color,
- * position and opacity. A stop stored as a bare color string reads as that
- * color, a stop without a usable position stands where the list order puts
- * it (spread evenly), and the order among stops at one position is the list
- * order, so a hard edge keeps its two colors the way round they were given.
+ * The stops as the CSS reads them, in position order: a bare color string is that color, a stop without a position is spread evenly, and ties keep list order.
  * @param {Array<{color?: string, at?: number, alpha?: number}|string>|undefined} stops
  * @returns {Array<{color: string, at: number, alpha: number}>}
  */
@@ -66,9 +55,7 @@ function paint(stop) {
 }
 
 /**
- * The widest color band as a share of the gradient (0..1): each color owns
- * the stretch from the midpoint to its neighbor on either side, the first
- * from 0 and the last to 100. The loop's period length reads it.
+ * The widest color band as a share of the gradient (0..1), each color owning the stretch to the midpoints beside it; the loop's period reads it.
  */
 function widestBand(list) {
   if (list.length < 2) return 1;
@@ -82,10 +69,7 @@ function widestBand(list) {
 }
 
 /**
- * The version 1 shares as positions: the center of each color's band, with
- * the shares read as weights that need not sum to 100 and a missing or zero
- * sum giving equal bands. A share of 0 lands the color on its neighbors'
- * boundary, which is where the hard edge stood.
+ * The version 1 shares as positions: the center of each color's band, the shares read as weights, and a missing or zero sum giving equal bands.
  * @param {Array<{color?: string, share?: number}|string>|undefined} stops
  * @returns {Array<{color: string, at: number}>}
  */
@@ -105,11 +89,9 @@ export function sharesToPositions(stops) {
   });
 }
 
-/** Circular cycle for one-way panning (the rainbow model): the last color
- *  glides back to the first, so the pattern reads 1 2 3 4 1 2 3 4 - never
- *  mirrored, and no color is visible twice at the same time (a color shows
- *  only once unless it has been added twice). The positions are percentages
- *  of ONE period. */
+/**
+ * A circular cycle for one-way panning: the last color glides back to the first, so the pattern repeats unmirrored; positions are per cent of one period.
+ */
 function cyclicCycle(list) {
   const shift = list[0]?.at ?? 0;
   return [
@@ -119,16 +101,7 @@ function cyclicCycle(list) {
 }
 
 /**
- * The loop geometry (pure, node-testable): follows the angle the owner has set.
- * The period is the gradient line across the surface plus JUST enough for the
- * hidden part of the cycle to hold the widest color: no color can then be
- * split across the edges of the visible area (the rule that no color shows
- * twice), while the colors keep roughly the same size as in the static
- * gradient (with 7 equal colors the period is only 1/6 longer than the line,
- * never double). The shift is exactly one period along the axis - the pattern
- * is then identical at the end of the round, and the loop seamless for ANY
- * angle (CSS angle: 0 = upwards, 90 = to the right).
- *
+ * The loop's geometry along the owner's angle: a period of the gradient line plus room for the widest color, shifted one period per round, seamless at any angle.
  * @param {number} width Surface width in px
  * @param {number} height Surface height in px
  * @param {number} angleDeg The gradient angle
@@ -140,16 +113,14 @@ export function loopGeometry(width, height, angleDeg, maxShare = 0.5) {
   // || 0 normalizes -0 (floating-point noise at exact angles).
   const round = (v) => Math.round(v * 100) / 100 || 0;
   const line = Math.abs(width * Math.sin(rad)) + Math.abs(height * Math.cos(rad));
-  // Clamped so an extremely dominant color cannot give an absurdly long
-  // period (and never a division by zero).
+  // Clamped so an extremely dominant color cannot give an absurdly long period (and never a division by zero).
   const share = Math.min(Math.max(maxShare, 0), 0.9);
   const period = line / (1 - share);
   return { period: round(period), dx: round(Math.sin(rad) * period), dy: round(-Math.cos(rad) * period) };
 }
 
 /**
- * The runner's gradient (pure): a repeating gradient with the cycle positions
- * converted to px of the period, so the pattern tiles seamlessly along the axis.
+ * The runner's gradient (pure): a repeating gradient with the cycle positions converted to px of the period, so the pattern tiles seamlessly along the axis.
  */
 export function loopGradientCss(stops, angleDeg, periodPx) {
   const css = stops
@@ -159,17 +130,10 @@ export function loopGradientCss(stops, angleDeg, periodPx) {
 }
 
 /**
- * Builds the whole render recipe as a pure function (node-testable): the
- * background CSS, extra style properties (kebab-case, including CSS vars)
- * and the animation class.
- *
+ * Builds the render recipe, pure: the background CSS, extra style properties (kebab-case, CSS vars included) and the animation class.
  * @param {{kind?: string, stops: Array<{color: string, at?: number, alpha?: number}>, angle?: number, x?: number, y?: number, animation?: string, speed?: number, opacity?: number}} props
  * @returns {{background: string|null, className: string|null, styles: Record<string, string>, loop?: {angle: number, stops: Array<{color: string, at: number, alpha: number}>, maxShare: number}, runner?: {className: string, background: string, left?: string, top?: string}}}
- *   loop is set only for pan-loop: the gradient is then painted on a runner
- *   in px once the surface can be measured (see render), and background is
- *   null. runner is set for pan/orbit: the gradient is painted on a 200 %
- *   runner animated with transform (compositor) instead of background-position
- *   (a repaint per frame); background is null there too.
+ *   loop for pan-loop, painted on a runner in px once measured (see render); runner for pan and orbit, a 200 % runner moved by transform; background null in both
  */
 export function gradientRender(props) {
   const kind = props.kind === 'radial' ? 'radial' : 'linear';
@@ -186,9 +150,7 @@ export function gradientRender(props) {
     const y = Math.round((props.y ?? 0.5) * 100);
     background = `radial-gradient(circle at ${x}% ${y}%, ${cssStops})`;
     if (anim === 'orbit') {
-      // The runner is anchored (left/top) so the gradient center (x, y) sits at
-      // the same point on the surface as when unanimated; the path swings the
-      // runner ±2 % of its own size = 4 % of the surface (see urd-bg-orbit).
+      // The orbit runner is anchored (left/top) so the center (x, y) sits where it does unanimated; its path swings 4 % of the surface (urd-bg-orbit).
       return {
         background: null,
         className: null,
@@ -200,9 +162,7 @@ export function gradientRender(props) {
   } else {
     const angle = props.angle ?? 160;
     if (anim === 'pan-loop') {
-      // The runner model (see render): the pure recipe is the cycle, the angle
-      // and the widest color band (which drives the period length); the px
-      // measurements are set only once the surface can be measured.
+      // The pan-loop recipe is the cycle, the angle and the widest band; the px measurements are set in render once the surface can be measured.
       return {
         background: null,
         className: null,
@@ -214,8 +174,7 @@ export function gradientRender(props) {
       ? `linear-gradient(calc(var(--urd-grad-spin, 0deg) + ${angle}deg), ${cssStops})`
       : `linear-gradient(${angle}deg, ${cssStops})`;
     if (anim === 'pan') {
-      // The runner is 200 % in both axes; the glide to translate(-50%, -50%)
-      // covers the same distance as a background-position travel 0 -> 100 %.
+      // The runner is 200 % in both axes; the glide to translate(-50%, -50%) covers the same distance as a background-position travel 0 -> 100 %.
       return {
         background: null,
         className: null,
@@ -229,9 +188,7 @@ export function gradientRender(props) {
   return { background, className: anim ? (classNames[anim] ?? null) : null, styles };
 }
 
-/* The loop runners must be re-measured when the window is resized (px
-   measurements). ONE module-level listener; detached runners (after a
-   re-render) are weeded out when apply returns false. */
+/* The loop runners, re-measured on a window resize by one module-level listener; a runner whose apply returns false is detached and dropped. */
 const loopAppliers = new Set();
 let loopListenerOn = false;
 function registerLoopApply(apply) {
@@ -245,8 +202,9 @@ function registerLoopApply(apply) {
   });
 }
 
-/* The rotate animation interpolates a registered angle variable; without
-   support it degrades to a static gradient (decoration never topples the page). */
+/*
+ * The rotate animation interpolates a registered angle variable; without support it degrades to a static gradient (decoration never topples the page).
+ */
 let spinRegistered = false;
 function registerSpin() {
   if (spinRegistered) return;
@@ -270,8 +228,7 @@ export const gradientLayer = {
     opacity: 1,
   }),
   migrations: {
-    // 1 -> 2: the shares become positions at the band centers, so the gradient
-    // keeps its look; the other props stand as stored.
+    // 1 -> 2: the shares become positions at the band centers, so the gradient keeps its look; the other props stand as stored.
     1: (props) => ({ ...props, stops: sharesToPositions(props?.stops) }),
   },
   /**
@@ -283,10 +240,7 @@ export const gradientLayer = {
     el.style.opacity = String(props.opacity ?? 1);
     for (const [name, value] of Object.entries(r.styles)) el.style.setProperty(name, value);
     if (r.loop) {
-      // One-way panning follows the owner's angle: a repeating gradient is
-      // painted on an oversized runner in px, and the runner is shifted exactly
-      // one period along the axis per round - seamless at any angle. The px
-      // measurements require a laid-out surface, hence rAF + resize refresh.
+      // One-way panning: a repeating gradient in px on an oversized runner, shifted one period along the angle per round, measured after a frame and on resize.
       el.classList.add('urd-bg-loop-host');
       const runner = document.createElement('div');
       runner.className = 'urd-bg-loop-runner';
@@ -309,10 +263,7 @@ export const gradientLayer = {
       return;
     }
     if (r.runner) {
-      // Pan/orbit: the gradient is painted on a 200 % runner shifted with
-      // transform on the compositor thread instead of background-position (a
-      // repaint of the layer per frame). The host clips the runner, using the
-      // same class as pan-loop.
+      // Pan and orbit: the gradient on a 200 % runner moved with transform on the compositor; the host clips it with the pan-loop class.
       el.classList.add('urd-bg-loop-host');
       const runner = document.createElement('div');
       runner.className = r.runner.className;

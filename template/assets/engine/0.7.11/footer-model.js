@@ -21,8 +21,7 @@ export function footerBrand(site) {
   const brand = site.footer?.brand ?? {};
   const title = str(brand.title).trim();
   const tagline = str(brand.tagline).trim();
-  // The brand can be text, an uploaded logo (image) or both (additive since
-  // v0.6, mirroring the nav logo). mode controls what is shown.
+  // The brand can be text, an uploaded logo (image) or both (mirroring the nav logo). mode controls what is shown.
   const logo = str(brand.logo).trim();
   const mode = brand.mode === 'image' || brand.mode === 'both' ? brand.mode : 'text';
   const hasLogo = logo && mode !== 'text';
@@ -46,8 +45,7 @@ export function footerColumns(site) {
       return {
         title: str(col.title).trim(),
         links,
-        // Long column (many links, or an explicit col.wide): rendered across two
-        // tracks and split into two sub-columns, so the footer stays symmetric.
+        // Long column (many links, or an explicit col.wide): rendered across two tracks and split into two sub-columns, so the footer stays symmetric.
         wide: col.wide === true || links.length > 6,
       };
     })
@@ -55,8 +53,7 @@ export function footerColumns(site) {
 }
 
 /**
- * The baseline's optional right-hand links (privacy/terms/«Made with Urd»),
- * resolved like the column links. Additive since v0.6.
+ * The baseline's optional right-hand links (privacy/terms/«Made with Urd»), resolved like the column links.
  * @param {object} site
  * @returns {Array<{label: string, href: string, external: boolean, missing: boolean}>}
  */
@@ -93,8 +90,7 @@ export function sitePageLink(site, id) {
 }
 
 /**
- * The doormat link row: one centered row of links (the Centered and Big CTA
- * templates). Additive since v0.6.
+ * The doormat link row: one centered row of links (the Centered and Big CTA templates).
  * @param {object} site
  * @returns {Array<{label: string, href: string, external: boolean, missing: boolean}>}
  */
@@ -122,8 +118,7 @@ export function footerCta(site) {
     kind,
     heading,
     sub: str(cta.sub).trim(),
-    // An empty label/success is filled in by the render layer with the visitor
-    // language's default text (footer.js + t()); the model is language-free (ADR-0012).
+    // An empty label/success is filled in by the render layer with the visitor language's default text (footer.js + t()); the model is language-free (ADR-0012).
     label: rawLabel,
     big: cta.big === true,
     target: kind === 'button' ? resolveItem({ label: rawLabel, page: cta.page, target: cta.target, href: cta.href, newTab: cta.newTab, rel: cta.rel, download: cta.download }, pages) : null,
@@ -143,7 +138,7 @@ export function footerSocial(site) {
 }
 
 /**
- * The site's address, phone and email (site.site.contact, contact-model.js), unless the footer leaves them out (`footer.contact: false`, additive from 0.7.24.5).
+ * The site's address, phone and email (site.site.contact, contact-model.js), unless the footer leaves them out (`footer.contact: false`).
  * @param {object} site
  * @param {typeof import('./contact-model.js')|null} contact The contact model, null where the site holds no contact details
  * @returns {ReturnType<typeof import('./contact-model.js').contactParts>}
@@ -165,8 +160,7 @@ export function footerLegal(site, contact) {
 }
 
 /**
- * The baseline: explicit copyright when set, otherwise the plain text lines
- * (backwards compatible: a footer with only text renders unchanged).
+ * The baseline: explicit copyright when set, otherwise the plain text lines (backwards compatible: a footer with only text renders unchanged).
  * @param {object} site
  * @returns {Array<string>}
  */

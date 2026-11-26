@@ -19,7 +19,7 @@ export function parseEngineVersion(text) {
   return /^(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*)){2}(?:(?:\.(?:0|[1-9]\d*))*\.[1-9]\d*)?$/.test(s) ? s.split('.').map(Number) : null;
 }
 
-/** Compares two versions number by number, a missing number counting as 0, so 0.7.6 < 0.7.6.1 < 0.7.6.1.1 < 0.7.7. */
+/** Compares two versions number by number, a missing number counting as 0, so 1.2 < 1.2.1 < 1.2.1.1 < 1.3. */
 function cmp(a, b) {
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const d = (a[i] ?? 0) - (b[i] ?? 0);
@@ -77,8 +77,7 @@ export function validateManifest(manifest) {
     if (!manifest.provides || typeof manifest.provides !== 'object') errors.push('provides is missing');
   }
   if (manifest.languages !== undefined) errors.push(...validateLanguages(manifest.languages));
-  // Optional multilingual fields: locales promises locales/<lang>.js files,
-  // names is the display name per admin language.
+  // Optional multilingual fields: locales promises locales/<lang>.js files, names is the display name per admin language.
   if (manifest.locales !== undefined && typeof manifest.locales !== 'boolean') errors.push('locales must be a boolean');
   if (manifest.names !== undefined && (typeof manifest.names !== 'object' || manifest.names === null || Array.isArray(manifest.names)
     || Object.values(manifest.names).some((v) => typeof v !== 'string' || !v))) errors.push('names must be an object mapping language code to name');
@@ -112,8 +111,7 @@ export function createStagedUrd(Urd, pluginName = null) {
       ids: () => Urd[kind].ids(),
     };
   }
-  // Legacy alias (ADR-0021): plugins written before the rename register
-  // their templates through urd.maler.
+  // Legacy alias (ADR-0021): plugins written before the rename register their templates through urd.maler.
   staged.maler = staged.templates;
   return {
     staged,
@@ -308,9 +306,7 @@ function commitPlugin(Urd, id, prepared) {
     console.warn(`Urd: plugin '${id}' is missing a register() export`);
     return;
   }
-  // fromPlugin carries the DISPLAY NAME (manifest.names for the admin
-  // language when it exists): the field is used only in the editor
-  // chrome (tip.blocks.fromPlugin).
+  // fromPlugin carries the DISPLAY NAME (manifest.names for the admin language when it exists): the field is used only in the editor chrome (tip.blocks.fromPlugin).
   const displayName = manifest.names?.[adminLang()] ?? manifest.name ?? id;
   const staging = createStagedUrd(Urd, displayName);
   try {

@@ -1,14 +1,6 @@
 /**
- * Core block: video. Two sources. `embed` (the default): paste a YouTube or
- * Vimeo link and a privacy-friendly embed is rendered (youtube-nocookie /
- * dnt=1) behind a cover until the visitor presses it (embed-cover.js), with
- * the owner's own image (`poster`) on the cover; the CSP in _headers has a
- * deliberate frame-src exception for exactly these two hosts, and other
- * embeds need a plugin and the owner's own CSP choice. `file`: a self-hosted mp4 or webm from media/ in a native
- * <video> with the browser's own controls, an optional poster, loop and
- * muted. It starts by itself only when it is muted, which is the one case
- * browsers allow, and never under reduced motion. A film can lie under an
- * overlay in a colour (`overlay`), as a picture can (picture.js).
+ * Core block: video, an embed of YouTube or Vimeo behind a cover until pressed (embed-cover.js), or a file from media/ in a native <video>.
+ * Notes: docs/engine-notes/blocks/video.md (Urd repository).
  */
 import { t, ta } from '../i18n.js';
 import { isSafeImage } from '../nav-model.js';
@@ -29,9 +21,7 @@ export function videoSource(source) {
 }
 
 /**
- * How a file video plays, from the props: looping and muted as chosen, and
- * starting by itself only when it is muted and the visitor has not asked for
- * reduced motion. Pure.
+ * How a file video plays: looping and muted as chosen, starting by itself only when muted and the visitor has not asked for reduced motion. Pure.
  * @param {{loop?: boolean, muted?: boolean, autoplay?: boolean}} props
  * @param {boolean} [reducedMotion]
  * @returns {{loop: boolean, muted: boolean, autoplay: boolean}}
@@ -76,10 +66,7 @@ export const videoBlock = {
    * @param {{url: string, title?: string, source?: 'embed'|'file', src?: string, poster?: string (the file's poster, or the embed's cover image),
    *          loop?: boolean, muted?: boolean, autoplay?: boolean, aspect?: string, playOnPress?: boolean, coverStyle?: object, askFirst?: boolean,
    *          overlay?: {color: string, strength: number}}} props
-   *   askFirst: false loads an embed with the page instead of behind its cover (additive from 0.7.29.4)
-   *   aspect: one of VIDEO_ASPECTS (push-model.js), the shape the video is drawn at, its height following its width; playOnPress: false keeps a pressed embed from starting by itself;
-   *   coverStyle: the cover picture's focus, zoom, adjustments and overlay from the image editor (coverImageStyle in embed-cover.js);
-   *   overlay: a colour over an uploaded film at a strength of 0..1, the shape a picture's overlay has (pictureStyle)
+   *   askFirst: false loads an embed with the page; aspect: one of VIDEO_ASPECTS; playOnPress: false keeps a pressed embed still; coverStyle, overlay: a picture's.
    * @param {object} ctx
    */
   render(el, props, ctx) {
@@ -150,7 +137,7 @@ export const videoBlock = {
       box.appendChild(hint);
       return;
     }
-    // The player behind its cover: nothing reaches the provider before the visitor presses (or has let it load at once). The pressed one starts as it loads, unless the owner chose otherwise; one that loads at once never does.
+    // The player behind its cover, reaching the provider only once pressed or let load; a pressed one starts as it loads unless the owner chose otherwise.
     const makeFrame = ({ pressed = false } = {}) => {
       const start = pressed && props.playOnPress !== false;
       const frame = document.createElement('iframe');

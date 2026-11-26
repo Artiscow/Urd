@@ -53,7 +53,7 @@ export function normaliseId(def, value) {
 
 /**
  * Whether a normalised value fits its id: the form (regex) and the check digit.
- * @returns {'ok' | 'warn' | 'form' | 'bad'} form when the number is not shaped as the country writes it; bad when the check digit fails; warn when the check fails but the profile only warns, since some registers issue numbers that fail it
+ * @returns {'ok' | 'warn' | 'form' | 'bad'} form when the number is not shaped as the country writes it; bad when the check digit fails; warn when it fails where the profile only warns
  */
 export function validateId(def, value) {
   if (!value) return 'ok';

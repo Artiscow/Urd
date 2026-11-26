@@ -1,10 +1,6 @@
 /**
- * Pure logic for the gallery block, the lightbox and the image gallery
- * background layer: index stepping, autoplay conditions, column maths, and the
- * mosaic spans and polaroid leans of the block's two framed views (dealt by
- * the same die as the background layer's, layout-die.js).
- * DOM-free, so all of it is tested with node --test (tests/gallery.test.mjs);
- * the DOM rendering is tested manually.
+ * Pure logic for the gallery block, the lightbox and the image gallery background: index stepping, autoplay, columns, and the mosaic and polaroid views.
+ * Notes: docs/engine-notes/gallery-model.md (Urd repository).
  */
 import { mosaicSpan, frameTilt } from './layout-die.js';
 
@@ -39,8 +35,8 @@ export function mosaicRowHeight(height) {
 }
 
 /**
- * One span per picture for the mosaic view. A wide tile never asks for more
- * columns than the wall has, so a one-column wall is a plain stack.
+ * One span per picture for the mosaic view.
+ * A wide tile never asks for more columns than the wall has, so a one-column wall is a plain stack.
  * @param {number} count The number of pictures
  * @param {unknown} seed
  * @param {number} cols The wall's columns (from gridColumns)
@@ -57,10 +53,7 @@ export function tileSpans(count, seed, cols) {
 }
 
 /**
- * One packing of the spans: first-fit, row by row, then the cells left empty
- * are given to a neighbour. A hole takes the tile above when that tile stands
- * exactly over the run of empty cells, otherwise the tile on its left or
- * right when the cells beside that tile are empty for its whole height.
+ * One packing of the spans: first-fit row by row, then each run of empty cells given to the tile above or beside it when that tile can take it whole.
  * @param {Array<{cols: number, rows: number}>} spans
  * @param {number} wall The columns
  * @returns {{tiles: Array<{col: number, row: number, cols: number, rows: number}>, rows: number, full: boolean}}
@@ -130,13 +123,7 @@ function packWall(spans, wall) {
 }
 
 /**
- * The mosaic wall with every tile in its place: the spans from tileSpans are
- * packed (packWall), and the wall is a full rectangle whatever the count. A
- * hole no neighbour can take is rare; then the last tile that is larger than
- * one cell is dealt as a single cell and the wall is packed again, which ends
- * at the latest with a wall of single cells, where the last row always fills.
- * The block draws from these positions rather than leaving the packing to
- * the browser, so the wall is the same everywhere and can be tested.
+ * The mosaic wall with every tile placed: the spans packed into a full rectangle, a large tile made one cell and the wall packed again while a hole is left.
  * @param {number} count The number of pictures
  * @param {unknown} seed
  * @param {number} cols The wall's columns (from gridColumns)
@@ -156,8 +143,8 @@ export function mosaicWall(count, seed, cols) {
 }
 
 /**
- * One lean per picture for the polaroid view, in degrees inside plus or minus
- * `tilt`. A missing tilt is the default lean; 0 stands the cards straight.
+ * One lean per picture for the polaroid view, in degrees inside plus or minus `tilt`.
+ * A missing tilt is the default lean; 0 stands the cards straight.
  * @param {number} count
  * @param {unknown} seed
  * @param {unknown} tilt
@@ -186,10 +173,7 @@ export function canAutoplay({ count = 0, reducedMotion = false } = {}) {
 }
 
 /**
- * Whether the slideshow's timer may advance right now: it needs the autoplay
- * at all, and neither a stop the visitor made (the pause button or a step by
- * hand, which lasts) nor a hold (the pointer over the show or focus inside it,
- * which lasts as long as it stays).
+ * Whether the slideshow's timer may advance now: autoplay is on, the visitor has not stopped it and nothing holds it (the pointer over it or focus inside).
  */
 export function slidesRun({ count = 0, reducedMotion = false, stopped = false, held = false } = {}) {
   return canAutoplay({ count, reducedMotion }) && !stopped && !held;

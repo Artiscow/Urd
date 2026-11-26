@@ -1,6 +1,7 @@
 /**
- * Core block: space (0.7.3.26.2). An empty block that makes room between two blocks of their own, as tall as its frame, and on the phone as tall as its own phone height where it has one: it draws nothing on the published page and is hidden from assistive technology there.
- * In the editor it is a faint hatched box with its height in px (preview.css .urd-spacer), so it can be found, selected and resized as any other block.
+ * Core block: space, an empty block as tall as its frame (or its own phone height) that draws nothing for visitors.
+ * In the editor it is a faint hatched box.
+ * Notes: docs/engine-notes/blocks/spacer.md (Urd repository).
  */
 
 export const spacerBlock = {

@@ -1,20 +1,6 @@
 /**
- * Core block: gallery. One block with six views (the Squarespace model: the
- * view is a prop, not separate block types): grid, carousel (side scrolling with
- * snap), slides (one image at a time with automatic advance), ribbon (a rolling
- * band), mosaic (a wall of tiles in varied spans) and polaroid (framed cards
- * with a lean).
- *
- * The images live in props.images with the same non-destructive style vocabulary
- * as the image block (style: fit/x/y/zoom/filters); the tiles render with the
- * shared applyImageStyle. For visitors a click opens the lightbox (props.lightbox);
- * in preview a click opens the image editor, and in Clean view the lightbox, so
- * the owner gets to try it before publishing. A link (href) always wins over the
- * lightbox.
- *
- * The slide timer is the engine's first setInterval: it cleans itself up when the
- * host disappears from the DOM (re-render churn), stands still under reduced
- * motion, in hidden tabs, and in preview with the editing chrome on.
+ * Core block: gallery, one block with six views (grid, carousel, slides, ribbon, mosaic and polaroid), its tiles drawn with the image block's style.
+ * Notes: docs/engine-notes/blocks/gallery.md (Urd repository).
  */
 import { applyImageStyle } from './image.js';
 import { growSectionTo, WIDTH_QUERIES } from '../render.js';
@@ -50,8 +36,7 @@ function openTileEditor(tile, index, ctx, blockEl) {
   post({ type: 'urd-picture-edit', kind: 'gallery', sectionId: ctx.section.id, blockId: blockEl.dataset.blockId, index, frameRatio: tile.offsetHeight ? tile.offsetWidth / tile.offsetHeight : 0, frameWidth: tile.offsetWidth, frameHeight: tile.offsetHeight });
 }
 
-/** One tile: a clipping frame plus an img with the shared image style. The element
- *  is chosen by what the click should do: link (a), clickable (button) or pure decoration (span). */
+/** One tile: a clipping frame and an img with the shared image style, in a link (a), a button or a plain span, by what the click does. */
 function makeTile(props, index, ctx, blockEl) {
   const img = props.images[index];
   // One link per picture (resolveLink): one that goes nowhere gives a tile without a link (the lightbox takes over).
@@ -98,10 +83,7 @@ function makeTile(props, index, ctx, blockEl) {
 }
 
 /**
- * The column counts of the grid views, wide and narrow: a narrow block (its
- * own width, ADR-0025) takes the narrow count through a container query in
- * gallery.css. Without container queries the wide count is the window's, as the
- * page's phone view.
+ * The column counts of the grid views, wide and narrow; a narrow block takes the narrow count through a container query in gallery.css.
  * @returns {{wide: number, narrow: number}}
  */
 function columnCounts(host, props, ctx) {
@@ -113,9 +95,7 @@ function columnCounts(host, props, ctx) {
 }
 
 /**
- * The element a grid view lays its tiles out in, inside the gallery: the
- * gallery itself is the width the narrow rules ask (gallery.css), so the
- * columns follow the width the content is laid out in under a size.
+ * The element a grid view lays its tiles out in, so the columns follow the width the content is laid out in under a size.
  * @param {HTMLElement} host The gallery
  * @returns {HTMLElement}
  */
@@ -189,8 +169,7 @@ function renderSlides(host, props, ctx, blockEl) {
     dots.forEach((dot, j) => dot.classList.toggle('on', j === i));
   };
 
-  // Self-cleaning timer: the host disappears from the DOM on every re-render in
-  // preview, and the interval has to die with it (otherwise one stacks up per render).
+  // Self-cleaning timer: the host disappears from the DOM on every re-render in preview, and the interval has to die with it (otherwise one stacks up per render).
   let timerId = 0;
   const startTimer = () => {
     clearInterval(timerId);
@@ -201,15 +180,13 @@ function renderSlides(host, props, ctx, blockEl) {
         return;
       }
       if (document.hidden) return;
-      // In preview the slide advances only in Clean view: while editing, nothing
-      // should move under the pointer.
+      // In preview the slide advances only in Clean view: while editing, nothing should move under the pointer.
       if (ctx.preview && !chromeOff()) return;
       if (!slidesRun({ count, reducedMotion: reducedMotion(), stopped: STOPPED_SLIDES.has(keyOf()), held })) return;
       show(stepIndex(current, 1, count));
     }, normalizeInterval(props.interval) * 1000);
   };
-  // The pause that stays (WCAG 2.2.2, the APG carousel's rotation control): a
-  // step by hand stops the timer for good as well, and the button plays it again.
+  // The pause that stays (WCAG 2.2.2, the APG carousel's rotation control): a step by hand stops the timer for good as well, and the button plays it again.
   const pauseButton = el2('button', 'urd-gallery-nav urd-gallery-pause');
   pauseButton.type = 'button';
   const paintPause = () => {
@@ -290,18 +267,14 @@ function renderRibbonView(host, props, ctx, blockEl) {
 }
 
 /**
- * The mosaic view: the grid's wall with tiles in varied spans, dealt by the
- * seed and placed by the pure mosaicWall, so the same pictures always build
- * the same wall and the panel's Shuffle builds another. The rows have one
- * height, and the wall is a full rectangle whatever the number of pictures.
+ * The mosaic view: tiles in varied spans dealt by the seed and placed by the pure mosaicWall, a full rectangle with rows of one height.
  */
 function renderMosaic(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-wall');
   const { wide, narrow } = columnCounts(host, props, ctx);
   host.style.setProperty('--urd-gallery-gap', `${Number(props.gap) || 0}px`);
   host.style.setProperty('--urd-gallery-row', `${mosaicRowHeight(props.rowHeight)}px`);
-  // Two walls from the same seed, one per column count: gallery.css places each
-  // tile by the one that fits the block's width.
+  // Two walls from the same seed, one per column count: gallery.css places each tile by the one that fits the block's width.
   const walls = { '': mosaicWall(props.images.length, props.seed, wide), '-narrow': mosaicWall(props.images.length, props.seed, narrow) };
   const tiles = tilesIn(host);
   props.images.forEach((_, i) => {
@@ -316,10 +289,7 @@ function renderMosaic(host, props, ctx, blockEl) {
 }
 
 /**
- * The polaroid view: every picture set in a card with a wider foot, leaning
- * by its own throw of the seed (polaroidTilts). With `captions` the image
- * text is written in the foot. The card straightens under a real pointer
- * (gallery.css), and the tile inside keeps its click.
+ * The polaroid view: every picture in a card with a wider foot, leaning by its own throw of the seed, with the image text in the foot under `captions`.
  */
 function renderPolaroid(host, props, ctx, blockEl) {
   host.classList.add('urd-gallery-cards');
@@ -352,8 +322,7 @@ const VIEWS = {
 
 export const galleryBlock = {
   version: 1,
-  // The grid views grow with their pictures on the phone; the ribbon keeps
-  // the height of its frame there too, since the band fills the box.
+  // The grid views grow with their pictures on the phone; the ribbon keeps the height of its frame there too, since the band fills the box.
   autoGrow: (props) => galleryView(props?.view) !== 'ribbon',
   label: 'Gallery',
   labelKey: 'blocks.gallery',
@@ -398,10 +367,7 @@ export const galleryBlock = {
       });
     }
 
-    // Auto-grow for the views that are grids of tiles: the height follows the
-    // number of images, so the frame follows the content (the same pattern as
-    // the collection block). The measurement has to wait until the block is in
-    // the DOM: render is called before appendChild.
+    // Auto-grow for the grid views: the height follows the number of images, measured once the block is in the DOM, since render runs before appendChild.
     if (GRID_VIEWS.includes(view) && ctx.viewport !== 'mobile') requestAnimationFrame(() => {
       if (!el.isConnected) return;
       const needed = host.scrollHeight;

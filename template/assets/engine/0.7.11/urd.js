@@ -35,16 +35,13 @@ export const Urd = {
   sections: createRegistry('sections'),
   backgrounds: createRegistry('backgrounds'),
   animations: createRegistry('animations'),
-  // Plugin-provided templates (same def shape as the template files: {name,
-  // kind, section|blocks}); the section gallery merges kind section into
-  // the plugin group.
+  // Plugin-provided templates (same def shape as the template files: {name, kind, section|blocks}); the section gallery merges kind section into the plugin group.
   templates: createRegistry('templates'),
   // Commands for the editor's palette (Ctrl/⌘+K): a plugin defines `{ label, labelKey?, run }`, and a chosen one runs here, where the plugin's code lives.
   commands: createRegistry('commands'),
 };
 
-// Legacy alias (ADR-0021): plugins written before the rename register
-// through Urd.maler; both names refer to the same registry forever.
+// Legacy alias (ADR-0021): plugins written before the rename register through Urd.maler; both names refer to the same registry forever.
 Urd.maler = Urd.templates;
 
 // Globally available for plugins (register(Urd)) and the editor's preview bridge.
@@ -233,12 +230,11 @@ export function endArrivalHold() {
 }
 
 /**
- * The site icon (favicon) from site.json: overrides the default icon in
- * index.html. Additive field; without an icon the Urd mark is kept.
+ * The site icon (favicon) from site.json: overrides the default icon in index.html.
+ * Additive field; without an icon the Urd mark is kept.
  */
 function applyFavicon(href) {
-  // Only known icon shapes (data:image base64 or a site-relative path);
-  // shared guard with the nav logo, the footer logo and the image layers.
+  // Only known icon shapes (data:image base64 or a site-relative path); shared guard with the nav logo, the footer logo and the image layers.
   if (!isSafeImage(href)) return;
   let link = document.querySelector('link[rel="icon"]');
   if (!link) {
@@ -418,8 +414,7 @@ function enablePreview(state, opts, queue) {
       document.body.spellcheck = spellcheckOn && msg.visible;
       // Every text written in place is plain text in the Clean view, as on the published page: no caret, no focus frame, and the links and buttons around it work.
       cleanTexts(!msg.visible);
-      // The pinning and the menu's scroll state follow the switch at once,
-      // not first at the next scroll.
+      // The pinning and the menu's scroll state follow the switch at once, not first at the next scroll.
       feature('sticky')?.refreshSticky();
       refreshNavScroll();
       // The bar the editor draws for a selected block in the phone view goes and comes back with the handles.
@@ -431,9 +426,7 @@ function enablePreview(state, opts, queue) {
         const el = root.querySelector(`.urd-block[data-block-id="${CSS.escape(msg.blockId)}"]`);
         // A block in a section showing its phone layout on the desktop (render.js urd-handoff) stands in a phone cell, which is no measure of its desktop frame.
         if (!el || el.closest('.urd-handoff') || el.querySelector('[aria-busy="true"]')) return;
-        // Measured as a visitor sees the block at rest: the adders and the
-        // placeholders of empty fields are the editor's own and never part of
-        // the design's height.
+        // Measured as a visitor sees the block at rest: the adders and the placeholders of empty fields are the editor's own and never part of the design's height.
         const h = visitorHeights(el).resting;
         if (h > 0) window.parent?.postMessage({ type: 'urd-grow', sectionId: msg.sectionId, blockId: msg.blockId, h, fit: true, seq: msg.seq ?? 0 }, location.origin);
       };
@@ -446,8 +439,7 @@ function enablePreview(state, opts, queue) {
       const host = root.querySelector(`[data-section-id="${CSS.escape(msg.sectionId)}"]`);
       if (host) updateFrames(host, msg.frames);
     } else if (msg?.type === 'urd-announce-reset') {
-      // The Announcement panel: forget the dismissal, so the strip returns
-      // in the preview and for this browser on the published page.
+      // The Announcement panel: forget the dismissal, so the strip returns in the preview and for this browser on the published page.
       clearAnnounceDismissal(state.site);
       if (opts.nav) renderNav(state.site, opts.nav, state.page?.meta?.id);
     } else if (msg?.type === 'urd-demo-motion') {
@@ -479,8 +471,7 @@ function enablePreview(state, opts, queue) {
       const el = msg.blockId ? host?.querySelector(`[data-block-id="${msg.blockId}"]`) : host;
       window.UrdPreviewEdit?.demoAnimation(el);
     } else if (msg?.type === 'urd-open-block-config' && msg.blockId) {
-      // The plugin block's settings open from Properties: click the hidden
-      // config toggle in the block.
+      // The plugin block's settings open from Properties: click the hidden config toggle in the block.
       root.querySelector(`[data-block-id="${msg.blockId}"] .urd-cfg-toggle`)?.click();
     } else if (msg?.type === 'urd-text-style' && msg.blockId) {
       // A style for the whole text from the text's menu: the field takes focus, which brings the text toolbar, and gets the style as an `urd-text-style` event.
@@ -559,7 +550,7 @@ function enablePreview(state, opts, queue) {
       // A press on the editor's stage around the canvas: nothing stays selected.
       window.UrdPreviewEdit?.deselectAll?.();
     } else if (msg?.type === 'urd-bar-press' && typeof msg.id === 'string' && Number.isInteger(msg.index)) {
-      // A tool of a bar the editor draws in the phone view, the block's or the section's, pressed there (0.7.3.19.2, 0.7.3.23).
+      // A tool of a bar the editor draws in the phone view, the block's or the section's, pressed there.
       window.UrdPreviewEdit?.pressPhoneBar(msg.bar === 'section' ? 'section' : 'block', msg.id, msg.index, msg.rest === true);
     } else if (msg?.type === 'urd-section-settings' && typeof msg.sectionId === 'string') {
       // A section's settings asked for from the editor's own lists (the Phone panel), opened as its gear opens them.
@@ -597,20 +588,15 @@ function enablePreview(state, opts, queue) {
         rest();
       })));
     } else if (msg?.type === 'urd-plugins') {
-      // The editor's plugin draft: load the enabled plugins (the files are
-      // already in the repo) and rerender, so plugins work in the preview
-      // BEFORE publishing.
+      // The editor's plugin draft: load the enabled plugins (the files are already in the repo) and rerender, so plugins work in the preview BEFORE publishing.
       const before = definedCount();
       pluginsIn = loadPluginList(Urd, state.engine, msg.enabled).then(async () => {
-        // The list may have contained a LANGUAGE PACK: if the draft's
-        // language was unknown when the site draft arrived (or at boot), it
-        // is loaded now.
+        // The list may have contained a LANGUAGE PACK: if the draft's language was unknown when the site draft arrived (or at boot), it is loaded now.
         const language = langOutOfSync();
         if (language) await syncSiteLocale();
         // The page is drawn again only where a plugin defined something it may draw, or brought its language; a language pack for another language changes nothing drawn.
         if (language || definedCount() !== before) renderPage(state.page, state.site, root, vp());
-        // Report the plugin blocks back (type, label, defaults), so the
-        // Blocks panel in admin can show them in its own "From plugins" section.
+        // Report the plugin blocks back (type, label, defaults), so the Blocks panel in admin can show them in its own "From plugins" section.
         const blocks = [];
         for (const type of Urd.blocks.ids()) {
           const def = Urd.blocks.get(type);
@@ -723,8 +709,7 @@ function enablePreview(state, opts, queue) {
     take(event.data);
   });
 
-  // Tell the editor the listener is attached: drafts sent before this
-  // point would be lost (the iframe load happens before boot finishes).
+  // Tell the editor the listener is attached: drafts sent before this point would be lost (the iframe load happens before boot finishes).
   window.parent?.postMessage({ type: 'urd-ready' }, location.origin);
   // The rest comes as the editor's start is drawn (urd-startup-done), or, for a frame that sends none, at an idle time a moment after ready.
   setTimeout(() => (typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(rest, { timeout: 1000 }) : rest()), START_WAIT_MS);
@@ -933,8 +918,7 @@ export async function boot(opts) {
     let checking = null;
     let queuedSite = false;
     const recheck = ({ site: checkSite }) => {
-      // A site check arriving mid-flight runs after the current one, so the
-      // stronger request is never dropped.
+      // A site check arriving mid-flight runs after the current one, so the stronger request is never dropped.
       if (checking) { queuedSite ||= checkSite; return checking; }
       checking = (async () => {
         if (checkSite) {

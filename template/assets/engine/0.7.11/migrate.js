@@ -11,8 +11,7 @@
  * @param {{version: number, migrations?: Record<number, (props: object) => object>}|undefined} def
  *   Type definition from the registry, or undefined if the type is unknown.
  * @returns {{ok: boolean, version: number, props: object, placeholder?: string}}
- *   ok=true with lifted props, or ok=false with a `placeholder` reason and
- *   the original props untouched ('unknown-type' | 'missing-migration' | 'newer-than-engine').
+ *   ok with the lifted props, or not ok with a `placeholder` reason ('unknown-type', 'missing-migration', 'newer-than-engine') and the props untouched.
  */
 export function lift(data, def) {
   if (!def) {
@@ -21,8 +20,7 @@ export function lift(data, def) {
   // A missing or non-integer version (hand-edited or truncated data) counts as v1, never as current, so the old format goes through every migration.
   const from = Number.isInteger(data.version) ? data.version : 1;
   if (from > def.version) {
-    // The content was written by a newer engine - rendered as a
-    // placeholder, never misread or downgraded.
+    // The content was written by a newer engine - rendered as a placeholder, never misread or downgraded.
     return { ok: false, version: from, props: data.props, placeholder: 'newer-than-engine' };
   }
 
@@ -150,8 +148,9 @@ export const SITE_SCHEMA_VERSION = 6;
  */
 const V1_FLOW_PAD = 24;
 
-/** attention.reason tokens were Norwegian in v1; data contracts use
- *  English identifiers. */
+/**
+ * attention.reason tokens were Norwegian in v1; data contracts use English identifiers.
+ */
 const V1_REASONS = {
   'oppsett-byttet': 'layout-changed',
   'blokk-endret': 'block-edited',
@@ -279,8 +278,7 @@ export function liftTermsBlocks(target) {
 }
 
 /**
- * The gap and the «Larger map» line under a map's iframe before v5, in px: the
- * 6 px gap of `.urd-map` and a line of text at 0.82 em (blocks/map.css).
+ * The gap and the «Larger map» line under a map's iframe before v5, in px: the 6 px gap of `.urd-map` and a line of text at 0.82 em (blocks/map.css).
  */
 const MAP_LINK_PX = 26;
 
@@ -375,8 +373,7 @@ const pageMigrations = {
     }
     return page;
   },
-  // 2 -> 3 (ADR-0021): core block and background layer types renamed from
-  // Norwegian to English contract identifiers.
+  // 2 -> 3 (ADR-0021): core block and background layer types renamed from Norwegian to English contract identifiers.
   2: (page) => {
     for (const section of page.sections ?? []) liftContractTokens(section);
     return page;
@@ -401,7 +398,7 @@ const pageMigrations = {
     for (const section of page.sections ?? []) liftGalleryBands(section, true);
     return page;
   },
-  // 7 -> 8 (0.7.24.8): a text block in a document design becomes the terms block.
+  // 7 -> 8: a text block in a document design becomes the terms block.
   7: (page) => {
     for (const section of page.sections ?? []) liftTermsBlocks(section);
     return page;
@@ -417,8 +414,7 @@ const siteMigrations = {
   3: (site) => (site.nav && site.nav.style?.inset === undefined
     ? { ...site, nav: { ...site.nav, style: { ...(site.nav.style ?? {}), inset: false } } }
     : site),
-  // 4 -> 5: the footer's social links became the site's links (site.links),
-  // drawn by the footer, the menu's tools and the share block.
+  // 4 -> 5: the footer's social links became the site's links (site.links), drawn by the footer, the menu's tools and the share block.
   4: (site) => liftFooterSocial(site),
   // 5 -> 6: the announcement strip gets its own `hideOn`; where the menu is hidden outright, the menu's `hideOn` pages join the strip's (liftAnnouncementHideOn).
   5: (site) => liftAnnouncementHideOn(site),
@@ -435,8 +431,8 @@ export function liftAnnouncementHideOn(site) {
 }
 
 /**
- * Lifts site.json to the current schemaVersion. Same rules as
- * liftPageFile: stepwise, never destructive, the original is never mutated.
+ * Lifts site.json to the current schemaVersion.
+ * Same rules as liftPageFile: stepwise, never destructive, the original is never mutated.
  */
 export function liftSiteFile(site) {
   let lifted = structuredClone(site);

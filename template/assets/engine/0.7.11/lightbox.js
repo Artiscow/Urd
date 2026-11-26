@@ -1,13 +1,6 @@
 /**
- * Lightbox: full screen image viewing for visitors (and in the editor's Clean
- * view). Loaded only via dynamic import on the first click, so a visitor who
- * never clicks an image never loads it.
- *
- * Built on the native <dialog> element (showModal): the top layer removes the
- * z-index war, ::backdrop gives the dark background, and focus trap, focus
- * return and an inert background come along for free. Esc closes (native),
- * the arrow keys step, a background click closes. Body scroll is locked by
- * body:has(dialog:modal) in base.css, no JS bookkeeping.
+ * Lightbox: full screen image viewing on a native modal <dialog>, loaded by dynamic import on the first click; Esc closes, the arrow keys step.
+ * Notes: docs/engine-notes/lightbox.md (Urd repository).
  */
 import { stepIndex } from './gallery-model.js';
 import { t } from './i18n.js';
@@ -15,8 +8,9 @@ import { pictureStyle, pictureFilter, duotoneAt } from './picture.js';
 
 let overlay = null;
 
-/** Synchronous teardown of the current overlay (used on re-open, so a
- *  trailing close event does not tear down a freshly opened overlay). */
+/**
+ * Synchronous teardown of the current overlay (used on re-open, so a trailing close event does not tear down a freshly opened overlay).
+ */
 function hardTeardown() {
   if (!overlay) return;
   const d = overlay;
@@ -38,8 +32,7 @@ const el2 = (tag, className, textContent) => {
 };
 
 /**
- * A picture's settings in the full view: its look (a duotone's colours too), adjustments, turn and flips follow it (picture.js); the framing (fit, focus point, zoom) does not, since the lightbox shows the whole picture.
- * A quarter turn lays the picture across, so its largest width and height swap.
+ * A picture's look, adjustments, turn and flips in the full view (picture.js), without its framing, as the whole picture shows; a quarter turn swaps its sides.
  * @param {HTMLImageElement} image
  * @param {object} [raw] The picture's stored settings
  */
@@ -115,8 +108,7 @@ export function openLightbox(images, startIndex = 0) {
   close.addEventListener('click', closeLightbox);
   dialog.appendChild(close);
 
-  // Cleanup when the dialog closes (native Esc included): instance guarded so
-  // a trailing close from an earlier overlay does not null out the new one.
+  // Cleanup when the dialog closes (native Esc included): instance guarded so a trailing close from an earlier overlay does not null out the new one.
   dialog.addEventListener('close', () => {
     if (overlay === dialog) overlay = null;
     dialog.remove();

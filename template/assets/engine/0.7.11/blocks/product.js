@@ -1,22 +1,7 @@
 /**
- * Core block: product cards (the shop, the data-block pattern in ADR-0007).
- * Renders the entries of a product collection (kind "products") as cards with
- * image, badge, price (and an optional member price), size and color choices,
- * the quantity the buyer types where the product has one, and an add-to-cart button. A color choice with its own image swaps the card
- * image. The catalog is git-owned data; the cart lives with the visitor (shop.js).
- *
- * For visitors, clicking the image or title opens a quick view: the product
- * details in a native <dialog> (ADR-0011) with an image gallery, full text,
- * variant choices and a buy button - the product page without a page change
- * (the Squarespace pattern). In the editor clicks belong to editing: a
- * "+ Product" card at the end of the grid adds a new product to the collection
- * (urd-collection-add), a click on a card of the selected block opens its
- * product in the Collections panel (urd-open-entry), and a block with no
- * catalogue offers «Choose the catalogue» (urd-block-menu at its Catalogue
- * group).
- *
- * The content is structured DATA: title and text are rich text through the same
- * sanitizing as the collection block, everything else renders with textContent.
+ * Core block: product cards from a product collection, with choices and an add-to-cart button, and a quick view in a native <dialog>.
+ * The cart is in shop.js.
+ * Notes: docs/engine-notes/blocks/product.md (Urd repository).
  */
 import { getCollection } from '../collections.js';
 import { applyEntryImageStyle } from './collection.js';
@@ -61,8 +46,7 @@ function richNode(tag, className, entry, field, collection, editable) {
 }
 
 /**
- * A row of choice chips (the sizes, the colours). A chip is its own choice by its place in the row, so two choices
- * that read the same stay two: the picture, the pressed chip and the preview follow the chip, never its words.
+ * A row of choice chips (the sizes, the colours), each its own choice by its place, so the picture, pressed chip and preview follow the chip, not its words.
  * @param {string} className
  * @param {string[]} labels
  * @param {(index: number|null) => void} onPick The chosen chip's place, or null when the choice is cleared
@@ -84,8 +68,7 @@ function choiceRow(className, labels, onPick, onPreview = null) {
       markNeed(row, null);
       onPick(next);
     });
-    // A mouse resting on a choice previews it (a colour's picture), and leaving gives the chosen one back.
-    // The pointerType guard keeps a tap on a touch screen from previewing and choosing in one press.
+    // A mouse resting on a choice previews it, and leaving gives the chosen one back; a tap on a touch screen does not preview.
     if (onPreview) {
       btn.addEventListener('pointerenter', (event) => { if (event.pointerType === 'mouse') onPreview(index); });
       btn.addEventListener('pointerleave', (event) => { if (event.pointerType === 'mouse') onPreview(null); });
@@ -103,9 +86,7 @@ function openChoice(entry, rows, choice) {
 }
 
 /**
- * The buy button of a product that greys it out until its choices are made (its disableUntilChosen): unavailable
- * with the missing choice in its tooltip, and available again once none is open. aria-disabled rather than
- * disabled, so the keyboard and a screen reader still reach the button and hear why it waits.
+ * Greys out the buy button of a product with disableUntilChosen until its choices are made, the missing one in its tooltip, by aria-disabled.
  */
 function holdBuy(buy, entry, rows, choice) {
   const open = entry.disableUntilChosen === true ? openChoice(entry, rows, choice) : null;
@@ -133,8 +114,7 @@ function markNeed(row, text) {
 }
 
 /**
- * Whether every choice the product asks for is made (its own requireSize and requireColor, for the
- * options it has). An open one is asked for under its row, and the first takes the focus.
+ * Whether every choice the product requires (requireSize, requireColor) is made; an open one is asked for under its row, the first focused.
  * @param {{ requireSize?: boolean, requireColor?: boolean }} entry
  * @param {{ sizes: HTMLElement|null, colors: HTMLElement|null }} rows
  * @param {{ size: unknown, color: unknown }} choice
@@ -167,9 +147,7 @@ function priceRow(entry, currency) {
 }
 
 /**
- * The quantity the buyer types, for a product that has limits (its `quantity`, shop.js quantityLimits): «Quantity» with minus and plus around a number
- * field held between the least and the most, the limits told beside it, and the line's sum under it once more than one is chosen.
- * The steps use the basket's own buttons (blocks/cart.js), so the two read alike.
+ * The quantity the buyer types, for a product with limits (shop.js quantityLimits): a stepper held between them, the limits beside it, the sum under it.
  * @returns {{row: HTMLElement, get: () => number}}
  */
 function quantityRow(limits, price, currency) {
@@ -214,9 +192,7 @@ function quantityRow(limits, price, currency) {
 }
 
 /**
- * The buy button, with an «added» receipt on the press. getChoice gives the chosen size's words and the chosen colour ({name, image}) or null;
- * ready says whether the choices the product asks for are made, and asks for the open ones when not.
- * A product with quantity limits puts the quantity typed (getQty) in the basket, with the limits on its line; any other puts one.
+ * The buy button, with an «added» receipt: it asks for open choices and puts the quantity typed, else one, in the basket.
  * A button held by holdBuy does nothing.
  */
 function buyButton(entry, getChoice, ready, getQty = () => 1) {
@@ -251,9 +227,7 @@ function buyButton(entry, getChoice, ready, getQty = () => 1) {
 }
 
 /**
- * Quick view (visitors only): the product details in a native <dialog> with a
- * gallery (main image plus color images), rich text and its own variant choices.
- * Built on first open and reused.
+ * Quick view (visitors only): the product details in a native <dialog> with a gallery, rich text and its own choices, built on first open and reused.
  */
 function openQuickView(card, entry, props) {
   let dialog = card.querySelector('.urd-product-dialog');
@@ -347,8 +321,8 @@ function renderCard(entry, props, editable, preview) {
   let chosenSize = null;
   let chosenColor = null;
 
-  // The image: the same non-destructive styling as collection entries. A color
-  // choice with its own image swaps src; with no choice the entry's main image shows.
+  // The image: the same non-destructive styling as collection entries.
+  // A color choice with its own image swaps src; with no choice the entry's main image shows.
   const baseImage = entry.image ?? '';
   let img = null;
   let wrap = null;
@@ -405,9 +379,7 @@ function renderCard(entry, props, editable, preview) {
   sync();
   card.appendChild(buyRow(amount, buy));
 
-  // Quick view for visitors: the image and the title open the detail view.
-  // In the editor clicks belong to editing (click-and-type), so nothing is wired
-  // there - nor in the mobile view (the preview flag, never editable).
+  // Quick view for visitors: the image and the title open the detail view; in the editor and the mobile view nothing is wired.
   if (!preview) {
     // The title keeps its heading role: its words go into a button inside it, which is the opener there.
     let titleButton = null;
@@ -457,8 +429,7 @@ function adderCard(collection) {
 }
 
 /**
- * The editor's way from a card to its entry: once the block is selected alone, a click on a card part that is not written on the card itself (the price, the badge, the choices, the picture, the card around them) opens the product's entry in the Collections panel (urd-open-entry), with the price, the badge or the sizes focused, and else the title.
- * The title and the text keep click-and-type, the buy button keeps filling the basket, and a Shift-click, a selected set and the Clean view open nothing.
+ * In the editor, a click on a card part not written on the card (price, badge, choices, picture) of a block selected alone opens its entry (urd-open-entry).
  */
 function wireEntryOpening(card, el, collection, entryId) {
   let armed = false;
@@ -501,11 +472,9 @@ function emptyState(el, ctx, message, action) {
 export const productBlock = {
   version: 1,
   autoGrow: true,
-  // Collection consumer: the urd-collections message re-renders only sections
-  // with blocks carrying this flag (the scroll position is preserved).
+  // Collection consumer: the urd-collections message re-renders only sections with blocks carrying this flag (the scroll position is preserved).
   usesCollections: true,
-  // Per-card animation: the block's entrance and pointer effect play per card,
-  // not on the block element (render.js skips it; the cards are animated in render).
+  // Per-card animation: the block's entrance and pointer effect play per card, not on the block element (render.js skips it; the cards are animated in render).
   animPerCard: true,
   label: 'Product cards',
   labelKey: 'blocks.product',
@@ -525,8 +494,7 @@ export const productBlock = {
     const block = ctx.section?.blocks?.find((b) => b.id === el.dataset.blockId);
 
     if (!props.collection) {
-      // With no cards the animation fields play on the block element, as on
-      // other blocks, so the choice in Properties is never inert.
+      // With no cards the animation fields play on the block element, as on other blocks, so the choice in Properties is never inert.
       if (block) renderCardAnimations(el, [el], block, ctx);
       adminLocaleReady.then(() => {
         if (host.isConnected) emptyState(el, ctx, ta('canvas.productEmpty'), editable ? chooseCatalogButton(el, ctx) : null);
@@ -534,9 +502,7 @@ export const productBlock = {
       return;
     }
 
-    // Busy while the entries are fetched: the block holds its frame's height
-    // on the desktop and the height measured for the phone there (base.css),
-    // and the editor's fit waits for it.
+    // Busy while the entries are fetched: the block holds its height (base.css), and the editor's fit waits for it.
     host.setAttribute('aria-busy', 'true');
     getCollection(props.collection).then((data) => {
       // The block may have been re-rendered or removed while the data was fetched.
@@ -570,15 +536,13 @@ export const productBlock = {
       grid.append(...cards);
       host.appendChild(grid);
 
-      // Per-card animation (animPerCard): the block's entrance animation plays
-      // per card with a staggered start, and the pointer effect lifts card by card.
+      // Per-card animation (animPerCard): the block's entrance animation plays per card with a staggered start, and the pointer effect lifts card by card.
       if (block) renderCardAnimations(el, cards, block, ctx);
 
       if (editable) {
         Promise.all([import('../hint.js'), adminLocaleReady]).then(([{ attachHint }]) => {
           if (!el.isConnected) return;
-          // The adder only when the grid is not truncated by limit: a new entry
-          // would otherwise fall outside the view and the click would look dead.
+          // The adder only when the grid is not truncated by limit, since a new entry past it falls outside the view and the click looks dead.
           if (!(props.limit > 0 && all.length >= props.limit)) {
             grid.appendChild(adderCard(props.collection));
           }

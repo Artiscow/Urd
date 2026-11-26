@@ -52,8 +52,7 @@ function buildSocial(social) {
     if (leavesSite(s.url)) a.target = '_blank';
     a.setAttribute('aria-label', s.label);
     a.title = s.label;
-    // The drawn SVG is the engine's own, and an own image has passed the
-    // image guard and is quoted (linkIconHtml), so the markup is safe to set.
+    // The drawn SVG is the engine's own, and an own image has passed the image guard and is quoted (linkIconHtml), so the markup is safe to set.
     a.innerHTML = linkIconHtml(s);
     row.appendChild(a);
   }
@@ -132,8 +131,7 @@ function buildNewsletterForm(cta) {
     const tools = await checks.catch(() => null);
     if (!tools) { fail(t('footer.newsletter.sendFailed')); return; }
     const { isEmail, isSpam, buildNewsletterPayload, buildNewsletterMailto } = tools;
-    // Honeypot filled in: act as if it succeeded and send nothing (never tip
-    // off the bot).
+    // Honeypot filled in: act as if it succeeded and send nothing (never tip off the bot).
     if (isSpam(honeypot.value)) { done(); return; }
     const value = email.value.trim();
     if (!isEmail(value)) { fail(t('footer.newsletter.invalidEmail')); return; }
@@ -315,12 +313,10 @@ export function renderFooter(site, host, pageId) {
   // A big CTA always centers; otherwise the alignment choice applies.
   const alignClass = cta && cta.big ? 'center' : footer.align ?? 'left';
   inner.className = `urd-footer urd-footer-rich urd-footer-${alignClass}`;
-  // The design dresses the brand-and-columns footer; a big call to action
-  // has its own centred build.
+  // The design dresses the brand-and-columns footer; a big call to action has its own centred build.
   const design = cta && cta.big ? '' : footerDesign(site);
   if (design) inner.classList.add(`urd-footer-design-${design}`);
-  // The layered background takes over the surface when present; otherwise the
-  // plain background color (default = the theme surface from base.css).
+  // The layered background takes over the surface when present; otherwise the plain background color (default = the theme surface from base.css).
   const hasFooterBgLayers = mountFooterBg(footer, inner);
   if (!hasFooterBgLayers && footer.bg) inner.style.background = resolveColor(footer.bg);
 
@@ -365,9 +361,7 @@ export function renderFooter(site, host, pageId) {
       top.appendChild(brandCol);
     }
 
-    // The columns in a grid: --n is the number of slots (a wide column counts
-    // as two), so the columns come out equally wide and evenly spaced whatever
-    // the link count.
+    // The columns in a grid: --n is the number of slots (a wide column counts as two), so the columns come out equally wide and evenly spaced whatever the link count.
     let n = 0;
     for (const col of columns) {
       const c = document.createElement('div');

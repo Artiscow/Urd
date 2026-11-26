@@ -1,13 +1,12 @@
 /**
- * The cover a third-party frame stands behind until the visitor presses it (0.7.24.1): nothing reaches the provider before the press, since its player stores in the browser as it loads, which needs consent first (ekomloven § 3-15).
- * A card in the site's own colours: the provider named in a corner, the owner's own image under it where there is one, a play button in the accent, a line saying what loading does, and a box that lets the visitor have that provider's frames load at once on this site from now on, kept in their browser per provider.
- * The video block, the map block and the contact block's map use it; the choice is stored only when the visitor ticks the box, which is the storage they asked for.
+ * The cover a third-party frame stands behind until the visitor presses it, so nothing reaches the provider before consent (ekomloven § 3-15).
+ * Notes: docs/engine-notes/embed-cover.md (Urd repository).
  */
 import { t } from './i18n.js';
 import { isSafeImage } from './nav-model.js';
 import { drawPicture } from './picture.js';
 
-/* The providers a cover names: the end of the frame's host, the id the visitor's choice is kept under, the name on the cover, and the provider's own privacy terms the privacy page links to. A new provider goes here, in `_headers`' frame-src and in the block that embeds it. */
+/* The providers a cover names: the host's end, the id the visitor's choice is kept under, the name, and the privacy terms the privacy page links to. */
 const PROVIDERS = [
   ['youtube-nocookie.com', 'youtube', 'YouTube', 'https://policies.google.com/privacy'],
   ['youtube.com', 'youtube', 'YouTube', 'https://policies.google.com/privacy'],
@@ -97,7 +96,7 @@ const MARKS = {
 export const COVER_DIM = 0.7;
 
 /**
- * Draws the cover's picture with the owner's settings from the image editor (picture.js: the focus point, zoom, turn, look and adjustments), darkened under the cover's words.
+ * Draws the cover's picture with the owner's image-editor settings (picture.js), darkened under the cover's words.
  * @param {HTMLElement} frame The cover's picture frame (`.urd-cover-frame`) with the img inside
  * @param {object} [style] The video's `coverStyle`
  */
@@ -110,11 +109,10 @@ export function coverImageStyle(frame, style) {
 let coverCount = 0;
 
 /**
- * A frame behind its cover: the frame at once where the visitor has let its provider load or the owner chose to load it with the page (`ask: false`, the block's `askFirst`), else the cover, which makes the frame on a press.
- * The editor's preview shows the cover whenever the owner asks first, as a visitor first sees it.
+ * A frame behind its cover: the frame at once where its provider is allowed or the owner chose `ask: false`, else the cover, which makes the frame on a press.
  * @param {HTMLElement} host Where the cover or the frame goes (appended)
  * @param {{src: string, makeFrame: (how: {pressed: boolean}) => HTMLIFrameElement, kind?: 'video'|'map', image?: string, imageStyle?: object, preview?: boolean, ask?: boolean, extraClass?: string}} options
- *   makeFrame builds the frame when it is wanted, told whether the visitor pressed this cover (a video may start then); image is the owner's own picture for the cover, imageStyle its framing and adjustments (coverImageStyle)
+ *   makeFrame builds the frame, told whether this cover was pressed; image is the owner's picture for the cover, imageStyle its framing (coverImageStyle).
  * @returns {HTMLElement} What was appended: the cover or the frame
  */
 export function coverFrame(host, { src, makeFrame, kind = 'video', image, imageStyle, preview = false, ask = true, extraClass }) {
@@ -174,8 +172,8 @@ export function coverFrame(host, { src, makeFrame, kind = 'video', image, imageS
     if (focused) frame.focus();
   };
   play.addEventListener('click', () => {
-    // This cover loads as pressed first, which also stops it hearing its own word to the others.
-    // In the editor's preview the press loads the frame for the owner, and the box keeps nothing: the admin shares the site's origin, so a choice kept there would load the provider at once on the owner's own visits.
+    // This cover loads first, so it does not hear its own word to the others.
+    // In the editor's preview the press loads the frame, and the box keeps nothing.
     const allow = box.checked && !preview;
     load(true);
     if (allow) {

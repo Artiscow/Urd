@@ -1,19 +1,6 @@
 /**
- * One drawing for every picture (0.7.29.1): the settings the image editor
- * writes, drawn the same wherever a picture stands (the image block, the
- * gallery's pictures, collection and product cards, the video's cover and
- * the lightbox). Every setting is drawn by the page and never changes the
- * file, and an absent setting is neutral, so a picture stored before the
- * settings existed draws as it always has.
- *
- * The settings: the focus point (`x`, `y`, 0..1) and `zoom` (1..4) towards
- * it; the turn: `rotate` in quarter turns, `flipX` and `flipY`, `straighten`
- * (degrees, -15..15); the `look`, one of the slideshow layer's tones;
- * `brightness`, `contrast` and `saturate` (0..2) and `blur` (px, 0..20); and
- * an `overlay` in a site colour (`{ color, strength }`); and with the duotone
- * look, its two colours (`duotone: { dark, light }`). A block's picture can
- * also blend with what lies behind the block (`blend`, pictureBlend), at a
- * strength (`blendStrength`).
+ * One drawing for every picture: the image editor's settings, drawn by the page the same wherever a picture stands, never changing the file.
+ * Notes: docs/engine-notes/picture.md (Urd repository).
  */
 import { resolveColor } from './theme.js';
 
@@ -24,9 +11,7 @@ export const PICTURE_LOOKS = [
 ];
 
 /**
- * A drawn example picture as a data URL: what an image or slideshow background looks like before the owner has picked anything.
- * Three variants, so a cross-fade and a drift are actually visible while the settings are being tried out, and painted in translucent grey so they read on a light and a dark background alike.
- * A data URL, which the site's `img-src 'self' data:` already covers.
+ * A drawn example picture as a data URL, shown before the owner has picked one: three variants in translucent grey, read on light and dark alike.
  * @param {number} index
  * @returns {string}
  */
@@ -48,9 +33,7 @@ export function placeholderPhoto(index) {
 }
 
 /**
- * Each look as a CSS filter, the same values gallery.css gives the slideshow's
- * tones (`.urd-gallery-tone-*`, a test holds the two equal). Duotone and
- * vintage add a layer over the picture as well (`.urd-pic-look-*` in base.css).
+ * Each look as a CSS filter, the same values as the slideshow's tones in gallery.css (a test holds them equal); duotone and vintage add a layer too.
  */
 export const LOOK_FILTERS = {
   natural: '',
@@ -117,8 +100,8 @@ const within = (value, min, max, fallback) => {
 };
 
 /**
- * A picture's settings as the drawing reads them: each one within its bounds,
- * an absent or broken one neutral. Pure.
+ * A picture's settings as the drawing reads them: each one within its bounds, an absent or broken one neutral.
+ * Pure.
  * @param {object} [raw] The stored settings (an image block's props, a gallery picture's `style`, an entry's `imageStyle`, a video's `coverStyle`)
  * @returns {{x: number, y: number, zoom: number, rotate: 0|90|180|270, flipX: boolean, flipY: boolean, straighten: number, look: string, brightness: number, contrast: number, saturate: number, blur: number, overlay: {color: string, strength: number}|null, duotone: {dark: string, light: string}}}
  */
@@ -150,12 +133,7 @@ export function pictureStyle(raw) {
 }
 
 /**
- * The CSS filter for a picture: its look first, then the adjustments in the
- * order they have always been written, then the blur. `dim` darkens on top
- * (the video's cover draws its picture at 0.7 so the words on it read).
- * A duotone given its gradient map (`duotone`, duotoneFilterUrl) maps the
- * adjusted picture's light to its two colours before the blur; without one
- * it falls back to the grey of its look. Pure.
+ * The CSS filter for a picture: its look, then the adjustments, then the blur; `dim` darkens on top, and a duotone's map goes before the blur. Pure.
  * @param {ReturnType<typeof pictureStyle>} style
  * @param {{dim?: number, duotone?: string}} [options]
  * @returns {string}
@@ -174,8 +152,9 @@ export function pictureFilter(style, { dim = 1, duotone = '' } = {}) {
 }
 
 /**
- * A colour as its red, green and blue (0..255): a hex colour or the
- * `rgb()` a browser computes. Null for anything else. Pure.
+ * A colour as its red, green and blue (0..255): a hex colour or the `rgb()` a browser computes.
+ * Null for anything else.
+ * Pure.
  * @param {string} value
  * @returns {[number, number, number]|null}
  */
@@ -191,10 +170,7 @@ export function parseColor(value) {
 }
 
 /**
- * A duotone's gradient map as the three channels' tables: each channel runs
- * from the dark colour's value at black to the light colour's at white,
- * whichever is the lighter, so any pair maps the picture's light between
- * them. Pure.
+ * A duotone's gradient map as the three channels' tables, each running from the dark colour's value at black to the light colour's at white. Pure.
  * @param {[number, number, number]} dark
  * @param {[number, number, number]} light
  * @returns {[string, string, string]} The red, green and blue tableValues
@@ -207,10 +183,7 @@ export function duotoneTables(dark, light) {
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
- * The duotone's SVG filter for a pair of colours, made once per document in
- * a hidden `#urd-duotones` and shared by every picture with that pair: the
- * picture's light (its luminance) mapped from the dark colour to the light
- * one. Returns the CSS `url()` that draws it.
+ * The duotone's SVG filter for a pair of colours, made once per document in a hidden `#urd-duotones` and shared; returns the CSS `url()` that draws it.
  * @param {[number, number, number]} dark
  * @param {[number, number, number]} light
  * @param {Document} [doc]
@@ -251,9 +224,7 @@ export function duotoneFilterUrl(dark, light, doc = document) {
 }
 
 /**
- * A duotone colour as its red, green and blue where it is drawn: a hex
- * colour as it is, a site colour as the place computes it (a section with
- * its own colours, the light or dark mode).
+ * A duotone colour as its red, green and blue where it is drawn: a hex colour as it is, a site colour as the place computes it.
  * @param {string} value
  * @param {Element} near Where the colour is drawn
  */
@@ -283,7 +254,7 @@ export function duotoneAt(style, near) {
   return dark && light ? duotoneFilterUrl(dark, light, near.ownerDocument) : '';
 }
 
-/** The frames drawn with a duotone, drawn again when the page's colours change (the light or dark mode, or the theme's colours themselves), so a site colour follows. */
+/** The frames drawn with a duotone, drawn again when the page's colours change, so a site colour follows. */
 const duotoneFrames = new Set();
 let watchingColours = false;
 
@@ -298,16 +269,14 @@ function watchColours() {
   };
   const observer = new MutationObserver(redraw);
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-urd-theme', 'style', 'class'] });
-  // Where the browser has light-dark(), the theme's colours are the text of their own stylesheet (theme.js applyTheme), which a colour changed in the editor rewrites.
+  // Where the browser has light-dark(), the theme's colours are the text of their own stylesheet (theme.js applyTheme), watched for changes.
   const theme = document.getElementById('urd-theme');
   if (theme) observer.observe(theme, { childList: true, characterData: true, subtree: true });
   window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', redraw);
 }
 
 /**
- * How much a picture straightened by `deg` degrees is drawn larger, so its
- * frame has no empty corners: enough for a frame up to 2.4 times as wide as
- * it is tall, or as tall as it is wide (21:9 and 9:16 included). Pure.
+ * How much a picture straightened by `deg` degrees is drawn larger, so a frame from 21:9 to 9:16 has no empty corners. Pure.
  * @param {number} deg
  * @returns {number}
  */
@@ -317,10 +286,7 @@ export function straightenScale(deg) {
 }
 
 /**
- * The turn as a CSS transform, or null for a picture that is not turned:
- * the quarter turns and the straightening as one rotation, the flips as a
- * mirror, and the straightening's scale. `quarter` says the turned picture
- * lies across its frame, so the drawing swaps its width and height. Pure.
+ * The turn as a CSS transform (one rotation, the flips as a mirror, the straightening's scale), or null; `quarter` says it lies across its frame. Pure.
  * @param {ReturnType<typeof pictureStyle>} style
  * @returns {{transform: string, quarter: boolean}|null}
  */
@@ -337,16 +303,12 @@ export function pictureTurn(style) {
 }
 
 /**
- * Draws a picture's settings onto its frame and its image: the focus point,
- * the zoom, the filter, the turn, the look's layer and the overlay. A picture
- * with no turn keeps the markup it has always had (the image straight in its
- * frame); a turned one is wrapped in `.urd-pic-turn`, which the turn rotates
- * and mirrors, and which lies across the frame for a quarter turn.
+ * Draws a picture's settings onto its frame and image: focus, zoom, filter, turn, the look's layer and the overlay; a turned one is wrapped in `.urd-pic-turn`.
  * @param {HTMLElement} frame The box that clips the picture
  * @param {HTMLImageElement} img
  * @param {object} raw The stored settings (pictureStyle), with `fit` beside them
  * @param {{dim?: number, ratioFromPicture?: boolean}} [options]
- *   dim: darken on top (the video's cover); ratioFromPicture: the frame takes its height from the picture (a gallery's grid), so a quarter turn gives it the turned picture's ratio
+ *   dim: darken on top (the video's cover); ratioFromPicture: the frame takes its height from the picture, so a quarter turn gives it the turned ratio
  */
 export function drawPicture(frame, img, raw, { dim = 1, ratioFromPicture = false } = {}) {
   const style = pictureStyle(raw);

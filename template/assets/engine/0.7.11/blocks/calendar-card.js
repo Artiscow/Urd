@@ -1,6 +1,6 @@
 /**
- * The calendar block's event card: an event or the announcement in full, in a dialog laid over its calendar (ADR-0011), opened from the block (calendar.js).
- * Loaded once the page is idle or at the first press that opens a card, never in the visitor closure.
+ * The calendar block's event card: an event or the announcement in full, in a dialog laid over its calendar, loaded when idle or at the first press.
+ * Notes: docs/engine-notes/blocks/calendar-card.md (Urd repository).
  */
 import { t } from '../i18n.js';
 import { iconSvg } from '../icons.js';
@@ -28,7 +28,7 @@ function descriptionNode(description, ui) {
 }
 
 /**
- * The card wears the card design the block names (calCardDress, written on the block as `data-card-set`, `data-card-classes` and `data-card-colours`): the set it is drawn in, the card classes (`urd-cal-dlg-<design>`, where a design overrides its set's variables for the card, and a lent card design's own), and the owner's colour slots copied from the block when the card is the calendar's own design's or the neutral one, so calendar.css draws it in the right colours although it lies in the page.
+ * The card wears the card design the block names (calCardDress): its set, its card classes, and the owner's colour slots copied from the block where they apply.
  */
 function dressDialog(dialog, from) {
   const host = from?.closest?.('.urd-cal');
@@ -43,7 +43,7 @@ function dressDialog(dialog, from) {
 /** The open cards, each with the event or announcement it was opened from. */
 const OPEN_CARDS = new Map();
 
-/** Closes a card whose event is no longer on the page: its calendar has been drawn again under it. */
+/** Closes a card whose event has left the page: its calendar has been drawn again under it. */
 export function closeOrphanCards() {
   for (const [dialog, from] of OPEN_CARDS) {
     if (!from?.isConnected) dialog.close();
@@ -145,7 +145,7 @@ export function showEventDialog(occ, from, ics, ui, props) {
     // The moment itself, when the times are shown on the site's own clock.
     const shift = occ.real != null ? occ.start - occ.real : 0;
     const real = { ...occ, start: occ.start - shift, end: Number.isFinite(occ.end) ? occ.end - shift : occ.end };
-    // «Add to calendar» opens the ways to do it: this one event (to Google, or as a file for the other calendar apps), or the whole calendar (a subscription, and its iCal address to copy).
+    // «Add to calendar» opens the ways to do it: this one event (to Google, or as a file), or the whole calendar (a subscription and its iCal address).
     const add = el2('details', 'urd-cal-dialog-add');
     const summary = el2('summary', 'urd-cal-dialog-link');
     summary.appendChild(ui.tx('addEvent'));
@@ -215,7 +215,7 @@ export function showNoticeDialog(from, ui, href) {
  * Opens a card over the calendar it was opened from (`from`, the event or the announcement), and gives the focus back to it when the card closes.
  */
 function openCard(dialog, from) {
-  // The card lies over its calendar and leaves the page alone (a dialog that is not modal): the page scrolls under it, and Escape or a press anywhere outside it closes it.
+  // The card is a dialog that is not modal: the page scrolls under it, and Escape or a press outside it closes it.
   // One card is open at a time.
   for (const other of document.querySelectorAll('dialog.urd-cal-dialog[open]')) other.close();
   const watch = new AbortController();
@@ -224,7 +224,7 @@ function openCard(dialog, from) {
     event.preventDefault();
     dialog.close('escape');
   }, { signal: watch.signal });
-  // The canvas's colour picker and menus lie outside the card and work on its words; the editor's text bar stands outside the canvas, where this press never reaches.
+  // A press outside the card closes it, except in the canvas's colour picker and menus, which work on its words.
   document.addEventListener('pointerdown', (event) => {
     if (dialog.contains(event.target) || event.target.closest?.('.urd-cp, .urd-dd-menu')) return;
     dialog.close();
@@ -238,7 +238,7 @@ function openCard(dialog, from) {
     dialog.remove();
     if (back && from?.isConnected) from.focus({ preventScroll: true });
   });
-  // The card is given a place in the part of the page that is in view before it opens, below the room a menu that stays on screen keeps at the top (scroll-padding-top, base.css), so opening it (which moves the focus into it) never scrolls the page.
+  // The card opens in the part of the page in view, below the room a menu that stays on screen keeps (scroll-padding-top), so opening it never scrolls the page.
   const clear = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
   dialog.style.left = `${window.scrollX + 8}px`;
   dialog.style.top = `${window.scrollY + clear + 8}px`;
@@ -247,12 +247,7 @@ function openCard(dialog, from) {
   placeOverCalendar(dialog, from);
 }
 
-/**
- * Lays the card over the calendar it belongs to, centred on the part of the calendar that is in view: at its own width and as tall as its content, so it may reach past the calendar's edges (a card never scrolls inside itself), never wider than the window and never over the navigation bar; a card taller than the window starts under the bar and the page scrolls.
- * It is placed on the page, so it scrolls away with its calendar, and placed again when the window changes or its own content unfolds.
- * The card is drawn at the calendar's own zoom (the block's drawn scale, render.js applyZoom), so it follows the size the owner gave the block. Its place is measured where it lands and set right from there (placeAt), so it lands where it should however the browser applies the zoom to its offsets.
- * The calendar and the rest of the page are left as they are.
- */
+/** The card's widest width in px. */
 const CARD_MAX_W = 460;
 
 /** Moves a positioned element so its box lands at (left, top) in the window: written, measured, and set right by what it missed, a few times at most. */
@@ -267,6 +262,7 @@ function placeAt(node, left, top, scale) {
   }
 }
 
+/** Lays the card over the part of its calendar in view, at the calendar's zoom, never wider than the window nor over the navigation bar. */
 function placeOverCalendar(dialog, from) {
   const host = from?.closest?.('.urd-cal');
   if (!host) return;

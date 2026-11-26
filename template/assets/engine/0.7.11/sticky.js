@@ -9,8 +9,7 @@ const FIXED_Z = '900';
 
 let wired = false;
 let ticking = false;
-// A counter, not a flag: with two simultaneous drags (two fingers) the
-// first release must not resume pinning while the second is still going.
+// A counter, not a flag: with two simultaneous drags (two fingers) the first release must not resume pinning while the second is still going.
 let suspendDepth = 0;
 
 /** Wired once from boot(); scroll/resize is rAF-throttled. */
@@ -82,8 +81,7 @@ function readGeom(el) {
     left: el.style.left,
     width: el.style.width,
     z: el.style.zIndex,
-    // The mobile row grid places with margin-left (%); a percentage margin
-    // on a fixed element would shift the docking, so it is zeroed while pinned.
+    // The mobile row grid places with margin-left (%); a percentage margin on a fixed element would shift the docking, so it is zeroed while pinned.
     ml: el.style.marginLeft,
   };
 }
@@ -108,8 +106,7 @@ function release(el) {
 }
 
 function applySticky() {
-  // Suspended (editing is writing geometry): the blocks are already released
-  // back to their true place, and measuring here would read values mid-write.
+  // Suspended (editing is writing geometry): the blocks are already released back to their true place, and measuring here would read values mid-write.
   if (suspendDepth > 0) return;
   const els = document.querySelectorAll('.urd-sticky-able');
   if (!els.length) return;
@@ -121,8 +118,7 @@ function applySticky() {
   const inset = dockInset(mobile);
   const navH = inset.top;
 
-  // Blocks with the same sticky-group are pinned as ONE unit; the rest are
-  // groups of one member each, so the whole loop below has the same shape.
+  // Blocks with the same sticky-group are pinned as ONE unit; the rest are groups of one member each, so the whole loop below has the same shape.
   const groups = new Map();
   for (const [i, el] of els.entries()) {
     const key = el.dataset.stickyGroup || `solo-${i}`;
@@ -135,8 +131,7 @@ function applySticky() {
     const section = lead.closest('.urd-section');
     // A section showing its phone layout on a desktop page (render.js urd-handoff) pins as the phone does.
     const phone = mobile || Boolean(section?.classList.contains('urd-handoff'));
-    // A transformed section ancestor would make fixed relative to itself
-    // (containing block); pinning is then meaningless - stand still.
+    // A transformed section ancestor would make fixed relative to itself (containing block); pinning is then meaningless - stand still.
     const blocked = !section || getComputedStyle(section).transform !== 'none'
       || (phone && lead.dataset.stickyMode !== 'screen');
     if (blocked) {
@@ -144,8 +139,7 @@ function applySticky() {
       continue;
     }
 
-    // Mobile screen docking: each block docks on its own against its own
-    // measured size (the row grid has no frames to compute group geometry from).
+    // Mobile screen docking: each block docks on its own against its own measured size (the row grid has no frames to compute group geometry from).
     if (phone) {
       const view = { w: document.documentElement.clientWidth, h: window.innerHeight, inset };
       for (const el of members) {
@@ -169,8 +163,7 @@ function applySticky() {
     const canvasRect = (section.querySelector(':scope > .urd-canvas') ?? section).getBoundingClientRect();
     // The canvas's offset inside the section: a block's `style.top` is canvas-relative, while the pin and release limits are section-relative.
     const canvasTop = canvasRect.top - sectionRect.top;
-    // Geometry is read from the stash while the block is pinned (the inline
-    // values are then overwritten), otherwise fresh from the element.
+    // Geometry is read from the stash while the block is pinned (the inline values are then overwritten), otherwise fresh from the element.
     const geoms = new Map(members.map((el) => [el, el._urdStickyBase ?? readGeom(el)]));
     // The members' boxes in px for both modes: left and width are computed from the canvas rect every time, and rotation and height are never touched.
     const boxes = members.map((el) => ({
@@ -183,21 +176,18 @@ function applySticky() {
     const box = groupBox(boxes);
 
     const place = (el, left, top) => {
-      // Stashed only when the block actually pins: then the inline values
-      // are overwritten, and the originals must be remembered until release.
+      // Stashed only when the block actually pins: then the inline values are overwritten, and the originals must be remembered until release.
       el._urdStickyBase ??= geoms.get(el);
       el.classList.add('urd-sticky-fixed');
       el.style.position = 'fixed';
       el.style.top = `${top}px`;
       el.style.left = `${left}px`;
-      // The group's internal stacking order must survive pinning, so the
-      // block's own z is added on top of the floor instead of being replaced
-      // by it.
+      // The group's internal stacking order must survive pinning, so the block's own z is added on top of the floor instead of being replaced by it.
       el.style.zIndex = String(Number(FIXED_Z) + (Number(geoms.get(el).z) || 0));
     };
 
-    // Pin to screen: the group docks at a fixed point in the window and
-    // stays there regardless of scrolling. The release limit does not apply here.
+    // Pin to screen: the group docks at a fixed point in the window and stays there regardless of scrolling.
+    // The release limit does not apply here.
     if (lead.dataset.stickyMode === 'screen') {
       const view = { w: document.documentElement.clientWidth, h: window.innerHeight, inset };
       const pos = dockPosition(lead.dataset.stickyDock, Number(lead.dataset.stickyOffset) || 0, box, view);
@@ -217,8 +207,7 @@ function applySticky() {
       if (untilEl) limitBottom = untilEl.getBoundingClientRect().bottom + scrollY;
     }
 
-    // The group is measured as one block: it pins when the top of the box
-    // reaches the offset, and the members keep their place inside the box.
+    // The group is measured as one block: it pins when the top of the box reaches the offset, and the members keep their place inside the box.
     const state = stickyState(scrollY, {
       sectionTop,
       blockY: box.y + canvasTop,

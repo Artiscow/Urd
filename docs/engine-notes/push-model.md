@@ -7,8 +7,8 @@ The full text of the longer comments in the engine's `push-model.js`, in the fil
 Content push on the desktop canvas (ADR-0024). Blocks are placed
 absolutely with pixel frames, so a block whose content grows taller than
 its frame (wrapped text, a longer feed) would draw over the blocks
-beneath. This model moves the blocks below instead, with the rules the
-Wix Editor publishes for its free canvas: a gap of PUSH\_GAP\_MAX px or less
+beneath. This model moves the blocks below instead, with the rules a free
+canvas editor publishes: a gap of PUSH\_GAP\_MAX px or less
 is preserved, a larger gap stays until it would fall under PUSH\_GAP\_MIN px,
 a block whose top sits above the grown block's vertical middle is a
 deliberate overlap and stays, and a move cascades to the blocks below the

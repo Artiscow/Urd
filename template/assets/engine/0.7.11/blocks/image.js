@@ -1,12 +1,6 @@
 /**
- * Core block: image. Shows a file from media/ (or a data URL for uploads
- * that are still unpublished in the draft). With href the image becomes a
- * link, which also covers logo use.
- *
- * The image sits in a frame (.urd-image-frame) that clips: rounding is
- * therefore ALWAYS visible (also with "show the whole image"/contain), and
- * zoom crops in towards the focal point. The picture's settings are drawn by
- * picture.js, the same drawing every picture on the site uses.
+ * Core block: image. A file from media/ (or a draft's data URL) in a clipping frame, so its rounding always shows; with href it is a link, as a logo is.
+ * Notes: docs/engine-notes/blocks/image.md (Urd repository).
  */
 
 import { resolveLink, linkAttrs } from '../nav-model.js';
@@ -35,9 +29,7 @@ export const imageBlock = {
   labelKey: 'blocks.image',
   defaults: () => ({
     src: '', alt: '', fit: 'cover', radius: 'md', href: null,
-    // Additive fields: focal point (0..1), zoom (1 = none) and non-destructive
-    // CSS adjustments (1 = neutral). lightbox opens the image full screen when a
-    // visitor clicks it (absent = false, so old data needs no migration).
+    // Additive fields: focal point (0..1), zoom (1 = none), the adjustments (1 = neutral), and lightbox, which opens the image full screen on a click.
     x: 0.5, y: 0.5, zoom: 1, brightness: 1, contrast: 1, saturate: 1,
     lightbox: false,
   }),
@@ -47,8 +39,7 @@ export const imageBlock = {
   /**
    * @param {HTMLElement} el
    * @param {{src: string, alt: string, fit: 'cover'|'contain', radius: string|null, href: string|null, aspect?: string}} props
-   *   aspect: one of IMAGE_ASPECTS (push-model.js) from the image editor, the frame's shape with its height following its width;
-   *   blend: one of PICTURE_BLENDS (picture.js), how the block blends with what lies behind it; blendStrength: 0..1, how strongly (absent = whole)
+   *   aspect: one of IMAGE_ASPECTS (push-model.js), the frame's shape; blend: one of PICTURE_BLENDS (picture.js); blendStrength: 0..1, how strongly (absent = whole)
    * @param {object} ctx
    */
   render(el, props, ctx) {
@@ -73,9 +64,8 @@ export const imageBlock = {
     const frame = document.createElement('span');
     frame.className = 'urd-image-frame';
     const img = document.createElement('img');
-    // Content images are fetched only as they approach the viewport: that spares images below the fold on heavy pages.
-    // The first image block a page's first section draws is the first screen's picture, so it is fetched at once and ahead of the rest (`fetchpriority`), never lazily; one picture alone takes the high priority.
-    // loading, decoding and the priority are set before src, or the browser may already have begun fetching.
+    // The first picture of a page's first section is fetched at once with high priority, every other lazily.
+    // Loading, decoding and the priority are set before src.
     if (ctx?.first && !ctx.preview && !ctx.firstPictureTaken) {
       ctx.firstPictureTaken = true;
       img.loading = 'eager';
@@ -86,16 +76,14 @@ export const imageBlock = {
     img.decoding = 'async';
     img.src = props.src;
     img.draggable = false;
-    // Large images decode strip by strip while they load (which looks like a
-    // gradual wipe from the top): keep the image invisible until it is
-    // COMPLETE, then show it whole at once. Cached images are untouched.
+    // A large image stays hidden until it has loaded, then shows whole, instead of decoding strip by strip; a cached one is untouched.
     if (!img.complete) {
       img.style.visibility = 'hidden';
       img.addEventListener('load', () => { img.style.visibility = ''; }, { once: true });
       img.addEventListener('error', () => { img.style.visibility = ''; }, { once: true });
     }
     frame.appendChild(img);
-    // A shape from the image editor: the frame is that shape at the block's width (keepsShape in push-model.js), or the picture's own shape, which the picture gives it.
+    // A shape from the image editor: the frame is that shape at the block's width (keepsShape in push-model.js), or the picture's own.
     const ratio = aspectRatio(props.aspect);
     const own = props.aspect === 'original';
     if (ratio || own) frame.classList.add('urd-image-shaped');
@@ -115,9 +103,7 @@ export const imageBlock = {
       el.appendChild(frame);
     }
 
-    // Full screen on click: always for visitors when the field is on; in preview
-    // only in clean view (otherwise editing owns the click). A link wins.
-    // For visitors the frame is a button for the keyboard too, named by the picture's alt text: reached with Tab, opened with Enter or Space.
+    // Full screen on click when the field is on and no link wins: for visitors, as a keyboard button too, and in the preview's clean view.
     if (props.lightbox && !linked) {
       frame.classList.add('urd-lightbox-able');
       if (!ctx.preview) {

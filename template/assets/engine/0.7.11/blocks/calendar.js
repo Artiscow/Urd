@@ -1,21 +1,9 @@
 /**
  * Core block: calendar.
- * A subscribable event calendar built from iCal feeds (Google Calendar, Nextcloud, Outlook and others), following the ApeironLF design requirements.
- * Fetching ALWAYS goes through the site's own feed proxy (/api/ics): feed hosts send no CORS, and the site's CSP allows connect-src 'self' only.
- * Locally, without functions, the preview shows demo data and visitors get a quiet empty state.
- *
- * Views: list (date-badge rows), cards, month, agenda (compact rows under their month) and next (a card for the next one to three events, with more listed under «Later»).
- * The sources are merged, and the same event from two calendars is shown once.
- * A source can carry a name and a colour: the name is then the category of everything in that calendar (the chip, and the filter), and the colour tints its chips and date badges.
- * A view with nothing to show draws a visible empty state, with the owner's own words and icon when set.
- * Conventions: "Category: Title" gives category chips with a filter, and a signup link in the description becomes a button.
- *
- * The look is a design (calendar-designs.js): the plain one draws every view on the theme's colours, and every design exposes its colour slots, an optional edge stripe on its boxes, the sign-up and subscribe buttons as switches, and a style per event field, all set in the Style tab.
- * Every word a design draws that is not the calendar's own (the labels, the buttons, the words of a time and of a countdown, the texts with a number in them) is rewritten by clicking it in the preview, with the text toolbar, and stored as HTML under `texts`.
- * The parser (ics.js) and the design model are loaded on the first render, never in the visitor closure.
- * The sources, the view and the count are edited in the Properties panel; the help chip (ADR-0008) explains the conventions.
+ * An event calendar built from iCal feeds through the site's feed proxy (/api/ics), drawn in the view and design the owner picks.
+ * Notes: docs/engine-notes/blocks/calendar.md (Urd repository).
  */
-// t() for visitor texts (the site language), ta() for the editor chrome (the admin language), dates() for month and weekday names, tp() for plurals; never called at module level.
+// t() for visitor texts, ta() for the editor chrome, dates() for month and weekday names, tp() for plurals; never called at module level.
 import { t, ta, tp, pluralForm, themeString, dates } from '../i18n.js';
 import { iconSvg } from '../icons.js';
 import { resolveColor, inkOn } from '../theme.js';
@@ -46,7 +34,7 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetin
     const url = ics.normalizeSourceUrl(entry.url);
     if (!url) { errors.push(ta('calendar.unknownSource', { source: entry.url })); return; }
     try {
-      // Every event remembers the source it came from (expandEvents keeps it on the occurrence): its name and colours, and from the site's registry its words, page, organizer and whether it stands in the filter.
+      // Every event keeps the source it came from: its name and colours, and from the site's registry its words, page, organizer and place in the filter.
       const readied = takeReadied(url);
       const asked = early?.get(url) ?? readied;
       early?.delete(url);
@@ -73,9 +61,7 @@ async function loadOccurrences(ics, cf, sources, limit, view, from, zone, meetin
         signup: ics.signupLinkOf(occ, meetingHosts), image: occ.image || ics.findImageLink(occ.description),
       };
     });
-  // The sources are one calendar to the visitor: an event that stands in two of them is shown once.
-  // With a zone set for the site, every time is moved to that zone's clock; `real` keeps the moment itself for the countdowns.
-  // An all-day event is a date, the same on every clock, and is left as it is.
+  // An event in two sources is shown once, and a timed event moves to the site's zone, `real` keeping the moment for the countdowns.
   const placed = zone ? expanded.map((occ) => (occ.allDay ? occ : { ...occ, real: occ.start, start: cf.shiftToZone(occ.start, zone), end: cf.shiftToZone(occ.end, zone) })) : expanded;
   return { occurrences: ics.dedupeOccurrences(placed), errors, feedZone };
 }
@@ -98,8 +84,7 @@ function rememberDrawing(blockId, host, props, waiting) {
 }
 
 /**
- * Fills a calendar drawn again with a copy of its last drawing, where its settings are the same, out of reach until its own drawing replaces it, so a redraw (its section's, the editor's drafts arriving, the phone's width crossed) never leaves it blank.
- * A copy of the drawing that waits keeps its words hidden (`data-cal-copy="wait"`).
+ * Fills a calendar drawn again with a copy of its last drawing while its settings are the same, until its own drawing replaces it.
  * @returns {boolean} Whether there was one to copy
  */
 function copyLastDrawing(host, el, props, measure = false) {
@@ -137,8 +122,7 @@ function demoOccurrences() {
 /* ---------- Formatting ---------- */
 
 /**
- * A node in a calendar's own colour, so its chip, badge and stripe follow the calendar, with the text colour that reads on it.
- * The registry's extra colours, when set, replace the derived ones: the text on the colour, the event's box and the chip.
+ * A node in its calendar's own colour with the text colour that reads on it; the registry's extra colours replace the derived ones when set.
  */
 function paintColor(node, colour, colors = null) {
   if (!colour) return node;
@@ -163,7 +147,7 @@ function chipNode(category, color, ui, colors = null) {
 }
 
 /**
- * The event's picture through the site's own picture route (the CSP allows pictures from the site itself only, and the route checks the host against the picture allowlist); null when the event has none.
+ * The event's picture through the site's own picture route, which checks the host against the allowlist; null when the event has none.
  */
 function imageUrl(occ, width = 800) {
   if (!occ.image) return null;
@@ -189,16 +173,7 @@ export function attachEditing(api) {
 const TEXTS = new WeakMap();
 
 /**
- * The helpers a draw hands its view.
- * `field` builds an element for an event field (title, date, time, place, description, category, number) carrying the owner's style for that field; `meta` is the date, time and place line as such fields.
- * `tx` is a word the design draws (a label, a button's words, the words of a time or a countdown, a text with a number in it) that the owner rewrites by clicking it in the preview, where the text toolbar attaches to it as to a text block; `retx` draws it again with new values (a ticking countdown); `line` and `group` hold the content a design ships with (CAL_CONTENT_TEXTS), which the owner can remove.
- * `notice` makes the announcement's box: its text stops after a few lines, and a text that does not fit opens the announcement in full in a card.
- * `signup` is the sign-up button when the block shows them; `recurring` is the mark on an event that repeats, `program` the link to the whole programme when the block has an address for it, and `openToAll` the words on an event without a sign-up.
- * `time`, `timeText` and `countdown` are nodes with the words in them; `timeString` and `metaString` are the same as plain text, for a tooltip or a screen reader.
- * `dayMonth`, `dateLine`, `weekdayDay`, `monthYear`, `monthRange` and `percent` write dates and shares in the order and form of the site's language.
- * `filter` is the category filter for a design that draws its own, and `offset`, `total` and `rest` tell a list design where in the whole list its rows stand when the block folds the rest.
- * `opt` holds the design's own settings (calOptions), and `descriptionIn` says whether a design with room draws the description in its rows or leaves it to the card (calDescription).
- * Every edit posts the whole props with the text under its slot in `texts`, so the editor's draft stays the owner of the words.
+ * The helpers a draw hands its view: the event fields, the design's words the owner rewrites in the preview (`tx`), buttons, times, dates and options.
  */
 function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   const lang = ctx.site?.site?.lang;
@@ -236,12 +211,11 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
 
   const params = (key) => cd.CAL_TEXT_PARAMS[key] ?? [];
   const formOf = (key, values) => (cd.CAL_PLURAL_TEXTS.includes(key) ? pluralForm(cd.CAL_TEXTS[key], Number(values?.n ?? 0)).form : null);
-  // The texts the design has words of its own for, while the owner keeps its word choice (calThemeTexts); a design drawn as the phone view brings its own (withDesign).
-  // The event's card is the block's, not the design's: the texts drawn inside plainWords take the common words, and keep them when painted again.
+  // The design whose own words the texts take while the owner keeps its word choice (calThemeTexts); the event's card takes the common words.
   let wordsDesign = cd.calDesign(props.design).id;
   let themed = new Set(cd.calThemeTexts(props));
   let plainScope = false;
-  /** The dictionary's words for a text in the site language, with its placeholders left in: the design's own words where it has them (themeString), else the common ones. */
+  /** The dictionary's words for a text in the site language, placeholders left in: the design's own where it has them, else the common ones. */
   const defaultWords = (key, form, plain = false) => {
     const base = cd.CAL_TEXTS[key];
     if (!base) return '';
@@ -310,9 +284,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     paintText(node, state.key, values);
   };
   /**
-   * A content line (CAL_CONTENT_TEXTS) in its box: the box with the words in it, or for a visitor null when the owner removed the line or it has no words.
-   * In the editor an empty line stays as a faint hint, marked `urd-cal-gone` so the Clean view and the fit leave it out.
-   * `carry` marks a line whose words make the group around it worth drawing.
+   * A content line (CAL_CONTENT_TEXTS) in its box, or null for a visitor when it is removed or empty; the editor keeps an empty one as a faint hint.
    */
   const line = (box, key, { carry = false, className } = {}) => {
     const words = tx(key, className);
@@ -334,9 +306,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   };
 
   /**
-   * The announcement's box, built from its lines: null for a visitor when none of its own words is left (`group`).
-   * Its text stops after the design's number of lines, and a text that does not fit gets «Read it all» and opens the announcement in full in a card, as an event does.
-   * With the editing handles on, a press on the cut text of the selected calendar opens the card, where the whole text is written; the other words are written where they stand.
+   * The announcement's box, null for a visitor without words of its own; its text stops after the design's lines and opens in full in a card.
    */
   const notice = (box, { title, text, href }) => {
     if (!group(box)) return null;
@@ -431,8 +401,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     return to ? t('calendar.timeRange', { from, to }) : from;
   };
   /**
-   * The event's time as it is written: «18:00-21:00» with its end, «all day», «until 6 Oct» for a span of days, and «Cancelled» for a cancelled event.
-   * The clock is 24 hours unless the block is set to 12; the words are texts the owner rewrites.
+   * The event's time as written («18:00-21:00», «all day», «until 6 Oct», «Cancelled»), on a 24-hour clock unless the block asks for 12.
    */
   const time = (occ) => {
     if (occ.cancelled) return tx('cancelled');
@@ -474,17 +443,17 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
     });
     return row;
   };
-  /** A link around words the owner rewrites: with the editing handles on, a press goes into the words and the link is never followed or dragged; in the Clean view it works as published. */
+  /** A link around words the owner rewrites: with the editing handles on a press edits the words, and in the Clean view the link works as published. */
   const editLink = (a) => {
     if (!editable) return a;
     a.draggable = false;
     a.addEventListener('click', (event) => { if (!clean()) event.preventDefault(); });
     return a;
   };
-  /** A link whose words are a text the owner rewrites. */
   /** The announcement's link (calNoticeLink), and what puts it on an anchor: its address, a new tab and the rel words. */
   const noticeLink = cd.calNoticeLink(props, ctx.site?.pages ?? []);
   const noticeOn = (a) => (noticeLink ? Object.assign(a, linkAttrs(noticeLink)) : a);
+  /** A link whose words are a text the owner rewrites. */
   const link = (className, key, href, title) => {
     const a = el2('a', className);
     a.href = href;
@@ -501,10 +470,7 @@ function makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone) {
   };
   const chip = (occ) => chipNode(occ.category, occ.color, ui, occ.colors);
   /**
-   * The event's box: tinted by its calendar, and opening the event in full at a click or Enter.
-   * A click on a link, a button or a text being edited is left to that element.
-   * With the editing handles on in the preview, the first press selects the calendar and a press on an event of the selected calendar opens its card, where the card's words are rewritten too.
-   * A box that holds the rows of other events (a «Coming up» card) passes its event's own words as `mark`, so a cancellation strikes them alone.
+   * The event's box, tinted by its calendar, opens the event in full at a click or Enter; a click on a link, a button or edited text is left to it.
    */
   const tint = (node, occ, mark = node) => {
     tintNode(node, occ, mark);
@@ -648,7 +614,7 @@ function placeLink(place, maps, service, geo) {
   return a;
 }
 
-/** The first line of a description with words in it, as plain text when the feed writes it as rich text, cut at a word boundary near `max` and never inside an address. */
+/** The first line of a description with words in it, as plain text, cut at a word boundary near `max` and never inside an address. */
 function excerptOf(description, max) {
   const line = plainLines(description).split('\n').map((part) => part.trim()).find(Boolean) ?? '';
   if (line.length <= max) return line;
@@ -710,7 +676,7 @@ function cardWhenIdle() {
   else setTimeout(go, 1500);
 }
 
-/** Closes a card whose event is no longer on the page; with the card's code not in, no card is open. */
+/** Closes a card whose event is gone from the page; with the card's code not in, no card is open. */
 function closeOrphanCards() {
   cardModule?.closeOrphanCards();
 }
@@ -718,8 +684,7 @@ function closeOrphanCards() {
 /* ---------- Views ---------- */
 
 /**
- * The empty state: an icon and a line of text, in every view.
- * The words are the owner's (props.emptyText) or the translated default; the icon is an id from the icon library (props.emptyIcon), the calendar when none is set and nothing at all for 'none'.
+ * The empty state in every view: an icon and a line of text, the owner's own (emptyText, emptyIcon) or the translated default and the calendar icon.
  */
 function emptyNode(props) {
   const box = el2('div', 'urd-cal-empty');
@@ -736,7 +701,7 @@ function emptyNode(props) {
 }
 
 /**
- * ApeironLF's empty state, for the designs that declare it: a pill with a kicker and a heading, the owner's line and icon in a dashed box, and the subscribe buttons under it.
+ * ApeironLF's empty state, for the designs that declare it: a pill with a kicker and a heading, the owner's line and icon, and the subscribe buttons.
  */
 function emptyApNode(props, ui) {
   const wrap = el2('div', 'urd-cal-apempty');
@@ -805,7 +770,7 @@ function categoryRow(occs, active, onpick, ui) {
 }
 
 /**
- * The fold for the events beyond the max count: a native details element whose summary counts them, with the same design drawing the rest inside it, so the whole list is in the page.
+ * The fold for the events beyond the max count: a native details element whose summary counts them, the same design drawing the rest inside it.
  */
 function foldNode(render, rest, total, props, ics, ui) {
   const fold = el2('details', 'urd-cal-fold');
@@ -823,8 +788,7 @@ function foldNode(render, rest, total, props, ics, ui) {
 const SEARCH_WAIT = 200;
 
 /**
- * The search field: one node for the life of the block, so the words and the caret stay while the calendar is redrawn under it.
- * On a phone the field is folded behind a button with the search icon, and opens when the button is pressed; it stays open while it holds words.
+ * The search field, one node for the block's life so its words and caret stay through a redraw; on a phone it folds behind a search button.
  */
 function searchField(onsearch) {
   const row = el2('div', 'urd-cal-searchrow');
@@ -913,10 +877,7 @@ function setStop(days, target) {
 }
 
 /**
- * A day grid as one tab stop, called after every paint of the grid.
- * The arrow keys move between the days (up and down to the day above and below on the screen), Home and End to the ends of the row, and PageUp and PageDown to the span before and after (`page`, the design's own move through its weeks or months); an arrow past the first or the last day pages too.
- * Tab from a day goes through that day's events and out of the grid.
- * The tab stop starts on the day `current` matches, else the first.
+ * Makes a day grid one tab stop: the arrow keys, Home, End, PageUp and PageDown move between the days, and Tab goes through the day's events and out.
  */
 function dayGrid(grid, selector, { page = null, current = null } = {}, keysOn = () => true) {
   let state = GRIDS.get(grid);
@@ -976,8 +937,7 @@ function dayGrid(grid, selector, { page = null, current = null } = {}, keysOn = 
 /* ---------- Structured data ---------- */
 
 /**
- * The events a published calendar shows, written into <head> as JSON-LD (schema.org `Event`), one script per block.
- * It carries the mark seo.js clears at every page render, so a page left takes its events with it.
+ * Writes the events a published calendar shows into <head> as JSON-LD (schema.org Event), one script per block, marked so seo.js clears it.
  */
 function writeEventData(el, occs, ics, ctx, meetingHosts) {
   const id = el.dataset.blockId ?? '';
@@ -1033,9 +993,7 @@ const DAY_MS = 24 * 3600 * 1000;
 const DOTS_MAX = 4;
 
 /**
- * The days of a month as the phone draws them: every day a button with its number and a dot per event, and the picked day's events listed in the panel under the grid.
- * Today is picked first, else the month's first day with an event.
- * The day buttons are appended to the grid after its lead cells.
+ * The days of a month as the phone draws them: a button per day with a dot per event, and the picked day's events in the panel under the grid.
  */
 function phoneDays(ui, grid, panel, year, month, occs, cellClass) {
   const today = ui.today();
@@ -1095,7 +1053,6 @@ const heightKey = (el, ctx) => `urd-cal-h:${el.dataset.blockId ?? ''}:${ctx.view
 
 /**
  * The loading state: quiet bars at the height the calendar will have, with the word for a screen reader.
- * The height the session saw is the closest; without it the phone takes the height the editor measured there (`--urd-loading-h`, base.css).
  */
 function loadingNode(el, ctx) {
   const box = el2('div', 'urd-cal-loading');
@@ -1128,10 +1085,10 @@ function renderCalendar(el, props, ctx) {
   // A calendar with a feed, an address of its own or a reference to the site's registry, stands in its loading state until the events are drawn.
   if ((props.sources ?? []).some((source) => (typeof source === 'string' ? source.trim() : source && (source.url || source.calendar)))) host.setAttribute('aria-busy', 'true');
   if (!copyLastDrawing(host, el, props, ctx.measure) && host.hasAttribute('aria-busy')) host.appendChild(loadingNode(el, ctx));
-  // A calendar whose code is all in (readied before the page was drawn, prepareCalendar in calendar-load.js) is drawn as the page's drawing ends, in the same task, so it stands with the page from its first frame; its drawing takes the feeds its readying asked for (takeReadied).
+  // A calendar whose code is all in (prepareCalendar in calendar-load.js) is drawn in the same task as the page, taking the feeds its readying asked for.
   const ready = partsIn ? designModules(partsIn[1], props) : null;
   const inAlready = Boolean(ready?.every((name) => !name || designsIn.has(name)));
-  // Otherwise the feeds are asked for as soon as the parser is in, beside the other modules, so the events arrive with the code that draws them; the drawing takes these requests (loadOccurrences), and a copy drawn only to be measured asks for none.
+  // Otherwise the feeds are asked for as soon as the parser is in, beside the other modules; a copy drawn only to be measured asks for none.
   const early = new Map();
   if (!inAlready && host.hasAttribute('aria-busy') && !ctx.measure) {
     import('../ics.js').then((ics) => {
@@ -1212,7 +1169,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   const stripe = cd.calStripe(design, props.stripe);
   host.classList.toggle('urd-cal-stripes', stripe.show);
   if (stripe.color) host.style.setProperty('--urd-cal-stripe', stripe.color);
-  // The phone design (calPhoneView) and the card design (calCardDesign) the block wears, each as a class of its own; the card's dress is written for the card (dressDialog).
+  // The phone design (calPhoneView) and the card design (calCardDesign) the block wears, each as a class of its own.
   const phoneView = cd.calPhoneView(props);
   const phoneDef = cd.calPhoneDesignDef(phoneView, props);
   host.classList.add(`urd-cal-pv-${phoneView}`);
@@ -1224,13 +1181,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   host.dataset.cardColours = cardDress.ownColours ? 'on' : 'off';
   const ui = makeUi(cd, cf, ics, maps, links, el, host, props, ctx, sources, zone);
   if (cardMod?.cards?.[card]) ui.dressCard = (dialog, occ) => ui.themedWords(() => cardMod.cards[card](dialog, occ, ui, props));
-  // A calendar narrower than NARROW_PX draws its narrow layouts: the designs
-  // with seven columns lay their days under each other, and the months show
-  // dots that open the day. Where container queries exist the calendar asks
-  // its own width (ADR-0025), so a calendar in a narrow column of a wide page
-  // is narrow too and a drag passes through both layouts; else the window
-  // decides, as the page's phone view.
-  // The width counts as the content has it: the block's drawn scale zooms the content (render.js applyZoom) and the frame follows the size, so a calendar drawn smaller has the room it had and keeps its layout.
+  // A calendar narrower than NARROW_PX draws its narrow layouts, by its own width where container queries exist (ADR-0025), else by the window's.
   const ruler = el.querySelector(':scope > .urd-block-ruler');
   const isNarrow = () => (WIDTH_QUERIES && ruler ? ruler.clientWidth / (parseFloat(host.style.zoom) || 1) < NARROW_PX : ctx.viewport === 'mobile');
   const setNarrow = (narrow) => {
@@ -1239,9 +1190,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   };
   setNarrow(isNarrow());
   if (WIDTH_QUERIES && ruler) {
-    // The ruler hears the width alone, and the calendar is drawn again in the
-    // next frame rather than inside the observer, where a change of its height
-    // would come back to the push pass as a notification it cannot deliver.
+    // The ruler hears the width alone, and the calendar is drawn again in the next frame, outside the observer.
     let frame = 0;
     const watch = new ResizeObserver(() => {
       if (!host.isConnected) {
@@ -1317,7 +1266,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     }
     if (search) tools.appendChild(search);
     if (tools.children.length) host.appendChild(tools);
-    // The calendar filter, when the owner switched it on; a design with switches of its own (ownFilter), the block's or the one behind the switcher's button, draws no chip row.
+    // The calendar filter when the owner switched it on; a design with switches of its own (ownFilter) draws no chip row.
     const shownDesign = own ? design : cd.calDesign(cd.calSwitcherViews(props)[mode]);
     const chips = props.showCategories !== true || shownDesign.ownFilter ? null : categoryRow(occurrences, activeCategory, (category) => {
       activeCategory = category;
@@ -1340,7 +1289,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     const phoneDesign = ui.phone && phoneView !== design.id;
     host.classList.toggle('urd-cal-phone-design', phoneDesign);
     if (mode === 'week' || mode === 'month') {
-      // The design behind the button (calSwitcherViews) is drawn in a box of its own that carries its class and its options, so its style sheet rules and settings apply inside the block's own set.
+      // The design behind the switcher's button (calSwitcherViews) is drawn in a box of its own with its class and options, so its rules and settings apply.
       const chosen = cd.calSwitcherViews(props)[mode];
       const box = el2('div', `urd-cal-swview urd-cal-d-${chosen}`);
       const opt = ui.opt;
@@ -1358,8 +1307,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
       host.appendChild(design.empty === 'ap' ? emptyApNode(props, ui) : emptyNode(props));
     } else {
       if (phoneDesign && phoneDef.look) {
-        // On a phone another design, or a phone design a design lends, is drawn in a box of its own that carries that design's set, its class (for a design drawn as itself) and its options, with its words.
-        // The owner's colours on this calendar belong to its own design: the box clears them, so the other design is drawn in its own.
+        // On a phone another design is drawn in a box of its own with its set, class, options and words, the owner's colours cleared so it wears its own.
         const look = cd.calDesign(phoneDef.look);
         const box = el2('div', `urd-cal-pd urd-cal-set-${look.set}${phoneDef.desktop ? ` urd-cal-d-${look.id}` : ''}`);
         if (look.id !== design.id) for (const name of host.style) if (name.startsWith('--urd-cal-s-') || name === '--urd-cal-accent-text') box.style.setProperty(name, 'initial');
@@ -1405,8 +1353,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     }
   };
 
-  // In the editor the example events stand in for the calendar's own while no calendar is connected that answers: by the choice made for the session on its bar's button (preview-edit.js), else while it has no sources or none of its feeds can be fetched, so its design can be seen and set; the reason a feed failed is kept for the button's tooltip.
-  // Visitors see the calendar's own events, or its quiet empty state.
+  // In the editor the example events stand in while no connected calendar answers or by the session's choice on the bar's button; visitors see their own.
   const key = el.dataset.blockId ?? '';
   const settle = (occurrences, reason = null, sample = !sources.length) => {
     settled = true;
@@ -1420,21 +1367,20 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
     if (!ctx.measure) rememberDrawing(key, host, props, false);
     if (!ctx.preview) return;
     editing?.shown(key, { host, examples, reason, redraw: () => { if (host.isConnected) settle(occurrences, reason, sample); } });
-    // The bar's button reads what the calendar now shows (preview-edit.js exampleButton), and a new calendar's fit measures it now that it stands (urd-drawn, add-fit.js).
+    // Tells the bar's button what the calendar shows (exampleButton), and a new calendar's fit that it stands (urd-drawn, add-fit.js).
     el.dispatchEvent(new CustomEvent('urd-cal-shown'));
     el.dispatchEvent(new CustomEvent('urd-drawn'));
   };
   const failed = (error) => settle([], () => ta('calendar.feedFailed', { error }), true);
 
   if (!sources.length) {
-    // A block whose only sources point at calendars no longer in the registry says so in the button's tooltip.
+    // A block whose only sources point at calendars missing from the registry says so in the button's tooltip.
     const unknown = (props.sources ?? []).some((source) => source && typeof source === 'object' && 'calendar' in source);
     settle([], unknown ? () => ta('calendar.unknownCalendar') : null);
     return;
   }
 
-  // The switcher needs the week and the month from their start, whichever is the earlier.
-  // The week begins on the day the site's language starts it on, which can be the day before Monday.
+  // The switcher needs the week and the month from their start, whichever is earlier; the week begins on the day the site's language starts it on.
   const weekFrom = switcher || view === 'week' ? Math.min(ics.windowStart('week'), ui.weekStartOf(Date.now())) : 0;
   // A year design with another month at the top reads a season: twelve months from that month, through the season's end.
   const season = view === 'year' ? ics.seasonRange(ics.seasonTop(ui.opt.firstMonth, ui.today()), ui.today().getTime()) : null;
@@ -1443,10 +1389,7 @@ function drawCalendar(ics, cd, cf, maps, links, mod, weekMod, phoneMod, cardMod,
   const pagesBack = ['month', 'week', 'day'].includes(view) || switcher;
   const from = Math.min(pagesBack ? viewFrom - 365 * 24 * 3600 * 1000 : viewFrom, props.showEarlier === true ? Date.now() - EARLIER_DAYS * 24 * 3600 * 1000 : viewFrom);
   const to = season && !switcher ? season.to : pagesBack ? Date.now() + 400 * 24 * 3600 * 1000 : undefined;
-  // While the feeds are on the way the calendar stands in its own design, drawn with the sample events, their words and pictures hidden under a loading note, so the calendar is seen at once and its events fill it as they come.
-  // It waits a frame, so a feed already at hand (the session's copy) is drawn without it; a copy drawn only to be measured goes without it, and so does a calendar whose rules did not load, which could not hide the words.
-  // It stands at the height the loading state kept, the sample drawn into it, so nothing around the calendar moves until its events are in.
-  // A calendar showing its last drawing keeps it until its own is in.
+  // While the feeds are on the way the calendar stands in its own design with the sample events, their words hidden under a loading note.
   if (!ctx.measure && !('calCopy' in host.dataset)) {
     requestAnimationFrame(() => {
       if (settled || !sheetIn || !host.isConnected) return;
