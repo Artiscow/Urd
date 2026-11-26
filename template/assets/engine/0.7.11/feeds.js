@@ -1,10 +1,6 @@
 /**
- * Publish-generated visibility files (the SEO pack): sitemap.xml, robots.txt
- * and RSS feeds for dated collections. Pure string builders without DOM or
- * network (node-tested); the editor calls them on publish and commits the
- * result as content files, the same pattern as theme.css.
- * Absolute addresses are built from the origin the editor runs on (admin lives
- * on the deployed site).
+ * The files publishing writes for search engines and feed readers: sitemap.xml, robots.txt and RSS for dated collections.
+ * Pure string builders.
  */
 
 /** XML entities in text content and attributes. */
@@ -47,8 +43,8 @@ export function buildRobotsTxt(origin) {
 export const FEED_KINDS = ['news', 'notices', 'publications'];
 
 /**
- * RSS 2.0 feed for a collection. The entries arrive READY as plain text
- * (rich text is stripped by the caller, which has the DOM); dates must be parsable.
+ * RSS 2.0 feed for a collection, its entries in plain text from the caller.
+ * Their dates must be parsable.
  * @param {{title: string, description?: string, origin: string, path: string,
  *   items: {title: string, text?: string, date?: string, href?: string}[]}} feed
  * @returns {string}

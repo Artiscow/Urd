@@ -1,6 +1,5 @@
 /**
- * A caret's place in an editable field as a path of child positions from the field down to the node it stands in, so the same place can be found in a field drawn again with the same markup (keepTyping in preview-edit.js).
- * Pure: it reads only `parentNode` and `childNodes`, and is node-tested on plain objects (tests/caret-path.test.mjs).
+ * A caret's place in an editable field as a path of child positions, found again in the field drawn anew with the same markup (keepTyping in preview-edit.js).
  */
 
 /**

@@ -1,15 +1,11 @@
 /**
- * The block palette (0.7.10.11): the kinds a new block can be, in the groups and the order the Blocks panel and the canvas's «+ New block» menu share, each with its label key, its tooltip key and a drawn picture.
- * The groups gather the kinds by what the owner adds a block for, as the builders' insert panels do (comparison/ELEMENTS.md, Insertion).
- * Both lists hold the same entries and run them the same way: an image and a gallery with pictures open the file picker, and «All calendar designs …» opens the design picker; the panel adds the block in the view, the canvas menu in its own section at the point clicked.
- * An entry with `files` adds its block from pictures on the computer (one or many), and `action: 'designs'` opens the calendar's design picker instead of adding a block.
- * Read by the editor (bundled) and by preview-edit.js, so it stays outside the visitors' import closure.
+ * The block palette: the kinds a new block can be, in the groups and order the Blocks panel and the canvas's «+ New block» menu share.
  */
 
 /** A drawn picture: a 24 px line drawing in the current colour (ADR-0009: drawn SVG, never characters). */
 const draw = (body) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
-/** Every kind with its label, its tooltip where it has one, and its picture. */
+/** Every kind with its label, tooltip and picture; `files` adds its block from pictures on the computer, `action: 'designs'` opens the calendar's picker. */
 export const PALETTE_KINDS = {
   'text': { labelKey: 'blocks.text', picture: draw('<path d="M5 6h14M5 10h14M5 14h10M5 18h12"/>') },
   'text-box': { labelKey: 'ui.textBox', tipKey: 'tip.blocks.textBox', picture: draw('<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9h10M7 13h10M7 16h6"/>') },
@@ -47,7 +43,7 @@ export const PALETTE_KINDS = {
   'shape-triangle': { labelKey: 'shape.triangle', picture: draw('<path d="M12 4l9 16H3z"/>') },
 };
 
-/** The groups in their order, each with its kinds in theirs: what the owner adds a block for. A group's picture in the canvas menu's list is the picture of its `icon` kind. */
+/** The groups in their order, each with its kinds in theirs; a group's picture in the canvas menu is its `icon` kind's. */
 export const PALETTE_GROUPS = [
   { id: 'text', labelKey: 'blockGroup.text', icon: 'text', kinds: ['text', 'text-box', 'button', 'quote', 'icon'] },
   { id: 'media', labelKey: 'blockGroup.media', icon: 'image', kinds: ['image', 'gallery', 'gallery-images', 'video', 'audio'] },
@@ -59,10 +55,7 @@ export const PALETTE_GROUPS = [
 ];
 
 /**
- * Whether the shop's blocks (product cards, basket, checkout) are offered in the
- * block lists: the site's own choice (site.commerce.shop) when it is set, else
- * on while the site has a product catalogue, so a site without a shop keeps a
- * shorter palette and a site that sells sees its blocks without a setting.
+ * Whether the block lists offer the shop's blocks: the site's own choice (site.commerce.shop) when set, else whether it has a product catalogue.
  * @param {{commerce?: {shop?: boolean}}|undefined} siteSettings The `site` part of site.json
  * @param {boolean} hasProducts Whether a collection of kind products exists
  * @returns {boolean}

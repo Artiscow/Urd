@@ -1,6 +1,7 @@
 /**
  * Contract tests for the typography logic in the text toolbar
- * (text-typo.js): size clamping, indent steps and font stack matching.
+ * (text-typo.js): size clamping, indent steps and font stack matching;
+ * and the toolbar's editing mode, which leaves styleWithCSS alone.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -72,4 +73,17 @@ test('LINE_HEIGHTS: five choices where the first is inherit (the UI contract)', 
     assert.ok(Number(value) > 0);
     assert.ok(label.includes('.'), 'the code label is an English decimal; the toolbar formats it per admin locale');
   }
+});
+
+test('the text toolbar never toggles styleWithCSS, so a theme colour the browser writes as font[color] is found and kept as the theme\'s', async () => {
+  const { readFileSync, readdirSync } = await import('node:fs');
+  const { ENGINE_DIR, stripComments } = await import('./_engine.mjs');
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? walk(new URL(`${entry.name}/`, dir)) : [new URL(entry.name, dir)]));
+  const modules = walk(ENGINE_DIR).filter((url) => url.pathname.endsWith('.js'));
+  assert.ok(modules.some((url) => url.pathname.endsWith('/preview-edit.js')));
+  for (const url of modules) {
+    assert.doesNotMatch(stripComments(readFileSync(url, 'utf8')), /\bstyleWithCSS\b|['"]useCSS['"]/, url.pathname.slice(ENGINE_DIR.pathname.length));
+  }
+  const edit = stripComments(readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8'));
+  assert.match(edit, /for \(const el of activeText\.querySelectorAll\('\[style\], font\[color\]'\)\) \{\s*if \(styleProp === 'color' && el\.tagName === 'FONT'/, 'the theme colour is read back from font[color]');
 });

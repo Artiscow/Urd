@@ -104,3 +104,31 @@ test('an image gallery layer is sketched in its style, so the card is not blank'
   // The fill style is the background itself.
   assert.equal([...card('fill').matchAll(/<rect /g)].length, 1);
 });
+
+test('no user string reaches the sketch: a colour passes only as hex or a theme token, and anything else falls back', () => {
+  const HOSTILE = ['red"><script>alert(1)</script>', 'url(javascript:alert(1))', '#fff" onload="alert(1)', 'var(--x);}</style><script>', 'Red', 'accent ', 'expression(alert(1))'];
+  const frame = { desktop: { x: 10, y: 20, w: 40, h: 120 } };
+  for (const bad of HOSTILE) {
+    const sketch = (section) => presetThumb({ size: { minHeight: '400px' }, ...section });
+    const svgs = [
+      sketch({ background: { layers: [{ type: 'color', props: { value: bad } }] }, blocks: [] }),
+      sketch({ background: { layers: [{ type: 'gradient', props: { stops: [{ color: bad }, bad] } }] }, blocks: [] }),
+      sketch({ background: { layers: [{ type: 'gradient', props: { stops: [bad] } }] }, blocks: [] }),
+      sketch({ background: { layers: [{ type: 'glow', props: { color: bad, x: bad, y: bad, radius: bad, opacity: bad } }] }, blocks: [] }),
+      ...['rect', 'circle', 'triangle', 'line'].map((kind) => sketch({ background: { layers: [] }, blocks: [{ type: 'shape', frames: frame, props: { kind, color: bad } }] })),
+      sketch({ theme: bad, background: { layers: [] }, blocks: [{ type: bad, frames: { desktop: { x: bad, y: bad, w: bad, h: bad } }, props: { html: bad, align: bad } }] }),
+      pageThumb({ sections: [{ size: { minHeight: bad }, background: { layers: [{ type: 'color', props: { value: bad } }] }, blocks: [{ type: 'text', frames: frame, props: { html: `<h2>${bad}</h2>` } }] }] }),
+    ];
+    for (const svg of svgs) {
+      assert.ok(!svg.includes(bad), `${bad} reached the sketch`);
+      assert.doesNotMatch(svg, /<script|javascript:|onload=|expression\(|url\(/i);
+      for (const [, value] of svg.matchAll(/\b(?:fill|stroke)="([^"]*)"/g)) {
+        assert.match(value, /^(?:#[0-9a-fA-F]{3,8}|var\(--urd-color-[a-z][a-z0-9-]*, #[0-9a-fA-F]{3,8}\)|none)$/, `${bad}: fill ${value}`);
+      }
+    }
+  }
+  // Hex and theme tokens pass, the token as the theme's variable with a fallback.
+  const shape = (color) => presetThumb({ background: { layers: [] }, blocks: [{ type: 'shape', frames: frame, props: { kind: 'rect', color } }] });
+  assert.match(shape('#12ab9F'), /fill="#12ab9F"/);
+  assert.match(shape('accent-2'), /fill="var\(--urd-color-accent-2, #[0-9a-f]+\)"/);
+});

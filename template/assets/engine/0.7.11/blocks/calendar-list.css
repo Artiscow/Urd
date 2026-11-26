@@ -1,6 +1,6 @@
 /*
- * The calendar's list designs (blocks/calendar-list.js): their own rules, loaded with the renderer by blocks/calendar-load.js (loadDesign).
- * The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+ * The list designs' own rules, loaded with blocks/calendar-list.js.
+ * Its reasoning stands in docs/STYLES.md, under blocks/calendar-list.css.
  */
 .urd-cal-d-glass .urd-cal-switch {
   background: var(--urd-cal-glass);
@@ -8,8 +8,7 @@
   backdrop-filter: blur(16px);
 }
 
-/* ---- The list designs (blocks/calendar-list.js).
-   Each design's slots are read as --urd-cal-s-<slot> with the design's own default. ---- */
+/* ---- The list designs (blocks/calendar-list.js) ---- */
 
 /* 01 Timeline */
 .urd-cal-tl {
@@ -348,8 +347,7 @@
   background: transparent;
 }
 
-/* The designs that stood wider than a phone with long titles: the sign-up of List on navy takes its own line, the large titles
-   of Regular event and Billboard are set smaller, and Billboard's frame and its tiles' units take less room. */
+/* The designs a phone is too narrow for with long titles take less room */
 .urd-cal-phone.urd-cal-d-apList .urd-cal-signup {
   flex-basis: 100%;
 }
@@ -368,7 +366,7 @@
   font-size: 1.15em;
 }
 
-/* 07 Programme booklet: a page out of the booklet, the binding shaded along its left edge with two staples, «Program» over a rule at its top. */
+/* 07 Programme booklet's card: a page out of the booklet */
 .urd-cal-dialog.urd-cal-dlg-booklet {
   padding-left: 2.4rem;
   background-image: linear-gradient(90deg, rgb(0 0 0 / 12%), transparent 22px);
@@ -421,7 +419,7 @@
   border-radius: 6px;
 }
 
-/* M2 Glass: the card as a frosted glass plate with the three colour blobs glowing through it, the date on a glass pill and the facts on an inner pane; the calendar behind it is blurred rather than darkened, so the glass has colour to break. */
+/* M2 Glass's card: a frosted glass plate over the colour blobs */
 .urd-cal-dialog.urd-cal-dlg-glass {
   --urd-cal-gl-line: var(--urd-cal-s-glassLine, rgb(255 255 255 / 80%));
   background:

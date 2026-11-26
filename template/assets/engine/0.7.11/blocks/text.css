@@ -1,6 +1,6 @@
 /*
- * The text block's own rules (blocks/text.js), all for its document designs, loaded with them (loadDocs), placed after base.css in the order BLOCK_SHEETS keeps.
- * Its reasoning stands in docs/STYLES.md, under blocks/text.css.
+ * The text block's document designs' rules (blocks/text.js), loaded with them after base.css in BLOCK_SHEETS order.
+ * Its reasoning stands in docs/STYLES.md.
  */
 .urd-text-doc .urd-text > :first-child {
   margin-top: 0;

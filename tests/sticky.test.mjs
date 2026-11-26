@@ -183,3 +183,33 @@ test('stickyLeads: the group\'s first block in the section\'s order speaks for i
   assert.equal(stickyLeads(null).size, 0);
 });
 
+
+test('the desktop drag pairs every suspend of the pinning with one resume: its release and its pointercancel (onCancel) both resume what it suspended', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { ENGINE_DIR, stripComments } = await import('./_engine.mjs');
+  const edit = stripComments(readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8'));
+  const from = edit.indexOf('function wireDrag(');
+  assert.ok(from > 0, 'the drag is found');
+  const drag = edit.slice(from, edit.indexOf('\n  function ', from + 1));
+  /** The body of an arrow function the drag names, from its opening brace to its closing one. */
+  const arrow = (name) => {
+    const start = drag.indexOf(`const ${name} = (`);
+    assert.ok(start >= 0, `the drag has ${name}`);
+    const open = drag.indexOf('{', drag.indexOf('=>', start));
+    let depth = 0;
+    for (let i = open; i < drag.length; i++) {
+      if (drag[i] === '{') depth++;
+      else if (drag[i] === '}' && --depth === 0) return drag.slice(open, i + 1);
+    }
+    return '';
+  };
+  assert.match(arrow('holdSticky'), /^\{ if \(!holdsSticky\) \{ holdsSticky = true; suspendSticky\(\); suspendPush\(\); \} \}$/, 'the hold suspends the pinning and the push once');
+  assert.match(arrow('dropSticky'), /^\{ if \(holdsSticky\) \{ holdsSticky = false; resumeSticky\(\); resumePush\(\); \} \}$/, 'the drop resumes both, once, and only what was held');
+  const desktop = drag.slice(drag.indexOf('let holdsSticky = false;'));
+  const cancel = desktop.slice(desktop.indexOf('const onCancel = () => {'), desktop.indexOf('const onEscape = '));
+  assert.match(cancel, /\bdropSticky\(\);/, 'an aborted drag resumes the pinning');
+  const up = desktop.slice(desktop.indexOf('const onUp = () => {'));
+  assert.match(up.slice(0, up.indexOf('if (unchanged) {')), /\bdropSticky\(\);/, 'a released drag resumes it before it posts');
+  assert.match(desktop, /handle\.addEventListener\('pointercancel', onCancel\);/, 'onCancel answers the pointercancel');
+  assert.equal((desktop.match(/\b(?:suspendSticky|resumeSticky|suspendPush|resumePush)\(/g) ?? []).length, 4, 'the desktop drag suspends and resumes through the pair alone');
+});

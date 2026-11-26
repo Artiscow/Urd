@@ -1,8 +1,6 @@
 /**
- * Named spots on a page: the sections and blocks an owner names so a link can point at them (`/kaker#priser`).
- * The naming rule's reasons, the ids a page already uses, suggestions from the spot's own words, the clean-up when content is copied in, and the links that point at a spot.
- * Pure: the editor, the schema check and the tests import it, and visitors never load it.
- * The rule itself is isAnchorName in nav-model.js, which the renderer reads.
+ * Named spots: the sections and blocks an owner names so a link can point at them (`/kaker#priser`).
+ * Pure; the rule itself is isAnchorName in nav-model.js.
  */
 
 import { isAnchorName } from './nav-model.js';
@@ -15,7 +13,7 @@ export const ANCHOR_MAX = 40;
 const RESERVED_RE = /^(?:urd|sec|blk)-/;
 
 /**
- * Why a name cannot be used, or null when it can: 'form' (only lower-case letters, digits and inner hyphens, at most 40), 'reserved' (one of the engine's own prefixes) or 'taken' (another spot on the page has it).
+ * Why a name cannot be used, or null: 'form' (lower-case letters, digits and inner hyphens), 'reserved' (an engine prefix) or 'taken' (another spot has it).
  * @param {unknown} name
  * @param {Set<string>} [taken] The ids in use on the page (takenAnchors)
  * @returns {'form'|'reserved'|'taken'|null}
@@ -32,8 +30,8 @@ function formFields(block) {
 }
 
 /**
- * The ids a page already uses for its spots: its sections' and blocks' ids and names, and the ids of its form fields' inputs.
- * The spot being named (`own`, a section or block id) is left out, so its own name stays free for it.
+ * The ids a page uses for its spots: its sections' and blocks' ids and names, and its form inputs' ids.
+ * The spot being named (`own`) is left out.
  * @param {{sections?: Array<object>}} page
  * @param {string|null} [own]
  * @returns {Set<string>}
@@ -60,8 +58,7 @@ export function takenAnchors(page, own = null) {
 }
 
 /**
- * The names on a page that another spot already holds: a name given twice, or a name equal to a section's or block's id or a form input's id.
- * Empty when every name is the only spot of its kind.
+ * The names on a page that another spot already holds, as a name or as an id.
  * @param {{sections?: Array<object>}} page
  * @returns {string[]}
  */
@@ -86,8 +83,8 @@ export function duplicateAnchors(page) {
 }
 
 /**
- * A free name built on `name`: the name itself, or with -2, -3 and so on while it is taken, shortened so it stays within the limit.
- * A name that is one of the reserved words alone (`urd`, `sec`, `blk`) takes its number without the hyphen (`urd2`), since `urd-2` would start with a reserved prefix.
+ * A free name built on `name`: itself, or with -2, -3 and so on, cut to the limit.
+ * A reserved word alone takes its number without a hyphen (`urd2`).
  * @param {string} name A valid name
  * @param {Set<string>} taken
  * @returns {string}
@@ -103,8 +100,8 @@ export function uniqueAnchor(name, taken) {
 }
 
 /**
- * A name made from words, free on the page: their slug, cut at the last whole word that fits, without a reserved prefix.
- * Empty when the words give no letters or digits.
+ * A name made from words, free on the page: their slug cut at the last whole word that fits, without a reserved prefix.
+ * Empty without letters or digits.
  * @param {string} words
  * @param {Set<string>} [taken]
  * @returns {string}
@@ -165,8 +162,8 @@ export function sectionWords(section) {
 }
 
 /**
- * The spots a link can land on in a page, in page order: each section, numbered from 1, and each named block, under its section from the top.
- * Each spot carries its id (what a link stores), its name ('' when it has none) and its first words, which the link editor shows.
+ * The spots a link can land on, in page order: each section, numbered from 1, and each named block under its section.
+ * Each has its id, name and first words.
  * @param {{sections?: Array<object>}} page
  * @returns {Array<{id: string, kind: 'section'|'block', n: number, name: string, words: string}>} `n` is the section's number, for a block the number of its section
  */
@@ -185,8 +182,7 @@ export function pageSpots(page) {
 }
 
 /**
- * Gives sections and blocks copied onto a page names that are free there: a name the page already uses gets -2, -3 and so on, two copies with the same name get different ones, and a name that breaks the rule is dropped.
- * The items are changed in place and returned.
+ * Gives copied sections and blocks names free on the page: a taken name gets -2, -3 and so on, and a name that breaks the rule is dropped.
  * @param {Array<object>} items Sections with their blocks, or blocks
  * @param {{sections?: Array<object>}} page The page they are added to, as it is without them
  * @returns {Array<object>}
@@ -225,7 +221,7 @@ const PAGE_ATTR_RE = /\sdata-urd-page="([^"]*)"/i;
 const HREF_ATTR_RE = /\shref="([^"]*)"/i;
 
 /**
- * An address within the site as the page path it names and the spot after #; the path is '' for a bare fragment, which stands for the page the link is on.
+ * An address within the site as its page path and the spot after #, the path '' for a bare fragment.
  * Null for an address without a spot or outside the site.
  * @param {string} href
  * @returns {{path: string, target: string}|null}
@@ -255,8 +251,8 @@ function textRefs(html) {
 }
 
 /**
- * Calls `visit(ref, holder)` for every link to a spot in a value: a link object's `target`, an address under `href` or `url`, and the links in rich text.
- * A ref names its page (`page`, '' for none) or the path of its address (`path`); `holder` is the nearest object with words of its own.
+ * Calls `visit(ref, holder)` for each link to a spot in a value: a `target`, an `href` or `url`, or rich text's links.
+ * `holder` is the nearest object with words.
  * @param {unknown} value
  * @param {(ref: {page?: string, path?: string, target: string}, holder: object|null) => void} visit
  * @param {object|null} [holder]
@@ -287,10 +283,8 @@ function holderWords(holder) {
 }
 
 /**
- * The links that point at a spot from its own page, the menu and the footer: by the spot's id, or by its name for a link typed as an address.
- * A link on the page that names no page points at a spot there; a link in the menu or the footer counts when it names the page, by its id or its address.
- * Each block with such a link is listed once, with its type and words; each menu or footer item once, with its words.
- * With `byName` only the links that name the spot by its name count: those a cleared name would cut, since a link by the spot's id lands without it.
+ * The links to a spot from its page, the menu and the footer, by its id or name, each block or item once with its words.
+ * With `byName`, only those by name.
  * @param {{id: string, name?: string}} spot
  * @param {{page?: {sections?: Array<object>}, pageId?: string, path?: string, site?: {nav?: object, footer?: object}|null, byName?: boolean}} context The page, its id and path, the site with its menu and footer, and whether only the links by name count
  * @returns {Array<{area: 'page'|'menu'|'footer', words: string, sectionId?: string, blockId?: string, type?: string}>}

@@ -1,14 +1,9 @@
 /**
- * Pure placement logic for new blocks: adding a block puts it WHERE the
- * owner clicked in the section, not at a fixed spot. Kept DOM-free so the
- * maths can be contract-tested (tests/place.test.mjs).
+ * Where new blocks, toolbars and menus are placed: a block added where the owner clicked in the section. Pure and tested.
  */
 
 /**
- * Centres a w×h frame on a click point, clamped inside the section and
- * snapped to the grid. x/w are percentages of the section width, y/h/grid
- * in px (the same physical units as frames elsewhere, see docs/SCHEMA.md).
- *
+ * Centres a w×h frame on a click point, clamped inside the section and snapped to the grid; x/w in percent of the section, y/h in px.
  * @param {{ x: number, y: number, w: number, h: number, grid: { size: number, snap?: boolean }, snap?: boolean }} p
  *   x/y is the click point (section-relative); p.snap === false gives free placement.
  * @returns {{ x: number, y: number }}
@@ -25,14 +20,7 @@ export function frameAtPoint(p) {
 }
 
 /**
- * Where a rotated block's toolbar is anchored, in the block's own unrotated
- * box: the corner of the block's bounding box on the screen (top left, or
- * bottom left when the toolbar is flipped under the block), carried back
- * through the rotation. The toolbar is a child of the rotated block and
- * turns itself upright (base.css), so anchoring it at the block's own
- * corner would lay it over the content whenever that corner is not the
- * block's highest point. Rotation is about the box's centre, clockwise for
- * a positive angle, as CSS `rotate()` draws it.
+ * Where a rotated block's toolbar is anchored in its own box: its bounding box's corner on the screen, top or bottom left, turned back by the rotation.
  * @param {number} w The block's width in px
  * @param {number} h The block's height in px
  * @param {number} rotDeg The rotation in degrees
@@ -54,7 +42,7 @@ export function toolbarAnchor(w, h, rotDeg, under) {
 }
 
 /**
- * How a menu that hangs from an anchor (the canvas's «+ New block») fits the screen: down from the anchor while it fits there, otherwise to the side of the anchor with more room, held to that room so it scrolls inside instead of running past the edge.
+ * How a menu hanging from an anchor fits the screen: down while it fits, else toward the side with more room, held to that room.
  * Every value is in screen px.
  * @param {{ anchorTop: number, anchorBottom: number, gap: number, height: number, viewport: number, margin?: number, min?: number }} p
  *   gap is the space between the anchor and the menu, viewport the screen's height, min the least height the menu is held to
@@ -71,8 +59,7 @@ export function menuFit(p) {
 }
 
 /**
- * The sideways move that keeps a box inside the screen: positive to the right, negative to the left, 0 when it fits.
- * A box wider than the screen keeps its left edge in view.
+ * The sideways move that keeps a box inside the screen, 0 when it fits; a box wider than the screen keeps its left edge in view.
  * @param {number} left The box's left edge on the screen
  * @param {number} width The box's width
  * @param {number} viewport The screen's width
@@ -86,8 +73,7 @@ export function shiftInto(left, width, viewport, margin = 8) {
 }
 
 /**
- * Where a side panel beside a menu opens (the slim «+ New block» menu's group): on the menu's right while it fits there, on the left when it does not and the left has more room; its top level with the row that opened it, moved up so its bottom stays on the screen, but never above the screen's top.
- * Every value is in screen px.
+ * Where a side panel beside a menu opens: right while it fits, else left when the left has more room, its top level with its row but kept on the screen.
  * @param {{ menuLeft: number, menuRight: number, rowTop: number, width: number, height: number, viewportW: number, viewportH: number, gap: number, margin?: number }} p
  * @returns {{ left: boolean, top: number, room: number|null }} left: open on the menu's left; top: the panel's top; room: the height to hold the panel to, null when it fits whole
  */

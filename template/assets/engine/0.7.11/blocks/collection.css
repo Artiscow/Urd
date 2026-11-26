@@ -1,6 +1,6 @@
 /*
- * The collection block's own rules (blocks/collection.js), loaded with the module by core-types.js, placed after base.css in the order BLOCK_SHEETS keeps.
- * Its labels say all there is; docs/STYLES.md holds nothing more for it.
+ * The collection block's own rules (blocks/collection.js), loaded with it after base.css in BLOCK_SHEETS order.
+ * docs/STYLES.md holds nothing more for it.
  */
 .urd-collection {
   width: 100%;

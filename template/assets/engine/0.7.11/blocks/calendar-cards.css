@@ -1,6 +1,6 @@
 /*
- * The calendar's card designs (blocks/calendar-cards.js): their own rules, loaded with the renderer by blocks/calendar-load.js (loadDesign).
- * The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+ * The card designs' own rules, loaded with blocks/calendar-cards.js.
+ * Its reasoning stands in docs/STYLES.md, under blocks/calendar-cards.css.
  */
 /* ---- The card designs (blocks/calendar-cards.js) ---- */
 
@@ -456,12 +456,9 @@
   grid-column: auto;
 }
 
-/*
- * The cards of their own (`ownCard` in the design list), from the design rounds on the Design canvas («Egne kort: kortet har samme form som tingen designet etterligner»).
- * Each is drawn on the card under the design's card class and its set, and a design's module adds a part the card has no element for (its `cards`). The rules stand after the sets' card rules and carry the card's own class too, so they win over them.
- */
+/* ---- The cards of their own (ownCard), after the sets' card rules ---- */
 
-/* 03 Tickets: an admission ticket, the stub across the top with the day large, and a tear-off line with a half-moon notch at each end above the buttons. */
+/* 03 Tickets' card: an admission ticket with a stub and a tear-off line */
 .urd-cal-dialog.urd-cal-dlg-tickets {
   --urd-cal-tk-stub: var(--urd-cal-s-stub, var(--urd-cal-set-accent));
   --urd-cal-tk-stubtext: var(--urd-cal-s-stubText, var(--urd-cal-set-accent-text));
@@ -538,7 +535,7 @@
   border-radius: 8px;
 }
 
-/* 02 Poster wall: the card as a poster in the second poster colour, taped at its two top corners and a little askew, the day large in the third. */
+/* 02 Poster wall's card: a taped poster, a little askew */
 .urd-cal-dialog.urd-cal-dlg-posters {
   --urd-cal-set-bg: var(--urd-cal-s-posterB, var(--urd-color-text));
   --urd-cal-set-ink: var(--urd-cal-s-posterBText, var(--urd-color-bg));

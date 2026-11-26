@@ -1,6 +1,6 @@
 /*
- * The basket in the menu's own rules (nav.js, drawn with shop.js), loaded with it by features.js, placed after base.css in the order ENGINE_SHEETS keeps (sheets.js).
- * Its reasoning stands in docs/STYLES.md, under nav-cart.css.
+ * The menu basket's own rules (nav.js and shop.js), loaded with it after base.css in ENGINE_SHEETS order (sheets.js).
+ * Its reasoning stands in docs/STYLES.md.
  */
 /* The cart in the menu */
 .urd-nav-cart {

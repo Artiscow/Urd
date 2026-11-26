@@ -684,3 +684,61 @@ test('an event\'s card opens without moving the page and leaves its calendar uns
   const css = calendarSheets().map((sheet) => sheet.text).join('\n');
   assert.doesNotMatch(src + css, /urd-cal-shade/, 'no shade over the calendar');
 });
+
+test('a calendar\'s words written in place: every urd-edit carries all the texts rewritten since the render, not only the one typed in', async () => {
+  // calendar-edit.js run on its own source, its imports stood in for, so wireText can be handed a word and its env as calendar.js hands them.
+  const src = readFileSync(new URL('blocks/calendar-edit.js', ENGINE_DIR), 'utf8');
+  const names = [];
+  const body = src
+    .replace(/^import \{([^}]*)\} from '[^']+';$/gm, (_, list) => { names.push(...list.split(',').map((n) => n.trim()).filter(Boolean)); return ''; })
+    .replace(/^export /gm, '');
+  assert.doesNotMatch(body, /^import\b/m, 'every import is stood in for');
+  let api = null;
+  const given = { attachEditing: (editing) => { api = editing; }, adminLocaleReady: Promise.resolve(), ta: (key) => key };
+  const posted = [];
+  const win = { parent: { postMessage: (msg) => posted.push(msg) } };
+  new Function(...names, 'window', 'location', 'document', body)(...names.map((n) => given[n] ?? (() => {})), win, { search: '', origin: 'http://localhost' }, { activeElement: null });
+  assert.equal(typeof api?.wireText, 'function', 'the editing attaches its wireText');
+
+  const cd = await engineImport('calendar-designs.js');
+  const TEXTS = new Map();
+  const word = (html) => {
+    const handlers = {};
+    const node = {
+      html,
+      classList: { add() {}, toggle() {}, contains: () => false },
+      dataset: {},
+      addEventListener: (type, fn) => { handlers[type] = fn; },
+      closest: () => null,
+      contains: () => false,
+      cloneNode: () => ({ querySelectorAll: () => [], get innerHTML() { return node.html; } }),
+      isConnected: true,
+    };
+    node.type = (text) => { node.html = text; handlers.input(); };
+    return node;
+  };
+  const props = { view: 'list', texts: { all: '<b>Alle</b>' } };
+  const env = {
+    TEXTS, rewritten: { ...props.texts }, measures: new Set(), paintText() {}, defaultWords: () => '', params: (key) => cd.CAL_TEXT_PARAMS[key] ?? [],
+    el: { dataset: { blockId: 'cal-1' }, classList: { contains: () => true } }, ctx: { section: { id: 'sec-1' } }, props, cd, clean: () => false, drawn: new Set(),
+  };
+  const next = word('Neste');
+  const later = word('Senere');
+  const notice = word('Merk');
+  for (const [node, key] of [[next, 'next'], [later, 'later'], [notice, 'noticeLabel']]) {
+    TEXTS.set(node, { key, values: null, form: null, plain: false });
+    api.wireText(node, key, env);
+  }
+  next.type('Først');
+  later.type('Så');
+  const last = posted.at(-1);
+  assert.equal(last.type, 'urd-edit');
+  assert.equal(last.sectionId, 'sec-1');
+  assert.equal(last.blockId, 'cal-1');
+  assert.deepEqual(last.props.texts, { all: '<b>Alle</b>', next: 'Først', later: 'Så' }, 'the word typed before stays in the message');
+  assert.equal(last.props.view, 'list', 'with the block\'s other props');
+  notice.type('');
+  next.type('<br>');
+  assert.deepEqual(posted.at(-1).props.texts, { all: '<b>Alle</b>', later: 'Så', noticeLabel: false }, 'an emptied content line is removed, another emptied text goes back to the dictionary\'s words');
+  assert.equal(posted.length, 4, 'one message for each change');
+});

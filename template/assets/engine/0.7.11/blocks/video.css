@@ -1,6 +1,6 @@
 /*
- * The video block's own rules (blocks/video.js), loaded with the module by core-types.js, placed after base.css in the order BLOCK_SHEETS keeps.
- * Its reasoning stands in docs/STYLES.md, under blocks/video.css.
+ * The video block's own rules (blocks/video.js), loaded with it after base.css in BLOCK_SHEETS order.
+ * Its reasoning stands in docs/STYLES.md.
  */
 /* The video block */
 /* A video given a shape */

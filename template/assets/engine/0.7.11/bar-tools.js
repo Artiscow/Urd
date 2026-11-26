@@ -1,19 +1,13 @@
 /**
- * The bar of tools on a selected block (Urd settings «Toolbar»: Tools with small panels): every group of the block's element menu is a tool, which opens that group alone in a small panel beside the block, so every setting is one press from the bar.
- * Each block type lists its tools in the menu's order, Content then Style: a group (`fold`, the id its fold carries in menu/families/*.svelte, with that fold's title key), or the rows of an area that stand in no group (`loose`, named by the area or by what they hold).
- * Every block adds its design first in Style where it has designs (the design picker, drawn by preview-edit.js), its motion last in Style, and its Placement, the area drawn alone; a block type not listed (a plugin's, the field contract's) has its Content and Style as tools.
- * Each tool carries a drawing's name (BAR_ICONS); one without a drawing of its own takes its area's. The bar draws them (preview-edit.js), and the small window a tool opens names it with the same drawing (the editor's menu/FloatingMenu.svelte).
- * A group the menu draws only in some states carries the same condition (`when`), so the bar never offers a tool that opens nothing.
- * A section's bar has the groups of its own menu as tools (SECTION_TOOLS).
- * The bar's choices in Urd settings, as the engine reads them, stand here too (BAR_CHOICES).
- * Pure, node-tested (tests/bar-tools.test.mjs holds every fold to its family and to the section's menu).
+ * The tools on the bar of a selected block or section, each a group of its menu that opens alone in a small panel.
+ * Also the bar's choices in Urd settings.
  */
 
 import { calDesign, calOptionDefs, calOptionShown, calOptions } from './calendar-designs.js';
 
 /**
- * The bar's choices in Urd settings, each kept in the shared localStorage under its key, with its options and the default first: the form, the look, the gear, the phone button, the size, what the design button opens, and where the bars stand in the phone view, on the phone or beside it.
- * The editor writes them as parts of the admin designs (editor/src/lib/admin-designs.js), and tests/bar-tools.test.mjs holds the two lists equal.
+ * The bar's choices in Urd settings, each with its localStorage key and its options, the default first.
+ * The editor writes them as parts of its admin designs.
  */
 export const BAR_CHOICES = {
   form: { key: 'urd-block-toolbar', options: ['groups', 'full', 'panels', 'short'] },
@@ -158,7 +152,7 @@ export function barTools(type, { designs = false, block = null } = {}) {
   ];
 }
 
-/** A section's tools on the bar, in its menu's order: its theme, background, edges and motion (Style), then its size and its name for links (Placement), each a group of section/SectionMenu.svelte. */
+/** A section's tools on the bar in its menu's order, Style then Placement, each a group of section/SectionMenu.svelte. */
 export const SECTION_TOOLS = [
   fold('sec-theme', 'lbl.sectionTheme', 'style', 'palette'),
   fold('sec-bg', 'lbl.background', 'style', 'picture'),

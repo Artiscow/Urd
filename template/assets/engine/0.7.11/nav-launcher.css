@@ -1,6 +1,6 @@
 /*
- * The menu launcher's own rules (nav-launcher.js), loaded with it by features.js, placed after base.css in the order ENGINE_SHEETS keeps (sheets.js).
- * Its reasoning stands in docs/STYLES.md, under nav-launcher.css.
+ * The menu launcher's own rules (nav-launcher.js), loaded with it after base.css in ENGINE_SHEETS order (sheets.js).
+ * Its reasoning stands in docs/STYLES.md.
  */
 /* The link launcher */
 .urd-nav-launcher-wrap {

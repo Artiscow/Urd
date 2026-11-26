@@ -1,13 +1,6 @@
 /**
- * Auto-generated preset thumbnails: a schematic SVG sketch of the section
- * a preset creates, drawn from the actual blocks and background. Always in
- * sync with the preset, and follows the site's theme via CSS variables.
- * Pure string building without the DOM, so the generator is tested with
- * node --test.
- *
- * No user strings are interpolated into the SVG: colors only pass through
- * as validated hex or theme tokens (anchored regexes), everything else is
- * numbers we computed ourselves. Safe for insertAdjacentHTML.
+ * Preset thumbnails: a schematic SVG of the section a preset creates, in the site's theme.
+ * Pure; only checked colours and numbers reach the SVG.
  */
 
 import { photoLayout, mosaicSpans, MOSAIC_COLS } from './gallery-layout.js';
@@ -45,10 +38,7 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const rect = (x, y, w, h, fill, extra = '') =>
   `<rect x="${r1(x)}" y="${r1(y)}" width="${r1(Math.max(w, 1))}" height="${r1(Math.max(h, 1))}" fill="${fill}"${extra}/>`;
 
-/** The background fill: the first color/gradient layer sets the tone. A
- *  role set (section.theme) outweighs the token background, so bands with
- *  an inverse/soft/muted role read honestly in the gallery instead of as
- *  yet another bg surface. */
+/** The background fill: the section's role where it has one, else its first colour or gradient layer. */
 function bgFill(section) {
   if (section?.theme) {
     if (section.theme === 'inverse' || section.theme === 'deep') return token('text', FALLBACK_TEXT);
@@ -66,12 +56,8 @@ function bgFill(section) {
 }
 
 /**
- * Text block: 1-3 lines; headings give a thicker first line. The line
- * dimensions shrink proportionally when the field is shorter than natural
- * (the page thumbnails' bands), with a floor so the first line always
- * leaves a readable trace - a heading must never vanish from the card.
- * box texts (a card surface in the engine) get the card drawn behind the
- * lines.
+ * Text block: one to three lines, a heading's first thicker, shrunk in a short field with a floor so the first line always shows.
+ * A box text gets its card behind.
  */
 function textShapes(x, y, w, h, props) {
   const heading = /<h[1-3]/.test(String(props?.html ?? ''));
@@ -99,10 +85,7 @@ function textShapes(x, y, w, h, props) {
 }
 
 /**
- * Image frame. With an image set: a surface with mountains and a sun (the
- * classic placeholder glyph). Without an image the EMPTY state is drawn
- * (dashed outline and pale glyph), which is what the new page actually
- * shows.
+ * Image frame: a surface with mountains and a sun, or without an image the empty state's dashed outline.
  */
 function imageShapes(x, y, w, h, empty = false) {
   const textFill = token('text', FALLBACK_TEXT);
@@ -335,9 +318,7 @@ function sectionShapes(section, w, h) {
     parts.push(`<circle cx="${r1(clamp(p.x ?? 0.5, 0, 1) * w)}" cy="${r1(clamp(p.y ?? 0.3, 0, 1) * h)}" r="${r1(w * clamp(p.radius ?? 0.5, 0.1, 1) * 0.5)}" fill="${safeColor(p.color, FALLBACK_ACCENT)}" opacity="${r1(clamp(p.opacity ?? 0.3, 0, 0.5))}"/>`);
   }
 
-  // Image gallery layers as the frames their style draws, on the same layout
-  // the layer itself uses, so a card shows the pattern before any picture has
-  // been picked. The fill style is the background itself and needs no sketch.
+  // Image gallery layers as the frames their style draws, on the layer's own layout; the fill style is the background itself.
   for (const layer of section?.background?.layers ?? []) {
     if (layer.type !== 'slideshow') continue;
     const props = layer.props ?? {};
@@ -379,9 +360,7 @@ function sectionShapes(section, w, h) {
     }
   }
 
-  // The content surface (ADR-0018): the blocks' x/w are percentages of the
-  // bound canvas, not of the full width. A fixed side margin mirrors the
-  // default gutter, so the content sits inset as on the actual page.
+  // The content surface (ADR-0018): the blocks' x/w are percentages of the bound canvas, inset by the default gutter.
   const inset = w * 0.06;
   const cw = w - inset * 2;
   for (const block of blocks) {
@@ -406,10 +385,7 @@ export function presetThumb(section, { w = 120, h = 68 } = {}) {
 }
 
 /**
- * Page thumbnail: the sections stacked as bands, weighted by minimum
- * height, so the card shows the PAGE's structure (hero large, cta small).
- * Used by the new-page-from-template grid in the Pages panel; tolerates an
- * empty page (a plain background field).
+ * Page thumbnail: the sections stacked as bands, weighted by minimum height; an empty page is a plain field.
  * @param {object} page Page file ({ sections: [...] }); the data is discarded afterwards
  * @returns {string} Schematic SVG thumbnail of the whole page
  */

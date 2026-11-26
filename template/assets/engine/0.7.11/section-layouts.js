@@ -1,17 +1,11 @@
 /**
- * The layout model («swap layout»/View Layouts): pure functions that compute
- * NEW frames for a section's blocks without touching the content.
- * The result is only frames + minHeight: the section stays fully editable
- * afterwards (never a dead-end generator). Decor blocks and shapes are NEVER
- * touched; they keep their frames. No DOM - node-testable.
- *
- * Units as elsewhere in Urd: x/w in percent of the section width, y/h in px.
+ * The layout model: new frames for a section's movable blocks, their content untouched.
+ * x and w in percent of the section width, y and h in px.
  */
 
 const r2 = (v) => Math.round(v * 100) / 100;
 
-/** Textual types are read as the text column in the split layouts; every other
- *  movable type (image, video, gallery, icon, collection, plugin blocks) is media. */
+/** The types the split layouts read as text; every other movable type is media. */
 const TEXT_TYPES = new Set(['text', 'terms', 'button', 'faq', 'timeline', 'quote', 'stats', 'table']);
 
 /** The blocks a layout may move: never decor, never shapes or spaces, never a block shown on phones only. */
@@ -31,8 +25,7 @@ export function readingOrder(blocks) {
 export const LAYOUT_IDS = ['stack-center', 'stack-left', 'split-media-right', 'split-media-left', 'two-columns', 'hero-top'];
 
 /**
- * The layouts that make sense for the section: at least two movable blocks,
- * and the split/hero layouts require both text and media.
+ * The layouts that fit the section: none under two movable blocks, and the split and hero layouts only with both text and media.
  */
 export function applicableLayouts(blocks) {
   const movable = movableBlocks(blocks);
@@ -57,9 +50,7 @@ function stackColumn(ordered, frames, x, w, startY, gap) {
 }
 
 /**
- * Compute frames for a layout. Heights and rotation are always kept; only
- * x/y/w are set. Returns null for an unknown id or when the layout is not
- * applicable (applicableLayouts).
+ * The frames of a layout, setting x, y and w alone; null for an id that is unknown or does not fit (applicableLayouts).
  * @returns {{frames: Array<{blockId: string, frame: object}>, minHeight: string}|null}
  */
 export function layoutFrames(id, blocks, grid) {

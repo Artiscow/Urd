@@ -31,3 +31,47 @@ test('the undo and redo caret opens the steps on a mouse\'s rest, keeps a list a
   assert.match(undo, /const pop = event\.currentTarget\.closest\('\.undo-group'\)\?\.querySelector\('\.steps-pop'\);/, 'the focus left on undo or redo does not hold the list open');
   assert.match(undo, /class="tool-pop steps-pop"[^>]*onpointerenter=\{\(e\) => rest\(true, e\)\} onpointerleave=\{\(e\) => rest\(false, e\)\}/, 'the list keeps itself open under the mouse');
 });
+
+test('every hover handler of the editing layer that opens, switches, closes or disarms something acts for a mouse alone, as a tap fires the pointer events too', async () => {
+  const { stripComments } = await import('./_engine.mjs');
+  const src = stripComments(edit);
+  /** A handler's parameter and body: an inline function's, or those of the named function it is given. */
+  const handlerAt = (at) => {
+    const named = /^(\w+)\)/.exec(src.slice(at));
+    const head = named
+      ? new RegExp(`(?:const ${named[1]} = \\(([^)]*)\\) => |function ${named[1]}\\(([^)]*)\\) )\\{`).exec(src)
+      : /^(?:async )?\(([^)]*)\) => \{/.exec(src.slice(at));
+    if (!head) return null;
+    const open = (named ? head.index : at) + head[0].length - 1;
+    let depth = 0;
+    for (let i = open; i < src.length; i++) {
+      if (src[i] === '{') depth++;
+      else if (src[i] === '}' && --depth === 0) return { param: (head[1] ?? head[2] ?? '').trim(), body: src.slice(open + 1, i).trim() };
+    }
+    return null;
+  };
+  /** The handlers that only place a bar or only stop a wait: they open, switch, close and disarm nothing, so a tap may run them. */
+  const NEUTRAL = new Map([
+    ['pointerenter updateToolbarSide', 'places the block\'s bar on the side with room'],
+    ['pointerleave () => clearTimeout(hoverTimer)', 'stops the wait a mouse\'s rest began; a tap began none'],
+  ]);
+  const found = [...src.matchAll(/\.addEventListener\('(pointerenter|pointerover|pointerleave|mouseenter|mouseover|mouseleave)', /g)];
+  assert.ok(found.length >= 10, `the hover handlers are found (${found.length})`);
+  const neutral = new Set();
+  for (const m of found) {
+    const at = m.index + m[0].length;
+    const inline = src.slice(at, src.indexOf(')', src.indexOf('=>', at) + 2) + 1);
+    const label = `${m[1]} ${/^\w+\)/.test(src.slice(at)) ? src.slice(at).match(/^(\w+)/)[1] : inline.trim()}`;
+    if (NEUTRAL.has(label)) { neutral.add(label); continue; }
+    const handler = handlerAt(at);
+    assert.ok(handler?.param, `${label}: a handler that reads its event`);
+    const p = handler.param.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const leaves = new RegExp(`^if \\(${p}\\.pointerType !== 'mouse'(?: \\|\\| [^;{}]+)?\\) return;`);
+    const only = new RegExp(`^if \\(${p}\\.pointerType === 'mouse'\\) [^;{}]+;$`);
+    assert.ok(leaves.test(handler.body) || only.test(handler.body), `${m[1]} at ${src.slice(0, m.index).split('\n').length}: ${handler.body.split('\n')[0]}`);
+  }
+  assert.deepEqual([...neutral].sort(), [...NEUTRAL.keys()].sort(), 'each handler let through still stands');
+  // The ones named in AGENTS.md's rule: the + New block menu's group rows and the button that acts at its second press.
+  assert.match(src, /tab\.addEventListener\('pointerenter', \(event\) => \{\s*if \(event\.pointerType !== 'mouse' \|\| !menu\.classList\.contains\('urd-abm-slim'\)\) return;/);
+  assert.match(src.slice(src.indexOf('function armedButton(')), /^function armedButton\([\s\S]*?btn\.addEventListener\('pointerleave', \(e\) => \{ if \(e\.pointerType === 'mouse'\) disarm\(\); \}\);/);
+});

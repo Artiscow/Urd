@@ -1,9 +1,6 @@
 /**
- * Admin strings, Norwegian Bokmål (the base: always loaded first, other
- * languages layer on top, so missing keys fall back here). Loaded at
- * runtime by the editor's main.js and by the preview chrome, never
- * bundled, so a translation change needs no build. The parity test
- * (tests/i18n.test.mjs) keeps the language files in sync.
+ * Admin strings in Norwegian Bokmål, the base the other languages fall back to.
+ * Loaded at runtime by the editor and the preview, never bundled.
  */
 export default {
   lang: 'nb',

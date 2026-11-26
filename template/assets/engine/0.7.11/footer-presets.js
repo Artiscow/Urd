@@ -1,8 +1,5 @@
 /**
- * The footer's presets (the Footer panel's «Presets», chosen in the design picker): ten arrangements of the footer, each a look (the alignment, the design, the background) and the parts it shows (the brand, link columns or a link row, a call to action, the bottom line).
- * A preset meets the footer's own content (applyPreset): a part the preset shows keeps the owner's content and takes the preset's sample only where the footer has none of its own, and a part the preset does not show is taken away. Link columns and a link row stand in for each other, so the owner's links move between them.
- * A sample is built from the site's own pages and a neutral name, never the site's title, with its words through `ta` (the admin dictionary), so seed text is written once, as it goes in (ADR-0012).
- * Loaded by the editor and the design pictures alone, never by a visitor's page. Node-tested (tests/footer-presets.test.mjs).
+ * The footer's presets for the design picker: ten arrangements, each a look and the parts it shows, with sample content from the site's pages.
  */
 import { glowLayer } from './backgrounds/glow.js';
 import { grainLayer } from './backgrounds/grain.js';
@@ -28,7 +25,7 @@ export function presetSample(id, { ta, pages = [], privacyPage = null }) {
   const title = ta('seed.orgName');
   const pageLinks = (n) => pages.slice(0, n).map((p) => ({ label: p.title || p.id, page: p.id }));
   const ext = (label, href) => ({ label, href });
-  // The site's privacy page, where the footer has one: the columns link it, and the bottom row leaves its placeholder out, since the footer draws the real link there.
+  // The site's privacy page, where it has one: the columns link it, and the bottom row leaves its placeholder out, as the footer draws the real link there.
   const privacyId = pages.some((p) => p.id === privacyPage) ? privacyPage : null;
   const privacy = () => (privacyId ? { label: ta('seed.footer.privacy'), page: privacyId } : ext(ta('seed.footer.privacy'), '#'));
   const bottomPrivacy = () => (privacyId ? [] : [ext(ta('seed.footer.privacy'), '#')]);
@@ -125,7 +122,7 @@ function holds(footer, part) {
   return true;
 }
 
-/** A call to action as the preset shows it: the owner's own where it is of the preset's kind, else the preset's with the owner's heading; the preset says whether it is big. */
+/** A call to action as the preset shows it: the owner's own if of the preset's kind, else the preset's with the owner's heading; the preset sets `big`. */
 function meetCta(own, sample) {
   if (!own) return clone(sample);
   const kind = (c) => c.kind ?? 'button';
@@ -136,7 +133,7 @@ function meetCta(own, sample) {
 }
 
 /**
- * The footer with a preset applied: the preset's look, and each part it shows with the owner's content where the footer holds some, else the preset's sample; the parts it does not show are taken away. The footer is turned on, and its old plain text form gives way.
+ * The footer with a preset applied: its look, each part it shows with the owner's content or the sample, the others taken away, and the footer turned on.
  * @param {object|null|undefined} footer The footer as it stands
  * @param {object} sample presetSample's result
  * @returns {object} a new footer; the one given is left as it is

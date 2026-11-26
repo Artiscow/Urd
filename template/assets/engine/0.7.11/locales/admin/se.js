@@ -1,9 +1,6 @@
 /**
- * Admin strings, Northern Sami (davvisámegiella). Overlays the Bokmål
- * base (nb.js); the parity test keeps the key sets in sync.
- *
- * NOTE: a machine-translated first draft that needs review by a native
- * Northern Sami speaker (see CONTRIBUTING.md).
+ * Admin strings, Northern Sami (davvisámegiella), over the Bokmål base (nb.js).
+ * A machine-translated draft awaiting a native speaker's review (CONTRIBUTING.md).
  */
 export default {
   lang: 'se',

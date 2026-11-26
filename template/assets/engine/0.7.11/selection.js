@@ -1,16 +1,10 @@
 /**
- * Pure logic for multi-selection: marquee hits, align/distribute computation
- * and group offset on paste. Everything works on frame values (x/w in percent
- * of the section width, y/h in px - the same physical units as
- * docs/SCHEMA.md) and is DOM free, so the maths is contract-tested in
- * tests/selection.test.mjs. The DOM part lives in preview-edit.js.
+ * Multi-selection: marquee hits, align and distribute, and a group's offset on paste, on frame values (x/w in percent, y/h in px).
+ * Pure and tested.
  */
 
 /**
- * Which blocks does a marquee hit? Rect and blocks share a coordinate system
- * (section-relative px); a block is included when the rects overlap (partial
- * is enough - there is no need to enclose the whole block).
- *
+ * The blocks a marquee touches, in section px; a block partly inside counts.
  * @param {{ left: number, top: number, right: number, bottom: number }} rect
  * @param {Array<{ id: string, left: number, top: number, right: number, bottom: number }>} blocks
  * @returns {string[]}
@@ -22,9 +16,7 @@ export function blocksInRect(rect, blocks) {
 }
 
 /**
- * Align the selection inside its own bounding box: left/center/right use x/w
- * (percent), top/middle/bottom use y/h (px).
- *
+ * Aligns the selection inside its own bounding box: left, center and right by x/w, top, middle and bottom by y/h.
  * @param {Array<{ id: string, x: number, y: number, w: number, h: number }>} items
  * @param {'left'|'center'|'right'|'top'|'middle'|'bottom'} mode
  * @returns {Array<{ id: string, x?: number, y?: number }>} only the blocks that actually move
@@ -51,10 +43,7 @@ export function alignMoves(items, mode) {
 }
 
 /**
- * Distribute the selection evenly: the first and last block (by position)
- * stay put, and the space BETWEEN the blocks is made equal. Needs at least
- * three blocks.
- *
+ * Distributes three or more blocks evenly: the first and last stay put, and the gaps between them are made equal.
  * @param {Array<{ id: string, x: number, y: number, w: number, h: number }>} items
  * @param {'x'|'y'} axis
  * @returns {Array<{ id: string, x?: number, y?: number }>}
@@ -81,10 +70,7 @@ export function distributeMoves(items, axis) {
 }
 
 /**
- * Clamp a wanted group offset (paste/duplicate) so the WHOLE selection stays
- * within the section width and below the top - without distorting the
- * internal layout (every block gets the same delta).
- *
+ * Clamps a group's offset on paste or duplicate so the whole selection stays within the section's width and below its top, each block moved alike.
  * @param {Array<{ x: number, y: number, w: number, h: number }>} frames
  * @param {number} dx Wanted offset in % (may be clipped)
  * @param {number} dy Wanted offset in px (clipped against the top)

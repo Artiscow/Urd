@@ -1,16 +1,6 @@
 /**
- * Shared color picker for the canvas (the preview layer; visitors never load it).
- * Used by the text toolbar (text color/highlight) and future surfaces; the admin
- * panels have their Svelte twin with the same look and shared «Recent»/«Saved»
- * stores.
- *
- * openColorPicker(anchor, { value, onpick }) → a floating card with an HSV area,
- * hue slider, alpha slider, hex and RGB fields, theme color dots, saved and
- * recent colors and an eyedropper (the EyeDropper API where it exists).
- * onpick(color) is called live on every pick; color is #rrggbb, or #rrggbbaa
- * when transparency is selected.
+ * The canvas's colour picker, with theme, saved and recent colours and an eyedropper; onpick gets #rrggbb or #rrggbbaa as each colour is picked.
  */
-// Loaded only through the preview layer (statically from preview-edit.js), beside the admin dictionary:
 // ta() is called as the picker opens, never at module level (ADR-0012).
 import { ta } from './i18n.js';
 import { nativeAnchoring, anchorName } from './anchored.js';
@@ -240,9 +230,7 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
     return dot;
   };
 
-  // The theme colors: resolved live through a rendered probe, so they
-  // follow the current theme and a light-dark() variable gives its
-  // concrete side rather than the function text.
+  // The theme colours, read through a rendered probe so they follow the current theme and give light-dark()'s concrete side.
   const tokens = el2('div', 'urd-cp-tokens');
   const probe = el2('span');
   document.body.appendChild(probe);
@@ -326,11 +314,9 @@ export function openColorPicker(anchor, { value = '#ffffff', onpick } = {}) {
   // The card's zoom (the chrome scale in preview.css) keeps it at the admin's size; an engine that cannot report the zoom draws it unscaled.
   if (!('currentCSSZoom' in panel)) panel.style.zoom = '1';
 
-  // Placement: PREFERABLY above the anchor (the text toolbar sits above the text,
-  // so the picker must not cover what is being edited), otherwise below.
+  // Placed above the anchor where it fits, else below.
   if (nativeAnchoring()) {
-    // Anchored in the top layer: the browser flips it below when it does not
-    // fit, and light dismiss closes it on an outside click or Escape.
+    // Anchored in the top layer: the browser flips it below when it does not fit, and light dismiss closes it.
     const name = anchorName('urd-cp');
     anchor.style.setProperty('anchor-name', name);
     panel.popover = 'auto';

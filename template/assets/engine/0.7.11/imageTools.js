@@ -1,7 +1,5 @@
 /**
- * Image tools for the editor: compression to webp in the browser before
- * the image even enters the draft. Publishing materializes the data URLs
- * into files in media/, each in the folder of its kind (MEDIA_FOLDERS).
+ * Image tools for the editor: pictures compressed to webp in the browser before they enter the draft; publishing writes the data URLs to media/ by kind.
  */
 
 const MAX_DIMENSION = 1600;
@@ -9,29 +7,17 @@ const TARGET_QUALITY = 0.82;
 const FALLBACK_QUALITY = 0.6;
 /** Above this the user is warned (git and static hosts like small files). */
 export const WARN_BYTES = 400_000;
-/* The media limits, set as one whole: images are compressed to webp (max
-   1600px, into their use's budget, PICTURE_BUDGETS), audio is published unchanged (warning
-   above WARN_BYTES), video warns above VIDEO_WARN_BYTES and is rejected
-   hard above VIDEO_MAX_BYTES - well below the host's file limit
-   (Cloudflare Pages 25 MiB), and with margin for the base64 draft in
-   localStorage blowing the quota (the draft then lives only in memory
-   until it is published, and the editor warns). */
+/* The media limits: audio publishes unchanged, and a video warns above VIDEO_WARN_BYTES and is refused above VIDEO_MAX_BYTES. */
 export const VIDEO_WARN_BYTES = 4_000_000;
 export const VIDEO_MAX_BYTES = 15_000_000;
-/* A PDF a link goes to is published unchanged like a video, under the same two limits.
-   The publishing guard holds the same maximum (MEDIA_PDF_MAX_BYTES in functions/_lib/guard.js). */
+/* A PDF publishes unchanged under a video's two limits; the publishing guard holds the same maximum (MEDIA_PDF_MAX_BYTES). */
 export const PDF_WARN_BYTES = VIDEO_WARN_BYTES;
 export const PDF_MAX_BYTES = VIDEO_MAX_BYTES;
-/* An animated image (GIF, animated WebP, APNG) is kept as the file it is: a
-   canvas holds one frame, so compressing it would freeze it. Above its
-   use's budget the owner is asked before it is kept, and above
-   ANIMATED_MAX_BYTES it is rejected, where a video does the same job at a
-   fraction of the size. */
+/* An animated image is kept as the file it is; above its use's budget the owner is asked, and above ANIMATED_MAX_BYTES it is refused. */
 export const ANIMATED_MAX_BYTES = 4_000_000;
 
 /**
- * The most a picture should weigh for each use, in bytes: a picture is compressed into its budget (compressToWebp's `budget`), and one that cannot be (an animation, a drawing) is asked about before it is kept.
- * image and gallery are the image block's and a gallery's pictures, entry a collection's or a product's, cover the video's cover, share a page's share image, portrait the quote's, logo the nav's and the footer's marks, icon the site icon, background a section's layers.
+ * The most a picture should weigh for each use, in bytes: a picture is compressed into its budget, and one that cannot be is asked about before it is kept.
  */
 export const PICTURE_BUDGETS = Object.freeze({
   image: 400_000,
@@ -45,11 +31,11 @@ export const PICTURE_BUDGETS = Object.freeze({
   background: 600_000,
 });
 
-/** The qualities a picture over its budget is tried at, and then the step it is made smaller by at the last of them, never below BUDGET_MIN_DIMENSION on its longest side. */
+/** The qualities a picture over its budget is tried at, then the step it shrinks by at the last, never below BUDGET_MIN_DIMENSION on its longest side. */
 const BUDGET_QUALITIES = [0.72, 0.62];
 const BUDGET_SHRINK = 0.85;
 const BUDGET_MIN_DIMENSION = 640;
-/** How much of a larger file is read to tell whether it moves: the flag of a WebP, the chunk of a PNG and the loop block of a GIF come before the first frame's picture. */
+/** How much of a larger file is read to tell whether it moves, each format's mark of animation standing before its first frame. */
 const ANIMATED_HEAD_BYTES = 256_000;
 
 /** True when the bytes hold a GIF's loop block (NETSCAPE2.0 or ANIMEXTS1.0), which an animated GIF carries before its first frame. */
@@ -138,8 +124,7 @@ function pngAnimated(bytes) {
 }
 
 /**
- * The kind of animated image a file is, from its own bytes: `gif`, `webp` or
- * `png` (an APNG), or null for a still image and for anything else. Pure.
+ * The kind of animated image a file is, from its own bytes: `gif`, `webp` or `png` (an APNG), or null. Pure.
  * @param {Uint8Array} bytes The file's content
  * @returns {'gif'|'webp'|'png'|null}
  */
@@ -161,10 +146,7 @@ export function isAnimatedImage(bytes) {
 }
 
 /**
- * An animated image as it is: the original bytes as a data URL, with the
- * first frame's size. null for a file that is not an animation; throws
- * AnimatedTooLargeError above the cap. Only the three formats that can
- * animate are read into memory.
+ * An animated image as it is: its bytes as a data URL with the first frame's size; null for a still file, AnimatedTooLargeError above the cap.
  * @param {File} file
  * @returns {Promise<{dataUrl: string, bytes: number, width: number, height: number, animated: true}|null>}
  */
@@ -197,16 +179,8 @@ async function keepAnimated(file) {
 }
 
 /**
- * Compresses an image file to webp, max 1600px on the longest side.
- * SVG is not rasterized: the vector is kept (after sanitizing), because a
- * logo must be sharp at every size. An animated image is kept as the file
- * it is (keepAnimated), marked `animated`, unless `still` asks for a still
- * picture at the size given (an icon). With a `budget` (PICTURE_BUDGETS),
- * a picture over it is tried at lower qualities and then made smaller step
- * by step until it fits or reaches BUDGET_MIN_DIMENSION, where the canvas
- * writes WebP; without one, a picture above WARN_BYTES is taken at
- * FALLBACK_QUALITY. The file name at
- * publish time gets the right extension via mediaExtension.
+ * Compresses an image to webp, at most maxDim on its longest side and within `budget` where given.
+ * An SVG keeps its vector, an animation its file unless `still`.
  * @param {Blob} file
  * @param {number} [maxDim]
  * @param {{still?: boolean, budget?: number}} [opts]
@@ -257,10 +231,7 @@ function isSvgFile(file) {
 }
 
 /**
- * Why an SVG may not be used, or null where it may: read left to right, each comment, CDATA section, processing instruction, DOCTYPE and tag taken whole where it starts, and each value checked with its references decoded, so neither a prefix (`s:script`), a reference (`&#106;avascript:`), a declaration of its own nor a section hiding a tag's edge can hide a script.
- * A DOCTYPE may hold an internal subset of entities with plain text only (older Illustrator declares its namespaces so); any other declaration, a stylesheet instruction, a reference to an entity not declared, and script, foreignObject, iframe, embed, object, handler and listener elements under any prefix are refused, as are an `on…` attribute, an animation of a link's address, any value or text naming a script scheme, and a data address in a link that is not a raster picture.
- * No pattern reads past a `<`, so the time grows with the length of the text alone.
- * Self-contained, so the publishing guard's copy (functions/_lib/svg-check.js) is held to the same text by a test.
+ * Why an SVG may not be used, or null: each value decoded, it refuses scripts, handlers, script addresses and a data address that is not a raster picture.
  * @param {string} text
  * @returns {null|'notSvg'|'declaration'|'element'|'handler'|'animation'|'scriptAddress'|'dataAddress'}
  */
@@ -381,9 +352,7 @@ export function svgDataText(url) {
 }
 
 /**
- * Validates an SVG and packs it as a base64 data URL.
- * The text is never read as markup in the live DOM (no DOMParser or innerHTML): it only goes into a data URL and is drawn by <img> or CSS, where an SVG runs no script.
- * The published file in media/ can still be opened on its own, so an SVG that holds something that can run is refused (svgProblem, the code `svgUnsafe`), never stripped, since a refusal cannot be passed the way a stripping can.
+ * Validates an SVG and packs it as a base64 data URL; one that holds anything that can run is refused (`svgUnsafe`), never stripped.
  * @returns {{dataUrl: string, bytes: number, width: number, height: number}}
  */
 export function svgToDataUrl(text) {
@@ -403,13 +372,8 @@ export function svgToDataUrl(text) {
 }
 
 /**
- * Tightens an SVG's `viewBox` (and width/height) to the motif's actual
- * extent, so dead space around a logo is removed and the image box follows
- * the content. The bounding box (in the SVG's user coordinates) is
- * measured outside this function (canvas pixels in the editor); only the
- * pure text rewrite happens here. A small padding fraction is added.
- * Invalid/empty box -> the text is returned unchanged. Pure function
- * (node-tested).
+ * Tightens an SVG's `viewBox`, width and height to a measured bounding box with a padding.
+ * An empty box leaves the text as it is.
  * @param {string} svgText
  * @param {{x: number, y: number, width: number, height: number}} bbox
  * @param {number} [padFrac] Padding as a fraction of the longest side (default 0.04)
@@ -444,17 +408,14 @@ export function svgViewBox(svgText) {
   return w > 0 && h > 0 ? [0, 0, w, h] : null;
 }
 
-/** Media file extension from a data URL: SVG keeps the vector, a GIF and a
- *  PNG keep their own (the animations that were kept as they are), a PDF is
- *  a pdf, the rest is webp. */
+/** Media file extension from a data URL: an SVG, GIF, PNG or PDF keeps its own, audio and video take their type's, and the rest is webp. */
 export function mediaExtension(dataUrl) {
   const url = dataUrl || '';
   if (/^data:application\/pdf[;,]/i.test(url)) return 'pdf';
   if (/^data:image\/svg\+xml[;,]/.test(url)) return 'svg';
   if (/^data:image\/gif[;,]/.test(url)) return 'gif';
   if (/^data:image\/(?:png|apng)[;,]/.test(url)) return 'png';
-  // Audio files are published unchanged (no canvas path to compress
-  // through), so the extension is derived from the MIME type.
+  // Audio is published unchanged, so its extension comes from its MIME type.
   const audio = url.match(/^data:audio\/([a-z0-9.+-]+)[;,]/i)?.[1]?.toLowerCase();
   if (audio) {
     return { mpeg: 'mp3', mp3: 'mp3', mp4: 'm4a', 'x-m4a': 'm4a', aac: 'aac', wav: 'wav', 'x-wav': 'wav', ogg: 'ogg', webm: 'webm', flac: 'flac' }[audio] ?? 'mp3';
@@ -469,8 +430,7 @@ export function mediaExtension(dataUrl) {
 const SPELT_OUT = { æ: 'ae', ø: 'o', ß: 'ss', ı: 'i', đ: 'd', ŋ: 'n', ŧ: 't', ł: 'l', ð: 'd', þ: 'th', œ: 'oe' };
 
 /**
- * Words → lower-case letters and digits joined by single hyphens.
- * The letters in SPELT_OUT are spelt out (æ as ae), accents are dropped (é as e), and everything else becomes a hyphen, never at either end.
+ * Words → lower-case letters and digits joined by single hyphens: SPELT_OUT's letters spelt out, accents dropped, and the rest a hyphen, never at either end.
  * @param {unknown} text
  * @returns {string}
  */
@@ -511,7 +471,7 @@ export function mediaFolder(extension) {
 }
 
 /**
- * The path publishing writes a file to: its folder by kind, the slug, and the content's hash, so the same content gives the same path and a republish never duplicates a file.
+ * The path publishing writes a file to: its folder by kind, its slug and its content's hash, so the same content gives the same path.
  * @param {string} slug The file's slug (slugify)
  * @param {string} base64 The content, base64
  * @param {string} dataUrl The data URL, for the extension (mediaExtension)
@@ -522,12 +482,12 @@ export function mediaPath(slug, base64, dataUrl) {
   return `media/${mediaFolder(ext) ?? 'files'}/${slug}-${contentHash(base64)}.${ext}`;
 }
 
-/** A path at the root of media/, as the files written before the folders came. */
+/** A path at the root of media/, outside the kind folders. */
 const ROOT_MEDIA_RE = /^\/media\/([a-z0-9][a-z0-9._-]*)\.([a-z0-9]+)$/i;
 
 /**
- * The path a file at the root of media/ takes in its folder (the tidy of a site built before the folders): `/media/x.webp` gives `/media/images/x.webp`.
- * Null for a path already in a folder, an extension media/ does not hold, or anything that is not a media path.
+ * The path a file at the root of media/ takes in its folder: `/media/x.webp` gives `/media/images/x.webp`.
+ * Null for a path in a folder or not a media path.
  * @param {string} path
  * @returns {string|null}
  */

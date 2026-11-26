@@ -1,10 +1,6 @@
 /**
- * Visitor-facing strings, Northern Sami (davvisámegiella). Overlays the
- * Bokmål base (nb.js); the parity test keeps the key sets in sync. Date
- * names come from Intl (ICU has complete Northern Sami CLDR data).
- *
- * NOTE: a machine-translated first draft that needs review by a native
- * Northern Sami speaker (see CONTRIBUTING.md).
+ * Visitor-facing strings, Northern Sami, over the Bokmål base (nb.js); date names come from Intl.
+ * A machine-translated draft awaiting a native speaker's review.
  */
 export default {
   lang: 'se',

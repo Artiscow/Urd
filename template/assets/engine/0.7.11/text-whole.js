@@ -1,6 +1,5 @@
 /**
- * A font or a size for a whole text, from the text's menu (WholeText.svelte): written on every leaf paragraph and list item of the text, and taken off the runs inside, so the whole text reads alike.
- * One surgery for the live field in the preview (preview-edit.js) and for the block's words in the editor, where the text is not written in place (the phone view, blocks/text.js).
+ * A font or a size for a whole text, written on each leaf paragraph and list item and taken off the runs inside, in the preview or the editor.
  */
 
 /** The block elements of a text: paragraphs, headings, list items, quotes and divisions. */
@@ -25,8 +24,7 @@ export function stripDescendantProp(root, prop) {
 }
 
 /**
- * Writes `style` ({ fontFamily?, fontSize? }) on the text's leaf paragraphs and list items; a value that is not a string takes the theme's back.
- * Bare words and runs at the text's top level get a paragraph around them first; a list or a paragraph is left as it stands.
+ * Writes `style` ({ fontFamily?, fontSize? }) on the leaf paragraphs and list items, wrapping loose top-level words first; a non-string value clears it.
  */
 export function applyWholeStyle(field, style) {
   const loose = [...field.childNodes].filter((n) => (n.nodeType === 3 ? n.textContent.trim() !== '' : n.nodeType === 1 && !n.matches(TEXT_BLOCKS) && !n.querySelector(TEXT_BLOCKS)));

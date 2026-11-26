@@ -1,8 +1,6 @@
 /**
- * The layer order of a section's blocks (0.7.30.6): a block put in front of all the others, or behind them all.
- * The canvas's toolbar, its right-click menu, its keys and the element menu all move a block this way.
- * On the phone the blocks pinned to rows of their own have a layer order of their own (phoneLayerChanges, 0.7.36.3).
- * Pure: it returns the z of each block that changes, by id, and changes nothing itself.
+ * The layer order of a section's blocks: blocks put in front of the others or behind them all, on the desktop or the phone.
+ * Pure: it returns each changed z by id.
  */
 
 const zOf = (block) => block.frames?.desktop?.z ?? 1;
@@ -11,8 +9,7 @@ const zOf = (block) => block.frames?.desktop?.z ?? 1;
 const phoneZOf = (block) => block.frames?.mobile?.z ?? zOf(block);
 
 /**
- * The layer order of the blocks pinned on the phone (ADR-0019): the pinned blocks among `ids` put in front of the section's other pinned blocks, or behind them all, keeping their order among themselves.
- * Only pinned blocks can overlap on the phone, so the blocks that flow there take no part, and the desktop's order is left as it is.
+ * The phone's layer order (ADR-0019): the pinned blocks among `ids` put before or behind the other pinned blocks in their order; flowing blocks take no part.
  * @param {Array<{id: string, frames?: {desktop?: {z?: number}, mobile?: {row?: number, z?: number}|null}}>} blocks The section's blocks
  * @param {Iterable<string>} ids The blocks to move
  * @param {number} dir Above zero to the front, else to the back

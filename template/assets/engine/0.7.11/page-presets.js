@@ -1,21 +1,10 @@
 /**
- * Built-in page templates («starter packs»): whole pages composed of core
- * section presets, shown in the «New page from template» grid in the Pages
- * panel under the Built-in group. Defined in code (not as content/maler/
- * files) so they follow the engine version, always exist on fresh clones and
- * keep the user's own template list clean.
- *
- * Only core presets are referenced (plugins can be switched off). create() runs
- * at build time, so the seed texts are translated then (ADR-0012) and makeId
- * gives fresh ids; no re-id is needed on insertion. EDITOR-ONLY: imported only
- * by admin (the $engine bundle), never by the visitor closure (the modulepreload
- * test guards it).
+ * Built-in page templates: whole pages of core section presets, offered under Built-in in the Pages panel's «New page from template» grid.
  */
 import { registerSectionPresets } from './sections/presets.js';
 import { PAGE_SCHEMA_VERSION } from './migrate.js';
 
-/* Section defs are collected with the validate.mjs trick: registration needs
-   only a define hook, not the whole Urd object. */
+/* The core section presets, registered through a bare define hook. */
 const defs = new Map();
 registerSectionPresets({ sections: { define: (id, def) => defs.set(id, def) } });
 
@@ -26,10 +15,8 @@ export const PAGE_PRESETS = [
   { id: 'contact', labelKey: 'pageTemplate.contact', sections: ['hero-centered', 'contact', 'faq'] },
   { id: 'portfolio', labelKey: 'pageTemplate.portfolio', sections: ['hero-centered', 'gallery', 'quote', 'cta'] },
   { id: 'event', labelKey: 'pageTemplate.event', sections: ['lead-story', 'events', 'steps', 'faq', 'cta'] },
-  // The shop pattern: the shop is a page of its own and the checkout another -
-  // the owner points the cart's Checkout page setting at the checkout page
-  // afterwards. shop-front is the full storefront (the Shopify pattern):
-  // campaign hero, product band, category tiles, statement band, trust and CTA.
+  // The shop and the checkout are pages of their own; the cart's Checkout page setting points at the checkout.
+  // shop-front is the full storefront.
   { id: 'shop', labelKey: 'pageTemplate.shop', sections: ['shop-hero', 'shop', 'faq', 'cta'] },
   { id: 'shop-front', labelKey: 'pageTemplate.shopFront', sections: ['shop-hero', 'shop', 'shop-categories', 'shop-showcase', 'shop-trust', 'cta'] },
   { id: 'checkout', labelKey: 'pageTemplate.checkout', sections: ['checkout', 'contact'] },

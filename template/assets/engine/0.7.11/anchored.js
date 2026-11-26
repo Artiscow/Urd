@@ -1,15 +1,9 @@
 /**
- * The modern branch for the editor's floating menus (ADR-0011 decisions 1 and 2):
- * the Popover API puts a menu in the top layer, so the panels' overflow
- * never clips it, and CSS anchor positioning places it against its
- * button with the browser flipping it away from the viewport edge. The
- * gate is the STRICTER feature, position-try fallbacks: anchoring without
- * flipping would let a menu near the bottom run off the screen, so a
- * browser with anchors but no fallbacks stays on the JS branch, which
- * measures and places with position: fixed as before.
+ * The native branch for the editor's floating menus (ADR-0011): a popover in the top layer, placed against its button by CSS anchor positioning.
  */
 
 /**
+ * Whether the browser has popovers, anchor names and position-try fallbacks; without all three the menus take the JS branch.
  * @param {object} [win] The window (injectable for tests)
  * @returns {boolean}
  */
@@ -25,8 +19,7 @@ export function nativeAnchoring(win = globalThis) {
 let seq = 0;
 
 /**
- * A unique anchor name per menu instance: anchor names are global, so two
- * buttons sharing one name would send a menu to the last of them.
+ * A unique anchor name per menu instance.
  * @param {string} [prefix]
  * @returns {string} A dashed-ident, e.g. --urd-pop-3
  */
@@ -36,11 +29,7 @@ export function anchorName(prefix = 'urd-pop') {
 }
 
 /**
- * Names the pane a picker stands in (a panel body or the floating block
- * menu) as the anchor --urd-pane while the picker is open, so the card's
- * CSS can keep itself inside the pane's edges. One picker is open at a
- * time (light dismiss), so one shared name suffices; the name is removed
- * on close.
+ * Names the pane a picker stands in (a panel body or the floating block menu) the anchor --urd-pane while the picker is open.
  * @param {Element|null} el The picker's root element
  * @param {boolean} open
  */

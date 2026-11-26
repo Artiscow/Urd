@@ -1,8 +1,6 @@
 /*
- * The calendar's rules every calendar draws with: its plain views, cards, settings, print and phone forms, and the rules several design families share.
- * Loaded by blocks/calendar-load.js with the calendar's modules, before the page is drawn on a page that holds a calendar, so a page without one never fetches them.
- * Each design family's own rules stand in blocks/calendar-<family>.css, loaded with its renderer; the sheets keep this file's order (SHEETS in calendar-load.js).
- * The loading state stands in base.css, since it shows before this sheet is in.
+ * The rules every calendar draws with, loaded by blocks/calendar-load.js.
+ * Its reasoning stands in docs/STYLES.md, under blocks/calendar.css.
  */
 .urd-block[data-urd-align="stretch"] > .urd-cal {
   display: flex;
@@ -14,11 +12,7 @@
   flex: 1;
 }
 
-/* The calendar block: the four views share the collection block's rows and
-   cards; the chips, the next panel and the month grid are its own. */
-/* The calendar block.
-   Its colours are slots the owner can override in the Style tab (calendar-designs.js writes --urd-cal-s-<slot> on the host); every slot falls back to the theme, so a block without overrides follows the theme. --urd-cal-color is the event's own calendar colour, set per box by the block. */
-/* A design drawn as another calendar's phone view (`.urd-cal-pd`) works its variables out again in its own box, from its own set and colours. */
+/* The calendar block, its colour slots and a phone view's own variables */
 .urd-cal,
 .urd-cal-pd {
   --urd-cal-accent: var(--urd-cal-s-accent, var(--urd-color-accent));
@@ -27,17 +21,12 @@
   --urd-cal-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-color-text) 12%, transparent));
   position: relative;
   display: grid;
-  /* One column as wide as the block: no child can widen the calendar past it, whatever it holds. */
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   width: 100%;
 }
 
-/*
- * While the feeds are on the way (blocks/calendar.js): the calendar in its own design, drawn with the sample events into the height the loading state kept, from its top, their words and pictures hidden, and the loading note over it in the design's colours.
- * Without a way to hide the words alone, the drawing is hidden and the note stands by itself.
- * A calendar drawn again shows a copy of its last drawing instead (data-cal-copy), at the height that drawing had.
- */
+/* While the feeds are on the way: the design drawn with sample events */
 .urd-block > .urd-cal.urd-cal-wait,
 .urd-block > .urd-cal[data-cal-copy] {
   height: auto;
@@ -47,7 +36,7 @@
   align-content: start;
 }
 
-/* Each part of the drawing keeps its own layers to itself, so the note stands over every design. */
+/* Each part keeps its layers to itself, so the note stands over it */
 .urd-cal-wait > :not(.urd-cal-wait-note) {
   -webkit-text-fill-color: transparent;
   isolation: isolate;
@@ -92,10 +81,7 @@
   }
 }
 
-/*
- * The colour sets (calendar-designs.js `set`, the class `urd-cal-set-<id>` on the block and on its card): the event card, the switcher's week and month, the finding tools and the phone view are drawn from these variables alone, so a design overrides its set by redefining one under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card).
- * The theme set follows the site; the others take the design's colour slots with the values the Design canvas drew.
- */
+/* The colour sets: the variables a set's parts are drawn from */
 .urd-cal,
 .urd-cal-dialog,
 .urd-cal-pd {
@@ -268,7 +254,7 @@
   --urd-cal-set-label-spacing: 0.1em;
 }
 
-/* The retro sets: each stylised design draws its set from its own slots, with the values the Design canvas drew. */
+/* The retro sets, each drawn from its own design's slots */
 .urd-cal-set-pad {
   --urd-cal-set-bg: var(--urd-cal-s-paper, #fbf7ee);
   --urd-cal-set-surface: color-mix(in srgb, var(--urd-cal-s-paper, #fbf7ee) 90%, var(--urd-cal-s-ink, #1d1b18));
@@ -414,7 +400,7 @@
   border-color: var(--urd-cal-line);
 }
 
-/* The view switcher: the design, the week and the month as one pill of pressed buttons */
+/* The view switcher: one pill of pressed buttons */
 .urd-cal-switch {
   display: inline-flex;
   justify-self: start;
@@ -444,7 +430,7 @@
   background: var(--urd-cal-set-accent);
 }
 
-/* The sets whose tools have a form of their own: the Ap sets' gold-framed group, the poster's square frames, the cork board's pinned notes, the board's tiles. */
+/* The sets whose tools have a form of their own */
 .urd-cal-set-apCream .urd-cal-switch,
 .urd-cal-set-apNavy .urd-cal-switch {
   gap: 0;
@@ -506,7 +492,7 @@
   backdrop-filter: var(--urd-cal-set-blur);
 }
 
-/* The edge stripe on the design's boxes: the owner's colour, else the event's calendar colour, else the accent. */
+/* The edge stripe on the design's boxes */
 .urd-cal-stripes .urd-collection-row,
 .urd-cal-stripes .urd-collection-card,
 .urd-cal-stripes .urd-cal-next-row,
@@ -552,7 +538,7 @@
   padding-left: 1rem;
 }
 
-/* A design's words (a label, a button's words, the words of a time or a countdown) are edited in place in the preview, where the text toolbar attaches to them. */
+/* A design's words, edited in place in the preview */
 .urd-cal .urd-cal-tx {
   overflow-wrap: anywhere;
 }
@@ -600,7 +586,7 @@
   text-decoration: underline;
 }
 
-/* A place leads to the map and a description keeps its links, both in the colour of the words around them. */
+/* A place's map link and a description's links, in the words' colour */
 .urd-cal-place-link {
   color: inherit;
   text-decoration: none;
@@ -626,7 +612,7 @@
   outline-offset: 2px;
 }
 
-/* The announcement's text stops after a few lines (the design sets how many), and a text that does not fit opens the announcement in full in a card («Read it all»). */
+/* The announcement's text, cut after a few lines */
 .urd-cal .urd-cal-clamp {
   display: -webkit-box;
   overflow: hidden;
@@ -654,7 +640,7 @@
   display: none;
 }
 
-/* The event in full: a native dialog over the page, drawn in its calendar's set (the set class and the colour slots are copied onto it by the block), with the theme set as the fallback. */
+/* The event in full: a native dialog in its calendar's set */
 .urd-cal-dialog {
   --dlg-text: var(--urd-cal-set-ink);
   --dlg-accent: var(--urd-cal-set-accent);
@@ -676,12 +662,12 @@
   backdrop-filter: var(--urd-cal-set-blur);
 }
 
-/* The card lies over its calendar, under the navigation bar; the calendar and the page behind are left as they are. */
+/* The card over its calendar, under the navigation bar */
 .urd-cal-dialog {
   z-index: 4000;
 }
 
-/* R1 Tear-off pad's card: a pad page with the perforation holes along its top edge, the date as the month bar, and the close cross on the bar. */
+/* R1 Tear-off pad's card: a pad page with perforation holes */
 .urd-cal-dlg-pad {
   padding-top: 0;
 }
@@ -704,7 +690,7 @@
   line-height: 1.1;
 }
 
-/* R2 Index cards' card: a typewritten card with the punched hole at its top, the date as the head over the rule, and the facts and the text on the lines. */
+/* R2 Index cards' card: a typewritten card with a punched hole */
 .urd-cal-dlg-index {
   padding-top: 1.7rem;
   line-height: 26px;
@@ -805,7 +791,7 @@
   margin-bottom: 0.9rem;
 }
 
-/* The calendar's own words and page from the site's registry, under the event's description. */
+/* The calendar's own words and page, under the description */
 .urd-cal-dialog-source {
   display: grid;
   gap: 0.3rem;
@@ -898,7 +884,7 @@
   border-radius: var(--urd-cal-set-chip-radius);
 }
 
-/* The sets whose card has a form of its own: the cork board's card is a pinned note, the poster's a square sheet, the glass sets' a pane over a blurred ground. */
+/* The sets whose card has a form of its own */
 .urd-cal-set-cork.urd-cal-dialog {
   transform: rotate(-0.8deg);
 }
@@ -933,7 +919,7 @@
   border-radius: 999px;
 }
 
-/* The sets whose ground is not the page's (navy, the dark board, dark glass and the cork board) draw their tools on their own ground, so the set's words read; without `:has` the tools stand on the page as before. */
+/* The sets whose ground is not the page's draw their tools on it */
 .urd-cal-set-apNavy:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier),
 .urd-cal-set-board:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier),
 .urd-cal-set-darkGlass:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier),
@@ -954,7 +940,7 @@
   font-size: 1em;
 }
 
-/* The tools' size (`toolsSize`): the switcher, the chips, the search and the arrows of the week and the month, small or large. */
+/* The tools' size (toolsSize), small or large */
 .urd-cal-tools-s .urd-cal-tools,
 .urd-cal-tools-s .urd-cal-chips,
 .urd-cal-tools-s .urd-cal-swview .urd-cal-month-head,
@@ -1054,7 +1040,7 @@
   border-radius: 999px;
 }
 
-/* The link to the whole programme, and the words on an event without a sign-up. */
+/* The whole programme's link, and an event's words without a sign-up */
 .urd-cal-program {
   font-weight: 600;
   color: var(--urd-cal-accent);
@@ -1125,7 +1111,7 @@
   border: 0;
 }
 
-/* The switcher and the search on one row; the search's button shows on a phone alone. */
+/* The switcher and the search on one row */
 .urd-cal-tools {
   display: flex;
   flex-wrap: wrap;
@@ -1164,7 +1150,7 @@
   stroke-linecap: round;
 }
 
-/* The visitor's search, the «nothing matches» line and the «Earlier» fold of events that are over. */
+/* The search, the «nothing matches» line and the «Earlier» fold */
 .urd-cal-search {
   box-sizing: border-box;
   width: 100%;
@@ -1308,7 +1294,7 @@
   opacity: 0.8;
 }
 
-/* A named calendar with a colour of its own tints its chips and date badges. */
+/* A named calendar's colour tints its chips and date badges */
 .urd-cal .urd-collection-badge {
   border-color: color-mix(in srgb, var(--urd-cal-color, var(--urd-color-text)) 35%, transparent);
 }
@@ -1371,7 +1357,7 @@
   color: var(--urd-cal-accent);
 }
 
-/* A day of a month on the phone is a button: its own look comes from the design's day cell, which stands after this in the sheet. */
+/* A day of a month on the phone is a button */
 .urd-cal-pday {
   font: inherit;
   color: inherit;
@@ -1424,7 +1410,7 @@
   border-radius: var(--urd-cal-set-chip-radius);
 }
 
-/* The switcher's month and week in the block's set: the head in the set's label words, the day cells on the set's ground, today in the set's accent. */
+/* The switcher's month and week in the block's set */
 .urd-cal-swview .urd-cal-month-head strong,
 .urd-cal-swview .urd-cal-wstrip-label strong {
   letter-spacing: var(--urd-cal-set-label-spacing);
@@ -1529,7 +1515,7 @@
   opacity: 0.6;
 }
 
-/* The empty state: an icon over a line of text, centred in the block, so a calendar with nothing coming up reads as empty rather than as broken. */
+/* The empty state: an icon over a line of text */
 .urd-cal-empty {
   display: grid;
   justify-items: center;
@@ -1553,7 +1539,7 @@
   font-size: 0.9em;
 }
 
-/* Several events in the «next» card stand under each other with a rule between. */
+/* Several events in the «next» card, a rule between them */
 .urd-cal-next-row + .urd-cal-next-row {
   margin-top: 14px;
   padding-top: 14px;
@@ -1727,7 +1713,6 @@
 }
 
 /* A5 List on navy (ApeironLF): rows on navy, the day in gold */
-/* The cream words belong on the navy rows and buttons; the shared parts around them (the view switcher, the zone line, «Earlier») stand on the page in its own text colour. */
 .urd-cal-d-apList {
   --urd-cal-ap-gold: var(--urd-cal-s-gold, #d0a74a);
   --urd-cal-ap-line: var(--urd-cal-s-line, color-mix(in srgb, var(--urd-cal-s-gold, #d0a74a) 35%, transparent));
@@ -2466,7 +2451,7 @@
   stroke: color-mix(in srgb, var(--urd-cal-accent) 70%, var(--urd-color-text));
 }
 
-/* A month shows focus in its own shape, never as the box round it a browser draws for a focused drawing: the keyboard's focus thickens it. */
+/* A month shows focus in its own shape */
 .urd-cal-wheel-seg:focus {
   outline: none;
 }
@@ -2485,7 +2470,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* In the editor a press on the button's words rewrites them, so the button keeps room of its own beside them, as the view switcher's do; the words stand in line with the list. */
+/* The «Show all» button under the month's list */
 .urd-cal-wheel-more {
   justify-self: start;
   padding: 6px 14px;
@@ -2531,7 +2516,7 @@
   border-radius: var(--urd-radius-sm);
 }
 
-/* ---- The designs' own settings (calOptions): the ones the style sheet draws ---- */
+/* ---- The designs' own settings (calOptions) the sheet draws ---- */
 
 .urd-cal-o-panelSide-under .urd-cal-side {
   grid-template-columns: minmax(0, 1fr);
@@ -2592,7 +2577,7 @@
   }
 }
 
-/* ---- Print: the events as a plain list, without the design and its buttons ---- */
+/* ---- Print: the events as a plain list ---- */
 
 .urd-cal-print {
   display: none;
@@ -2629,9 +2614,9 @@
   }
 }
 
-/* ---- The phone: the seven-column designs with their days under each other, and the months as dots that open the day ---- */
+/* ---- The phone: day columns stacked, the months as dots ---- */
 
-/* The finding tools on a phone: the switcher across the width with the search as a button beside it, the field across the width when the button opens it, and the calendar chips in one row that scrolls sideways. */
+/* The finding tools on a phone */
 .urd-cal-phone .urd-cal-tools {
   flex-wrap: wrap;
 }
@@ -2681,13 +2666,12 @@
   flex: none;
 }
 
-/* The poster wall and the picture cards flow into one column on a phone, whatever the columns option says, and the first poster spans no more than the column. */
+/* The poster wall and the picture cards in one column on a phone */
 .urd-cal-phone :is(.urd-cal-posters, .urd-cal-photos, .urd-cal-index) {
   grid-template-columns: minmax(0, 1fr);
 }
 
-/* A word wider than the calendar breaks inside the event's text fields instead of running out of the block. `anywhere`, not
-   `break-word`: only it lets the break points count towards an item's smallest width, so a flex or grid item can shrink. */
+/* A word wider than the calendar breaks inside the text fields */
 .urd-cal :is(.urd-cal-f-title, .urd-cal-f-place, .urd-cal-f-description, .urd-cal-f-category) {
   overflow-wrap: anywhere;
 }
@@ -2705,7 +2689,7 @@
   overflow-wrap: anywhere;
 }
 
-/* The phone design (calPhoneDesign, `.urd-cal-phone-design` on the host): one stacked agenda drawn from the set's variables, with the set's words for the dates and the set's type for the titles. */
+/* The phone design (calPhoneDesign): one stacked agenda */
 .urd-cal-pa {
   display: grid;
   color: var(--urd-cal-set-ink);
@@ -2942,7 +2926,7 @@
   opacity: 0.7;
 }
 
-/* R2 Index cards: typewritten cards on lined paper, the lines in pixels so the writing sits on them, each card a little askew. */
+/* R2 Index cards: typewritten cards on lined paper */
 .urd-cal-index {
   --urd-cal-index-card: var(--urd-cal-s-card, #fdfbf3);
   --urd-cal-index-rule: var(--urd-cal-s-rule, #c9483b);
@@ -2971,7 +2955,7 @@
   padding-top: 16px;
 }
 
-/* A design drawn as another block's phone view (calPhoneCandidates, `.urd-cal-pd`): its box stands in the block in the design's own set. */
+/* A design drawn as another block's phone view (.urd-cal-pd) */
 .urd-cal-pd {
   color: var(--urd-cal-set-ink);
 }
@@ -3021,7 +3005,7 @@
   opacity: 0.45;
 }
 
-/* The marquee's set card: the board's paper in the red frame, the title in the display face. */
+/* The marquee's set card: the board's paper in the red frame */
 .urd-cal-set-marquee.urd-cal-dialog .urd-cal-dialog-title {
   font-stretch: condensed;
   text-transform: uppercase;
@@ -3049,7 +3033,7 @@
   opacity: 0.6;
 }
 
-/* ---- The ApeironLF set: the colours its designs in four families share ---- */
+/* ---- The ApeironLF set: the colours its designs share ---- */
 
 /* The ApeironLF colours, shared by every design of the set */
 .urd-cal-d-apNow,
@@ -3062,7 +3046,7 @@
   --urd-cal-ap-golddark: var(--urd-cal-s-goldDark, #8f6a1e);
 }
 
-/* The ApeironLF empty state: a pill, the dashed box and the subscribe button in gold */
+/* The ApeironLF empty state: a pill, a dashed box, a gold button */
 .urd-cal-apempty {
   display: grid;
   justify-items: center;

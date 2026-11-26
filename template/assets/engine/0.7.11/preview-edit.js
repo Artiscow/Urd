@@ -1,44 +1,5 @@
 /**
- * The editing layer for preview mode: drag, resize (with grid snapping) and
- * delete directly in the real page inside the editor's iframe.
- *
- * Loaded ONLY in preview mode (dynamic import in urd.js) - visitors never
- * load this file. Changes are reported to the editor, which owns the
- * draft:
- *   page → editor: { type: 'urd-move',   sectionId, blockId, frame, frameKey, coalesce?, groupKey? }  (frameKey 'mobile': frame is a row-grid placement, ADR-0019)
- *                  { type: 'urd-move-block-section', fromSectionId, toSectionId, blockId, frame, groupKey? }  (a block dropped in another section; groupKey joins the settle's moves in the source)
- *                  { type: 'urd-delete', sectionId, blockId | blockIds }  (blockIds: multi-selection in one undo step)
- *                  { type: 'urd-add-section', index, section }
- *                  { type: 'urd-move-section', sectionId, dir }
- *                  { type: 'urd-delete-section', sectionId }
- *                  { type: 'urd-duplicate-section', sectionId }
- *                  { type: 'urd-clipboard', clipboard, cut }  (a copy or a cut: the editor keeps it and hands it to the next page the preview loads)
- *                  urd-edit from a text block carries `caret`: the characters into the text where the change began, kept with the undo step
- *                  { type: 'urd-paste-section', afterId, section }  (the clipboard's section with fresh ids, below afterId, or last without one)
- *                  { type: 'urd-section-phone-room', sectionId, side, px }  (a seam's grip in the phone view: the room above ('top') or below ('bottom') the section's blocks on the phone, 0.7.3.26)
- *                  { type: 'urd-section-size', sectionId, minHeight, moves? }  (moves: a section the seam grip changed at its top moves all its blocks in the same undo step)
- *                  { type: 'urd-mobile-reset', sectionId, blockId? }  (reset mobile overrides; without blockId, the whole section)
- *                  { type: 'urd-edit-on-phone', sectionId }  (a section showing its phone layout in the desktop view, its words too narrow at this width: its bar's «Edit on the phone»)
- *                  { type: 'urd-phone-order', sectionId, blockId, change, coalesce? }  (a block moved one place in the phone's reading order, the change phone-moves.js settles it into: exceptions, stacks, the custom order or blocks taken out of the rule's columns; also a block taken out of its group, or the group undone, from the block's menu, and a set grouped or its groups undone from the phone's set bar, the menu or the keys; coalesce from the keys, a burst one undo step)
- *                  { type: 'urd-phone-layout', sectionId, change, preset?, follow? }  (a preset of «Phone layout» on the phone view's section bar: its cells and order, phone-layouts.js, `preset` its id, which asks for «Same height» after it; «Same width» there; or «Same height», the heights its lines are measured to, `follow` where they follow a preset as part of its step; or the phone's set bar's alignment, its cells, and the layer order of the blocks pinned on the phone, its `layers`)
- *                  { type: 'urd-hover-block', blockId }  (the block under the mouse, null for none: its row in the Phone panel's list is lit)
- *                  { type: 'urd-attention-cards', cards: [{ sectionId, rect }] }  (the sections that need a phone review in the phone view, where each stands in the canvas, for the editor to draw their cards beside the phone; sent when they change)
- *                  { type: 'urd-new-fitted', sectionId, blockId, w, h }  (a new block's box fitted to what it draws, the answer to urd-fit-new, once, as the block is shown: the fitted width in percent and height in px, or null for both where it was not fitted, add-fit.js)
- *                  { type: 'urd-phone-unpin', sectionId, blockId }  (a block pinned on the phone unpinned, from its bar or its menu: back into the phone's order, its cells kept, phone-moves.js unpinned)
- *                  { type: 'urd-phone-seen', sectionIds }  (the sections standing in the phone view's window, at least half of them or half the window, for the editor's phone check before publishing; sent as a section is drawn, and as a scroll changes the sections in sight)
- *                  { type: 'urd-too-narrow', screen }  (a drag, the key carry or a handle greys its block as too narrow for its words, ADR-0034: 'phone' or 'desktop' while it is greyed, null once it is not)
- *                  { type: 'urd-block-flag', sectionId, blockId, decor?, hideMobile?, hideDesktop? }
- *                  { type: 'urd-block-style', sectionId, blockId, fields }  (a pasted style's block-level fields: animation, hover, size and the phone's own, height, fit; null clears one)
- *                  { type: 'urd-section-menu', sectionId, rect }  (open the section's settings in the editor's floating menu: the gear on its bar and «Settings» in its right-click menu)
- *                  { type: 'urd-menu-area', area }  (1, 2 or 3 on a selected block: the editor's menu shows that area)
- *                  { type: 'urd-toggle-grid' }  (G on the page: the editor shows or hides the grid)
- *                  { type: 'urd-block-menu', sectionId, blockId, rect, group? }  (open the block menu in the editor; `group` opens one of its groups)
- *                  { type: 'urd-block-design', sectionId, blockId, phone? }  (open the design picker for a block with designs, from its toolbar; `phone` from the phone view, for its design on a phone)
- *                  { type: 'urd-block-bar', blockId, rect?, tools?, set? }  (in the phone view, the selected block's box in the canvas and its bar's tools, the tools only when they changed, each `disabled` where it greys, for the editor to draw the bar beside the phone; `set` true while they are a set's bar and the box the set's, 0.7.36.3; blockId null when no block's bar stands, 0.7.3.19.2)
- *                  { type: 'urd-section-bar', sectionId, rect?, tools? }  (the same for the section the mouse was last over, or put at work: its bar beside the phone, 0.7.3.23)
- *                  { type: 'urd-nav-bar', on, rect? }  (in the phone view, where the site's menu stands in the canvas while the mouse was last over it or it was last pressed: the editor draws the menu's size bar beside the phone, 0.7.3.25; on false takes it away)
- *                  { type: 'urd-ctx-menu', label, rows, at, editor, rest }  (in the phone view, a menu's rows for the editor to draw: at the point `at`, or under the ⋮ of the editor's bar `editor` names, 'block' or 'section'; `rest` leaves the focus where it is)
- *                  { type: 'urd-ctx-close' }, { type: 'urd-ctx-hold' }, { type: 'urd-ctx-hover', over }  (the phone view's menu closed by the page, a menu a rest opened held by a press on its ⋮, and the pointer on or off a ⋮ of the page's that opened one)
+ * The editing layer of the preview: drag, resize and delete on the real page inside the editor's iframe, each change posted to the editor, which owns the draft.
  */
 import { applyFrameCss, mobilePlacementToCss, placeStuck, autoGrows, suspendPush, resumePush, pushShiftOf, pushDrawnOf, pushGrowthOf, pushPreview, hugHeight, contentHeight, drawsAtContent, visitorHeights, syncSectionHeight, drawnWidth, renderSection } from './render.js';
 import { followsContent, fitMovesAll, FIT_BY_WIDTH, PHONE_DESIGNS, PHONE_WORDS, phoneWordsOf, forcesReadable, NARROW_PX, DRAWS_NOTHING, READABLE_PX } from './push-model.js';
@@ -74,7 +35,6 @@ import { layerChanges, phoneLayerChanges } from './layer-order.js';
 import { isAnchorName, resolveLink, linkAttrs, LINK_RELS } from './nav-model.js';
 import { pasteCommand } from './sanitize.js';
 import { pathTo, nodeAt } from './caret-path.js';
-// This module is loaded dynamically by urd.js beside the admin dictionary (initAdminLocale), and is in place before the first render:
 // ta() is called as the editing chrome is drawn, never at module level (ADR-0012).
 import { ta, adminLang } from './i18n.js';
 import { barTools, SECTION_TOOLS, BAR_CHOICES, TOOL_FORMS, AREA_LOOKS, BAR_ICONS } from './bar-tools.js';
@@ -82,9 +42,7 @@ import { textDesign } from './doc-designs.js';
 import { addedFloor, narrowestWidth, fittedFrame, pluginFits, DRAWS_LATE } from './add-fit.js';
 
 /**
- * The event's target as an Element. The editing chrome draws its icons as
- * inline SVG, and an SVGElement is not an HTMLElement, so the guards that
- * ask which piece of chrome was hit are reached from inside an icon too.
+ * The event's target as an Element, an SVG icon of the editing chrome included.
  * @param {Event} event
  * @returns {Element | null}
  */
@@ -96,7 +54,7 @@ function eventTarget(event) {
 const EDITABLE_TEXT = '[contenteditable="true"], [contenteditable="plaintext-only"]';
 
 /**
- * Writes in a block's words where a press was (x, y in the page's px), as a press released without a drag on a block not yet selected asks: the words the press began on (`pressed`), else those under it, else the block's first, take the focus, and the caret stands at the press through the standard caret at a point (caretPositionFromPoint), or at the end of the words where the browser has no such thing.
+ * Focuses the words a press hit in a block (`pressed`, else those at x, y, else the first), the caret at the press, or at the end without caretPositionFromPoint.
  * @param {HTMLElement} el The block element
  * @param {number} x
  * @param {number} y
@@ -120,7 +78,7 @@ function writeAt(el, x, y, pressed = null) {
   selection?.addRange(range);
 }
 
-/** The layer order: puts the block in front of the section's other blocks or behind them all (the toolbar's arrows, the right-click menu and the keys; layer-order.js). */
+/** Puts the block in front of the section's other blocks or behind them all (layer-order.js), from the toolbar's arrows, the right-click menu and the keys. */
 function bumpBlockZ(host, section, block, el, dir) {
   const changes = layerChanges(section.blocks, block.id, dir);
   for (const other of section.blocks) {
@@ -134,7 +92,7 @@ function bumpBlockZ(host, section, block, el, dir) {
   }
 }
 
-/** The layer order on the phone: the pinned blocks among `ids` put in front of the section's other pinned blocks there, or behind them all (layer-order.js phoneLayerChanges), the desktop's order left as it is; one undo step. */
+/** Puts the pinned blocks among `ids` in front of or behind the section's other pinned blocks on the phone (phoneLayerChanges), in one undo step. */
 function bumpPhoneZ(section, ids, dir) {
   const layers = Object.fromEntries(phoneLayerChanges(section.blocks, ids, dir));
   if (Object.keys(layers).length) post({ type: 'urd-phone-layout', sectionId: section.id, change: { layers } });
@@ -165,9 +123,9 @@ function hasDesigns(block) {
   return Boolean(def?.fromPlugin && pluginBlockDesigns(def, ta));
 }
 
-/** The design picker in the editor, for the block (the toolbar's design button beside the gear); `phone` asks for the design it draws on a phone (the phone view's button). */
+/** Opens the block's designs from its toolbar; `phone` asks for the design it draws on a phone. */
 function openBlockDesign(el, section, block, phone = false) {
-  // The small window (Urd settings «Design button on the bar», the default) opens the design beside the block as a small panel of its pictures, as the bar's tools open their groups; the full window, and a phone design always, open the picker.
+  // The small window, the default, shows the designs in a panel beside the block; the full window, and a phone design always, open the editor's picker.
   if (!phone && barChoice(BAR_CHOICES.design) === 'small') {
     openBlockTool(el, section, block, 'look:design', ta('lbl.design'), 'design');
     return;
@@ -178,7 +136,7 @@ function openBlockDesign(el, section, block, phone = false) {
 
 const GEAR_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>';
 
-/** The toolbar's design button: the block's designs one press away, in the picker or in a small panel as Urd settings «Design button on the bar» asks; in the phone view its design on a phone. */
+/** The toolbar's design button, opening the block's designs as Urd settings «Design button on the bar» ask; in the phone view its design on a phone. */
 function designButton(el, section, block, phone) {
   const btn = document.createElement('button');
   btn.className = 'urd-edit-design';
@@ -192,11 +150,6 @@ function designButton(el, section, block, phone) {
   return opensMenu(btn);
 }
 
-/**
- * The bar on a block and on a section, in the form Urd settings «Toolbar» chooses (ADR-0030, kept in the shared localStorage and read at every draw):
- * `groups` (the default) every group of the block's menu as a tool (bar-tools.js), each opening that group alone in a small panel, and ⋮; `full` every action on the bar; `panels` a word for the main act, then tools that each open a small panel of their group in the editor, and ⋮;
- * `short` the block's own one-press acts and the gear, with ⋮ opening the right-click menu that holds the rest.
- */
 /** A choice of the bar as stored in the shared localStorage (BAR_CHOICES in bar-tools.js), its first option where none is stored or storage is closed. */
 function barChoice({ key, options }) {
   try {
@@ -206,29 +159,27 @@ function barChoice({ key, options }) {
     return options[0];
   }
 }
+/** The bar's form (Urd settings «Toolbar», ADR-0030): `groups` of the menu as tools, the default; `full` every action; `panels`; or `short`, the block's own acts. */
 const barForm = () => barChoice(BAR_CHOICES.form);
 /** Whether the gear stands on a bar whose tools open the settings themselves (Urd settings «Settings gear on the bar», on by default). */
 const barGear = () => barChoice(BAR_CHOICES.gear) === 'on';
-/** Whether the phone button (shown or hidden on phones) stands on a bar that leaves it to the right-click menu (Urd settings «Phone button on the bar», shown by default). */
+/** Whether the phone button stands on a bar that leaves it to the right-click menu (Urd settings «Phone button on the bar», shown by default). */
 const barPhone = () => barChoice(BAR_CHOICES.phone) === 'on';
 /** How large the bar is drawn (Urd settings «Toolbar size»): its class, which preview.css sizes the bar by. */
 const barSize = () => barChoice(BAR_CHOICES.size);
-/** Whether the phone view's bars and their menus are drawn by the editor beside the phone (Urd settings «Bars in the phone view»: beside the phone, or both, where the page keeps its own bars as well), or stand on the page alone as on the desktop, as they do by default. */
+/** Whether the editor draws the phone view's bars and their menus beside the phone (Urd settings «Bars in the phone view»), not on the page alone. */
 const phoneBars = () => isMobile() && barChoice(BAR_CHOICES.place) !== 'canvas';
 
 /**
- * The bar's look (Urd settings «Toolbar look», kept in the shared localStorage and read at every draw): the class `urd-bar-<look>` on the toolbar, which preview.css draws.
- * The area looks set the tools apart by Content, Style and Placement, so they hold only for the bar of tools; another form takes the plain look in their place.
+ * The bar's look from Urd settings «Toolbar look», as `urd-bar-<look>`.
+ * An area look holds only on a bar of tools; another form takes the plain look.
  */
 function barLook(form = barForm()) {
   const v = barChoice(BAR_CHOICES.look);
   return !TOOL_FORMS.includes(form) && AREA_LOOKS[v] ? AREA_LOOKS[v] : v;
 }
 
-/**
- * The tools of a bar whose tools belong to the menu's areas, placed in it: in a cluster of their area where the look sets the areas apart, else in a row.
- * Returns the function that places one tool by its area.
- */
+/** Returns the function that places a bar's tool by its menu area: in its area's cluster where the look sets the areas apart, else in a row. */
 function toolPlacer(barBody, look) {
   const clustered = look === 'areas' || look === 'capsule-areas';
   const clusters = new Map();
@@ -249,7 +200,7 @@ const EXAMPLES_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none
 
 const MORE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
 
-/** A bar button: its drawing or its words, its tooltip and name, and what a press does; the pointerdown stops, so the document's selection listener never draws the section anew under the press. */
+/** A bar button: its drawing or words, its tooltip and name, and what a press does; its pointerdown stops before the document's selection listener. */
 function barButton(content, title, run, className = '', cap = '') {
   const btn = document.createElement('button');
   btn.type = 'button';
@@ -264,11 +215,7 @@ function barButton(content, title, run, className = '', cap = '') {
   return btn;
 }
 
-/**
- * The ⋮ of the shorter bars: the right-click menu of the block or the section, opened under it.
- * A mouse resting on it, with no button held, opens the menu without taking the focus or changing the selection, and the menu closes a moment after the mouse leaves the ⋮ and the menu, or at Escape (showContextMenu); a press opens it with the block or the section selected and the focus on its first item, keeps a menu the rest opened the same way, and closes one it opened.
- * It carries no tooltip, since it opens on a rest; its name stands in its aria-label.
- */
+/** The ⋮ of the shorter bars: the right-click menu under it, opened by a resting mouse without the focus or by a press with it; its name in aria-label, no tooltip. */
 function moreButton(open) {
   const btn = barButton(MORE_SVG, ta('canvas.bar.more'), () => {
     clearTimeout(restTimer);
@@ -324,7 +271,7 @@ function moreButton(open) {
   return btn;
 }
 
-/** A button of the bar that opens the editor's menu or one of its small windows: a press on it leaves the menu standing open to the editor, which opens the tool's group inside it or closes it as the press asks (the editor's state/preview.svelte.js). */
+/** Marks a bar button that opens the editor's menu or a small window of it: a press on it leaves the open menu to the editor (state/preview.svelte.js). */
 const opensMenu = (btn) => {
   btn.dataset.opensMenu = '';
   return btn;
@@ -343,10 +290,7 @@ function menuButton(el, section, block) {
   btn.dataset.cap = ta('canvas.cap.settings');
   btn.innerHTML = GEAR_SVG;
   btn.title = ta('canvas.blockMenu');
-  // Without the stop, pointerdown would bubble to the document's selection
-  // listener, which can trigger a re-render (section activation) BEFORE click
-  // fires - and then the button is swapped out mid-click (the same guard as
-  // the handles).
+  // The press stops here, before the document's selection listener.
   btn.addEventListener('pointerdown', (event) => event.stopPropagation());
   btn.addEventListener('click', () => openBlockSettings(el, section, block));
   return opensMenu(btn);
@@ -359,9 +303,7 @@ function openBlockSettings(el, section, block) {
   post({ type: 'urd-block-menu', sectionId: section.id, blockId: block.id, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
 }
 
-/* The style clipboard (block-style.js): one copied look for the session,
-   pasted onto a block of the same type whole, onto another type as the
-   shared fields. */
+/* The style clipboard (block-style.js): one look per session, pasted whole on a block of its type and as the shared fields on another. */
 let styleClipboard = null;
 
 function copyBlockStyle(block) {
@@ -378,14 +320,7 @@ function pasteBlockStyle(section, block) {
   post({ type: 'urd-block-style', sectionId: section.id, blockId: block.id, fields: next.shared });
 }
 
-/* The right-click menu (0.7.20.8, proposal N on the Design canvas): a narrow
-   menu at the pointer, or at the block or section when opened from the
-   keyboard (the context-menu key or Shift+F10). On a block it has «Settings»
-   first and the block's actions after it, on a section's surface the
-   section's actions, each with its key where it has one. One menu at a
-   time; Escape closes it and gives the focus back to where it was opened.
-   The APG menu pattern: role="menu", the arrow keys walk the items, Home
-   and End jump. */
+/* The right-click menu, one at a time: at the pointer, or at the block or section from the keyboard, its items walked by the arrow keys (the APG menu pattern). */
 let contextMenu = null;
 
 function closeContextMenu(returnFocus = true) {
@@ -404,11 +339,7 @@ function closeContextMenu(returnFocus = true) {
   }
 }
 
-/*
- * The phone view's bar and menus, drawn by the editor over the stage beside the phone (0.7.3.19.2, editor/src/lib/CanvasBar.svelte), free of the page's edges and clear of the page.
- * The page keeps the selected block's bar, unseen (preview.css), and tells the editor once a frame where the block stands and what its tools show (urd-block-bar); a press there presses the tool here (pressPhoneBar), so every tool acts as on the page.
- * A menu, the right-click one or a ⋮'s, is handed to the editor as its rows (urd-ctx-menu), and a row chosen there runs here (runPhoneMenu).
- */
+/* The editor draws the phone view's bars and menus beside the phone (CanvasBar.svelte); a press or a row chosen there runs here (pressPhoneBar, runPhoneMenu). */
 
 /** The menu the editor shows for the phone view: its block or section, each row's action by its place, and the ⋮ that opened it as showContextMenu takes it. */
 let phoneMenu = null;
@@ -461,7 +392,7 @@ export function runPhoneMenu(index) {
   run?.();
 }
 
-/** The editor closed the phone view's menu without a choice (urd-ctx-closed); closed with a key, the focus goes back to the block or section it was opened on, as the page's own menu gives it back. */
+/** The editor closed the phone view's menu without a choice (urd-ctx-closed); closed by a key, the focus goes back to its block or section. */
 export function phoneMenuClosed(focus = false) {
   const el = phoneMenu?.el;
   phoneMenu = null;
@@ -470,13 +401,13 @@ export function phoneMenuClosed(focus = false) {
   el.focus({ preventScroll: true });
 }
 
-/** The tools of a bar the editor draws in the phone view: a block's every tool but ⠿, whose drag the block's own surface gives there, or with a set the set bar's count and buttons (phoneSetBar); a section's every button, and its link name. */
+/** The tools of a bar the editor draws in the phone view: a block's but ⠿, a set's count and buttons (phoneSetBar), or a section's buttons and link name. */
 const phoneBarTools = (el, kind = 'block') => (kind === 'section'
   ? [...el.querySelectorAll(':scope > .urd-section-toolbar :is(button, .urd-anchor-tag)')]
   : multiIds.size > 1 && phoneSetBar ? [...phoneSetBar._urd.body.querySelectorAll(':scope > :is(button, .urd-multi-count)')]
     : [...el.querySelectorAll(':scope > .urd-edit-toolbar .urd-bar-body button')].filter((b) => !b.classList.contains('urd-edit-move')));
 
-/** A tool as the editor draws it: its drawing or its words, its name and tooltip, whether it is pressed (null for a tool with no such state), removes, is the ⋮ or the help chip, whether it opens the editor's menu, which a second press closes, whether it opens a pop-up of the page's own (the block menu, the layout picker, the hidden blocks), which a second press closes too, whether it is the section's link name or a set's count, words to read rather than a tool, and whether it is greyed. */
+/** A tool as the editor draws it: its drawing or words, name, tooltip, and whether it is pressed, removes, opens a menu or a pop-up, is words only or greyed. */
 const toolOf = (btn) => ({
   html: btn.innerHTML.trim().startsWith('<svg') ? btn.innerHTML : '',
   text: btn.innerHTML.trim().startsWith('<svg') ? '' : btn.textContent.trim(),
@@ -508,7 +439,7 @@ function barVersion(kind, bar) {
   return watch.version;
 }
 
-/** The section whose bar the editor draws in the phone view: the last one the mouse was over on the page, kept while the mouse is off the page so its bar can be reached, or the section last put at work. */
+/** The section whose bar the editor draws in the phone view: the last one the mouse was over, kept while it is off the page, or the last put at work. */
 let phoneBarSectionId = null;
 
 let phoneBarFrame = 0;
@@ -527,8 +458,7 @@ function setBox(els) {
 }
 
 /**
- * Tells the editor of one bar where its block or section stands in the canvas and what the bar holds, the tools only when they changed, or that none stands; true while it stands, or is only out of sight for the moment.
- * A set's bar is told as the block's, its box the set's, and marked as a set's (`set`).
+ * Tells the editor where a bar's block, set or section stands, and its tools when they change; true while it stands or is only out of sight.
  * @param {'block'|'section'} kind
  * @param {Element|null} el The selected block, or the section
  * @param {Element|null} bar Its bar on the page
@@ -558,10 +488,7 @@ function tellPhoneBar(kind, el, bar, held = false, set = null) {
   return true;
 }
 
-/**
- * Tells the editor, once a frame in the phone view, of the two bars it draws beside the phone (urd-block-bar, urd-section-bar): the selected block's, gone while the block is dragged or scrolled out of the phone's window, and the set's bar in its place while a set stands (phoneSetBar); and the section's (phoneBarSectionId); both gone in the Clean view.
- * Run as the selection changes, the mouse goes over a section and a section is drawn; it stops itself when nothing is left to tell.
- */
+/** Tells the editor, once a frame in the phone view, where the block's or set's bar and the section's bar stand, until neither does. */
 export function watchPhoneBar() {
   if (phoneBarFrame) return;
   const tick = () => {
@@ -583,12 +510,12 @@ export function watchPhoneBar() {
   phoneBarFrame = requestAnimationFrame(tick);
 }
 
-/** Whether the editor draws the menu's size bar beside the phone: in the phone view the mouse was last over the site's menu on the page, or the menu was last pressed there. */
+/** Whether the editor draws the menu's size bar beside the phone: the mouse was last over the site's menu, or it was last pressed. */
 let navBarOn = false;
 let navBarFrame = 0;
 let navBarTold = '';
 
-/** Tells the editor, once a frame while the menu's size bar stands, where the site's menu stands in the canvas (urd-nav-bar), and once that it stands no more: outside the phone view, in the Clean view, or with no menu on the page. */
+/** Tells the editor, once a frame while the size bar stands, where the site's menu stands (urd-nav-bar), and once that it stands no more. */
 function watchNavBar() {
   if (navBarFrame) return;
   const tick = () => {
@@ -634,7 +561,7 @@ document.addEventListener('pointerover', (event) => {
 });
 
 /**
- * A press on a tool of a bar the editor draws in the phone view (urd-bar-press): the tool at that place on the selected block's bar, or the section's, is pressed as on the page; the ⋮ opens its menu in the editor, by a rest without the focus.
+ * Presses the tool at `index` of the block's or section's bar, from the bar the editor draws (urd-bar-press); a ⋮ opens its menu, by a rest without the focus.
  * @param {'block'|'section'} kind
  * @param {string} id The block's or the section's id
  * @param {number} index
@@ -662,11 +589,7 @@ export function openSectionSettingsById(sectionId) {
   if (host?._urdSection) openSectionSettings(host, host._urdSection);
 }
 
-/**
- * Shows a menu at (x, y) for `el`, filled by `build(item, sep)`. An item
- * with `arm` asks for a second press, the way the section bar's deletion does (armedButton).
- * `from` is the bar's ⋮ that opened it, if one did (moreButton): a press on it is no press outside, and with `rest`, opened by a mouse resting on the ⋮, the menu leaves the focus where it is and closes a moment after the mouse leaves the ⋮ and the menu.
- */
+/** Shows a menu at (x, y) for `el`, filled by `build(item, sep)`; an item's `arm` asks for a second press, and `from` is the ⋮ that opened it (moreButton). */
 function showContextMenu(el, x, y, label, build, from = null) {
   if (phoneBars()) {
     showPhoneMenu(el, x, y, label, build, from);
@@ -730,9 +653,7 @@ function showContextMenu(el, x, y, label, build, from = null) {
     else if (event.key === 'Escape' || event.key === 'Tab') { event.preventDefault(); closeContextMenu(); }
     event.stopPropagation();
   });
-  // A press outside, a scroll of the page, a window the owner leaves or
-  // resizes: all close the menu. The listeners are set after the frame the
-  // menu opens in, since opening it can redraw the section under the pointer.
+  // A press outside, a scroll, a blur or a resize closes the menu, from the frame after it opens.
   const outside = (event) => { if (!menu.contains(event.target) && !from?.button.contains(event.target)) closeContextMenu(false); };
   // A menu a rest opened holds no focus, so Escape anywhere on the page closes it, before the page's own keys see the press.
   const onEscape = (event) => {
@@ -798,7 +719,7 @@ function showContextMenu(el, x, y, label, build, from = null) {
  */
 const keysHere = (key) => (isMobile() ? '' : key);
 
-/** The block's menu: «Settings» first, then the block's actions; `from` as showContextMenu takes it. The phone view has the same menu, its layer order the phone's own among the blocks pinned there (bumpPhoneZ), greyed where it moves nothing. A block in a group of the phone's order (phoneTree) is taken out of it, and the groups are undone, from either view. A set's blocks are grouped in the phone view, where a set's member keeps the set, which the grouping and the layer order act on; on the desktop the menu holds one block, so the grouping stands greyed there. Each is greyed where it acts on nothing. A block is pinned on the phone in the phone view, where it stands, and unpinned from either view. */
+/** The block's right-click menu: «Settings», then its actions, each greyed where it acts on nothing; in the phone view a set's member acts on the set. */
 function openContextMenu(el, x, y, from = null) {
   const ctx = el._urdCtx;
   if (!ctx || document.body.classList.contains('urd-chrome-off')) return;
@@ -854,7 +775,7 @@ const NAV_FOLDS = [
   ['mobile', 'group.mobile'], ['scroll', 'group.navScrollPages'], ['tools', 'group.tools'], ['announcement', 'group.announcement'],
 ];
 
-/** The part of the site's menu a right click landed on, as the Nav panel's fold that holds its settings and, for a tool, its card in the Tools fold; the bar itself has no fold of its own. */
+/** The Nav panel's fold for the part of the site's menu a right click landed on, with a tool's card in the Tools fold; the bar has no fold. */
 function navPartAt(target) {
   if (target.closest('.urd-nav-announce')) return { fold: 'announcement' };
   for (const [selector, part] of [['.urd-nav-launcher-wrap', 'launcher'], ['.urd-nav-cart', 'cart'], ['.urd-nav-theme', 'theme'], ['.urd-nav-links', 'links']]) {
@@ -867,7 +788,7 @@ function navPartAt(target) {
   return { fold: null };
 }
 
-/** The site's menu's own menu: the settings of the part under the pointer, and each of the Nav panel's folds, opened there. In the phone view the bar, its logo and its list lead to the fold of the menu on the phone, which holds their settings for the phone. */
+/** The site menu's right-click menu: the settings of the part under the pointer, then each Nav panel fold; in the phone view the bar leads to the phone's fold. */
 function openNavContextMenu(nav, target, x, y) {
   if (document.body.classList.contains('urd-chrome-off')) return;
   selectBlock(null);
@@ -881,7 +802,7 @@ function openNavContextMenu(nav, target, x, y) {
   });
 }
 
-/** The section's menu, on its empty surface: a new block at the point, the clipboard, the section's settings and its own actions. The phone view has the same menu, a new block or pasted blocks standing on the phone only, greyed where an item acts on the desktop alone: a new section from the adder the phone view does not draw, and the height fitted to the desktop's blocks. */
+/** The section's right-click menu: a new block at the point, the clipboard, its settings and actions; in the phone view new blocks stand on the phone only. */
 function openSectionContextMenu(host, x, y, from = null) {
   if (document.body.classList.contains('urd-chrome-off')) return;
   const section = host._urdSection;
@@ -902,7 +823,7 @@ function openSectionContextMenu(host, x, y, from = null) {
     return n?.querySelector('button') ?? null;
   };
   showContextMenu(host, x, y, ta('canvas.ctx.sectionLabel'), (item, sep) => {
-    // Opened from the section's bar the editor draws beside the phone, «here» is the section's top, as the bar stands there; otherwise the point the menu was opened at.
+    // From the bar the editor draws beside the phone «here» has no point, and the new block lands first; otherwise it is where the menu was opened.
     const here = from?.editor ? null : { x, y };
     item(ta('canvas.ctx.newBlockHere'), keysHere('/'), () => (here ? openBlockMenuAt(host, here.x, here.y) : openBlockMenuAt(host)), { disabled: handoff }).classList.add('urd-ctx-first');
     // One clipboard: blocks paste at this section, a section lands below it.
@@ -925,15 +846,11 @@ function openSectionContextMenu(host, x, y, from = null) {
   }, from);
 }
 
-/* A right click opens the menu at the pointer: on a block the block's, on a
-   section's empty surface the section's; the browser's own stays off the
-   editing surface, except in text that held the caret before the press
-   (spelling, paste): the press itself moves the focus into the text, so
-   what had the focus is read on the way down. */
+/* What had the focus as a press began: a right click keeps the browser's own menu in text that held the caret before it. */
 let activeBeforePress = null;
 document.addEventListener('pointerdown', () => { activeBeforePress = document.activeElement; }, true);
 
-/* The block under the mouse, told to the editor as it changes (urd-hover-block), so its row in the Phone panel's list is lit; null as the mouse leaves the blocks or the canvas. */
+/* The block under the mouse, told to the editor as it changes (urd-hover-block) to light its row in the Phone panel; null off the blocks. */
 let hoverBlockId = null;
 const tellHover = (id) => {
   if (id === hoverBlockId) return;
@@ -972,9 +889,7 @@ document.addEventListener('contextmenu', (event) => {
 });
 
 /**
- * Draws a desktop frame on its block with the push shift the block is
- * shown with (ADR-0024): the frame is the data, the shift is display only,
- * so a drag keeps the block where the owner grabbed it.
+ * Draws a desktop frame on its block with the push shift it is shown with, which is display only (ADR-0024).
  * @param {HTMLElement} el The block element
  * @param {{x: number, y: number, w: number, h: number}} frame The desktop frame
  */
@@ -989,11 +904,7 @@ function drawFrame(el, frame) {
 }
 
 /**
- * The height of the box the owner sees for a frame of height h: frameToCss
- * writes the design height, while the box shown is the one the last push
- * pass drew: grown past the frame by its content, unless a resize has made
- * the frame the taller of the two, or at its content's height for a block
- * that follows its content (ADR-0025).
+ * The height shown for a frame of height h: the push pass's drawn height where it is taller or the block follows its content (ADR-0025), else h.
  * @param {HTMLElement} el The block element
  * @param {number} h The frame's height
  * @returns {number}
@@ -1004,24 +915,11 @@ function shownHeight(el, h) {
 }
 
 /**
- * Settles the frames of the blocks under a gesture to the boxes the push
- * pass draws for them (ADR-0025): a block that follows its content takes its
- * content's height at rest as a visitor sees it, and any other block whose
- * content grew past its frame takes that growth. The data then says what the
- * pass drew: the blocks below move exactly as far as they are already drawn
- * (fitMovesAll), so nothing changes on screen, and the gesture places a
- * block whose frame is its box, which never stretches the section it is
- * dragged in. The section's own height is the owner's and is never written
- * by a settle. Only growth is settled; a block drawn shorter than its frame
- * keeps it until an edit fits it. Written into the section the push pass and
- * this layer hold: the gesture sends the settled frames with its own
- * (postSettled), or calls `undo` when it changes nothing.
+ * Settles the frames of a gesture's blocks to the heights the push pass draws, where they grew or follow their content (ADR-0025); the section's height is kept.
  * @param {HTMLElement} host The section element
  * @param {object} section The section data
  * @param {Iterable<string>} ids The blocks under the gesture
- * @returns {{ids: string[], grown: Map<string, number>, undo: () => void} | null}
- *   The blocks whose frames changed, the growth the settled blocks still
- *   show (an unfolded FAQ answer), and the way back
+ * @returns {{ids: string[], grown: Map<string, number>, undo: () => void} | null} The blocks whose frames changed, the growth they still show, and the way back
  */
 function settleFrames(host, section, ids) {
   const canvas = canvasOf(host);
@@ -1083,8 +981,7 @@ function settleFrames(host, section, ids) {
 }
 
 /**
- * Sends the frames a settle wrote (settleFrames) to the editor, beside the
- * ones the gesture sends itself, in the gesture's undo step.
+ * Sends the frames a settle wrote (settleFrames) that the gesture does not send itself, in the gesture's undo step.
  * @param {object} section The section data
  * @param {ReturnType<typeof settleFrames>} settle
  * @param {string[]} own The ids the gesture sends itself
@@ -1099,20 +996,7 @@ function postSettled(section, settle, own, groupKey) {
 }
 
 /**
- * The content surface of a section (ADR-0018). Block x/w are percentages OF
- * THIS surface, not of the section, so everything that converts pixels to
- * percent (drag, resize, arrow keys, marquee, materializing mobile frames)
- * must measure here.
- *
- * We MEASURE the surface instead of computing the min() expression from
- * site.layout: if the editor computes it itself, it can arrive at a
- * different width than the engine, and then blocks drift by themselves.
- * The fallback to the section covers older DOM not yet re-rendered.
- *
- * The section's OWN geometry (height, top, bottom) is still read from host:
- * the background and section height are full-width and not part of the
- * surface.
- *
+ * The content surface of a section (ADR-0018), the section itself where there is none: block x and w are percentages of its measured width.
  * @param {HTMLElement} host The section element
  * @returns {HTMLElement}
  */
@@ -1120,22 +1004,14 @@ function canvasOf(host) {
   return host.querySelector(':scope > .urd-canvas') ?? host;
 }
 
-/**
- * The nav clearance for the section (0 except for the first section under
- * an out-of-flow menu, see base.css): how far the content surface is pushed
- * down. Measured as the canvas offset, so the height drags can work in pure
- * content heights (the same numbers as size.minHeight in the data).
- */
+/** The nav clearance in px: how far the content surface stands below the section's top, nonzero under an out-of-flow menu (base.css). */
 function sectionClearance(host) {
   const canvas = host.querySelector(':scope > .urd-canvas');
   if (!canvas) return 0;
   return Math.max(0, Math.round(canvas.getBoundingClientRect().top - host.getBoundingClientRect().top));
 }
 
-/** The section's inline minHeight as render.js writes it: a plain length in
- *  content height, the nav clearance being the section's padding (base.css).
- *  Written to the element and to its dataset copy alike, since the push pass
- *  (render.js) restores the dataset value on every measurement. */
+/** Writes the section's minHeight in content px to its style and to the dataset copy the push pass restores at each measurement (render.js). */
 function setMinHeight(host, px) {
   host.style.minHeight = `${px}px`;
   host.dataset.urdMinHeight = host.style.minHeight;
@@ -1158,8 +1034,7 @@ let squeezed = [];
 let squeezedOn = null;
 
 /**
- * Greys the block a drag or a handle would make narrower than «Force readable text» lets its words be (ADR-0034), the block being dragged, and takes the look off the ones no longer among them; none takes it off all.
- * The editor is told as the look comes and goes, and says why in its notice line (urd-too-narrow).
+ * Greys the blocks a drag or a handle makes too narrow for «Force readable text» (ADR-0034), ungreys the rest, and tells the editor (urd-too-narrow).
  * @param {HTMLElement[]} els
  * @param {'phone'|'desktop'} [screen]
  */
@@ -1175,9 +1050,7 @@ function showTooNarrow(els, screen = 'phone') {
 }
 
 /**
- * The size readout beside the resize handle while a block is dragged: the
- * width in percent of the content surface and the height in px, as they
- * change, so what stands on release is what was shown (ADR-0025 decision 7).
+ * The size readout beside the resize handle in a drag: the width in percent of the content surface and the height in px (ADR-0025 decision 7).
  * @param {HTMLElement} el The block element
  * @returns {{show(w: number, h: number): void, remove(): void}}
  */
@@ -1197,15 +1070,13 @@ function sizeReadout(el) {
   };
 }
 
-/** The template drafts from the editor (the urd-templates message): {id, name, kind, section?, blocks?}.
- *  The editor owns the list; here it feeds the My templates tab in "+ New section". */
+/** The template drafts from the editor (urd-templates): {id, name, kind, section?, blocks?}, for the My templates tab of «+ New section». */
 let templates = [];
 export function setTemplates(list) {
   templates = Array.isArray(list) ? list : [];
 }
 
-/** The category choice in the preset gallery is remembered per session
- *  (category sidebar). */
+/** The preset gallery's chosen category, kept for the session. */
 let presetCategory = 'all';
 
 /** Display names for the layouts (keys in the core languages). */
@@ -1218,9 +1089,7 @@ const LAYOUT_LABEL_KEYS = {
   'hero-top': 'canvas.layout.heroTop',
 };
 
-/** One layout card per applicable variant: a thumbnail from the section's
- *  OWN blocks with the variant's frames; a click posts urd-apply-layout
- *  (ONE undo step in the editor) and calls done(). */
+/** A card per applicable layout, its thumbnail the section's own blocks in its frames; a click posts urd-apply-layout, one undo step, and calls done(). */
 function buildLayoutCards(section, grid, done) {
   const cards = [];
   for (const id of applicableLayouts(section.blocks)) {
@@ -1265,7 +1134,7 @@ const PHONE_LAYOUT_LABEL_KEYS = {
 };
 
 /**
- * «Same height» on the phone (0.7.3.27): on each line of the section that holds more than one cell, every cell's last block is given the height that brings its bottom level with the line's lowest, measured as the section stands in the phone view; a block that grows with its words keeps growing past it.
+ * «Same height» on the phone: on each line of more than one cell, each cell's last block grows to bring its bottom level with the line's lowest.
  * @param {string} sectionId
  * @returns {{heights: Record<string, number>}|null} The change, null where every line already stands level or the section is not drawn for the phone
  */
@@ -1297,7 +1166,7 @@ function phoneSameHeights(sectionId) {
 }
 
 /**
- * «Same height» asked for by the editor (the urd-phone-same-height message: the button in the section's phone settings, and after a preset): measured once the section stands drawn anew, and posted as urd-phone-layout; `follow` marks heights that belong to the preset's step.
+ * «Same height» asked for by the editor (urd-phone-same-height), measured once the section is drawn anew; `follow` joins the heights to a preset's step.
  * @param {string} sectionId
  * @param {boolean} [follow]
  */
@@ -1308,7 +1177,7 @@ export function matchPhoneHeights(sectionId, follow = false) {
   }));
 }
 
-/** The two cards after the presets on the phone's layout strip: «Same height» and «Same width», each drawn as what it does to two blocks side by side, in the presets' own marks. */
+/** The «Same height» and «Same width» cards after the presets on the phone's layout strip, each drawn as what it does to two blocks side by side. */
 function phoneMatchCards(section, done) {
   const card = (key, cells, act) => {
     const button = document.createElement('button');
@@ -1351,7 +1220,7 @@ function phoneMatchCards(section, done) {
   ];
 }
 
-/** One card per phone layout preset (phone-layouts.js), the ones that fit the section first: each drawn small with the section's own blocks in the eight cell columns; one that does not fit stands greyed; the site's own layouts after Urd's, by their names; then «Same height» and «Same width» (phoneMatchCards). A press posts urd-phone-layout (ONE undo step in the editor) and calls done(). */
+/** A card per phone layout preset, drawn with the section's blocks and greyed where it does not fit, then phoneMatchCards; a press posts urd-phone-layout. */
 function buildPhoneLayoutCards(section, done) {
   return [...phoneLayouts(section.blocks, phoneSetupOf(section), siteNow?.phoneLayouts).map(({ id, fits, own }) => {
     const card = document.createElement('button');
@@ -1384,18 +1253,10 @@ function buildPhoneLayoutCards(section, done) {
   }), ...phoneMatchCards(section, done)];
 }
 
-/**
- * The "Change layout" picker: a strip above the section (default) or a
- * gallery menu, following the personal preference in the Urd settings
- * (urd-layout-picker in shared localStorage; read on every open, so
- * switching works without a reload). Both stick to the screen within the
- * section and close on another button click, a choice, an outside click
- * and Escape. The cards are the desktop's layouts (buildLayoutCards) or the
- * phone's presets (buildPhoneLayoutCards), given as `cardsFor(done)`.
- */
 /** The open layout picker's way to close, for a press in the editor (closeMenus). */
 let closeLayoutPicker = null;
 
+/** Opens or closes the layout picker: a strip above the section or a gallery menu (Urd settings, urd-layout-picker), its cards from `cardsFor(done)`. */
 function toggleLayoutPicker(host, cardsFor, titleKey = 'canvas.layoutTitle') {
   const existing = host.querySelector('.urd-layout-strip, .urd-layout-menu');
   document.querySelectorAll('.urd-layout-strip, .urd-layout-menu').forEach((el) => el.remove());
@@ -1404,9 +1265,7 @@ function toggleLayoutPicker(host, cardsFor, titleKey = 'canvas.layoutTitle') {
   const asMenu = localStorage.getItem('urd-layout-picker') === 'menu';
   const picker = document.createElement('div');
   const outside = (event) => {
-    // The button itself toggles; without this exception the capture
-    // listener would remove the picker before the click, and the toggle
-    // would rebuild it.
+    // A press on the layout button is left to its own toggle.
     if (picker.contains(event.target) || event.target.closest?.('.urd-layout-btn')) return;
     cleanup();
   };
@@ -1446,7 +1305,7 @@ function toggleLayoutPicker(host, cardsFor, titleKey = 'canvas.layoutTitle') {
   // The section toolbar's own height, which the picker's offsets clear at any scale (preview.css).
   const toolbar = host.querySelector(':scope > .urd-section-toolbar');
   if (toolbar?.offsetHeight) picker.style.setProperty('--urd-picker-clear', `${toolbar.offsetHeight}px`);
-  // Before the canvas, so it sticks from the section's top: in the phone view the canvas stands in the flow, and the picker lies over it rather than pushing it down.
+  // Before the canvas, so it sticks from the section's top; in the phone view it lies over the canvas, not pushing it down.
   host.insertBefore(picker, host.querySelector(':scope > .urd-canvas'));
   if (isMobile()) picker.style.marginBottom = `${-(picker.offsetHeight + (parseFloat(getComputedStyle(picker).marginTop) || 0))}px`;
   setTimeout(() => {
@@ -1462,11 +1321,7 @@ document.addEventListener('pointermove', (event) => {
   raiseSmallestUnder(event.clientX, event.clientY);
 }, { passive: true });
 
-/**
- * The block raised under the pointer is the smallest one there, not the topmost, so a small block lying over a larger one can be reached.
- * A block whose own bar or handles stand topmost under the pointer stays raised: its bar stands outside its box, over the block above or below it, and stays reachable there.
- * The class stands where :hover would in preview.css; a block that is not under the pointer loses it, and the Clean view raises nothing.
- */
+/** The block raised under the pointer, with the class preview.css draws as hover: the smallest editable block there, or the one whose bar or handles stand on top. */
 let raisedEl = null;
 let raiseFrame = 0;
 function raiseSmallestUnder(x, y) {
@@ -1495,21 +1350,13 @@ function raiseSmallestUnder(x, y) {
   });
 }
 
-/**
- * Open a section's + New block menu, shared by double-click and slash: with
- * a point, the block lands there (_urdAt) and the menu sits at the pointer;
- * without one it opens at its place under the section toolbar. The search
- * field is reset and focused.
- * In the phone view the point is the block's place in the phone's order (_urdPhone).
- */
+/** Opens a section's «+ New block» menu: at a point the block lands there (_urdAt, or _urdPhone in the phone view), else it opens under the section toolbar. */
 function openBlockMenuAt(host, clientX = null, clientY = null) {
   const wrap = host.querySelector('.urd-add-block');
   const menu = wrap?.querySelector('.urd-add-block-menu');
   if (!wrap || !menu) return;
   const rect = host.getBoundingClientRect();
-  // The block's landing point is a percentage of the CONTENT SURFACE, while
-  // the menu itself is a child of the section and is positioned against it.
-  // Two different frames.
+  // The landing point is in percent of the content surface, while the menu is placed against the section.
   const canvasRect = canvasOf(host).getBoundingClientRect();
   // In the phone view the block stands on the phone only, landing at the point as a block let go there does; without a point, first in the section.
   menu._urdPhone = isMobile() ? phoneAdd(clientX != null ? phoneDropAtPoint(host, host._urdSection, clientX, clientY) : phoneDropFirst(host)) : {};
@@ -1533,9 +1380,7 @@ function openBlockMenuAt(host, clientX = null, clientY = null) {
 }
 
 /**
- * Keeps an open block menu inside the screen (menuFit and shiftInto in place.js): it hangs down from its place, the pointer or the toolbar's «New block», turns upwards when the room below is too small and there is more above, and is held to the room it has, where its list scrolls inside.
- * It hangs to the left of its anchor, and to the right where that would pass the screen's left edge.
- * Run again whenever a fold inside the menu changes its height.
+ * Keeps an open block menu on the screen (menuFit, shiftInto), turned up where above has more room; run it again as a fold in it changes its height.
  * @param {HTMLElement} menu The .urd-add-block-menu element
  */
 function fitBlockMenu(menu) {
@@ -1562,8 +1407,7 @@ function fitBlockMenu(menu) {
 }
 
 /**
- * Places the slim block menu's side panel beside the group row that opened it (flyoutFit in place.js): on the menu's right, or its left where the right has no room, level with the row and kept on the screen.
- * The side form shows its blocks inside the menu, so there the panel's own placement is cleared.
+ * Places the slim block menu's side panel level with its group row (flyoutFit), on the menu's right or, without room, its left; the side form clears it.
  * @param {HTMLElement} menu The .urd-add-block-menu element
  * @param {HTMLElement} pane The side panel
  * @param {HTMLElement|null} row The group row it belongs to
@@ -1588,7 +1432,7 @@ function fitFlyout(menu, pane, row) {
   if (fit.room != null) pane.style.maxHeight = `${Math.floor(fit.room / scale)}px`;
 }
 
-/** Closes open menus (preset gallery, block menu). Also called via urd-close-menus when the owner clicks in the admin panels, which the iframe's own click listeners never see. */
+/** Closes open menus (preset gallery, block menu), also on urd-close-menus from a click in the admin panels the iframe never sees. */
 let collapseOpenPresetMenu = null;
 /** The text toolbar's way to write the link editor's answer on the selection it kept (initTextToolbar). */
 let textLinkApply = null;
@@ -1603,9 +1447,7 @@ export function applyTextLink(link, pages) {
 }
 
 /**
- * Draws again while the owner types in a field of a block without taking the field from them: the field drawn anew gets the text it held, which can be newer than the draft the redraw was made from, and the caret or the selection where it stood, and its own input listener runs, so the editor gets the text and the frames the field stands at.
- * The field is found by its block and its place among the block's fields, and only while the block keeps as many fields; a field drawn after its data arrives (a collection entry) is waited for over a few frames, until the owner presses elsewhere or the focus moves.
- * A redraw while the preview does not have the focus (a change from the editor's panels) draws the data as it comes.
+ * Draws again while the owner types in a block's field: the field drawn anew gets its text and caret back, and its input listener runs.
  * @param {() => void} paint
  */
 export function keepTyping(paint) {
@@ -1690,12 +1532,11 @@ export function closeMenus() {
  */
 export function enhanceSection(host, section, grid) {
   host._urdGrid = grid;
-  // Where the phone view's bars stand, read at every drawing as the bar's other choices are: preview.css leaves the page's own bars unseen while the editor draws them beside the phone.
-  // With the bars in both places the page keeps its own in sight.
+  // Bars beside the phone alone (Urd settings «Bars in the phone view»), read at every drawing: preview.css then hides the page's own bars.
   document.body.classList.toggle('urd-bars-beside', barChoice(BAR_CHOICES.place) === 'beside');
   // The section's data on its element, for the right-click menu on its surface.
   host._urdSection = section;
-  // A section showing its phone layout in the desktop view, since its words would be too narrow at this width (render.js urd-handoff, ADR-0034), is shown and not edited: its canvas takes no press, and its bar opens it in the phone view.
+  // A section drawn in its phone layout on the desktop (render.js urd-handoff, ADR-0034) is not edited: its canvas is inert, and its bar opens the phone view.
   if (host.classList.contains('urd-handoff')) {
     host.querySelector(':scope > .urd-canvas')?.setAttribute('inert', '');
     // A selection in it ends, so the editor's menu never writes a desktop frame from the phone layout's measure.
@@ -1729,8 +1570,7 @@ export function enhanceSection(host, section, grid) {
   if (selectedBlockId) {
     host.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`)?.classList.add('urd-selected');
   }
-  // Likewise the multi-selection (including a freshly pasted selection,
-  // where the ids were set BEFORE the re-render found the elements).
+  // Likewise the multi-selection, a freshly pasted one included.
   if (multiIds.size && host.dataset.sectionId === multiSectionId) {
     for (const id of multiIds) {
       host.querySelector(`.urd-block[data-block-id="${CSS.escape(id)}"]`)?.classList.add('urd-multi-selected');
@@ -1742,16 +1582,14 @@ export function enhanceSection(host, section, grid) {
   addBlockAdder(host, section, grid);
   // A section or a selected block drawn anew in the phone view: the editor's bars are told their new tools.
   if (isMobile()) watchPhoneBar();
-  // Persistent grid display (the grid menu in the editor is open) must
-  // survive re-renders of the section.
+  // The grid shown while the editor's grid menu is open stays through a redraw.
   if (gridOverlaysOn) showGridOverlay(host, grid, restingGridLook()).classList.add('urd-grid-persistent');
   // Likewise the guide lines (a re-render removes the overlay elements).
   if (guideOverlaysOn) addGuideOverlays(host);
 }
 
 /**
- * The units on the phone (phone-moves.js phoneTree: a block alone, or a stack's or a column's blocks), each with its box in the row grid as drawn, from the row grid's corner: where a drag can land, and where a block added at a point lands.
- * A unit of several blocks carries each one's height, so a drop above or below lands on the block under the pointer.
+ * The units on the phone (phoneTree) with their boxes from the row grid's corner, a unit of several blocks with each one's: where a drag or an added block lands.
  * @param {HTMLElement} host The section
  * @param {object} section
  * @param {HTMLElement} flowEl The row grid
@@ -1779,7 +1617,7 @@ function phoneUnitBoxes(host, section, flowEl, without = null, placed = null) {
   return out;
 }
 
-/** The box that blocks stand in on the phone together, from the row grid's corner: each block's own, or its slot's where it is pinned; null where none of them is drawn. */
+/** The box blocks stand in together on the phone, from the row grid's corner, a pinned block by its slot; null where none of them is drawn. */
 function phoneBoxOf(host, flowEl, ids) {
   const fr = flowEl.getBoundingClientRect();
   const rects = ids.map((id) => {
@@ -1796,8 +1634,7 @@ function phoneBoxOf(host, flowEl, ids) {
 }
 
 /**
- * Where a block added at a point of a section in the phone view lands (0.7.3.17): the drop a block let go there makes (phoneDropAt), with where the point stands across the row, in columns; null in a section with nothing on the phone.
- * With `between`, a point over a block lands after its line, as a block from the Blocks panel does in the middle of the view.
+ * Where a block added at a point of a section in the phone view lands (phoneDropAt), its x in columns; with `between`, after the line of a block under it.
  * @param {HTMLElement} host
  * @param {object} section
  * @param {number} clientX
@@ -1815,7 +1652,7 @@ function phoneDropAtPoint(host, section, clientX, clientY, between = false) {
   const drop = { ...found, x: (x - fr.width * 0.05) / ((fr.width * 0.9) / PHONE_COLUMNS) };
   if (drop.pos === 'before' || drop.pos === 'after') return drop;
   if (between && !drop.free) return phoneAfterLine(boxes, drop.of);
-  // Beside a block or into its column, the new block is tried in the section as the last of it: where it finds no room, as in the gutter between two halves, or would stand narrower than words read well under «Force readable text» (ADR-0034), it lands after the line.
+  // A new block beside a block or in its column lands after the line where it finds no room or would be too narrow for «Force readable text» (ADR-0034).
   const probe = { id: 'urd-new-probe', hideDesktop: true, frames: { desktop: { x: 0, y: Number.MAX_SAFE_INTEGER, w: 100, h: 1 }, mobile: null } };
   const cells = phoneDropChange([...section.blocks, probe], phoneSetupOf(section), probe.id, drop)?.cells;
   const narrow = Boolean(cells?.[probe.id]) && forcesReadable(section, 'mobile') && cells[probe.id].cols < leastWordsCols(window.innerWidth);
@@ -1835,15 +1672,10 @@ function phoneDropFirst(host) {
   return first ? { pos: 'before', of: first.id } : null;
 }
 
-/** The phone's place for blocks added in the phone view, as the messages that add them carry it (`phone`): they stand on the phone only, landing where `drop` asks; nothing in the desktop view. */
+/** The `phone` field of the messages that add blocks in the phone view: on the phone only, landing where `drop` asks; empty in the desktop view. */
 const phoneAdd = (drop) => (isMobile() ? { phone: { drop: drop ?? null } } : {});
 
-/**
- * Places a new block from the editor's palette in the middle of the user's
- * view: in the active section, otherwise the section closest to the middle
- * of the viewport. The iframe knows where the user has scrolled; the
- * editor does not.
- */
+/** Places a new block from the editor's palette in the middle of the view: in the active section, else the section nearest the middle of the window. */
 export function placeBlock(block, root) {
   // A section showing its phone layout in the desktop view (render.js urd-handoff) takes no block there.
   let host = root.querySelector('.urd-section-active:not(.urd-handoff)');
@@ -1872,27 +1704,16 @@ export function placeBlock(block, root) {
     frame.x = Math.round(((100 - frame.w) / 2) * 100) / 100;
     post({ type: 'urd-add-block', sectionId: host.dataset.sectionId, block, fit: true });
   }
-  // The new block is selected immediately (same pattern as duplicate):
-  // the re-render after urd-add-block reads selectedBlockId, the editor
-  // follows via urd-select-block, and Ctrl+D/arrow keys work without an
-  // extra click first.
+  // The new block is selected at once: the redraw after urd-add-block reads selectedBlockId, and the editor follows urd-select-block.
   document.querySelectorAll('.urd-block.urd-selected').forEach((b) => b.classList.remove('urd-selected'));
   selectedBlockId = block.id;
   post({ type: 'urd-select-block', sectionId: host.dataset.sectionId, blockId: block.id });
 }
 
-/**
- * Replays an entrance animation (demo when the editor changes it): snap
- * back to the start state without a transition, then glide in again.
- * Stagger hosts have the effect classes on their CHILDREN (each with its
- * own offset delay), so there the whole group is replayed.
- */
+/** Replays an entrance animation from its start state, on the element or, on a stagger host, on its entrance-classed children. */
 export function demoAnimation(el) {
   if (!el) return;
   const ENTRANCE = ['urd-anim-fade-in', 'urd-anim-slide-up', 'urd-anim-zoom-in'];
-  // If the element carries an entrance class itself, it is played; otherwise
-  // it is a group host (stagger/per-card) and the entrance-classed
-  // descendants are played.
   const targets = ENTRANCE.some((c) => el.classList.contains(c))
     ? [el]
     : [...el.querySelectorAll(ENTRANCE.map((c) => `.${c}`).join(', '))];
@@ -1909,7 +1730,7 @@ export function demoAnimation(el) {
 /** Whether persistent grid display is on (controlled by the editor's grid menu). */
 let gridOverlaysOn = false;
 
-/** How the grid is drawn, as the editor keeps it in the browser (`urd-grid-look`, snap-model.js GRID_LOOKS); read where it is drawn, so a change shows at the next drawing. */
+/** How the grid is drawn, from the browser's `urd-grid-look` (snap-model.js GRID_LOOKS), read at each drawing. */
 function gridLook() {
   try {
     return gridLookOf(localStorage.getItem('urd-grid-look'));
@@ -1924,10 +1745,7 @@ const restingGridLook = () => (gridLook() === 'drag' ? 'columns' : gridLook());
 /** The grid in a drag: its dots where they are chosen, else its lines. */
 const draggingGridLook = () => (gridLook() === 'dots' ? 'dots' : 'lines');
 
-/**
- * Toggles the grid display in all sections. Used while the grid menu in
- * the editor is open, so setting changes are seen immediately.
- */
+/** Shows or hides the grid in all sections while the editor's grid menu is open. */
 export function toggleGridOverlays(visible, page, site) {
   gridOverlaysOn = visible;
   document.querySelectorAll('.urd-grid-persistent').forEach((el) => el.remove());
@@ -1943,11 +1761,7 @@ export function toggleGridOverlays(visible, page, site) {
 /** Whether the guide lines are on (controlled by the editor's top bar button). */
 let guideOverlaysOn = false;
 
-/**
- * Always-visible guide lines for the whole page: the content surface's quarters (25 %, the midline, 75 %), each with its share written at its top, as lines in the accent, or, where the grid is drawn as dots, as ticks on the section's edges with a faint line between.
- * Drawn in the content surface, the same lines the drag snaps to.
- * Editor chrome only: hidden in Clean view and never present for visitors.
- */
+/** Shows or hides the page's guide lines at the content surface's quarters, where a drag snaps: lines in the accent, or ticks where the grid is drawn as dots. */
 export function toggleGuideOverlays(visible) {
   guideOverlaysOn = visible;
   document.querySelectorAll('.urd-page-guide').forEach((el) => el.remove());
@@ -1971,21 +1785,7 @@ function addGuideOverlays(host) {
   }
 }
 
-/**
- * Shared height drag: moves the section's bottom edge (size.minHeight),
- * snapped to the grid. Used by the handle at the section's bottom edge AND
- * by the "+ New section" bar (which sits on the same boundary). Stored in
- * px (a re-render can still grow the section if the blocks need more, see
- * render.js).
- *
- * The drag only starts after a small threshold, so target can also be a
- * clickable button; opts.onDragged is then called (before the button's
- * click), so the click can be suppressed.
- */
-/**
- * Direction-indicating cursor during section height drags: arrow down when dragging down, arrow up when dragging up (the CSS classes in preview.css hold it over every element with !important).
- * Small threshold against jitter; the direction is kept until it actually reverses.
- */
+/** The cursor of a section height drag: an arrow down or up as the pointer last moved by 2 px or more (the classes in preview.css). */
 function dragCursor() {
   let lastY = null;
   return {
@@ -2006,14 +1806,9 @@ function dragCursor() {
   };
 }
 
-/**
- * "+ New block" in the section (shown on hover): a click opens a menu of all block kinds, in the groups and the order the Blocks panel shares (block-palette.js), and the choice is reported to the editor, which builds the block and puts it in this exact section.
- */
+/** «+ New block» in the section: a menu of every block kind in the Blocks panel's groups (block-palette.js), the block built by the editor in this section. */
 
-/**
- * Closes a "+ New block" menu and resets where a double click or the toolbar
- * put it: the menu back at its place under the toolbar, its edge clamping removed.
- */
+/** Closes a «+ New block» menu and puts it back at its place under the toolbar, its clamping removed. */
 function resetBlockAdder(wrap) {
   wrap.classList.remove('urd-at-pointer');
   wrap.style.left = '';
@@ -2029,7 +1824,7 @@ function resetBlockAdder(wrap) {
   }
 }
 
-/** The «+ New block» menu's form from the Urd settings (urd-add-block-menu in the shared localStorage, read on every open like the layout picker's): the slim list, or the groups on the side. */
+/** Whether the «+ New block» menu is the slim list, not the groups on the side (Urd settings, urd-add-block-menu), read at every open. */
 function blockMenuSlim() {
   try {
     return localStorage.getItem('urd-add-block-menu') === 'slim';
@@ -2056,9 +1851,7 @@ function noteRecentKind(kind) {
 }
 
 /**
- * A fold's own button in the block menu: the label followed by a drawn
- * caret that turns over while the fold is open (the FAQ block's chevron
- * pattern). The open state is a class, so the label survives the toggle.
+ * A fold's button in the block menu: its label, then a caret that turns while the fold is open.
  * @param {string} label The fold's name
  * @returns {HTMLButtonElement}
  */
@@ -2073,8 +1866,7 @@ function foldToggle(label) {
   return button;
 }
 
-/** A click anywhere outside an open block menu closes it. One document
- *  listener for the whole page, wired the first time a menu is built. */
+/** A press outside an open block menu closes it, by one document listener set as the first menu is built. */
 let blockMenuOutsideWired = false;
 function wireBlockMenuOutsideClose() {
   if (blockMenuOutsideWired) return;
@@ -2089,7 +1881,7 @@ function wireBlockMenuOutsideClose() {
   }, true);
 }
 
-/** Whether the shop's blocks stand in the «+ New block» menu and the shop's templates in «+ New section» (block-palette.js shopOn); urd.js hands in the site's settings and whether a product catalogue stands among the collection drafts, and each menu reads the value as it opens. */
+/** Whether the shop's blocks and templates stand in «+ New block» and «+ New section» (shopOn), from the site's settings and its product catalogue. */
 let shopBlocksOn = true;
 export function setShopOn(siteSettings, hasProducts) {
   shopBlocksOn = shopOn(siteSettings, hasProducts);
@@ -2102,16 +1894,11 @@ function addBlockAdder(host, section, grid) {
 
   const menu = document.createElement('div');
   menu.className = 'urd-add-block-menu';
-  // The click point (section-relative: x in %, y in px) is set when the
-  // menu opens via DOUBLE-CLICK on the section surface; the block then
-  // lands there. Opened from the section toolbar's «New block», the point is
-  // null and the editor centers the block.
+  // The point a double click opened the menu at (x in %, y in px), where the block lands; null from the toolbar's «New block».
   menu._urdAt = null;
   menu._urdPhone = {};
 
-  // The block search (flat hit list). Everything added to the menu is
-  // registered in searchables with its visible label and a run that clicks
-  // the REAL button, so hits and menu can never diverge.
+  // The block search: each entry of the menu is registered with its label and a run that clicks its real button.
   const searchables = [];
   const searchWrap = document.createElement('div');
   searchWrap.className = 'urd-block-search';
@@ -2124,8 +1911,7 @@ function addBlockAdder(host, section, grid) {
   hits.className = 'urd-block-hits';
   menu.append(searchWrap, hits);
 
-  // The arrow keys walk a marked row through the menu: the hits while a search is running, the menu's own rows before that (a closed group or fold hides its own).
-  // The step is geometric rather than DOM order, since the groups' list and the blocks stand side by side.
+  // The arrow keys walk a marked row through the visible rows, or the hits while searching, by their places rather than DOM order.
   let pickEl = null;
   const pickables = () => [...menu.querySelectorAll('button')].filter((b) => b.offsetParent !== null);
   const clearPick = () => {
@@ -2157,8 +1943,7 @@ function addBlockAdder(host, section, grid) {
       const r = b.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
-      // Only rows lying in the direction of travel, and of those the nearest,
-      // counting the sideways distance double so the walk keeps to its column.
+      // The nearest row in the direction of travel, its sideways distance counted double so the walk keeps to its column.
       const along = dy ? (cy - fy) * dy : (cx - fx) * dx;
       if (along <= 1) continue;
       const across = dy ? Math.abs(cx - fx) : Math.abs(cy - fy);
@@ -2215,10 +2000,7 @@ function addBlockAdder(host, section, grid) {
     setPick(hits.querySelector('button'));
   };
   searchInput.addEventListener('input', renderHits);
-  // The keys are read on the whole menu, so they hold wherever in it the focus stands.
-  // The arrows walk the menu, Enter takes the walked row and otherwise the first hit (the slash flow: "/", type, Enter), and Escape closes.
-  // Every key is stopped at the menu, so the canvas shortcuts never see it.
-  // Left and right move the caret in the field until the walk has started with up or down.
+  // The menu's keys: the arrows walk it, Enter takes the walked row or the first hit, Escape closes; each key stops at the menu, before the canvas shortcuts.
   menu.addEventListener('keydown', (event) => {
     const inField = event.target === searchInput;
     const step = ARROW_STEPS[event.key];
@@ -2239,9 +2021,7 @@ function addBlockAdder(host, section, grid) {
   };
   menu._urdSearchFocus = () => searchInput.focus();
 
-  // The menu's body in both forms: the groups' list and the chosen group's blocks (block-palette.js), with the plugins' blocks and the saved block groups as two more groups.
-  // Groups on the side, the default, is a box of fixed size with the list at the left and the blocks beside it.
-  // The slim form (the Urd settings) is the list alone under the blocks added last, and a group's blocks open in a panel beside the menu.
+  // The menu's body: the groups' list and the chosen group's blocks, beside it in the side form or in a panel beside the menu in the slim form.
   const recent = document.createElement('div');
   recent.className = 'urd-abm-recent';
   const body = document.createElement('div');
@@ -2286,8 +2066,7 @@ function addBlockAdder(host, section, grid) {
       setPick(tab);
       searchInput.focus({ preventScroll: true });
     });
-    // In the slim form a mouse resting on a group opens it; once a panel is open the change waits a moment, so a pointer crossing the other rows on its way into the panel leaves it be.
-    // Touch and the keyboard open a group with the click (the pointerType guard: a tap fires pointerenter too).
+    // In the slim form a resting mouse opens a group, after a moment once a panel is open; touch and the keyboard open it with the click.
     tab.addEventListener('pointerenter', (event) => {
       if (event.pointerType !== 'mouse' || !menu.classList.contains('urd-abm-slim')) return;
       clearTimeout(hoverTimer);
@@ -2308,7 +2087,7 @@ function addBlockAdder(host, section, grid) {
     return items;
   };
 
-  // A kind's row: its picture, then its name. An entry from pictures opens the file picker on the click itself and sends the files with the request; the calendar's designs ask the editor for its design picker.
+  // A kind's row, its picture then its name: a pictures entry opens the file picker within the click, and the calendar's designs ask for the design picker.
   const kindButtons = new Map();
   const kindButton = (parent, kind, label, group, shop = false) => {
     const def = PALETTE_KINDS[kind];
@@ -2382,8 +2161,7 @@ function addBlockAdder(host, section, grid) {
     const def = window.Urd.blocks.get(type);
     const title = typeof def.fromPlugin === 'string' ? ta('tip.blocks.fromPlugin', { plugin: def.fromPlugin }) : ta('tip.blocks.fromPluginGeneric');
     const buildAndPost = (extraProps = {}) => {
-      // Opened via double-click: the plugin block lands on the click point
-      // (the same pure placement the editor uses for core blocks).
+      // Opened by a double click, the plugin block lands at the click point (frameAtPoint).
       const w = 50;
       const h = 260;
       const pos = menu._urdAt
@@ -2436,8 +2214,7 @@ function addBlockAdder(host, section, grid) {
     pluginItems.appendChild(b);
     searchables.push({ label: defLabel, run: () => b.click() });
   }
-  // My templates (block groups, the snippets model): saved groups in the SAME menu as the blocks, as the last group.
-  // The content is built on every open, so the list is always fresh (saving/deleting happens without the section re-rendering), and the group is left out while there are none.
+  // My templates: the saved block groups as the menu's last group, built at every open and left out while there are none.
   const templateItems = addGroup('templates', ta('canvas.tabMyTemplates'), EXTRA_GROUP_PICTURES.templates);
   menu._urdRefreshTemplates = () => {
     templateItems.replaceChildren();
@@ -2450,9 +2227,7 @@ function addBlockAdder(host, section, grid) {
       b.textContent = tpl.name;
       b.title = ta('canvas.insertGroup');
       b.addEventListener('click', () => {
-        // Opened via double-click: the group lands with its top-left corner
-        // on the click point; otherwise the stored positions are kept
-        // (clamping only).
+        // From a double click the group's top-left corner lands at the click point; otherwise its stored places are kept.
         insertBlocksTemplate(tpl, section.id, menu._urdAt, menu._urdPhone);
         resetBlockAdder(wrap);
       });
@@ -2460,8 +2235,7 @@ function addBlockAdder(host, section, grid) {
       menu._urdTemplateSearchables.push({ label: tpl.name, run: () => b.click() });
     }
   };
-  // Every open reads the form from the Urd settings, so a change there needs no reload.
-  // The side form shows the group last chosen (the first while there is none), and the slim form opens with its panel closed.
+  // Each open reads the menu's form from the Urd settings; the side form shows the group last chosen, and the slim form opens with its panel closed.
   menu._urdPrepare = () => {
     clearTimeout(hoverTimer);
     const slim = blockMenuSlim();
@@ -2478,16 +2252,10 @@ function addBlockAdder(host, section, grid) {
     }
     if (!slim) showGroup(groups.get(shownGroup)?.tab.hidden === false ? shownGroup : PALETTE_GROUPS[0].id);
   };
-  // enhanceSection runs after EVERY re-render on the same host element: the listeners are added only once and look up the current menu at event time, otherwise one listener piles up per re-render.
+  // The section's listeners are set once on its element, which outlives each redraw, and find the current menu as they fire.
   if (!host._urdAdderLeaveWired) {
     host._urdAdderLeaveWired = true;
-    // The menu does NOT close when the pointer leaves the section: it stays
-    // until a click outside (outside-pointerdown) or a block is chosen.
-    // No mouseleave closing.
-    // Double-click on empty section surface opens the menu AT THE POINTER,
-    // and the block lands on the click point ("+ new block where you
-    // click"). Never inside blocks (double-click is word selection/image
-    // editor there) or on editing handles.
+    // A double click on the section's empty surface opens the menu at the pointer, where the block lands; not on a block or the editing chrome.
     host.addEventListener('dblclick', (event) => {
       const target = event.target instanceof Element ? event.target : null;
       if (!target) return;
@@ -2501,10 +2269,7 @@ function addBlockAdder(host, section, grid) {
 }
 
 /**
- * The grip on the seam between two sections (BACKLOG 535 and 539, the Section Seams canvas, look A): a pill on the line that only grows, the section above as it is dragged down and the section below at its top as it is dragged up, and a tab above and a tab below it that each shrink the section they stand in, stopping where that section's content ends unless Alt is held (seamDrag in section-size.js). The tabs stand while the pointer is on the grip.
- * The first seam has only a section below and the last only one above, so they carry one tab. Ctrl or Cmd gives a free height, and Escape puts the seam back where the drag began.
- * A section that changes at its top takes its blocks with it and the page scrolls by as much, so the content stands still and the dragged edge follows the pointer.
- * The whole drag is one urd-section-size, for the section that changed; the arrow keys on a part move it one grid step (Shift: 1 px), and the part keeps the focus through the page's redraw, found again by its seam's place (`index`) and its kind.
+ * The grip on a seam between sections: a pill that grows the section above or below, and a tab on each side that shrinks its own (seamDrag in section-size.js).
  * @param {number} index Where the seam stands among the page's seams
  * @param {{host: HTMLElement, section: object, grid: object} | null} above
  * @param {{host: HTMLElement, section: object, grid: object} | null} below
@@ -2536,8 +2301,7 @@ function seamGrip(index, above, below) {
 /** Whether a block is docked to the screen (sticky.js), floating over every section and standing in none. */
 const dockedToScreen = (block) => block.sticky?.mode === 'screen';
 
-/** A section's state as a seam drag begins, read from the section as it is drawn now (the data and grid enhanceSection keeps on its element, since one section can be drawn again without the page): its height in content px, its blocks with their desktop y and their drawn top, where its content ends and starts, and its own inline height to restore.
- *  The content is measured where each block stands in the section, its frame and the push pass's shift with its drawn height; a block docked to the screen is left out. Called with sticky.js and the push pass suspended, so every block stands at its place in the section. */
+/** A section's state as a seam drag begins, as drawn now: its height in content px, its blocks' desktop y and drawn top, its content's ends and its inline height. */
 function seamSide(side) {
   // A section showing its phone layout in the desktop view (render.js urd-handoff) keeps its desktop height: the seam acts as if it stood alone on its other side.
   if (!side || side.host.classList.contains('urd-handoff')) return null;
@@ -2573,7 +2337,7 @@ function wireSeamDrag(btn, part, above, below, grip, index) {
     if (s.minHeightData === undefined) delete s.host.dataset.urdMinHeight;
     else s.host.dataset.urdMinHeight = s.minHeightData;
   };
-  /** Applies a result from the start: the section that changes takes it, the other stands as the drag found it, and only the section below's blocks move, as it changes at its top. */
+  /** Applies a result from the drag's start: the changed section takes it, the other stays as the drag found it, and only the section below's blocks move. */
   const apply = (a, b, r, scrollY) => {
     if (a) {
       if (r.side === 'above') setMinHeight(a.host, r.heightPx);
@@ -2719,9 +2483,7 @@ function wireSeamDrag(btn, part, above, below, grip, index) {
 }
 
 /**
- * A seam in the phone view (0.7.3.26), drawn and dragged as the desktop's seam is (seamGrip): a pill on the line that grows, the room below the section above's blocks as it is dragged down and the room above the section below's as it is dragged up, and a tab above and a tab below it that each shrink the room in the section they stand in (phoneSeamDrag in section-size.js). The first seam has only a section below and the last only one above, so they carry one tab.
- * The room is the phone's own (size.mobilePadTop and mobilePadBottom, phoneRoomOf in migrate.js), with no upper bound, in steps of 4 px, Shift for 1; the flows' padding follows the pointer, and the release writes one urd-section-phone-room. Escape puts it back, and the arrow keys move a part a step at a time.
- * The line follows the pointer either way: where the room above the section below changes, the page scrolls by as much, so the section below's blocks stand still and the line moves, as the desktop's seam does.
+ * A seam in the phone view, dragged as the desktop's seam (seamGrip): its pill grows the room on either side of the line, and a tab on each side shrinks it.
  * @param {number} index Where the seam stands among the page's seams
  * @param {HTMLElement|null} aboveHost The section above, with its data
  * @param {object|null} aboveSection
@@ -2773,7 +2535,7 @@ function wirePhoneRoom(btn, part, above, below, grip, index) {
     shown.hidden = px === null;
     if (px !== null) shown.textContent = ta('canvas.phoneSeam.room', { n: String(px) });
   };
-  /** Draws a result from the drag's start: the side that changes takes its room, the other stands as the drag found it; a change above the section below's blocks scrolls the page by as much, so they stand still under the pointer's line. */
+  /** Draws a result from the drag's start; a change of room above the section below's blocks scrolls the page by as much, so they stand still under the line. */
   const apply = (a, b, r, scrollY) => {
     for (const [side, name] of [[a, 'above'], [b, 'below']]) {
       if (!side?.flow) continue;
@@ -2848,7 +2610,7 @@ function wirePhoneRoom(btn, part, above, below, grip, index) {
     window.addEventListener('keydown', onKey, true);
   });
 
-  // The arrow keys move the part a step, Shift a pixel, as one change each, as a drag of that length would; the part takes the focus again once the page stands anew.
+  // The arrow keys move the part a step, Shift a pixel, as one change each; the part takes the focus again once the page is drawn anew.
   btn.addEventListener('keydown', (event) => {
     if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
     event.preventDefault();
@@ -2863,17 +2625,15 @@ function wirePhoneRoom(btn, part, above, below, grip, index) {
   });
 }
 
+/** The site the page was last drawn with, for a section drawn out of sight while a block is dragged on the phone (flowDrag's preview). */
+let siteNow = null;
+
 /**
- * Adds "+ New section" bars between (and around) the sections. Called by
- * render.js after every full page render in preview mode.
- *
+ * Adds the "+ New section" bars between and around the sections, called by render.js after each full render in preview mode.
  * @param {HTMLElement} root The page's root element
  * @param {object} page Page data (for the section count)
  * @param {object} site site.json (the grid for dragging on the section boundary)
  */
-/** The site the page was last drawn with, for a section drawn out of sight while a block is dragged on the phone (flowDrag's preview). */
-let siteNow = null;
-
 export function enhancePage(root, page, site) {
   siteNow = site;
   initTextToolbar();
@@ -2901,11 +2661,7 @@ export function enhancePage(root, page, site) {
   root.appendChild(makeSectionAdder(hosts.length, above(hosts.length), null));
 }
 
-/**
- * Opens the "+ New section" gallery toward the side of its bar that has room in the view, and holds it to that room, so it stays inside the frame as a category switch grows it.
- * The side is chosen on the tallest the gallery can be (its CSS cap): downward when that fits below, upward when it does not and there is more room above, never upward from a bar with no section above it.
- * The gallery stands 8 px off its bar and keeps 8 px from the frame's edge; the cap is read in the gallery's own units and drawn at the chrome scale.
- */
+/** Opens the "+ New section" gallery on the side of its bar with room for its CSS cap, upward only below a section, and holds its height to that room. */
 function placePresetMenu(bar, menu) {
   const scale = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale')) || 1;
   const cap = Number.parseFloat(getComputedStyle(menu).maxHeight) || 460;
@@ -2918,9 +2674,7 @@ function placePresetMenu(bar, menu) {
   menu.style.maxHeight = `${Math.max(160, Math.floor(Math.min(cap, room / scale)))}px`;
 }
 
-/** The "+ New section" bar on a seam: the seam's grip stands in the middle of the line (seamGrip), and its
- *  chip shows the preset choices from the registry, pressed by the section toolbar's «New section» above
- *  it (openSectionGalleryBelow) and standing on its own only on an empty page. */
+/** The "+ New section" bar on a seam: the seam's grip (seamGrip) and a chip that opens the section gallery, pressed by openSectionGalleryBelow. */
 function makeSectionAdder(index, above = null, below = null) {
   const bar = document.createElement('div');
   bar.className = 'urd-add-section';
@@ -2938,17 +2692,11 @@ function makeSectionAdder(index, above = null, below = null) {
     bar.classList.add('open');
     bar.replaceChildren();
 
-    // The preset gallery in category-sidebar form: a narrow category list
-    // on the left (All, the core groups, Plugins, My templates), a grid
-    // with search on the right. The groups keep the registry's order;
-    // presets without a group land under "Other".
+    // The preset gallery: a category rail on the left (All, the core groups, Plugins, My templates) and a grid with search; presets without a group go under "Other".
     const menu = document.createElement('div');
     menu.className = 'urd-preset-menu';
 
-    // The sources are collected ONCE at opening: core groups keyed by the
-    // group STRING (display via groupKey - the plugin contract), plugin
-    // presets and plugin-provided templates (kind section, via the re-id
-    // rule) in their own group.
+    // The sources, collected once at opening: core groups keyed by their group string (shown via groupKey), and plugin presets and templates in their own group.
     const groups = new Map();
     const pluginDefs = [];
     for (const id of window.Urd.sections.ids()) {
@@ -2972,10 +2720,7 @@ function makeSectionAdder(index, above = null, below = null) {
     if (pluginDefs.length) groups.set('__plugins', { labelKey: 'panel.plugins', defs: pluginDefs });
     const groupLabel = (name, labelKey) => (labelKey ? ta(labelKey) : (name || ta('canvas.groupOther')));
 
-    // The category colors: each group gets a fixed color step derived from
-    // the admin accent in preview.css (--urd-category-1..5, cyclic with more
-    // groups); My templates always has step 5. The color is set as
-    // --urd-category-color on cards, headings and category buttons.
+    // Each group gets a category colour step (--urd-category-1..5 in preview.css, cyclic) and My templates step 5, set as --urd-category-color.
     const TEMPLATE_CAT = 5;
     const categoryFor = new Map([...groups.keys()].map((name, i) => [name, (i % 5) + 1]));
     const setCategory = (el, category) => el.style.setProperty('--urd-category-color', `var(--urd-category-${category})`);
@@ -2985,9 +2730,7 @@ function makeSectionAdder(index, above = null, below = null) {
       return dot;
     };
 
-    // The category rail: All + the groups + My templates (the relevance
-    // rule: an empty plugin group does not exist in groups and therefore
-    // gets no button).
+    // The category rail: All, the groups and My templates; an empty plugin group has no button.
     const rail = document.createElement('div');
     rail.className = 'urd-preset-rail';
     const railTitle = document.createElement('span');
@@ -3016,9 +2759,7 @@ function makeSectionAdder(index, above = null, below = null) {
     main.append(top, content);
     menu.append(rail, main);
 
-    /** Preset card in the grid: thumbnail + name, the hint as a tooltip.
-     *  A throwing plugin preset must never topple the menu: a text card
-     *  without a sketch instead. */
+    /** A preset card in the grid: thumbnail and name, the hint as a tooltip; a plugin preset that throws gets a text card without a sketch. */
     const buildCard = (def, category) => {
       const choice = document.createElement('button');
       choice.type = 'button';
@@ -3050,10 +2791,7 @@ function makeSectionAdder(index, above = null, below = null) {
       return grid;
     };
 
-    // My templates: a grid with a large thumbnail, name and delete button.
-    // Insertion goes via cloneSectionForInsert (the re-id rule in
-    // SCHEMA.md): new ids every time, so the same template can be inserted
-    // multiple times.
+    // My templates: cards with a large thumbnail, name and delete button, each inserted with new ids (cloneSectionForInsert, the re-id rule in SCHEMA.md).
     const renderTemplates = () => {
       const list = templates.filter((m) => m.kind === 'section' && m.section);
       if (!list.length) {
@@ -3091,8 +2829,7 @@ function makeSectionAdder(index, above = null, below = null) {
         del.innerHTML = BIN_SVG;
         del.title = ta('canvas.deleteTemplate');
         del.addEventListener('click', (event) => {
-          // The editor owns the confirmation and deletion; the menu closes
-          // so the list is fresh the next time it opens.
+          // The editor owns the confirmation and deletion; the menu closes, so the list is fresh when it opens again.
           event.stopPropagation();
           post({ type: 'urd-delete-template', id: tpl.id });
           cleanupOutside();
@@ -3105,8 +2842,7 @@ function makeSectionAdder(index, above = null, below = null) {
       content.appendChild(grid);
     };
 
-    // The search always spans all categories (a flat, ranked hit list like
-    // the block menu's) and matches the visible labels.
+    // The search spans all categories as one ranked list, as the block menu's does, and matches the visible labels.
     const searchables = [];
     for (const [name, { defs }] of groups) {
       for (const def of defs) searchables.push({ label: def.labelKey ? ta(def.labelKey) : def.label, def, category: categoryFor.get(name) });
@@ -3159,8 +2895,7 @@ function makeSectionAdder(index, above = null, below = null) {
       }
     };
 
-    // The category buttons; the choice is remembered per session. An
-    // active search wins over the category until the field is cleared.
+    // The category buttons, the choice kept per session; an active search wins over the category until the field is cleared.
     const railButtons = new Map();
     const addRailButton = (id, label, category) => {
       const btn = document.createElement('button');
@@ -3207,9 +2942,7 @@ function makeSectionAdder(index, above = null, below = null) {
     placePresetMenu(bar, menu);
     search.focus({ preventScroll: true });
 
-    // A click outside the menu closes it, the same expectation as elsewhere
-    // in the editor. The listener is cleaned up on close and on preset
-    // choice.
+    // A click outside the menu closes it; its listener is removed on close and on a preset choice.
     const outside = (event) => {
       if (!menu.contains(event.target)) {
         cleanupOutside();
@@ -3231,9 +2964,7 @@ function makeSectionAdder(index, above = null, below = null) {
 }
 
 /**
- * The tools of a text field written in place: the editor draws their bar over the canvas (editor/src/lib/TextToolbar.svelte), beside the phone or above the block, free of the canvas's edges, and the editing stays here, on the text and its selection.
- * While a text field is being written, its block's place and the selection's state (the level, the font, the size, the marks pressed, the colour and the highlight) go to the editor as urd-text-state, and the bar's commands come back as urd-text-cmd (textCommand): each is applied on the selection kept here, through contenteditable (execCommand) or the text's own markup, and the input event it fires saves it in the draft through text.js, as typing does.
- * A command leaves the focus where it is, so a picker in the editor stays open while its colour is tried live; the editor asks for the focus back where the owner goes on typing.
+ * The text tools: the editor draws their bar from urd-text-state, and its commands (urd-text-cmd) act here on the kept selection, leaving the focus where it is.
  */
 let textToolbarReady = false;
 /** The text tools' command, set once they are ready (urd-text-cmd). */
@@ -3265,7 +2996,7 @@ function initTextToolbar() {
 
   const exec = (name, value = null) => document.execCommand(name, false, value);
 
-  // The selection in the text being written, kept as it changes: the editor's bar takes the focus or the pointer, and its commands are applied where the selection stood.
+  // The selection in the text being written, kept as it changes, so the bar's commands apply where it stood.
   let savedRange = null;
   const saveSelection = () => {
     const sel = document.getSelection();
@@ -3278,16 +3009,10 @@ function initTextToolbar() {
     sel.addRange(savedRange);
   };
 
-  // --- Sentinel normalization: one technique for all inline styles on the
-  // SELECTION (size, font, letter spacing). execCommand('fontName') does
-  // the range surgery (splits partially selected text nodes, spans
-  // multiple paragraphs); afterwards the markers are swapped for clean
-  // spans. styleWithCSS is never touched, so themeify (font[color])
-  // survives. ---
+  // --- Sentinel normalization: execCommand('fontName') marks the selection, and the markers become clean spans of size, font or letter spacing. ---
   const SENTINEL = 'urd-marker';
 
-  // The markers: font[face] (the default without styleWithCSS) OR a span
-  // with font-family set to the sentinel (some browsers, e.g. Firefox).
+  // The markers: font[face] by default, or a span with the sentinel as its font-family in some browsers.
   const collectMarkers = () => {
     const out = [...activeText.querySelectorAll(`font[face="${SENTINEL}"]`)];
     for (const el of activeText.querySelectorAll('span[style]')) {
@@ -3305,8 +3030,7 @@ function initTextToolbar() {
     sel.removeAllRanges();
     sel.addRange(range);
   };
-  // Collapsed caret: expand to the word the caret sits in (like Word),
-  // never with an invisible character in the stored HTML.
+  // A collapsed caret expands to the word it sits in, with no invisible character in the stored HTML.
   const expandToWord = () => {
     const sel = document.getSelection();
     if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
@@ -3350,10 +3074,7 @@ function initTextToolbar() {
     reselect(made);
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
-  // Size per run (A-up/A-down and ±1px): each text run is stepped from ITS
-  // own computed size, so mixed selections are preserved. Works directly
-  // on the text nodes (not via a fontName marker, which merges neighboring
-  // runs).
+  // Size per run (A-up, A-down and ±1px): each text node is stepped from its own computed size, so a mixed selection keeps its differences.
   const applySizeStep = (read) => {
     if (!activeText) return;
     expandToWord();
@@ -3382,8 +3103,7 @@ function initTextToolbar() {
     for (const tn of runs) {
       const parent = tn.parentElement;
       const next = read(parseFloat(getComputedStyle(parent).fontSize));
-      // Is the run the ENTIRE content of a size span? Update it in place,
-      // so repeated stepping does not stack new spans.
+      // A run that is the whole of a size span updates that span, so repeated steps stack no new spans.
       if (parent.tagName === 'SPAN' && parent.childNodes.length === 1 && parent.style.fontSize) {
         parent.style.fontSize = `${next}px`;
         made.push(parent);
@@ -3399,8 +3119,7 @@ function initTextToolbar() {
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
-  // Block-level operations (line height, indent): affect the paragraphs in
-  // the selection, not individual words.
+  // Block-level operations (line height, indent) act on the paragraphs in the selection, not on single words.
   const BLOCK_SEL = TEXT_BLOCKS;
   const blocksInRange = () => {
     const sel = document.getSelection();
@@ -3458,12 +3177,10 @@ function initTextToolbar() {
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
-  // A link: the editor's link editor opens over the admin (urd-link-edit), and its answer comes back as urd-link-apply (applyTextLink), which writes it on the selection kept here.
-  // A link to a page or a spot on it keeps the page and the spot beside its address (data-urd-page, data-urd-target), which the text's render reads again, so the link follows a change of the page's address.
+  // A link: the editor's link editor opens (urd-link-edit), and its answer (urd-link-apply, applyTextLink) is written on the selection kept here.
   /** The link being edited, or null for a new one on the selection. */
   let editedLink = null;
-  /** The text and its block a link was asked for: the focus goes to the editor's link editor meanwhile, so its answer is written where it was asked for.
-      The text's place among its block's texts and the words chosen as paths into it (caret-path.js) find both again on a text drawn anew meanwhile. */
+  /** The text and block a link was asked for, found again by its place and chosen words (caret-path.js) where the text was drawn anew meanwhile. */
   let linkField = null;
   let linkBlockId = null;
   let linkFieldIndex = -1;
@@ -3508,7 +3225,7 @@ function initTextToolbar() {
     if (link.target) a.dataset.urdTarget = link.target; else delete a.dataset.urdTarget;
   };
 
-  /** The text the link was asked for, or, where it was drawn anew meanwhile, the text in its place in its block with the words chosen again in it and the link they stood in; null where they cannot be found, and the answer is then left. */
+  /** The text the link was asked for, or where it was drawn anew, the text in its place with the words chosen again; null where they cannot be found. */
   const linkTarget = () => {
     if (linkField?.isConnected) return linkField;
     const fields = linkBlockId ? document.querySelector(`.urd-block[data-block-id="${linkBlockId}"]`)?.querySelectorAll(EDITABLE_TEXT) : null;
@@ -3553,7 +3270,7 @@ function initTextToolbar() {
       if (sel && !sel.isCollapsed) {
         exec('createLink', marker);
       } else {
-        // No words chosen: the link is written with words of its own: the page's title for a page, the spot's name for a spot on this page, else the address without its scheme and query.
+        // No words chosen: the link gets words of its own: the page's title, the spot's name, or the address without its scheme and query.
         const words = document.createElement('span');
         const page = link.page ? pages.find((p) => p.id === link.page) : null;
         const spotName = !page && link.target ? document.querySelector(`.urd-anchor[data-spot="${CSS.escape(link.target)}"]`)?.id : null;
@@ -3569,15 +3286,7 @@ function initTextToolbar() {
     report();
   };
 
-  // The theme color commands: execCommand can only write a FIXED color;
-  // afterwards it is swapped for var(--urd-color-<token>) in the field, so
-  // the content follows theme switches. execCommand normalizes colors
-  // differently (hex/rgb), so matching happens in rgb form. Custom colors
-  // deliberately remain detached hex.
-  //
-  // A token is resolved through a rendered probe, never read as the raw
-  // variable text: with a dark variant the variable holds light-dark(...),
-  // which only the computed style turns into the concrete rgb color.
+  // The theme colour commands: execCommand writes a fixed colour, which is swapped for var(--urd-color-<token>), matched in rgb; a custom colour stays hex.
   const tokenColor = (token) => {
     const probe = document.createElement('span');
     probe.style.color = `var(--urd-color-${token})`;
@@ -3613,7 +3322,7 @@ function initTextToolbar() {
     // The swap happens outside execCommand: dispatch input ourselves, so the draft is saved.
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   };
-  /** A colour on the selection: a theme colour by its name, which the words keep as the theme's (themeify), or a colour of its own as #rrggbb; the highlight's empty colour takes the highlight away. */
+  /** A colour on the selection: a theme colour by name, kept as the theme's (themeify), or one of its own as #rrggbb; an empty highlight takes it away. */
   const setColour = (styleProp, value) => {
     const cmd = styleProp === 'color' ? 'foreColor' : 'hiliteColor';
     if (!value) {
@@ -3693,7 +3402,7 @@ function initTextToolbar() {
     activeText.dispatchEvent(new Event('input', { bubbles: true }));
   });
 
-  // The text being written, and its block's id: a change of its props (the text style, the Properties panel) draws the section again and swaps the element, so it is found again by the id. Cleared on a deliberate end, so the tools let go.
+  // The text being written and its block's id, by which it is found again when a change of props draws the section anew; cleared on a deliberate end.
   let activeText = null;
   let activeBlockId = null;
 
@@ -3740,8 +3449,7 @@ function initTextToolbar() {
     return alpha >= 0.995 ? hex : hex + Math.round(alpha * 255).toString(16).padStart(2, '0');
   };
   /**
-   * The colour and the highlight of the words where the selection starts (the first selected letters, or where the caret stands): a theme colour by its name where the words keep the theme's (themeify), else the colour as a code.
-   * The highlight is the nearest one inside the text, null where the words have none.
+   * The colour and the highlight where the selection starts: a theme colour by name where the words keep the theme's, else its code; null for no highlight.
    */
   const selectionColours = () => {
     const sel = document.getSelection();
@@ -3778,7 +3486,7 @@ function initTextToolbar() {
     const highlight = highlightSet ? highlightSet.token ?? hexOfComputed(getComputedStyle(highlightSet.el).backgroundColor) : null;
     return { colour, highlight };
   };
-  /** The state the bar shows: the level and the quote where the caret stands, the marks pressed, the size, the font and the colours the selection holds, and whether the words can take a link. */
+  /** The state the bar shows: the level and quote at the caret, the marks pressed, the selection's size, font and colours, and whether the words can take a link. */
   const textState = () => {
     let level = 'p';
     let quote = false;
@@ -3798,7 +3506,7 @@ function initTextToolbar() {
   let reported = false;
   let reportFrame = 0;
   /**
-   * Tells the editor where the text being written stands and what its selection holds (urd-text-state), once a frame: its block's box in the canvas, above the block's own bar where that stands over it, so the editor's bar can stand clear of both; an empty message when no text is being written.
+   * Tells the editor once a frame where the text being written stands, above its block's own bar, and what its selection holds (urd-text-state).
    */
   function report() {
     if (reportFrame) return;
@@ -3850,7 +3558,7 @@ function initTextToolbar() {
     saveSelection();
     report();
   });
-  // A font or a size for the whole text, from the block's menu (urd-text-style): written on every leaf paragraph and list item of the field, and taken off the runs inside, so the whole text reads alike (text-whole.js); null takes the theme's value back.
+  // A font or size for the whole text, from the block's menu (urd-text-style): set on each paragraph and list item and taken off the runs inside (text-whole.js).
   document.addEventListener('urd-text-style', (event) => {
     const field = event.target instanceof HTMLElement ? event.target.closest('.urd-text[contenteditable="true"]') : null;
     const style = event.detail;
@@ -3862,13 +3570,12 @@ function initTextToolbar() {
     report();
   });
   document.addEventListener('focusout', () => {
-    // Wait a beat: the focus may be on its way to the colour picker's fields. Focus gone out of the canvas's document (the editor's text bar and its fields) keeps the writing, which the editor ends itself (urd-text-end).
+    // Wait a beat for the focus to land; focus gone out of the canvas's document keeps the writing, which the editor ends itself (urd-text-end).
     requestAnimationFrame(() => {
       if (!document.hasFocus()) return;
       const el = document.activeElement;
       if (el instanceof HTMLElement && el.closest('.urd-text[contenteditable="true"], .urd-cp')) return;
-      // Was the field SWAPPED OUT by a re-render (typography/panel change), not abandoned by the user?
-      // Then report reconnects via the block id instead of ending the writing.
+      // A field swapped out by a re-render, not left by the owner, is found again by its block id (report) instead of ending the writing.
       if (activeText && !activeText.isConnected && activeBlockId) {
         report();
         return;
@@ -3878,9 +3585,7 @@ function initTextToolbar() {
       report();
     });
   });
-  // A press anywhere in the canvas outside the field ends the writing.
-  // The surface drag in preview swallows mousedown (preventDefault), so the text field never loses focus by itself; it is therefore ended explicitly here.
-  // Presses in the color picker, the image editor or another text field must NOT end it (they handle themselves).
+  // A press in the canvas outside the field ends the writing; one in the colour picker, the image editor or another text field leaves it to them.
   document.addEventListener('pointerdown', (event) => {
     if (!activeText) return;
     const target = event.target instanceof Element ? event.target : null;
@@ -3917,8 +3622,7 @@ function openSectionTool(host, section, only, title = '', icon = '') {
   post({ type: 'urd-section-menu', sectionId: section.id, only, title, icon, rect: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } });
 }
 
-/** Toolbar at the section's top right. Desktop: move up/down, fit height,
- *  delete. Mobile: reviewed (✓) and back to auto (↺). */
+/** The toolbar at a section's top right, its tools by the view and the bar's form (barForm). */
 function addSectionToolbar(host, section, grid) {
   const bar = document.createElement('div');
   bar.className = `urd-section-toolbar urd-bar-size-${barSize()}`;
@@ -3942,7 +3646,7 @@ function addSectionToolbar(host, section, grid) {
     bar.appendChild(tag);
   }
 
-  // The sections that need a phone review are reported to the editor, which draws their cards beside the phone (reportAttention), and the sections in sight as seen again, since one drawn anew may have changed (reportSeen).
+  // The sections needing a phone review go to the editor for their cards (reportAttention), and those in sight count as seen again (reportSeen).
   seenSent = '';
   scheduleAttention();
   if (isMobile()) {
@@ -3961,15 +3665,12 @@ function addSectionToolbar(host, section, grid) {
     phoneLayoutBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M6 9h12M12 9v8M6 17h12"/></svg>';
     phoneLayoutBtn.addEventListener('click', () => toggleLayoutPicker(host, (done) => buildPhoneLayoutCards(section, done), 'canvas.phoneLayoutTitle'));
     bar.appendChild(phoneLayoutBtn);
-    // Hidden blocks are otherwise invisible in the mobile view: the chip
-    // makes them rediscoverable, with an eye button per block that shows
-    // it again.
+    // The chip lists the blocks hidden on phones, each with an eye button that shows it again.
     hiddenChip(host, bar, section, 'hideMobile');
   } else {
     // The blocks shown on phones only, likewise, so the desktop finds them again.
     hiddenChip(host, bar, section, 'hideDesktop');
-    // Extensible presets: a "+ card/row/person" button that adds the NEXT item to the section.
-    // The factory (def.item) lives in the preset definition; the section remains a generic container.
+    // An extensible preset gets a "+ card/row/person" button that adds its next item, made by the preset's factory (def.item).
     const def = section.preset ? window.Urd.sections.get(section.preset) : null;
     if (def?.item) {
       const itemLabel = def.itemLabelKey ? ta(def.itemLabelKey) : (def.itemLabel ?? ta('canvas.itemFallback'));
@@ -3978,9 +3679,7 @@ function addSectionToolbar(host, section, grid) {
         event.target.disabled = true;
         const next = def.item(section);
         post({ type: 'urd-add-blocks', sectionId: section.id, blocks: next.blocks, minBottom: next.bottom, moves: next.moves ?? [] });
-        // Select and scroll to the new item after the re-render: a new
-        // EMPTY frame is identical to its neighbors, so without this the
-        // click looks dead.
+        // The new item is selected and scrolled to after the re-render.
         setTimeout(() => {
           const el = document.querySelector(`.urd-block[data-block-id="${next.blocks[0].id}"]`);
           if (!el) return;
@@ -3996,8 +3695,7 @@ function addSectionToolbar(host, section, grid) {
       mk(DUPLICATE_SVG, ta('canvas.duplicateSection'), () => post({ type: 'urd-duplicate-section', sectionId: section.id }));
       mk(FIT_HEIGHT_SVG, ta('canvas.fitHeight'), () => fitSectionHeight(host, section, grid));
     }
-    // "Change layout": only when the section has something to change
-    // (the relevance rule: at least two movable blocks).
+    // "Change layout" stands only when the section has something to change: at least two movable blocks.
     if (applicableLayouts(section.blocks).length) {
       const layoutBtn = document.createElement('button');
       layoutBtn.className = 'urd-layout-btn';
@@ -4014,8 +3712,7 @@ function addSectionToolbar(host, section, grid) {
         bar.appendChild(opensMenu(barButton(BAR_ICONS[tool.icon] ?? BAR_ICONS.pencil, label, () => openSectionTool(host, section, tool.only, label, tool.icon), '', label)));
       }
     }
-    // "Save as template": a nameless snapshot to the editor, which names
-    // and stores the draft. Re-id happens only at insertion, never here.
+    // "Save as template": a nameless snapshot to the editor, which names and stores it; ids are made new only at insertion.
     const save = document.createElement('button');
     save.className = 'urd-save-template';
     save.title = ta('canvas.saveTemplate');
@@ -4034,7 +3731,7 @@ function addSectionToolbar(host, section, grid) {
   gear.addEventListener('pointerdown', (event) => event.stopPropagation());
   gear.addEventListener('click', () => openSectionSettings(host, section));
   opensMenu(gear);
-  // With small panels the gear is the word for the settings; with every group a tool, the groups and ⋮ hold the settings, and the gear stands in the phone view or where «Settings gear on the bar» asks for it.
+  // With small panels the gear is the word for the settings; with every group a tool, it stands in the phone view or where «Settings gear on the bar» asks for it.
   if (form === 'panels') {
     gear.textContent = ta('canvas.ctx.settings');
     gear.className = 'urd-edit-lead';
@@ -4046,7 +3743,7 @@ function addSectionToolbar(host, section, grid) {
     bar.appendChild(del);
   }
   else bar.appendChild(moreButton((x, y, from) => openSectionContextMenu(host, x, y, from)));
-  // New block and New section, together at the bar's right end: a block in this section, and a section below it; the phone view adds blocks for the phone only and draws no adder for sections.
+  // New block and New section at the bar's right end; the phone view adds blocks for the phone only and draws no section adder.
   const adds = document.createElement('span');
   adds.className = 'urd-sec-adds';
   const addBlock = document.createElement('button');
@@ -4072,7 +3769,7 @@ function addSectionToolbar(host, section, grid) {
 }
 
 /**
- * The bar of a section showing its phone layout in the desktop view (render.js urd-handoff): what it shows and why, the way to edit it in the phone view, and the section's settings and its menu, which hold in both views.
+ * The bar of a section showing its phone layout on the desktop (urd-handoff): what it shows, how to edit it on the phone, and the section's settings and menu.
  * @param {HTMLElement} host
  * @param {object} section
  */
@@ -4147,8 +3844,7 @@ function openSectionGalleryBelow(host) {
 }
 
 /**
- * A button that acts at its second press, as the right-click menu's deletion does: the first press arms it, red, its tooltip asking for the second.
- * A mouse leaving the button, or the focus leaving it, disarms it; a touch lifts before its click, so a lifted finger never disarms what it is about to press.
+ * A button that acts at its second press: the first arms it, red, its tooltip asking for the second; a mouse or the focus leaving it disarms it.
  */
 function armedButton(svg, title, run) {
   const btn = document.createElement('button');
@@ -4203,8 +3899,7 @@ function scheduleAttention() {
 let seenSent = '';
 
 /**
- * The sections standing in the phone view's window, at least half of a section or half the window (`urd-phone-seen`), for the editor's phone check before publishing (lib/phone-check.js), which takes them as looked at on the phone as they stand now.
- * Sent when the sections in sight change and when a section is drawn, since one drawn anew in sight is seen again; none in the desktop view.
+ * The sections in the phone view's window, at least half of each or half the window, sent as urd-phone-seen for the editor's phone check (lib/phone-check.js).
  */
 function reportSeen() {
   if (!isMobile()) return;
@@ -4221,8 +3916,7 @@ function reportSeen() {
 }
 
 /**
- * The sections that need a phone review in the phone view (`urd-attention`, ADR-0019 decision 5), with where each stands in the canvas, for the editor to draw their cards beside the phone (urd-attention-cards); none in the desktop view, and none scrolled out of sight.
- * The editor reads what happened and when from its own draft, and its «Reviewed» takes the mark away (urd-attention).
+ * The sections in sight that need a phone review (ADR-0019 decision 5), with their places, for the editor's cards beside the phone (urd-attention-cards).
  */
 export function reportAttention() {
   const cards = isMobile() ? [...document.querySelectorAll('[data-section-id].urd-attention')].map((host) => {
@@ -4239,7 +3933,7 @@ window.addEventListener('scroll', scheduleAttention, { passive: true, capture: t
 window.addEventListener('resize', scheduleAttention);
 
 /**
- * The chip on a section's bar for the blocks the view does not draw: those hidden on phones in the phone view (`hideMobile`), those shown on phones only on the desktop (`hideDesktop`); a press lists them.
+ * The chip on a section's bar for the blocks the view does not draw: hidden on phones in the phone view, phone-only on the desktop; a press lists them.
  * @param {HTMLElement} host The section
  * @param {HTMLElement} bar Its bar
  * @param {object} section
@@ -4287,11 +3981,9 @@ function buildHiddenList(section, hidden, flag = 'hideMobile') {
   return list;
 }
 
-// The same rule for the rest of the editing chrome: a cross, the drag grip,
-// the rotate handle, the fit-height button and the folds' caret are drawn,
-// never characters.
+// The rest of the editing chrome is drawn too, never characters: a cross, the drag grip, the rotate handle, the fit-height button and the folds' caret.
 const CROSS_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-/** Every deletion on the canvas draws a bin, as the admin's do (the editor's ICONS.bin), never the cross that closes things; the selection's bar draws the same lines at its own size. */
+/** The bin every deletion on the canvas draws, as the admin's do (ICONS.bin), never the closing cross; the selection's bar draws it at its own size. */
 const BIN_PATHS = '<path d="M3 6h18"/><path d="M8.5 6V3h7v3"/><path d="M5.5 6l1 15h11l1-15"/><path d="M10 10.5v6M14 10.5v6"/>';
 const BIN_SVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${BIN_PATHS}</svg>`;
 /** The layer order's arrows: to the front, to the back. */
@@ -4305,9 +3997,7 @@ const CARET_SVG = '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" s
 /** The slim block menu's arrow on a group's row, pointing to the side its panel opens on. */
 const CHEVRON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
 
-// Drawn icons for the mobile buttons (ADR-0009: never glyphs/emoji in
-// chrome): reset (counterclockwise arrow), arrow up/down (order) and a
-// check mark.
+// Drawn icons for the phone buttons, never glyphs: reset, arrow up and down (order) and a check mark.
 const RESET_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4v6h6"/><path d="M3.5 13a8.5 8.5 0 1 0 2-5.5L3 10"/></svg>';
 const ORDER_UP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4"/><path d="M5 11l7-7 7 7"/></svg>';
 const ORDER_DOWN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M5 13l7 7 7-7"/></svg>';
@@ -4319,10 +4009,7 @@ const SEAM_UP_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
 const SEAM_DOWN_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 
 /**
- * The row index (1-based) at a y offset from the row grid's content top.
- * The track list holds the ACTUAL row heights (grown tracks are taller
- * than MOBILE_ROW); past the last track the grid continues in MOBILE_ROW
- * steps.
+ * The row (1-based) at a y offset from the row grid's content top, read on the drawn track heights and in MOBILE_ROW steps past the last track.
  */
 function rowAtOffset(tracks, y) {
   let sum = 0;
@@ -4337,8 +4024,7 @@ function rowAtOffset(tracks, y) {
 const HOLD_TO_SELECT_MS = 400;
 
 /**
- * The row (1-based) whose top edge lies nearest a y offset from the row grid's content top: where a block dragged on the rows lands, before a grown row while its top is over that row's upper half and after it over its lower half, the room under a block being its row's.
- * Past the last track the grid continues in MOBILE_ROW steps.
+ * The row (1-based) whose top edge is nearest a y offset from the grid's content top, where a block dragged on the rows lands; MOBILE_ROW steps past the tracks.
  */
 function rowNearOffset(tracks, y) {
   let top = 0;
@@ -4365,8 +4051,7 @@ document.addEventListener('focusin', (event) => {
   if (root) typedIn.delete(root);
 }, true);
 
-// A paste or a drop into a text goes through the rich-text allowlist (sanitize.js), the same the page draws with: HTML is cleaned before it is inserted, and Ctrl+Shift+V pastes the words alone.
-// The plain paste is known from its keys, held from the key's press to its release.
+// A paste or drop into a text goes through the rich-text allowlist (sanitize.js), and Ctrl+Shift+V, known from its keys while held, pastes the words alone.
 let plainPaste = false;
 window.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') plainPaste = event.shiftKey;
@@ -4381,7 +4066,7 @@ document.addEventListener('paste', (event) => {
   event.preventDefault();
   document.execCommand(action.command, false, action.value);
 }, true);
-// A drop carries its HTML in the input event (Input Events), and lands where the browser was to put it; without it the browser's own drop stands, and the text is cleaned when it is drawn.
+// A drop carries its HTML in the input event and lands where the browser puts it; without it the browser's drop stands, cleaned when the text is drawn.
 document.addEventListener('beforeinput', (event) => {
   if (event.inputType !== 'insertFromDrop') return;
   const root = editableRoot(event.target);
@@ -4401,11 +4086,7 @@ document.addEventListener('beforeinput', (event) => {
   document.execCommand(action.command, false, action.value);
 }, true);
 
-// Ctrl+Z / Ctrl+Shift+Z inside the iframe is forwarded to the editor,
-// which owns the history - UNLESS focus sits in editable text typed in
-// since it took the focus (there the browser's own text undo applies;
-// urd-edit keeps the draft in sync). A text the caret was only put back
-// in, by an undo or a click, has no typing of its own to undo.
+// Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y go to the editor, which owns the history, except in a text typed in since it took the focus, which keeps the browser's undo.
 window.addEventListener('keydown', (event) => {
   if (!(event.ctrlKey || event.metaKey)) return;
   const key = event.key.toLowerCase();
@@ -4416,17 +4097,11 @@ window.addEventListener('keydown', (event) => {
   post({ type: 'urd-undo', redo: key === 'y' || event.shiftKey });
 });
 
-// Selection: clicking a block gives it lasting focus (the handles stay
-// visible, see preview.css). Clicking outside all blocks deselects. The
-// selection survives re-renders via the id.
+// The selected block keeps its handles (preview.css) and survives re-renders by its id; a click outside all blocks deselects.
 let selectedBlockId = null;
 
 /**
- * Multi-selection: a set of blocks in ONE section (ids + the section they
- * live in). selectedBlockId is always the primary block of the set. The
- * set is built with shift-click or marquee (dragging on empty surface),
- * and is treated as one unit for drag, arrow keys, deletion and
- * Ctrl+C/D/V.
+ * The set of a multi-selection, in one section, selectedBlockId its primary: built by shift-click or marquee, and moved, deleted and copied as one.
  */
 let multiIds = new Set();
 let multiSectionId = null;
@@ -4437,13 +4112,10 @@ let activeSectionId = null;
 /** The section chosen as a section, by a press on its bare surface or a paste, which Ctrl+C and Ctrl+X take whole; a press on a block chooses the block instead. */
 let chosenSectionId = null;
 
-/** The clipboard for Ctrl+C, Ctrl+X and Ctrl+V (clipboard-model.js): blocks
- *  with their source section, or a whole section. Each copy goes to the
- *  editor too, which hands it back to the next page the preview loads
- *  (setClipboard), so a copy pastes on another page. */
+/** The clipboard (clipboard-model.js): blocks with their section, or a whole section, sent to the editor too so a copy pastes on another page (setClipboard). */
 let clipboard = null;
 
-/** The section the editor selected itself (the urd-active-section message: a new, duplicated or pasted section): active and chosen here, and marked once it is drawn. */
+/** The section the editor selected itself (urd-active-section: a new, duplicated or pasted one): active and chosen here, and marked once it is drawn. */
 export function setActiveSection(sectionId) {
   activeSectionId = typeof sectionId === 'string' ? sectionId : null;
   chosenSectionId = activeSectionId;
@@ -4455,7 +4127,7 @@ export function setActiveSection(sectionId) {
 }
 
 /**
- * The caret put back in a block's text after an undo (the urd-caret message): the text takes the focus with the caret at that many characters in, or at its end where the text is shorter now.
+ * Puts the caret back in a block's text after an undo (urd-caret), that many characters in, or at its end where the text is shorter now.
  * @param {string} blockId
  * @param {number} offset Characters from the text's start
  */
@@ -4580,7 +4252,7 @@ function toggleMulti(el) {
   }
   if (multiIds.has(id)) {
     multiIds.delete(id);
-    // The primary block remains one still part of the set.
+    // The primary block becomes one still in the set.
     const rest = selectedEls();
     selectBlock(rest[0] ?? null, { keepMulti: true });
   } else {
@@ -4606,8 +4278,7 @@ function selectBlock(el, opts = {}) {
   // The bar shows with the selection, and is kept inside the canvas once it is drawn; in the phone view the editor draws it (watchPhoneBar).
   el?._urdKeepBar?.();
   watchPhoneBar();
-  // The selected block takes the keyboard focus, so the keys on a selected block (the arrows, Delete, 1, 2 and 3, Shift+F10) work right after the click: the press that selects prevents its default, which would have moved the focus into the frame.
-  // Text with the caret keeps it, and a block picked in the editor's own lists leaves the focus in the list (opts.keepFocus).
+  // The selected block takes the keyboard focus for its keys; text with the caret keeps it, as does a list in the editor that picked the block (opts.keepFocus).
   if (el && !opts.keepFocus && !el.contains(document.activeElement)) {
     if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
     el.focus({ preventScroll: true });
@@ -4621,30 +4292,19 @@ function selectBlock(el, opts = {}) {
   }
 }
 
-// Internal navigation in preview goes via the editor (which switches page
-// and keeps the dropdown in sync); external links open in a new tab
-// instead of pulling the iframe out of editing mode. Links INSIDE blocks
-// (buttons, images, text links) never trigger while editing: the click
-// selects the block. In the Clean view, which shows the page as visitors
-// see it, every link is followed.
-// A click the link's own handler has cancelled (a mobile menu item that
-// opens its submenu) navigates nowhere, as on the published page.
+// Links in the preview: a site page opens through the editor, another site in a new tab; a link in a block selects it, except in the Clean view, which follows it.
 document.addEventListener('click', (event) => {
   if (event.defaultPrevented) return;
   const a = eventTarget(event)?.closest('a[href]') ?? null;
   if (!a) return;
-  // The event in full is a dialog over the page: its links work as on the
-  // published page (a new tab, a file to save).
+  // The full event's dialog over the page keeps its links as on the published page.
   if (a.closest('.urd-cal-dialog')) return;
-  // In the Clean view every link in a block is followed, as on the published
-  // page; while editing, a links block's row works once its block is
-  // selected (the first click selects, the next follows, the cart button's
-  // model), and every other link in a block waits for «View page».
+  // In the Clean view every link in a block is followed; while editing, a links block's row works once its block is selected, other links wait for «View site».
   const chromeOff = document.body.classList.contains('urd-chrome-off');
   const linksRow = a.classList.contains('urd-share-button') && (chromeOff || a.closest('.urd-block')?.classList.contains('urd-selected'));
   // A basket's drawer is opened on purpose, so its «Go to checkout» switches the editor to that page, as the menu basket's does.
   const cartDrawer = Boolean(a.closest('.urd-cart-dialog'));
-  // A document's contents jump to their parts in the preview too, without changing the preview's address; the page's scroll padding keeps the part clear of the menu.
+  // A document's contents jump to their parts without changing the preview's address; the page's scroll padding keeps the part clear of the menu.
   const docPart = a.closest('.urd-doc-toc, .urd-doc-fold') ? document.getElementById((a.getAttribute('href') ?? '').slice(1)) : null;
   if (docPart) {
     event.preventDefault();
@@ -4667,8 +4327,7 @@ document.addEventListener('click', (event) => {
     event.preventDefault();
     return;
   }
-  // A link to another site that opens in a tab of its own is left to the
-  // browser; only a link to a page of this site goes through the editor.
+  // A link to another site that opens a tab of its own is left to the browser.
   if ((chromeOff || linksRow) && url.origin !== location.origin && a.target === '_blank') return;
   event.preventDefault();
   // A page of this site goes through the editor; a file of the site (a PDF under media/) and another site open in a tab of their own.
@@ -4679,13 +4338,7 @@ document.addEventListener('click', (event) => {
   }
 });
 
-// Keyboard on a selected block/set: arrow keys move (grid steps;
-// Shift = 1 px), Delete deletes, Esc deselects, Ctrl+C, Ctrl+X and Ctrl+V
-// copy, cut and paste with the layout preserved (a selected section with no
-// block is copied whole), Ctrl+D duplicates. Never when focus
-// sits in text/fields. In the phone view the arrows go to phoneArrow, and
-// Ctrl+G and Ctrl+Shift+G group and ungroup the set on phones.
-// A dialog on the page keeps its own arrows, and the clean view moves nothing.
+// The keys on a selected block or set, never in text or fields: arrows move, Delete deletes, Esc deselects, and Ctrl+C, X, V and D copy, cut, paste and duplicate.
 window.addEventListener('keydown', (event) => {
   const target = event.target;
   if (target instanceof HTMLElement
@@ -4700,9 +4353,7 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  // Set deletion needs no single-block anchor (a marquee can be left
-  // without one after group operations). Deletion is structural work and
-  // belongs to the desktop view, like the other shortcuts.
+  // A set is deleted without a single-block anchor, in the desktop view only, like the other structural shortcuts.
   if ((event.key === 'Delete' || event.key === 'Backspace') && multiIds.size > 1) {
     if (isMobile()) return;
     event.preventDefault();
@@ -4724,7 +4375,7 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  // Ctrl/⌘+K outside a text asks the editor for its command palette, and Ctrl+Shift+P where a browser keeps Ctrl+K for itself; in a text Ctrl+K is the toolbar's link key, and a dialog on the page keeps the keys.
+  // Ctrl/⌘+K outside a text asks the editor for its command palette, as does Ctrl+Shift+P; in a text Ctrl+K is the link key, and a dialog keeps its keys.
   const paletteKey = (!event.shiftKey && event.key.toLowerCase() === 'k') || (event.shiftKey && event.key.toLowerCase() === 'p');
   if (ctrl && !event.altKey && paletteKey
     && !(target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) || target.closest('dialog, [role="dialog"]')))) {
@@ -4740,10 +4391,7 @@ window.addEventListener('keydown', (event) => {
     return;
   }
 
-  // Slash command: "/" opens the + New block menu with the search field
-  // focused, in the active section (otherwise the section under the
-  // pointer); if the pointer sits in the section, the block lands at the
-  // pointer point.
+  // "/" opens the + New block menu with its search focused, in the active section or the one under the pointer, landing the block at the pointer there.
   if (event.key === '/' && !ctrl && !event.altKey) {
     if (isMobile() || document.body.classList.contains('urd-chrome-off')) return;
     const active = document.querySelector('.urd-section-active');
@@ -4797,8 +4445,7 @@ window.addEventListener('keydown', (event) => {
   const ctx = el?._urdCtx;
   if (!ctx) return;
 
-  // The element menu's areas from the canvas: 1, 2 and 3 on a selected block
-  // choose Content, Style and Placement in the editor's menu (0.7.20.9).
+  // 1, 2 and 3 on a selected block choose Content, Style and Placement in the editor's element menu.
   if (['1', '2', '3'].includes(event.key) && !ctrl && !event.altKey) {
     event.preventDefault();
     post({ type: 'urd-menu-area', area: ['content', 'style', 'placement'][Number(event.key) - 1] });
@@ -4885,15 +4532,11 @@ window.addEventListener('keydown', (event) => {
   const r1 = (v) => Math.round(v * 10) / 10;
 
   if (multiIds.size > 1) {
-    // The whole set moves by the same delta, clamped so the group stays
-    // within the width; a burst of presses becomes one undo step.
-    // The axis NOT being moved is never touched (rounding an untouched
-    // x/y would leave an invisible change keeping the draft dirty).
+    // The whole set moves by one delta, clamped to the width; a burst of presses is one undo step, and the axis not moved is never written.
     const parts = selectedEls().map((e) => ({ el: e, ctx: e._urdCtx })).filter((p) => p.ctx);
     suspendSticky();
     suspendPush();
-    // The frames are settled to their boxes first (settleFrames), so the
-    // keys place what the owner sees.
+    // The frames are settled to their boxes first (settleFrames), so the keys move what the owner sees.
     const settle = settleFrames(ctx.host, ctx.section, parts.map((p) => p.ctx.block.id));
     const d = dir[0] ? groupDelta(parts.map((p) => p.ctx.block.frames.desktop), r1(dir[0] * stepPx * pctPerPx), 0) : { dx: 0 };
     postSettled(ctx.section, settle, parts.map((p) => p.ctx.block.id), 'multi-arrow');
@@ -4921,14 +4564,13 @@ window.addEventListener('keydown', (event) => {
   drawFrame(el, frame);
   resumeSticky();
   resumePush();
-  // coalesce: a burst of arrow-key presses becomes one undo step, the
-  // settled frames included (their groupKey is the block's own key).
+  // A burst of arrow presses is one undo step (coalesce), the settled frames included under the block's own key.
   postSettled(ctx.section, settle, [ctx.block.id], ctx.block.id);
   post({ type: 'urd-move', sectionId: ctx.section.id, blockId: selectedBlockId, frame, frameKey: 'desktop', coalesce: true });
 });
 
 /**
- * A flowing block moved one place in the phone's reading order (phone-moves.js phoneStep): the change is written into the section here, so a burst of presses reckons from where the last one left it, and posted to the editor.
+ * Moves a flowing block one place in the phone's reading order (phoneStep), written into the section here so a burst reckons from the last press, and posted.
  * @param {object} section
  * @param {object} block
  * @param {number} dir -1 earlier, 1 later
@@ -4949,8 +4591,7 @@ function stepPhone(section, block, dir, coalesce) {
 }
 
 /**
- * The arrows in the phone view: Alt with Up or Down moves a block that flows in the row grid one step in the reading order, as the bar's buttons do; the arrows move a block placed by hand in the row grid, Up and Down one row and Left and Right one per cent of the width.
- * A burst of presses is one undo step.
+ * The phone view's arrows: Alt+Up/Down steps a flowing block in the reading order, the arrows move a placed one a row or one per cent, a burst one undo step.
  * @param {KeyboardEvent} event
  * @param {{ section: object, block: object }} ctx
  * @param {HTMLElement} el The block's element
@@ -4992,15 +4633,7 @@ function phoneArrow(event, ctx, el, dir) {
   post({ type: 'urd-move', sectionId: section.id, blockId: block.id, frame: placement, frameKey: 'mobile', coalesce: true, groupKey: `nudge-mobile-${block.id}` });
 }
 
-// Active section: the editor's palette puts new blocks in the last
-// clicked section, marked with an accent line at the left edge.
-//
-// markActiveVisual sets ONLY the class (the palette hint). markActive
-// additionally posts urd-select-section, which makes the editor show the
-// SECTION's properties - that must only happen when the bare section
-// surface is clicked, never when a block or a block handle is touched
-// (then the block's own urd-select-block carries the section context, and
-// Properties stays on the block).
+// The active section takes the palette's new blocks; markActiveVisual sets only its class, and markActive also shows its properties (urd-select-section).
 function markActiveVisual(host) {
   activeSectionId = host?.dataset.sectionId ?? null;
   // The section put at work is the one whose bar the editor draws in the phone view.
@@ -5021,8 +4654,7 @@ function markActive(host) {
 }
 
 document.addEventListener('pointerdown', (event) => {
-  // Clean view has no editing: a click there is a visitor's click, and must
-  // not select anything behind the hidden panels.
+  // The Clean view has no editing: a click there is a visitor's and selects nothing.
   if (document.body.classList.contains('urd-chrome-off')) return;
   const target = eventTarget(event);
   // Clicks in the multi toolbar must never change the set it acts on.
@@ -5034,28 +4666,20 @@ document.addEventListener('pointerdown', (event) => {
   if (blockEl && event.shiftKey) {
     toggleMulti(blockEl);
   } else if (blockEl && multiIds.size > 1 && multiIds.has(blockEl.dataset.blockId)) {
-    // Clicking a member keeps the set (group drag), but makes the block
-    // primary.
+    // Clicking a member keeps the set but makes the block primary.
     selectBlock(blockEl, { keepMulti: true });
   } else {
     selectBlock(blockEl);
   }
-  // Clicking a block must not post a section choice (Properties stays on
-  // the block); only the bare section surface switches to the section's
-  // properties.
+  // A click on a block posts no section choice; only the bare section surface shows the section's properties.
   const host = target?.closest('.urd-section');
-  // A right press marks the section visually only: the activation would
-  // redraw it before the browser's contextmenu event, which then lands on
-  // the detached node and never reaches the menu's listener.
+  // A right press marks the section visually only, so the contextmenu event still finds the section's element.
   if (blockEl) chosenSectionId = null;
   if (blockEl || event.button === 2) markActiveVisual(host);
   else markActive(host);
 });
 
-// Marquee: dragging on empty section surface draws a selection frame, and
-// every block it overlaps becomes the set (a click without a drag remains
-// a click; the set is limited to the section the drag started in).
-// In the phone view the blocks stand in the row grid and its cells, so each is measured where it is drawn.
+// Marquee: a drag on empty section surface selects the blocks its frame overlaps in that section, each measured where it is drawn; a click stays a click.
 document.addEventListener('pointerdown', (event) => {
   if (event.button !== 0 || event.shiftKey) return;
   if (document.body.classList.contains('urd-chrome-off')) return;
@@ -5065,10 +4689,7 @@ document.addEventListener('pointerdown', (event) => {
   if (!host || host.classList.contains('urd-handoff')) return;
   if (target.closest('.urd-block, .urd-add-block, .urd-add-section, .urd-section-toolbar, .urd-hint-chip, .urd-hint-card, .urd-multi-toolbar')) return;
 
-  // The marquee rectangle and hit detection are measured against the
-  // content surface: the blocks' offsetLeft/offsetTop are relative to it
-  // (it is their offsetParent), so both sides of the comparison must
-  // share the same frame.
+  // The marquee and its hits are measured on the content surface, the blocks' offsetParent.
   const canvas = canvasOf(host);
   const startRect = canvas.getBoundingClientRect();
   const start = { x: event.clientX - startRect.left, y: event.clientY - startRect.top };
@@ -5134,11 +4755,7 @@ document.addEventListener('pointerdown', (event) => {
 });
 
 /**
- * The floor for a block's y in its section. The first section has nothing
- * above it but the menu, so a block there never goes under the menu, where it
- * is drawn behind it and cannot be taken hold of; in any other section a block
- * may hang above the top and lie over the section before it (ADR-0025
- * decision 8), as the group drag and the transfer at a drop already allow.
+ * The floor for a block's y in its section: 0 in the first, so it never goes under the menu; none elsewhere, where it may lie over the section above (ADR-0025).
  */
 function yFloor(host) {
   return document.querySelector('.urd-section') === host ? 0 : -Infinity;
@@ -5150,8 +4767,7 @@ function clamp(value, min, max) {
 
 /* ---------- Multi-selection: toolbar, copy/paste ---------- */
 
-/** Deletes the whole set as ONE undo step (shared by the Delete key and
- *  the toolbar's delete button). */
+/** Deletes the whole set as one undo step, for the Delete key and the toolbar's delete button. */
 function deleteSelection() {
   const ctx = selectedEls()[0]?._urdCtx;
   const sectionId = multiSectionId ?? ctx?.section?.id;
@@ -5192,19 +4808,14 @@ function buildMultiBar() {
   const distH = btn(svg('<path d="M3 3v18M21 3v18"/><rect x="7" y="9" width="3" height="6"/><rect x="14" y="9" width="3" height="6"/>'), ta('canvas.distributeH'), () => applyDistribute('x'));
   const distV = btn(svg('<path d="M3 3h18M3 21h18"/><rect x="9" y="7" width="6" height="3"/><rect x="9" y="14" width="6" height="3"/>'), ta('canvas.distributeV'), () => applyDistribute('y'));
   multiBar._urdDist = [distH, distV];
-  // "Save group as template" (the snippets model): the whole set is saved
-  // as a reusable block group; naming and storage happen in the editor
-  // (urd-save-template), and the group appears in the block menus.
+  // "Save group as template": the set is saved as a reusable block group, named and stored by the editor (urd-save-template), and shown in the block menus.
   const saveGroup = btn(svg('<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/>'), ta('canvas.saveGroup'), () => {
     const blocks = selectedEls().map((el) => el._urdCtx?.block).filter(Boolean);
     if (blocks.length < 2) return;
     post({ type: 'urd-save-template', kind: 'blocks', blocks: JSON.parse(JSON.stringify(blocks)) });
   });
   saveGroup.classList.add('urd-multi-save');
-  // "Pin the group": the whole set gets the same group id and is pinned
-  // as ONE unit, so the blocks keep their relative placement instead of
-  // all piling up at the top of the window. If the set is already pinned
-  // as a group, the button unpins it.
+  // "Pin the group": the set gets one group id and is pinned as one unit, keeping the blocks' placement; a set already pinned as a group is unpinned.
   btn(svg('<path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/>'), ta('canvas.stickyGroup'), () => {
     const blocks = selectedEls().map((el) => el._urdCtx?.block).filter(Boolean);
     if (blocks.length < 2) return;
@@ -5216,8 +4827,7 @@ function buildMultiBar() {
       on: !grouped,
     });
   });
-  // The drag handle: grab the whole set and drag it together (its own
-  // button next to the trash icon); recorded as ONE undo step on release.
+  // The drag handle beside the bin drags the whole set, one undo step on release.
   const grip = document.createElement('button');
   grip.className = 'urd-multi-drag';
   grip.title = ta('canvas.dragSelected');
@@ -5229,13 +4839,9 @@ function buildMultiBar() {
   document.body.appendChild(multiBar);
 }
 
-/** Drag the whole set together from the toolbar handle: a live view
- *  during the drag (clamped by groupDelta so the group stays in the
- *  section), recorded as ONE undo step on release. Cancel restores
- *  everything. */
+/** Drags the whole set from the toolbar handle, clamped by groupDelta to the section, as one undo step on release; a cancel puts everything back. */
 function startSelectionDrag(event) {
-  // The isPrimary guard: a second finger on the handle must not start a
-  // competing drag with its own listeners fighting over the delta.
+  // Only the primary pointer starts the drag, so a second finger starts no rival one.
   if (event.button !== 0 || !event.isPrimary) return;
   let items = selectionItems();
   const host = selectedEls()[0]?.closest('.urd-section');
@@ -5245,9 +4851,7 @@ function startSelectionDrag(event) {
   event.stopPropagation();
   const handle = event.currentTarget;
   handle.setPointerCapture(event.pointerId);
-  // As with the single drag: pinned blocks are released back to their real
-  // place before the drag writes geometry on them, and the push stands
-  // still so the pushed blocks stay where they are seen.
+  // As in the single drag: pinned blocks go back to their place before the drag writes their geometry, and the push stands still.
   suspendSticky();
   suspendPush();
 
@@ -5256,8 +4860,7 @@ function startSelectionDrag(event) {
   const startY = event.clientY;
   const r2 = (v) => Math.round(v * 100) / 100;
   let delta = { dx: 0, dy: 0 };
-  // The set's frames are settled to their boxes at the first move
-  // (settleFrames), as for a single drag.
+  // The set's frames are settled to their boxes at the first move (settleFrames), as in a single drag.
   let settle = null;
   let settled = false;
 
@@ -5308,8 +4911,7 @@ function startSelectionDrag(event) {
 }
 
 /**
- * The set bar of the phone view (0.7.36.3): the count, «Group» and «Ungroup» on phones, the blocks in cells to the left, the middle or the right of their row, and the pinned blocks' layer order there; a button with nothing to act on is greyed (updatePhoneSetBar).
- * Its tools stand in a row of their own, which the editor watches when it draws the bar beside the phone (watchPhoneBar), so the bar's place is no change of its tools.
+ * The phone view's set bar: the count, «Group» and «Ungroup», the cell alignment and the pinned blocks' layer order; a button with nothing to do is greyed.
  */
 let phoneSetBar = null;
 
@@ -5416,14 +5018,12 @@ function updateMultiToolbar() {
     return;
   }
   multiBar._urdCount.textContent = ta('canvas.selectedCount', { n: els.length });
-  // The distribute buttons require at least three blocks (settings only when relevant).
   for (const b of multiBar._urdDist) b.style.display = els.length >= 3 ? '' : 'none';
   multiBar.classList.add('visible');
   placeAbove(multiBar, els);
 }
 
-// The toolbar follows the set on scroll/resize (fixed positioning).
-// On a scroll the phone's set bar only moves: its buttons are weighed when the set or the page changes (updatePhoneSetBar).
+// The toolbar follows the set on scroll and resize; on a scroll the phone's set bar only moves, its buttons weighed when the set or page changes.
 window.addEventListener('scroll', () => {
   if (multiIds.size < 2) return;
   if (isMobile() && phoneSetBar?.classList.contains('visible')) placeAbove(phoneSetBar, selectedEls());
@@ -5441,16 +5041,13 @@ function selectionItems() {
     .filter(Boolean);
 }
 
-/** Record a list of moves as ONE undo step (shared groupKey), with the
- *  frames a settle wrote before them (settleFrames). */
+/** Records a list of moves as one undo step (a shared groupKey), with the frames a settle wrote before them. */
 function applySelectionMoves(moves, settle = null) {
   if (!moves.length) {
     settle?.undo();
     return;
   }
-  // Writes geometry straight onto the elements without a re-render, so
-  // the pinning must let go first (otherwise the next pin is measured
-  // against the old place).
+  // The geometry is written straight onto the elements without a re-render, so the pinning lets go first.
   suspendSticky();
   suspendPush();
   const key = makeId('malign');
@@ -5472,8 +5069,7 @@ function applySelectionMoves(moves, settle = null) {
   updateMultiToolbar();
 }
 
-/** Settles the set's frames to their boxes (settleFrames), so align and
- *  distribute work on the bottoms and middles the owner sees. */
+/** Settles the set's frames to their boxes (settleFrames), so align and distribute act on the bottoms and middles the owner sees. */
 function settleSelection() {
   const ctx = selectedEls()[0]?._urdCtx;
   if (!ctx) return null;
@@ -5496,14 +5092,7 @@ function copySelection(ctx, cut = false) {
 }
 
 /**
- * Ctrl+V: paste the clipboard with the internal layout preserved - all
- * blocks get the SAME offset (slightly down/right, clamped by groupDelta
- * so the whole group stays within the section). The target is the active
- * section, otherwise the source section, otherwise the section in view,
- * otherwise the first. Sent together as urd-add-blocks = ONE undo step,
- * and the new set is selected. A section on the clipboard lands below the
- * active section instead (pasteSection).
- * From a section's menu (`point`) the blocks go into that section, and in the phone view land at the point the menu was opened at.
+ * Ctrl+V: pastes the clipboard's blocks with their layout, one offset for all, as one undo step into the active, source, visible or first section, or at `point`.
  */
 function pasteClipboard(source = clipboard, point = null) {
   if (source?.kind === 'section') {
@@ -5538,15 +5127,13 @@ function pasteClipboard(source = clipboard, point = null) {
     else if (copy.phonePlace && (!side || source.sectionId !== sectionId)) delete copy.phonePlace;
   }
   const minBottom = Math.max(...blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
-  // In the phone view the blocks stand on the phone only, from the point the section's menu was opened at, first in the section from its bar beside the phone, else last.
+  // In the phone view the blocks stand on the phone only: at the point the menu was opened at, first from the bar beside the phone, else last.
   const drop = !isMobile() || !point?.host ? null
     : Number.isFinite(point.x) ? phoneDropAtPoint(host, host._urdSection, point.x, point.y) : phoneDropFirst(host);
   post({ type: 'urd-add-blocks', sectionId, blocks, minBottom, moves: [], ...phoneAdd(drop) });
   // The next paste continues from the pasted content (no stacking on top of each other).
   if (source === clipboard) clipboard = { kind: 'blocks', sectionId, blocks: JSON.parse(JSON.stringify(blocks)) };
-  // The pasted content becomes the new set: the re-render after
-  // urd-add-blocks reads multiIds/selectedBlockId (enhanceSection), and
-  // the editor follows.
+  // The pasted content becomes the new set, which the re-render after urd-add-blocks reads (enhanceSection).
   document.querySelectorAll('.urd-block.urd-selected, .urd-block.urd-multi-selected')
     .forEach((b) => b.classList.remove('urd-selected', 'urd-multi-selected'));
   multiSectionId = sectionId;
@@ -5556,8 +5143,8 @@ function pasteClipboard(source = clipboard, point = null) {
 }
 
 /**
- * Insert a block-group template into a section: re-id + anchor/clamp via the template model (the re-id rule in SCHEMA.md), ONE undo step via urd-add-blocks, and the inserted content becomes the new set (the same tail as pasteClipboard).
- * anchor = {x in %, y in px} or null; `phone` is the place in the phone view (phoneAdd).
+ * Inserts a block-group template into a section as one undo step, its blocks selected.
+ * `anchor` is {x in %, y in px} or null; `phone` its phone place (phoneAdd).
  */
 function insertBlocksTemplate(tpl, sectionId, anchor, phone = {}) {
   const { blocks, minBottom } = cloneBlocksForInsert(tpl.blocks, makeId, { anchor });
@@ -5570,7 +5157,7 @@ function insertBlocksTemplate(tpl, sectionId, anchor, phone = {}) {
   post({ type: 'urd-select-block', sectionId, blockId: selectedBlockId });
 }
 
-/** The Blocks panel's My templates group (urd-insert-template): insert into the active section (otherwise the first) with stored positions, clamping only; a section showing its phone layout on the desktop (urd-handoff) is edited in the phone view and takes none, as placeBlock does. */
+/** Inserts a saved template (urd-insert-template) into the active section, else the first, at its stored positions; a section in urd-handoff takes none. */
 export function insertTemplate(id) {
   const tpl = templates.find((m) => m.id === id && m.kind === 'blocks' && Array.isArray(m.blocks));
   const host = document.querySelector('.urd-section-active:not(.urd-handoff)') ?? document.querySelector('.urd-section:not(.urd-handoff)');
@@ -5586,12 +5173,7 @@ function duplicateSelection(ctx) {
 }
 
 /**
- * Select a block by id (the bridge: the editor just built the block
- * itself, e.g. from the + New block menu, and the preview does not know
- * the id until the section is re-rendered). Called AFTER the re-render.
- * A block `picked` in the editor's own lists (the Phone panel's order) is
- * brought into view, and the focus stays in the list.
- * A block in a section showing its phone layout on the desktop (urd-handoff) is not selected there: that section is edited in the phone view.
+ * Selects a block by id after the re-render, outside urd-handoff; one `picked` in the editor's lists is brought into view, the focus kept there.
  */
 export function selectById(blockId, picked = false) {
   const el = document.querySelector(`.urd-section:not(.urd-handoff) .urd-block[data-block-id="${CSS.escape(blockId)}"]`);
@@ -5606,7 +5188,7 @@ const pendingNewFits = new Map();
 /** The editing chrome inside a block, which never counts in what it draws. */
 const FIT_CHROME = '.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, .urd-edit-readout, .urd-hint-chip, .urd-hint-card, .urd-anchor, .urd-sticky-badge, .urd-mobile-pin, .urd-phone-words';
 
-/** How far the block's content spills past the boxes that hold it, in px, the editing chrome left out: past its own box, by what stands in it, and past every box inside it. */
+/** How far the block's content spills past its own box and every box inside it, in px, the editing chrome left out. */
 function spill(el) {
   const box = el.getBoundingClientRect();
   let sum = 0;
@@ -5636,12 +5218,11 @@ function lineCount(el) {
 }
 
 /**
- * A block's box fitted to what it draws, at the width it was added at (`startPx`): the narrowest width at which its words stand on no more lines, nothing in it spills sideways and it grows no taller (a grid of cards that would lose a column), no narrower than `floor`, and the height its content needs there, both in px; null where it draws nothing yet.
- * Content that only gets smaller as the block narrows (a number sized by the block's width) shrinks with it until its words wrap. The block is measured as a visitor sees it (urd-fit-measure, visitorHeights), and stands at its own width again after.
+ * A block's box fitted to its content in px: the narrowest width from `startPx` down to `floor` that wraps no more lines, spills nothing and grows no taller.
  * @param {HTMLElement} el The block element
- * @param {number} startPx
+ * @param {number} startPx The width it was added at
  * @param {number} floor
- * @returns {{w: number, h: number}|null}
+ * @returns {{w: number, h: number}|null} Null where it draws nothing yet
  */
 function fittedSize(el, startPx, floor) {
   const keep = el.style.width;
@@ -5667,7 +5248,7 @@ function fittedSize(el, startPx, floor) {
 }
 
 /**
- * A new block fitted to what it draws (the urd-fit-new message, add-fit.js), which the editor sends before the section that holds it: the block is drawn hidden, fitted before the screen shows it, and shown at its fitted size, so it never changes size once it is seen (beginNewFit).
+ * Fits a new block to its content before it is first shown (urd-fit-new, sent before its section), so it never changes size once seen (beginNewFit).
  * @param {string} sectionId
  * @param {string} blockId
  * @param {number} startW The width it was added at, in percent of the canvas
@@ -5681,13 +5262,12 @@ export function fitNewBlock(sectionId, blockId, startW) {
 /** The time between two measures of a plugin's block, whose content may arrive late without saying so, in ms. */
 const NEW_FIT_STEP = 120;
 
-/** The measures a plugin's block is given before it is shown as it stands, and the time a block that says when it has drawn (DRAWS_LATE) is waited for, about four seconds. */
+/** The measures a plugin's block gets before it is shown as it stands, and the wait for a DRAWS_LATE block, about four seconds. */
 const NEW_FIT_TRIES = 33;
 const NEW_FIT_WAIT = NEW_FIT_STEP * NEW_FIT_TRIES;
 
 /**
- * Fits a block just added as it is drawn: hidden until fitted, and measured before the next paint; a block that draws its content later (DRAWS_LATE) before the paint after it says it has drawn (urd-drawn), and a plugin's block that asks to be fitted (pluginFits), whose content may arrive late without saying so, once two measures in a row agree and nothing in it is loading.
- * A calendar fitted below NARROW_PX turns to its narrow layouts in place, so it stays hidden two frames more and is measured again in them. The fitted frame is drawn on the block (drawFrame), put in the page's copy of the section, the block shown, and the fit sent to the editor (urd-new-fitted), with no size where none is taken, so the editor finishes the add either way; a block drawn again meanwhile carries on in its new element.
+ * Fits a block just added while hidden: at the next paint, after urd-drawn (DRAWS_LATE) or once two measures agree (pluginFits); then shows it (urd-new-fitted).
  * @param {HTMLElement} el The block element
  * @param {object} block The block's data
  */
@@ -5775,7 +5355,7 @@ function beginNewFit(el, block) {
 }
 
 /**
- * The blocks a row under the pointer in the editor's lists stands for, lit on the canvas (the urd-light message: the Phone panel's order, a stack lighting all of its blocks), or the section a heading of the order's column stands for; an empty list and no section take the light away.
+ * Lights the blocks, or the section, a row under the pointer in the editor's lists stands for (urd-light); an empty list and no section clear the light.
  * @param {string[]} ids
  * @param {string} [sectionId]
  */
@@ -5788,7 +5368,7 @@ export function lightBlocks(ids, sectionId) {
 }
 
 /**
- * Pins a block on the phone where it stands now (the urd-phone-pin message: the Phone panel's row menu), as its bar's pin does; nothing for a block that does not flow in the phone view.
+ * Pins a block on the phone where it stands (urd-phone-pin), as its bar's pin does; a block that does not flow in the phone view is left as it is.
  * @param {string} blockId
  */
 export function pinOnPhoneAt(blockId) {
@@ -5796,8 +5376,7 @@ export function pinOnPhoneAt(blockId) {
 }
 
 /**
- * Opens the image editor on a block's picture as a press on it does, measured as the canvas draws it and in the view it is drawn in (the urd-ask-picture message: «Open the image editor» in the block's menu).
- * A block not drawn in this view asks without its measures.
+ * Opens the image editor on a block's picture (urd-ask-picture), measured as drawn in this view; a block not drawn here asks without measures.
  * @param {string} sectionId
  * @param {string} blockId
  * @param {'image'|'cover'} kind
@@ -5814,7 +5393,7 @@ export function deselectAll() {
   markActiveVisual(null);
 }
 
-/** Duplicate the selected block (the bridge: «Duplicate» in the element menu, and Ctrl+D with focus in the admin panels, which the editor sends from the desktop view only); in the phone view the copy stands on the phone only (duplicateBlock). */
+/** Duplicates the selected block (the element menu's «Duplicate», Ctrl+D from the admin panels); in the phone view the copy stands on the phone only. */
 export function duplicateSelected() {
   if (!selectedBlockId) return;
   const ctx = document.querySelector(`.urd-block[data-block-id="${selectedBlockId}"]`)?._urdCtx;
@@ -5842,18 +5421,14 @@ function duplicateBlock(section, block) {
   };
   // In the phone view the copy stands on the phone only, right after the line its block stands on.
   post({ type: 'urd-add-block', sectionId: section.id, block: copy, ...phoneAdd(isMobile() ? phoneDropAfter(section, block.id) : null) });
-  // The duplicate becomes the selected block: the re-render after
-  // urd-add-block selects it (enhanceSection reads selectedBlockId), and
-  // the editor follows via urd-select-block so the Properties panel shows
-  // the copy.
+  // The duplicate becomes the selected block, which the re-render after urd-add-block selects, and the editor follows (urd-select-block).
   document.querySelectorAll('.urd-block.urd-selected').forEach((b) => b.classList.remove('urd-selected'));
   selectedBlockId = copy.id;
   post({ type: 'urd-select-block', sectionId: section.id, blockId: copy.id });
 }
 
 /**
- * Visible grid overlay in the section while dragging/resizing, so the snapping has something visible to snap against.
- * The lines, the dots or the columns are drawn with CSS gradients at the exact cell size (preview.css, by `look`), the cells counted out from the content's middle.
+ * A grid overlay in the section while a block is dragged or resized: lines, dots or columns at the cell size (preview.css), counted from the content's middle.
  * @param {HTMLElement} host
  * @param {{size: number}} grid
  * @param {'lines'|'dots'|'columns'} look
@@ -5863,8 +5438,7 @@ function showGridOverlay(host, grid, look) {
   overlay.className = 'urd-grid-overlay';
   overlay.dataset.look = look;
   overlay.style.setProperty('--urd-grid', `${grid.size}px`);
-  // In the content surface, not in the section: the snapping is relative
-  // to the surface, so the cells must start where the blocks start.
+  // In the content surface, which the snapping is relative to.
   canvasOf(host).appendChild(overlay);
   return overlay;
 }
@@ -5886,12 +5460,7 @@ function enhanceBlock(el, block, section, grid, host) {
   const barBody = document.createElement('div');
   barBody.className = 'urd-bar-body';
   toolbar.appendChild(barBody);
-  // The toolbar sits above the block; at the top of the page or right
-  // below the menu there is no visible room there (above the document top
-  // or behind the menu). Then it flips below the block. Measured against
-  // the VIEWPORT when the pointer hits the block (and on selection): the
-  // position is changed by both dragging and scrolling, which never
-  // re-render.
+  // The toolbar flips below the block where the page's top or the menu leaves no room above, measured on the viewport as the pointer enters and on selection.
   const updateToolbarSide = () => {
     const cs = getComputedStyle(document.documentElement);
     const navH = Number.parseFloat(cs.getPropertyValue('--urd-nav-h-base'))
@@ -5901,7 +5470,7 @@ function enhanceBlock(el, block, section, grid, host) {
     toolbar.classList.toggle('urd-toolbar-under', under);
     placeToolbar(under);
   };
-  // An upright bar that would run past the canvas's right edge is moved left by what runs over, once it is drawn (shiftInto in place.js), so every tool stays in reach; the move is in the block's own px, the block's own scale taken out.
+  // An upright bar that would run past the canvas's right edge is moved left by what runs over (shiftInto), in the block's own unscaled px.
   const keepToolbarIn = () => {
     toolbar.style.translate = '';
     if (!toolbar.isConnected || Number.parseFloat(el.style.getPropertyValue('--urd-block-rot'))) return;
@@ -5914,9 +5483,7 @@ function enhanceBlock(el, block, section, grid, host) {
   };
   // The block carries its bar's keeping, for selectBlock to ask for once the block is selected and its bar shows.
   el._urdKeepBar = () => requestAnimationFrame(keepToolbarIn);
-  // On a rotated block the toolbar is anchored at the block's bounding box
-  // on the screen (toolbarAnchor), clear of the content, and turns itself
-  // upright there; unrotated, preview.css places it at the block's own edge.
+  // On a rotated block the toolbar stands upright at its bounding box on screen (toolbarAnchor); unrotated, preview.css places it at the block's edge.
   const placeToolbar = (under = toolbar.classList.contains('urd-toolbar-under')) => {
     const rot = Number.parseFloat(el.style.getPropertyValue('--urd-block-rot')) || 0;
     // A shift kept from an upright bar is never carried onto a turned one; an upright bar is kept inside the canvas anew once drawn.
@@ -5937,7 +5504,7 @@ function enhanceBlock(el, block, section, grid, host) {
   updateToolbarSide();
   el.addEventListener('pointerenter', updateToolbarSide);
 
-  // The image editor is the admin's (PictureEditor.svelte): the block asks it to open, with its frame's shape as drawn here, so the editor's crop window has the frame's real proportions, and whether it is drawn on the phone.
+  // The image editor is the admin's (PictureEditor.svelte): the block asks it to open with its frame's drawn shape, and whether it is drawn on the phone.
   const askPictureEditor = (kind) => {
     const box = (kind === 'cover' ? el.querySelector('.urd-cover') : el.querySelector('.urd-image-frame')) ?? el;
     post({ type: 'urd-picture-edit', kind, sectionId: section.id, blockId: block.id, frameRatio: box.offsetHeight ? box.offsetWidth / box.offsetHeight : 0, frameWidth: box.offsetWidth, frameHeight: box.offsetHeight, phone: mobile });
@@ -5953,7 +5520,7 @@ function enhanceBlock(el, block, section, grid, host) {
     });
   }
 
-  /** A calendar's example events on and off (blocks/calendar-edit.js): pressed while they stand in for its own; the tooltip tells why it has none of its own where its feed failed, read again each time the calendar is drawn, since the feed answers after the bar is. */
+  /** Turns a calendar's example events on and off (blocks/calendar-edit.js), its tooltip read again each time the calendar is drawn. */
   const exampleButton = () => {
     const btn = barButton(EXAMPLES_SVG, '', () => {
       toggleCalendarExamples(block.id);
@@ -5984,10 +5551,9 @@ function enhanceBlock(el, block, section, grid, host) {
   moveHandle.dataset.cap = ta('canvas.cap.move');
   barBody.appendChild(moveHandle);
   const MOBILE_PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
-  // The pin crossed out: unpin.
   const MOBILE_UNPIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M3 3l18 18"/></svg>';
 
-  // In the phone view the pin stands first after ⠿, in the same place on every block: on a block that flows, the pin, which pins it where it stands now (it then keeps that spot and leaves the phone's order, ADR-0019); on a pinned block, the crossed pin, which unpins it back into the phone's order with its cells kept (urd-phone-unpin).
+  // In the phone view the pin stands first after ⠿: it pins a flowing block where it stands, and crossed, it unpins a pinned one (urd-phone-unpin).
   if (mobile) {
     const pinned = !flowsOnPhone;
     const pinBtn = document.createElement('button');
@@ -6001,7 +5567,7 @@ function enhanceBlock(el, block, section, grid, host) {
     barBody.appendChild(pinBtn);
   }
 
-  // Flowing mobile block: arrows that move it in the reading order (stepPhone: its exception, its stack or the custom order). Pinned blocks do not take part in the flow.
+  // A flowing block's arrows move it in the phone's reading order (stepPhone); pinned blocks are not in the flow.
   if (flowsOnPhone) {
     for (const [svg, dir, key] of [[ORDER_UP_SVG, -1, 'canvas.orderUp'], [ORDER_DOWN_SVG, 1, 'canvas.orderDown']]) {
       const btn = document.createElement('button');
@@ -6015,7 +5581,7 @@ function enhanceBlock(el, block, section, grid, host) {
   // The pin as the block's menu and the Phone panel reach it (pinOnPhoneAt): only a block that flows in the phone view, which measures where it stands.
   el._urdPinOnPhone = flowsOnPhone ? pinOnPhone : null;
 
-  // A block pinned on the phone carries the pin mark; a block placed for the phone that still flows (its cells, its height) carries none, and a ↺ on its bar resets ONLY this block's override (back in sync with desktop).
+  // A block pinned on the phone carries the pin mark; one placed for the phone that still flows carries none, and its ↺ resets only its own override.
   if (mobile && !flowsOnPhone) {
     const pin = document.createElement('div');
     pin.className = 'urd-mobile-pin';
@@ -6034,7 +5600,7 @@ function enhanceBlock(el, block, section, grid, host) {
     barBody.appendChild(resetBtn);
   }
 
-  // A block with words of its own on the phone (ADR-0033): a mark in the phone view, beside the pin of a block pinned there, standing from the first word typed there, since the typing draws nothing again.
+  // A block with words of its own on the phone (ADR-0033) is marked in the phone view from the first word typed there.
   if (mobile && PHONE_WORDS[block.type]) {
     const markWords = () => {
       if (el.querySelector(':scope > .urd-phone-words')) return;
@@ -6064,7 +5630,7 @@ function enhanceBlock(el, block, section, grid, host) {
     return deleteBtn;
   };
 
-  // In the phone view the block's design on a phone and its menu are one press away too: the design button opens the design it draws on a phone where it has one (the calendar's phone view, PHONE_DESIGNS), its design otherwise, and the gear its menu.
+  // In the phone view the design button opens the block's phone design where it has one (PHONE_DESIGNS, the calendar), else its design; the gear opens its menu.
   if (mobile) {
     if (hasDesigns(block)) barBody.appendChild(designButton(el, section, block, block.type === 'calendar' || Boolean(PHONE_DESIGNS[block.type])));
     if (block.type === 'calendar') barBody.appendChild(exampleButton());
@@ -6077,10 +5643,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   const form = barForm();
-  // Mobile visibility: phone = the block is shown on mobile, crossed-out
-  // phone = it is hidden (hideMobile). The icon IS the state (a drawn
-  // SVG, not emoji); the tooltip explains the click. The full bar draws it,
-  // and the shorter bars where «Phone button on the bar» asks for it.
+  // The phone button shows or hides the block on the phone (hideMobile), its icon the state; the shorter bars draw it where «Phone button on the bar» asks.
   const PHONE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/></svg>';
   const PHONE_OFF_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.2h3"/><path d="M3.5 3.5l17 17"/></svg>';
   const phoneButton = () => {
@@ -6142,10 +5705,7 @@ function enhanceBlock(el, block, section, grid, host) {
     dupBtn.addEventListener('click', () => duplicateBlock(section, block));
     barBody.appendChild(dupBtn);
 
-    // Block menu: all the block settings in a floating menu by the block
-    // (the calendar pattern). The menu itself lives in the editor (the
-    // same controls as Properties); only the position is reported here.
-    // The design picker one press away, beside the gear, on a block that has designs.
+    // The block's settings menu is the editor's, placed by the block; the design picker stands beside the gear on a block with designs.
     if (hasDesigns(block)) barBody.appendChild(designButton(el, section, block, false));
     barBody.appendChild(menuButton(el, section, block));
     barBody.appendChild(deleteButton());
@@ -6153,7 +5713,7 @@ function enhanceBlock(el, block, section, grid, host) {
 
   // The shorter bars: the acts the full bar holds besides these stand in the right-click menu under ⋮.
   if (!mobile && form !== 'full') {
-    // With small panels the bar starts with a word for the block's main act: the image or cover editor, or its settings; a text is written where it stands, at a press on its words, so it needs no word of its own.
+    // With small panels the bar starts with a word for the block's main act: the image or cover editor, else its settings.
     const picture = block.type === 'image' || coverEditable;
     const leadIsSettings = form === 'panels' && !picture;
     if (form === 'panels') {
@@ -6164,7 +5724,7 @@ function enhanceBlock(el, block, section, grid, host) {
       const lead = barButton(word, tip, run, 'urd-edit-lead');
       barBody.appendChild(picture ? lead : opensMenu(lead));
     }
-    // Every group a tool: the word for the picture's own editor where it has one, then a tool for each group of its menu, which the right-click menu under ⋮ follows with the rest.
+    // Every group a tool: the picture editor's word where it has one, then a tool per group of its menu; the right-click menu under ⋮ holds the rest.
     if (form === 'groups' && picture) {
       const word = ta(coverEditable ? 'canvas.bar.editCover' : 'canvas.bar.editImage');
       barBody.appendChild(barButton(word, ta(coverEditable ? 'canvas.editCover' : 'canvas.editImage'), () => askPictureEditor(coverEditable ? 'cover' : 'image'), 'urd-edit-lead'));
@@ -6185,7 +5745,7 @@ function enhanceBlock(el, block, section, grid, host) {
     }
     // The phone button on the shorter bars where «Phone button on the bar» asks for it, before the gear.
     if (barPhone()) barBody.appendChild(phoneButton());
-    // The gear stands on the short bar, and on the bar of tools where nothing else opens the settings (not after the word «Settings», not where every group is a tool), or wherever «Settings gear on the bar» asks for it.
+    // The gear stands on the short bar, on the bar of tools where nothing else opens the settings, and wherever «Settings gear on the bar» asks.
     if (form === 'short' || (form === 'panels' && !leadIsSettings) || barGear()) barBody.appendChild(menuButton(el, section, block));
     barBody.appendChild(deleteButton());
     barBody.appendChild(moreButton((x, y, from) => openContextMenu(el, x, y, from)));
@@ -6198,16 +5758,13 @@ function enhanceBlock(el, block, section, grid, host) {
   const resizeHandle = document.createElement('div');
   resizeHandle.className = 'urd-edit-resize';
   resizeHandle.dataset.edge = 'se';
-  // The handle of a block that follows its content changes its width only
-  // (ADR-0025), and says so; on a block whose size is its frame it says that
-  // Shift keeps the ratio.
+  // The handle's tooltip: width only on a block that follows its content (ADR-0025), Shift keeping the ratio on one sized by its frame.
   resizeHandle.title = flowsOnPhone ? ta('canvas.dragPhoneSize')
     : mobile ? ta(FIT_BY_WIDTH.has(block.type) ? 'canvas.dragResizeRatio' : 'canvas.dragResize')
     : followsContent(block) ? ta('canvas.dragResizeWidth')
     : FIT_BY_WIDTH.has(block.type) ? ta('canvas.dragResizeRatio') : ta('canvas.dragResize');
   el.appendChild(resizeHandle);
-  // The other edges and corners take the same drag with the opposite edge held still, on the desktop frame.
-  // On the desktop a block that follows its content gets the left and right edges only, since its height is the content's; on the phone every block has all of them, its width and height there its own, words never cut off (0.7.3.18).
+  // The other edges and corners drag with the opposite edge held still: on the desktop a block that follows its content gets the left and right only.
   const edgeHandles = [];
   {
     const edges = mobile || !followsContent(block) ? ['n', 's', 'e', 'w', 'ne', 'sw', 'nw'] : ['e', 'w'];
@@ -6224,9 +5781,7 @@ function enhanceBlock(el, block, section, grid, host) {
     }
   }
 
-  // Pinning is otherwise invisible until you scroll: a pin in the corner
-  // shows that the block has "Pin on scroll" enabled. On mobile only
-  // screen docking applies, so the pin follows that boundary.
+  // A pin in the corner marks a block set to «Pin while scrolling»; on the phone only «To the screen» pins.
   if (block.sticky && (!mobile || block.sticky.mode === 'screen')) {
     const PIN_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></svg>';
     const pin = document.createElement('div');
@@ -6239,16 +5794,12 @@ function enhanceBlock(el, block, section, grid, host) {
   wireDrag(moveHandle, 'move');
   wireDrag(resizeHandle, 'resize');
   for (const h of edgeHandles) wireDrag(h, 'resize', { edge: { x: h.dataset.edge.includes('w') ? -1 : h.dataset.edge.includes('e') ? 1 : 0, y: h.dataset.edge.includes('n') ? -1 : h.dataset.edge.includes('s') ? 1 : 0 } });
-  // The whole block surface can also be dragged directly (⠿ remains). A
-  // threshold keeps clicks as clicks; editable text and handles are
-  // exempt.
+  // The whole block surface drags too, past a threshold so clicks stay clicks; editable text and handles are exempt.
   wireDrag(el, 'move', { surface: true });
   // Links/images must never start the browser's own drag behavior.
   el.addEventListener('dragstart', (event) => event.preventDefault());
 
-  // Rotation handle (desktop only: rot lives in the desktop frame).
-  // Dragged around the block's center; snaps to 15° steps, Shift gives a
-  // free angle.
+  // The rotation handle, on the desktop frame only: dragged round the block's centre in 15° steps, free with Shift.
   if (!mobile) {
     const rotHandle = document.createElement('div');
     rotHandle.className = 'urd-edit-rotate';
@@ -6338,7 +5889,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * The selection's other blocks on this section's phone, dragged with this one when it is pressed as one of a set selected together: each with its block, its element and whether it is pinned to rows.
+   * The set's other blocks dragged with this one on the phone, when it is pressed as one of a multi-selection.
    * @returns {Array<{block: object, node: HTMLElement, pinned: boolean}>}
    */
   function phoneSet() {
@@ -6351,7 +5902,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * A block of a set dragged on the phone lifted out of the row grid as the dragged one is, at its place: with `keep`, a hold of its size where it stood (its slot, where it is pinned while the page scrolls), so the grid keeps its layout; without, its rows let go, and the grid reflows.
+   * Lifts a set's block out of the phone's row grid at its place; with `keep` a hold of its size stays where it stood, else the grid reflows.
    * @returns {{left: number, top: number, w: number, h: number, hold: HTMLElement|null}}
    */
   function liftSetMember(flowEl, node, keep) {
@@ -6397,7 +5948,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * A placement on the phone's rows for a block lifted out of the grid, from where it stands: its left edge and width in percent of the canvas, its first row read on the grid's tracks as they are, and its rows; its layer and turn kept.
+   * A lifted block's placement on the phone's rows where it stands: left and width in percent, its first row on the grid's tracks and its rows; layer and turn kept.
    * @param {HTMLElement} flowEl
    * @param {HTMLElement} node
    * @param {object} b The block
@@ -6423,7 +5974,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * The block out of the row grid into free positioning at its place on the screen, a hold of its size left where it stood (its slot, where it is pinned while the page scrolls), so the grid keeps its layout while the block is dragged and the place it left reads as its own.
+   * Lifts the block out of the row grid into free positioning at its place, a hold of its size left where it stood, so the grid keeps its layout.
    * @returns {{at: {left: number, top: number, w: number, h: number}, hold: HTMLElement}}
    */
   function liftOnPhone(flowEl, handle, event) {
@@ -6450,10 +6001,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * The section shown as a drop on the phone would leave it, while the dragged block is held over a place (flowDrag): the section drawn out of sight with the change written in (phoneChangeApplied), each block's place there measured, and the shown blocks gliding to those places by transform, the dragged block's place a dashed box; the place the block left keeps its room unmarked.
-   * A change of none puts every block back where it stood; the end takes the box away, the section then drawn again from the draft.
-   * A block sized in place (`lifted` false, its handles) glides to its own new size and place with the others, and has no dashed box.
-   * The other blocks of a set dragged with it (`set`) are carried with it, and each flowing one has a dashed box of its own where it lands.
+   * Shows the section as a drop on the phone would leave it: drawn out of sight with the change, measured, and the blocks glided there, each landing dashed.
    * @returns {{show: (change: object|null) => void, placed: () => Map<string, object>|null, mine: () => object|null, end: () => void}}
    */
   function phonePreview(flowEl, hold, { lifted = true, set = [] } = {}) {
@@ -6541,7 +6089,7 @@ function enhanceBlock(el, block, section, grid, host) {
           if (!moved.has(node)) moved.set(node, { transform: node.style.transform, width: node.style.width, height: node.style.height, minHeight: node.style.minHeight, transition: node.style.transition });
           node.style.transition = ease;
           node.style.width = `${t.width}px`;
-          // A block whose height the change sets stands at it, its own least height let go for the while; it is measured at its own height first, so a change that keeps the height shown keeps it.
+          // A block whose height the change sets stands at it, its least height let go meanwhile; measured at its own height first, so a kept height stays.
           Object.assign(node.style, { height: moved.get(node).height, minHeight: moved.get(node).minHeight });
           if (Math.abs(t.height - node.offsetHeight) > 1) Object.assign(node.style, { height: `${t.height}px`, minHeight: '0px' });
           plan.push([node, t]);
@@ -6630,7 +6178,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * A flowing block lifted with the keys on the phone (Alt with an arrow): the arrows walk where it will land through the places phoneKeyDrops lists, Up and Down along the order, Left and Right beside the place's unit, and the block glides to each place in the landing's dashed outline while the others make room (phonePreview). Enter lands it as a release does, and Escape, a press anywhere or the selection leaving the block puts everything back.
+   * Carries a flowing block on the phone with Alt and the arrows through phoneKeyDrops' places; Enter lands it, and Escape or a press elsewhere puts it back.
    */
   function phoneCarry() {
     const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
@@ -6700,14 +6248,13 @@ function enhanceBlock(el, block, section, grid, host) {
   el._urdLift = phoneCarry;
 
   /**
-   * A flowing block dragged on the phone canvas (0.7.3.15): it follows the pointer over the section, the eight cell columns shown, the section showing as it goes where the block would land (the preview, the other blocks gliding to their places), and lands where phoneDropAt reads the pointer over the other units: before or after one, or the line of units it stands in, across the row, beside one in the columns free there, or above or below one in its column as a stack (phoneDropChange), the change posted as one undo step; over its own place it lands nowhere.
-   * The landing place is marked as the drag goes: a line before or after a line of units, the columns it will take beside a unit, or the half of a block it goes above or below in that block's column.
+   * Drags a flowing block on the phone: it follows the pointer, the section previews where it lands (phoneDropAt, phoneDropChange), and the drop is one undo step.
    */
   function flowDrag(handle, event, opts = {}) {
     const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
     if (!flowEl) return;
     const flowBefore = flowEl.offsetHeight;
-    // A block pressed as one of a set selected together carries the set: its flowing blocks land with it in the order, and the whole set is pinned where it stands over the room.
+    // A block pressed as one of a set carries the set: its flowing blocks land with it in the order, and over the room the set is pinned where it stands.
     const set = phoneSet();
     const setIds = new Set([block.id, ...set.map((m) => m.block.id)]);
     const followers = phoneTree(section.blocks, phoneSetupOf(section)).flatMap((n) => (n.children ? n.children.map((c) => c.id) : [n.id])).filter((id) => set.some((m) => !m.pinned && m.block.id === id));
@@ -6731,7 +6278,7 @@ function enhanceBlock(el, block, section, grid, host) {
     let pinning = false;
     /** The smart guides of the block while it is held over the room, where it is placed freely (phoneGuides). */
     let guides = null;
-    /** The other blocks one by one as the drag began, the span the block keeps its place in among them (phoneHomeSpan), and the band that shows its room above it while it is held there. */
+    /** The other blocks as the drag began, the span the block keeps its place in (phoneHomeSpan), and the band that shows its room while it is held there. */
     let neighbours = [];
     let home = null;
     let band = null;
@@ -6774,7 +6321,7 @@ function enhanceBlock(el, block, section, grid, host) {
       Object.assign(band.style, { top: `${top}px`, height: `${Math.max(0, mine.top - top)}px` });
       band.firstChild.textContent = `${Math.round(Math.max(0, mine.top - top))} px`;
     };
-    /** The set's other blocks carried by the dragged block's move: the flowing ones always, the pinned ones over the room, where the set is placed freely, and back in their places elsewhere. */
+    /** Carries the set's other blocks with the move: the flowing ones always, the pinned ones over the room, else back in their places. */
     const carry = () => {
       if (!set.length) return;
       const dx = (parseFloat(el.style.left) || 0) - at.left;
@@ -6835,7 +6382,7 @@ function enhanceBlock(el, block, section, grid, host) {
       el.style.left = `${at.left + moved.dx}px`;
       el.style.top = `${at.top + moved.dy}px`;
       const fr = flowEl.getBoundingClientRect();
-      // The drop is read on the units where the preview shows them, so what is seen is what is aimed at; over the box where the block will land, and the gaps the preview opens right above and below it, the result stands as it is. Any other gap is read on the units as the drag began, since the preview opens gaps of its own as the blocks make room, and a reading in one of those would move the blocks again.
+      // The drop is read on the units as the preview shows them over the landing box and its gaps, and elsewhere on the units as the drag began.
       const x = ev.clientX - fr.left;
       const y = ev.clientY - fr.top;
       const within = (b) => b && x >= b.left && x <= b.right && y >= b.top && y <= b.bottom;
@@ -6916,7 +6463,7 @@ function enhanceBlock(el, block, section, grid, host) {
       ev.stopPropagation();
       cancel();
     };
-    /** The block pinned on the phone where it was let go over the section's room, and the set dragged with it each where it stands, read on the grid without them, the room below the blocks keeping the section's height; one undo step. */
+    /** Pins the block and its set where they were let go over the room, read on the grid without them, the room keeping the section's height; one undo step. */
     const pinWhereDropped = () => {
       hold?.remove();
       for (const m of set) m.hold?.remove();
@@ -6954,8 +6501,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * A press on the words of the selected block on the phone that moves drags it into the phone's order and cells (flowDrag), as a press on any other block does: the words let go of the selection the press began, and choose none while the block is dragged.
-   * A click puts the caret, as the text's own; a press held still first (HOLD_TO_SELECT_MS) chooses words as it moves, as a long press does on a phone.
+   * A press that moves on the selected block's words on the phone drags it (flowDrag); a click puts the caret, a press held still (HOLD_TO_SELECT_MS) chooses words.
    */
   function moveToDrag(down) {
     const start = { x: down.clientX, y: down.clientY };
@@ -6980,9 +6526,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * A flowing block's handles on the phone (ADR-0019), by the edge they are dragged by; the desktop keeps its own size.
-   * The left and right edges set its width in the cells with the other edge held still, snapping to the row's quarters or to any of the eight columns with Alt; a block in a stack sizes its whole stack, which shares one cell, and a cell holding words goes no narrower than the words floor lets it stand.
-   * The top and bottom edges set its own height on the phone in the row grid's steps, snapping to the bottom of a block or stack beside it on its line («Same height»), and a corner sets both, the height once the pointer has moved a step up or down. A block with words stops at its words' height, where it follows them again.
+   * A flowing block's handles on the phone (ADR-0019): the side edges set its width in the cells, the top and bottom its height in row steps, a corner both.
    * @param {HTMLElement} handle
    * @param {PointerEvent} event
    * @param {{x: number, y: number}} [edge] The edge dragged, -1, 0 or 1 across and down; the bottom-right corner by default
@@ -7137,8 +6681,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * The room below the section's blocks on the phone that keeps the section as tall as it stood before a block was placed in it, or null where the room stays as it is.
-   * The room takes up what the blocks grow, down to none, and gives back what they shrink, so a block placed inside the section never moves its end.
+   * The room below the blocks on the phone that keeps the section as tall as before a block was placed in it, down to none; null where the room stays.
    * @param {HTMLElement} flowEl
    * @param {number} before The flow's height before the block was placed
    * @returns {number|null}
@@ -7150,7 +6693,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * The section's other blocks pinned on the phone, top first, each with its top in the flow as drawn now, so a change to the grid can keep them where they stand (keepPinned).
+   * The section's other blocks pinned on the phone, top first, each with its top in the flow as drawn now (for keepPinned).
    * @param {HTMLElement} flowEl
    * @param {Set<string>|null} [skip] The blocks of a set dragged with it, which move themselves
    * @returns {Array<{node: HTMLElement, top: number}>}
@@ -7164,8 +6707,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * Puts the other blocks pinned on the phone back where they stood after the grid changed under them, top first: a row is a track of the grid, and the tracks change as a block is pinned, moved or let go.
-   * Each is read on the grid without it, so its new row starts where its top stood, and is drawn there at once; the row is weighed against the one stored, so a block already put back during a drag is still told.
+   * Puts the other pinned blocks back where they stood after the tracks change, top first, each row read on the grid without it and weighed against the stored row.
    * @param {HTMLElement} flowEl
    * @param {Array<{node: HTMLElement, top: number}>} tops As pinnedTops read them before the change
    * @returns {Array<{blockId: string, frame: object}>} The frames that changed
@@ -7190,8 +6732,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * The smart guides of a block dragged freely on the phone (snap-model.js), as on the desktop canvas: the other blocks' edges and middles, the content's edges and middle, and the gaps the blocks keep between them.
-   * They are read once as the drag begins, in the flow's px; within reach the block snaps onto the nearest, and every line it then stands on is drawn in a layer over the flow and the dragged block, a line of the content only a little past the block.
+   * Smart guides for a block dragged freely on the phone (snap-model.js), as on the desktop: read as the drag begins, snapped to and drawn over the flow.
    * @param {HTMLElement} flowEl
    * @param {Set<string>|null} [skip] The blocks of a set dragged with it, which give no lines
    * @returns {{snap: (box: {left: number, top: number, w: number, h: number}, free: boolean) => {left: number, top: number}, clear: () => void, done: () => void}}
@@ -7259,7 +6800,7 @@ function enhanceBlock(el, block, section, grid, host) {
     const clear = settle;
     /** Takes the layer away as the drag ends. */
     const done = () => layer.remove();
-    /** The box moved onto the nearest line or equal gap within reach, with the lines it then stands on drawn; Ctrl or Cmd, or the section's snapping off, leave it free. */
+    /** The box moved onto the nearest line or equal gap within reach, its lines drawn; Ctrl or Cmd, or snapping off, leave it free. */
     const snap = (box, free) => {
       if (free) {
         settle();
@@ -7285,8 +6826,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * The block pinned to rows of its own on the phone where it stands now, as a drag on its rows would pin it: from its row in the grid's tracks, in its cells where it stands in some (ADR-0019 decision 2), else at its width and left edge in percent.
-   * A block that follows its words spans the tracks that hold it, its own line among them; any other spans its height in rows, since a pinned block is as tall as its rows.
+   * Pins the block to rows of its own on the phone where it stands: its row from the grid's tracks, its cells or else width and left in percent, its height in rows.
    */
   function pinOnPhone() {
     const flowEl = canvasOf(host).querySelector(':scope > .urd-flow');
@@ -7331,13 +6871,7 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * Mobile drag: pins ONE block to the row grid (ADR-0019). During the
-   * drag the element is positioned absolutely in the flow surface, so the
-   * rest of the grid reflows around it and shows the layout the block is
-   * being pinned into. On release the placement is converted to row
-   * tracks via the actual track heights (grown tracks are taller than
-   * MOBILE_ROW), the DOM is converted in place and the editor records it
-   * via urd-move with frameKey 'mobile'.
+   * Drags a block pinned to the phone's row grid (ADR-0019): placed freely while the grid reflows, then turned into rows and posted (urd-move, frameKey 'mobile').
    */
   function mobileDrag(handle, event, kind, opts = {}) {
     const canvas = canvasOf(host);
@@ -7366,8 +6900,7 @@ function enhanceBlock(el, block, section, grid, host) {
     // A surface drag only starts after a small threshold, so clicks remain clicks.
     const threshold = opts.surface ? 4 : 0;
     let started = false;
-    // Every edge and corner sizes the block on its rows with the opposite edge held still (0.7.3.18).
-    // A block that follows its content stands at least as tall as its content needs (ADR-0025): a pull under it is stopped at the content's edge with the same mark as on the desktop, and a pull past it gives it rows of its own.
+    // Edges and corners size the block on its rows, the opposite edge held; one that follows its content stops at the content's edge, marked (ADR-0025).
     const edge = kind === 'resize' ? (opts.edge ?? { x: 1, y: 1 }) : { x: 0, y: 0 };
     const hug = kind === 'resize' && followsContent(block);
     const contentH = hug ? Math.round(contentHeight(el)) : 0;
@@ -7377,7 +6910,7 @@ function enhanceBlock(el, block, section, grid, host) {
     let readout = null;
     /** Whether the block was pinned on the phone, so it is drawn back over the grid from its new place once the drag ends. */
     let restick = false;
-    /** The block's landing, a dashed frame of its size behind it at the row it will be pinned into, as a drag in the phone's order shows where a block lands; the tracks are read once the block is out of the grid. */
+    /** The block's landing: a dashed frame of its size at the row it will be pinned into, the tracks read once the block is out of the grid. */
     let landing = null;
     /** The landings of the set's other blocks, in the set's order. */
     const setLandings = [];
@@ -7398,9 +6931,7 @@ function enhanceBlock(el, block, section, grid, host) {
       // The section keeps its height while the block is out of the grid, the grid's tracks at their own heights from its top.
       flowHeld = { minHeight: flowEl.style.minHeight, alignContent: flowEl.style.alignContent };
       Object.assign(flowEl.style, { minHeight: `${flowBefore}px`, alignContent: 'start' });
-      // A block pinned on the phone comes back from over the grid (render.js stickOnPhone), and its slot leaves, so the grid shows the layout it is placed into.
-      // Moving the block lets go of the pointer its handle held, so the handle takes it again.
-      // A block standing in a cell with others (render.js, phoneCellCss) comes out of the cell the same way, and the section is drawn again as it lands.
+      // A block pinned over the grid (stickOnPhone) or in a shared cell (phoneCellCss) comes back into the flow, its slot gone; its handle takes the pointer again.
       const cell = el.parentElement?.classList.contains('urd-cell') ? el.parentElement : null;
       // A block pinned in cells leaves its columns, so it moves over the whole row, and the section is drawn again as it lands.
       if (el.style.gridColumn) {
@@ -7519,7 +7050,7 @@ function enhanceBlock(el, block, section, grid, host) {
       guides?.done();
       if (flowHeld) Object.assign(flowEl.style, flowHeld);
     };
-    // A cancelled drag of a block on its rows draws the section again, which puts the block back in its place, over the grid with its slot where it is pinned while the page scrolls.
+    // A cancelled drag draws the section again, which puts the block back in its place.
     const cancel = (ev) => {
       if (other(ev)) return;
       finish();
@@ -7531,9 +7062,7 @@ function enhanceBlock(el, block, section, grid, host) {
       finish();
       if (!started) return;
 
-      // The row index is read against the track heights WITHOUT the block
-      // (it is absolutely positioned now), which is exactly the grid it is
-      // being pinned into.
+      // The row is read on the tracks without the block, now placed absolutely: the grid it is pinned into.
       const tracks = getComputedStyle(flowEl).gridTemplateRows
         .split(' ').map(parseFloat).filter(Number.isFinite);
       const rect = el.getBoundingClientRect();
@@ -7566,7 +7095,7 @@ function enhanceBlock(el, block, section, grid, host) {
       const autoGrow = autoGrows(block, window.Urd.blocks.get(block.type));
       Object.assign(el.style, mobilePlacementToCss(placement, block.frames.desktop, { autoGrow }));
       for (const { m, placement: p } of placed) pinSetMember(m.node, m.block, p);
-      // The other pinned blocks stay where they stood, and a block moved inside the section leaves it as tall as it was: the room below its blocks makes up the difference.
+      // The other pinned blocks stay where they stood, and after a move the room below the blocks keeps the section's height.
       const others = kind === 'move' ? keepPinned(flowEl, otherTops) : [];
       const room = kind === 'move' ? roomKeeping(flowEl, flowBefore) : null;
 
@@ -7584,35 +7113,26 @@ function enhanceBlock(el, block, section, grid, host) {
   }
 
   /**
-   * Shared drag logic for moving and resizing. Pixels are translated to
-   * grid units and rounded continuously, so the block snaps visibly while
-   * dragging. On release the new frame is reported to the editor.
+   * The drag for moving and resizing: the block snaps to the grid as the pointer moves, and the new frame is posted on release.
    */
   function wireDrag(handle, kind, opts = {}) {
     // The words the last press on the desktop began on, in a block not yet selected: released without a drag, the press writes there at once (writeAt).
     let pressedText = null;
     handle.addEventListener('pointerdown', (event) => {
       if (opts.surface) {
-        // In the Clean view a press is the published page's: no block is selected or dragged, so a link, a calendar's event, a document's fold and a links row answer as they do for a visitor, and the texts are plain text (urd.js).
+        // In the Clean view a press is the published page's: no block is selected or dragged, and links, events and folds answer as for a visitor (urd.js).
         if (document.body.classList.contains('urd-chrome-off')) return;
         const target = eventTarget(event);
-        // Editable text is only exempt when the block is ALREADY selected (then the text is being edited).
-        // An unselected block drags freely from the text too: a click without a drag selects it and writes where it was pressed (writeAt).
-        // Every block's own editable text counts: the rich text block's, and the plain-text cells, numbers, quotes and events the other blocks mark with plaintext-only.
-        // On the phone a press that moves on those words drags a flowing block all the same (moveToDrag), and the text keeps its click, and its words are chosen by a press held still first.
+        // Editable text is exempt only in the selected block; an unselected block drags from its text too, and a click writes where it was pressed (writeAt).
         if (target?.closest(EDITABLE_TEXT) && selectedBlockId === block.id && multiIds.size <= 1) {
           if (mobile && !Number.isFinite(block.frames.mobile?.row) && event.button === 0) moveToDrag(event);
           return;
         }
-        // The cart button follows the text block's two-step model: selected
-        // block = native click (the drawer opens), unselected block =
-        // surface drag and selection.
+        // The cart and share buttons take two steps: a native click in the selected block, a drag and selection in an unselected one.
         if (target?.closest('.urd-cart-button, .urd-share-button') && selectedBlockId === block.id && multiIds.size <= 1) return;
         // A product card of the selected block follows the same two steps: its click opens the product's entry in the Collections panel (blocks/product.js).
         if (!mobile && target?.closest('.urd-product-card') && selectedBlockId === block.id && multiIds.size <= 1) return;
-        // An event of the selected calendar keeps its click while editing, where the card's words are rewritten.
-        // The Year wheel's months are buttons drawn in SVG and follow the same two steps: a click picks the month.
-        // An unselected calendar drags from its events and months too.
+        // The selected calendar's events and Year wheel months keep their click; an unselected calendar drags from them.
         const calendarPress = target?.closest('.urd-cal-event, .urd-cal-wheel-seg, .urd-cal-wheel-month');
         if (calendarPress && selectedBlockId === block.id && multiIds.size <= 1) return;
         // A document's contents are its navigation: a press on an entry jumps to its part at once, the block selected or not (the click below).
@@ -7620,9 +7140,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // A document's fold-outs (the privacy page's questions, the contents folded into one row) follow the same two steps: a press on the selected block's row opens it.
         const foldPress = target?.closest('.urd-doc-part > summary, .urd-doc-fold > summary');
         if (foldPress && selectedBlockId === block.id && multiIds.size <= 1) return;
-        // The plugin config panels are guarded by class name, the old
-        // reference plugin names included: plugin copies in user repos
-        // keep them forever (see the compatibility surface in SCHEMA.md).
+        // The plugin config panels are matched by class name, the reference plugins' old names included (the compatibility surface in SCHEMA.md).
         if (target?.closest('.urd-edit-toolbar, .urd-edit-resize, .urd-edit-rotate, button:not(.urd-cart-button), input, select, textarea, dialog, .urd-collection-editable, .urd-collection-image-edit, .urd-faq-q, .urd-cal-config, .urd-form-config, .urd-kal-config, .urd-skjema-config, .urd-kart-config')) return;
         pressedText = !mobile && event.button === 0 && !event.shiftKey && !(multiIds.size > 1 && multiIds.has(block.id)) ? target?.closest(EDITABLE_TEXT) ?? null : null;
         event.preventDefault();
@@ -7636,12 +7154,7 @@ function enhanceBlock(el, block, section, grid, host) {
       }
       handle.setPointerCapture(event.pointerId);
 
-      // Screen-docked block: the drag moves the DOCKING, not the frame.
-      // The block follows the pointer as fixed, and on release the
-      // nearest of the nine anchor points is chosen from where it lands
-      // (nearestDock). A regular drag would release the pinning
-      // (suspendSticky) and teleport the block back to the section the
-      // moment the grab started.
+      // A screen-docked block drags its docking, not its frame: it follows the pointer as fixed, and the release picks the nearest of nine anchors (nearestDock).
       if (kind === 'move' && el.classList.contains('urd-sticky-fixed') && el.dataset.stickyMode === 'screen') {
         const threshold = opts.surface ? 4 : 0;
         let started = threshold === 0;
@@ -7671,8 +7184,7 @@ function enhanceBlock(el, block, section, grid, host) {
               { left: rect.left, top: rect.top, w: rect.width, h: rect.height },
               { w: document.documentElement.clientWidth, h: window.innerHeight, inset: dockInset() },
             );
-            // The dock group comes along: applySticky reads the leader's
-            // dock, and published data must say the same for every member.
+            // The dock group follows: applySticky reads the leader's dock, and the published data gives every member the same.
             const groupId = el.dataset.stickyGroup;
             const members = groupId
               ? [...document.querySelectorAll(`.urd-sticky-able[data-sticky-group="${CSS.escape(groupId)}"]`)]
@@ -7698,7 +7210,7 @@ function enhanceBlock(el, block, section, grid, host) {
         return;
       }
 
-      // Mobile has its own drag mechanics (ADR-0019): a flowing block is dragged into the phone's order and cells, its handles setting its width in the cells and its height there; a block pinned to rows of its own moves and is sized on its rows.
+      // The phone has its own drag (ADR-0019): a flowing block into the order and cells, a block pinned to rows on its rows.
       if (mobile) {
         if (Number.isFinite(block.frames.mobile?.row)) mobileDrag(handle, event, kind, opts);
         else if (kind === 'move') flowDrag(handle, event, opts);
@@ -7707,14 +7219,10 @@ function enhanceBlock(el, block, section, grid, host) {
       }
       const frameKey = 'desktop';
 
-      // A surface drag only starts after a small threshold, so clicks
-      // (selection, caret) remain clicks.
+      // A surface drag starts past a small threshold, so clicks stay clicks.
       const threshold = opts.surface ? 4 : 0;
       let started = threshold === 0;
-      // Pinned blocks are released back to their real place before the
-      // drag writes geometry. A pure click (threshold not passed)
-      // suspends nothing. The pair must be exact: an unmatched resume
-      // would cut short the suspension of another drag in progress.
+      // Pinned blocks go back to their real place before the drag writes geometry, a click suspends nothing, and each suspend has exactly one resume.
       let holdsSticky = false;
       const holdSticky = () => { if (!holdsSticky) { holdsSticky = true; suspendSticky(); suspendPush(); } };
       const dropSticky = () => { if (holdsSticky) { holdsSticky = false; resumeSticky(); resumePush(); } };
@@ -7722,12 +7230,9 @@ function enhanceBlock(el, block, section, grid, host) {
 
       const start = { x: event.clientX, y: event.clientY };
       let orig = { ...(block.frames[frameKey] ?? block.frames.desktop) };
-      // Which edges the resize moves: the corner handle both, an edge handle one, with the opposite edge held still, so a pull on the left or top moves the block's origin as well as its size.
+      // The edges a resize moves: the corner both, an edge handle one; a pull on the left or top moves the origin too.
       const edge = kind === 'resize' ? (opts.edge ?? { x: 1, y: 1 }) : { x: 0, y: 0 };
-      // A block that follows its content keeps its height under the resize
-      // handle (ADR-0025): the box follows the content at the width being
-      // dragged, and a pull up or down is stopped at the content's edge,
-      // with a mark there for as long as the pointer is held.
+      // A block that follows its content keeps its height under the resize (ADR-0025): a pull up or down stops at the content's edge, marked while held.
       const hug = kind === 'resize' && followsContent(block);
       let stop = null;
       if (hug) {
@@ -7739,14 +7244,10 @@ function enhanceBlock(el, block, section, grid, host) {
         stop.appendChild(label);
         el.appendChild(stop);
       }
-      // The size readout beside the handle, and Shift keeping the ratio of a
-      // block whose size is its frame (FIT_BY_WIDTH): the width drives, and
-      // the height follows it in the design's px.
+      // The size readout beside the handle, and Shift keeping the ratio of a block sized by its frame (FIT_BY_WIDTH), the height following the width.
       const readout = kind === 'resize' ? sizeReadout(el) : null;
       const ratio = kind === 'resize' && FIT_BY_WIDTH.has(block.type) && orig.w > 0 ? orig.h / orig.w : 0;
-      // Group drag: if the block is part of a multi-selection, the rest
-      // follow (same delta, clamped so the whole group stays within the
-      // width).
+      // Group drag: the rest of a multi-selection follow by the same delta, clamped so the group stays within the width.
       const canvas = canvasOf(host);
       const groupParts = (kind === 'move' && multiIds.size > 1 && multiIds.has(block.id))
         ? [...canvas.querySelectorAll(':scope > .urd-block')]
@@ -7758,9 +7259,7 @@ function enhanceBlock(el, block, section, grid, host) {
             .filter(Boolean)
         : [];
       const groupKey = groupParts.length ? makeId('mdrag') : null;
-      // The frames under the drag are settled to the boxes the push pass
-      // draws when the drag begins (settleFrames), so the block is placed by
-      // the box the owner sees and the section line holds still.
+      // The frames are settled to the boxes the push pass draws as the drag begins (settleFrames), so the block is placed by the box the owner sees.
       let settle = null;
       let settled = false;
       const settleOnce = () => {
@@ -7770,16 +7269,13 @@ function enhanceBlock(el, block, section, grid, host) {
         orig = { ...block.frames.desktop };
         for (const g of groupParts) g.orig = { ...g.block.frames.desktop };
       };
-      // Frames are physical (x/w in %, y/h in px); the grid controls ONLY
-      // what we snap against: square cells of grid.size px. Snapping off
-      // gives free placement (0.1% / 1 px precision).
+      // Frames are x and w in %, y and h in px; the grid sets only the snap, square cells of grid.size px, and snapping off is free (0.1 % / 1 px).
       const pctPerPx = 100 / canvas.clientWidth;
       const colStep = grid.size * pctPerPx;
       const readableText = kind === 'resize' && block.type === 'text' && textDesign(block.props?.design) === 'plain' && forcesReadable(section, 'desktop');
       const r2 = (v) => Math.round(v * 100) / 100;
       const yMin = yFloor(host);
-      // The grid: on this section, and under a move on every other section
-      // too, since a block released wholly outside its own section moves there.
+      // The grid on this section, and under a move on every other one, since a block released wholly outside its section moves there.
       const overlays = [showGridOverlay(host, grid, draggingGridLook())];
       if (kind === 'move') {
         for (const other of document.querySelectorAll('.urd-section')) {
@@ -7788,11 +7284,7 @@ function enhanceBlock(el, block, section, grid, host) {
       }
       let current = orig;
 
-      // A block carried to the top or bottom edge of the view scrolls the
-      // page under it, so a block can be moved past what is on screen. The
-      // scrolled distance counts as pointer travel, so the block stays under
-      // the pointer while the page moves; the pass runs once per frame while
-      // the pointer rests in the edge band, and stops at the page's ends.
+      // A block carried to the view's top or bottom edge scrolls the page once per frame, the scroll counted as pointer travel, until the page's end.
       const EDGE_PX = 48;
       let scrolled = 0;
       let lastEv = null;
@@ -7816,9 +7308,7 @@ function enhanceBlock(el, block, section, grid, host) {
         onMove(lastEv);
       };
 
-      // Smart guides (snap-model.js): the neighbours' edges and centres, the content surface's quarters and midline, and the gaps the neighbours keep between them, as snap lines, within a distance that follows the preview's zoom.
-      // The targets come from the section the block came from and the section it is held over, measured in this canvas's px, and the lines are drawn here, where they may run into that section.
-      // A line between the block and a neighbour spans the two; a line of the content surface reaches a little past the block, with its share; an equal gap is a band with its size.
+      // Smart guides (snap-model.js): the neighbours' edges and centres, the content's quarters and midline, and equal gaps, within a reach that follows the zoom.
       const tol = snapTolerance(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale'));
       const guideEls = [];
       const clearGuides = () => {
@@ -7903,8 +7393,7 @@ function enhanceBlock(el, block, section, grid, host) {
         guideEls.push(g);
       };
       /**
-       * Moves current onto the nearest snap line or equal gap and draws it, with every other line the box then stands on.
-       * The lines are found from where the pointer holds the block (`raw`), before the grid: a line the grid's steps never land on, such as the middle of a block whose half-width is no whole number of steps, can still be reached, and an axis with no line within reach keeps the grid's place.
+       * Moves current onto the nearest snap line or equal gap and draws it, with every line the box then stands on; read from `raw`, before the grid snaps.
        * @param {{x: number, y: number}} raw The frame's x (percent) and y (px) under the pointer, unsnapped
        */
       const applyGuides = (raw) => {
@@ -7951,13 +7440,10 @@ function enhanceBlock(el, block, section, grid, host) {
           holdSticky();
         }
         if (!settled) settleOnce();
-        // Ctrl or Cmd held = the grid and the guides off for this drag (0.1 %
-        // / 1 px); otherwise grid.snap decides. Shift holds a move to one
-        // axis, and on a resize of a block whose size is its frame it keeps
-        // the ratio.
+        // Ctrl or Cmd frees the drag of grid and guides (0.1 % / 1 px), else grid.snap decides; Shift holds a move to one axis, and a resize to its ratio.
         const keepRatio = Boolean(ratio) && ev.shiftKey;
         const free = grid.snap === false || ev.ctrlKey || ev.metaKey;
-        // A width is whole cells, and a position a line of the grid, the lines counted out from the content's middle (snap-model.js gridLine), so a block of an even number of cells can stand centred.
+        // A width is whole cells, and a position a grid line counted from the content's middle (gridLine), so an even-celled block can stand centred.
         const snapPct = free ? (v) => Math.round(v * 10) / 10 : (v) => r2(Math.round(v / colStep) * colStep);
         const snapX = free ? snapPct : (v) => r2(gridLine(v, colStep));
         const snapPx = free ? Math.round : (v) => Math.round(v / grid.size) * grid.size;
@@ -7970,8 +7456,7 @@ function enhanceBlock(el, block, section, grid, host) {
         if (kind === 'move' && ev.shiftKey) ({ dx: dxPx, dy: dyPx } = lockAxis(dxPx, dyPx));
         const dx = dxPx * pctPerPx;
         const dy = dyPx;
-        // The section the block is held over gives its lines too, from the
-        // moment the block's centre enters it.
+        // The section the block is held over gives its lines too, once the block's centre enters it.
         if (kind === 'move') {
           const rect = el.getBoundingClientRect();
           const under = document.elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
@@ -7981,9 +7466,9 @@ function enhanceBlock(el, block, section, grid, host) {
             collectTargets();
           }
         }
-        // The width grows with a pull outward on the edge dragged, up to the section's far edge on the right and the block's own right edge on the left, so the origin never crosses zero.
+        // The width grows outward up to the section's right edge, and on the left up to the block's own right edge, so the origin stays at zero or above.
         const wMax = edge.x < 0 ? r2(orig.x + orig.w) : r2(100 - orig.x);
-        // A text stops where its lines would get narrower than they read well while its section forces readable text (ADR-0034), and greys while it is pushed past; one already narrower stops where it stands.
+        // While the section forces readable text (ADR-0034) a text stops at its readable width and greys past it; one already narrower stops where it stands.
         const wFloor = readableText ? Math.max(r2(colStep), Math.min(r2(READABLE_MIN_PX * pctPerPx), orig.w)) : r2(colStep);
         const wanted = snapPct(orig.w + edge.x * dx);
         if (readableText) showTooNarrow(edge.x !== 0 && wanted < wFloor ? [el] : [], 'desktop');
@@ -7998,28 +7483,22 @@ function enhanceBlock(el, block, section, grid, host) {
           ? {
               ...orig,
               x: clamp(snapX(orig.x + dx), 0, r2(100 - orig.w)),
-              // y is open downwards, and upwards too except in the first
-              // section (yFloor): a block may hang above its section's top,
-              // just as below the bottom.
+              // y is open downwards, and upwards except in the first section (yFloor): a block may hang past its section's top or bottom.
               y: Math.max(yMin, snapPx(orig.y + dy)),
             }
           : {
               ...orig,
               x: edge.x < 0 ? r2(orig.x + orig.w - w) : orig.x,
               y: yTop,
-              // A pull straight up or down on a block that follows its content
-              // leaves its width as it is, unsnapped, so the release changes nothing.
+              // A pull straight up or down on a block that follows its content leaves its width unsnapped, so the release changes nothing.
               w,
               h: edge.y < 0 ? orig.y + orig.h - yTop : h,
             };
-        // Free = the smart guides are off too.
         if (!free) applyGuides({ x: clamp(orig.x + dx, 0, r2(100 - orig.w)), y: Math.max(yMin, orig.y + dy) });
         else clearGuides();
         const frames = new Map([[block.id, current]]);
         if (groupParts.length) {
-          // The delta is clamped against the group's combined width
-          // limits; y is unbounded as in a single drag (blocks may hang
-          // outside).
+          // The delta is clamped to the group's combined width; y is unbounded, as in a single drag.
           const d = groupDelta([orig, ...groupParts.map((g) => g.orig)], current.x - orig.x, 0);
           const dyPx = current.y - orig.y;
           current = { ...current, x: r2(orig.x + d.dx) };
@@ -8032,9 +7511,7 @@ function enhanceBlock(el, block, section, grid, host) {
           updateMultiToolbar();
         }
         drawFrame(el, current);
-        // The section the block will move to is drawn as the drop target while
-        // the block, as now drawn, is held wholly outside its own section over
-        // another: the same test the release makes (ADR-0025 decision 8).
+        // The section the block will move to is drawn as the drop target while the block is wholly outside its own over it, as the release tests (ADR-0025).
         if (kind === 'move') {
           const drawn = el.getBoundingClientRect();
           const own = host.getBoundingClientRect();
@@ -8057,20 +7534,13 @@ function enhanceBlock(el, block, section, grid, host) {
           grown = new Map([...(settle?.grown ?? []), [block.id, Math.max(0, (seen || current.h) - current.h)]]);
           stop.hidden = Math.abs(dy) < STOP_MARK_PX;
         }
-        // The readout shows the box as drawn: the dragged height, or the
-        // content's own for a block that follows it.
+        // The readout shows the box as drawn: the dragged height, or the content's for a block that follows it.
         readout?.show(current.w, hug ? parseFloat(el.style.height) || current.h : current.h);
-        // The push as it will be after release, drawn live: the block is
-        // shown where it lands, and the blocks it pushes move with it. A
-        // moved block is left out of the section height; a resized one is
-        // not, so content that grows under the drag raises the section now
-        // as it will on release.
+        // The push drawn live as it will be after release; a moved block is left out of the section height, a resized one is not.
         pushPreview(host, frames, grown, kind === 'move' ? undefined : new Set());
       };
 
-      // Aborted drag (the browser takes over the pointer, or the element
-      // is swapped out mid-drag): clean up and release the pinning,
-      // otherwise it would stay suspended for the rest of the session.
+      // An aborted drag (the browser takes the pointer, or the element is swapped out) cleans up and resumes the pinning.
       const onCancel = () => {
         stopEdgeScroll();
         handle.removeEventListener('pointermove', onMove);
@@ -8087,7 +7557,7 @@ function enhanceBlock(el, block, section, grid, host) {
         dropSticky();
       };
 
-      // Escape in the middle of the gesture: the blocks go back to where they stood, the push is drawn from the section as it is, and nothing is posted, so no undo step is left behind.
+      // Escape puts the blocks back, draws the push from the section as it is, and posts nothing, so no undo step is left.
       const onEscape = (event) => {
         if (event.key !== 'Escape') return;
         event.preventDefault();
@@ -8111,12 +7581,10 @@ function enhanceBlock(el, block, section, grid, host) {
         stop?.remove();
         readout?.remove();
         showTooNarrow([]);
-        // A fit can land while a block that follows its content is dragged
-        // (urd-frames writes into the same block): its height is the fit's,
-        // never the one the drag began with.
+        // A fit can land while a block that follows its content is dragged (urd-frames): its height is the fit's, not the drag's start.
         if (followsContent(block)) current = { ...current, h: block.frames.desktop.h };
-        // A gesture that changes nothing leaves the frames as they were,
-        // settled or not. Re-pins from the block's NEW base values.
+        // A gesture that changes nothing leaves the frames as they were, settled or not.
+        // The pinning resumes from the block's new base values.
         const unchanged = !started || (current.x === orig.x && current.y === orig.y && current.w === orig.w && current.h === orig.h);
         if (unchanged) settle?.undo();
         dropSticky();
@@ -8126,10 +7594,7 @@ function enhanceBlock(el, block, section, grid, host) {
           return;
         }
 
-        // Group drag: record the whole set as ONE undo step (shared
-        // groupKey) and skip section transfer (the set lives in one
-        // section). Each member's frame is its own as it stands now, so a
-        // fit that landed during the drag is kept.
+        // Group drag: the whole set is one undo step (shared groupKey) with no section transfer, each frame as it stands now, so a fit during the drag is kept.
         if (groupParts.length) {
           const dx = r2(current.x - orig.x);
           const dyPx = current.y - orig.y;
@@ -8147,11 +7612,7 @@ function enhanceBlock(el, block, section, grid, host) {
         // A settled drag is one undo step with the frames it settled.
         const placeKey = settle ? makeId('place') : null;
 
-        // A block released with its whole box outside the section it came
-        // from moves to the section under its centre: grid and ownership
-        // follow the section it actually sits in. A block that still
-        // overlaps its own section stays and lies over the neighbour, as a
-        // block placed past the edge does (ADR-0025 decision 8).
+        // A block released wholly outside its own section moves to the section under its centre; one that still overlaps stays (ADR-0025 decision 8).
         if (kind === 'move') {
           const rect = el.getBoundingClientRect();
           const own = host.getBoundingClientRect();
@@ -8160,11 +7621,7 @@ function enhanceBlock(el, block, section, grid, host) {
             .elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
             .find((n) => n instanceof HTMLElement && n.classList.contains('urd-section')) : null;
           if (target && target.dataset.sectionId !== section.id) {
-            // Against the target's content surface, not its outer box: block
-            // y is relative to the canvas, which a menu out of the flow
-            // pushes down. Carried across from the source canvas rather than
-            // measured off the element, whose box is the rotated block's
-            // bounding box and starts above the frame.
+            // Measured on the target's content surface, which a menu out of the flow pushes down, and carried from the source canvas, not the rotated block's box.
             const tTop = canvasOf(target).getBoundingClientRect().top;
             const sTop = canvas.getBoundingClientRect().top;
             const frame = { ...current, y: Math.max(0, Math.round(sTop + current.y - tTop)) };

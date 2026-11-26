@@ -170,3 +170,56 @@ test('the media folders: a file goes in the folder of its kind, the path keeps t
   assert.equal(tidiedMediaPath('/om-oss'), null);
   assert.equal(tidiedMediaPath('/media/'), null);
 });
+
+test('compressToWebp keeps an animated image as its own bytes and never draws it on a canvas, which holds one frame; a still picture is drawn', async () => {
+  const names = ['FileReader', 'createImageBitmap', 'document'];
+  const kept = names.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]);
+  const canvases = [];
+  class Reader {
+    readAsDataURL(blob) {
+      blob.arrayBuffer().then((buffer) => {
+        this.result = `data:${blob.type};base64,${Buffer.from(buffer).toString('base64')}`;
+        this.onload();
+      }, (error) => { this.error = error; this.onerror(); });
+    }
+  }
+  const STOP = new Error('drawn on a canvas');
+  try {
+    Object.defineProperty(globalThis, 'FileReader', { configurable: true, value: Reader });
+    Object.defineProperty(globalThis, 'createImageBitmap', { configurable: true, value: async () => ({ width: 1, height: 1, close() {} }) });
+    Object.defineProperty(globalThis, 'document', { configurable: true, value: { createElement: (tag) => { canvases.push(tag); throw STOP; } } });
+    const moving = gif(gifControl(), gifFrame(), gifControl(), gifFrame());
+    for (const [name, type] of [['a.gif', 'image/gif'], ['a.gif', ''], ['a.webp', 'image/webp']]) {
+      const bytes = name.endsWith('.webp') ? webp('VP8X', 0x02) : moving;
+      const out = await compressToWebp(new File([bytes], name, { type }));
+      assert.equal(out.animated, true, name);
+      assert.deepEqual([...Buffer.from(out.dataUrl.split(',')[1], 'base64')], [...bytes], `${name}: the file's own bytes`);
+      assert.deepEqual(canvases, [], `${name}: no canvas`);
+    }
+    // The same animation asked for as a still (an icon) is drawn, so the canvas would be seen.
+    await assert.rejects(compressToWebp(new File([moving], 'a.gif', { type: 'image/gif' }), 64, { still: true }), STOP);
+    assert.deepEqual(canvases, ['canvas']);
+  } finally {
+    for (const [name, descriptor] of kept) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+});
+
+test('the video and PDF limits stay below the host\'s 25 MiB file limit, and the warning comes first', async () => {
+  const { VIDEO_MAX_BYTES } = await engineImport('imageTools.js');
+  assert.ok(VIDEO_WARN_BYTES < VIDEO_MAX_BYTES);
+  assert.ok(VIDEO_MAX_BYTES < 25 * 1024 * 1024);
+  assert.ok(PDF_MAX_BYTES < 25 * 1024 * 1024);
+});
+
+test('mediaPath gives the same path for the same content and another for other content, so a republish never writes a file twice', async () => {
+  const { mediaPath } = await engineImport('imageTools.js');
+  const url = (b64) => `data:image/webp;base64,${b64}`;
+  const a = 'UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAwA0JaQAA3AA/vuUAAA=';
+  const b = 'UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAwA0JaQAA3AA/vuUAAB=';
+  assert.equal(mediaPath('kake', a, url(a)), mediaPath('kake', a, url(a)));
+  assert.equal(mediaPath('kake', a, url(a)), mediaPath('kake', `${a}`, `data:image/webp;name=kake;base64,${a}`), 'the name in the address is no part of the content');
+  assert.notEqual(mediaPath('kake', a, url(a)), mediaPath('kake', b, url(b)));
+});

@@ -1,7 +1,5 @@
 /**
- * A block's style as something to copy and paste (0.7.20.8, the right-click
- * menu's «Copy style» and «Paste style»): the look without the content. Pure
- * and node-tested; the clipboard itself lives in preview-edit.js.
+ * A block's style to copy and paste (the right-click menu's «Copy style» and «Paste style»): the look without the content.
  */
 
 /** The props that are a block's content (its words, pictures, addresses and sources), kept out of a copied style, per type. */
@@ -35,8 +33,7 @@ export const CONTENT_KEYS = {
 const SHARED_FIELDS = ['animation', 'hover', 'size', 'phoneSize', 'sizeMin', 'sizeMax', 'height', 'fit', 'fitMin'];
 
 /**
- * The style of a block: its type, its props without the content, and the
- * shared fields.
+ * The style of a block: its type, its props without the content, and the shared fields.
  * @param {object} block
  * @returns {{type: string, props: object, shared: object}}
  */
@@ -50,8 +47,7 @@ export function styleOf(block) {
 }
 
 /**
- * The fields a paste writes onto a block: the whole look when the types
- * match (the block's content stays), only the shared fields otherwise.
+ * The fields a paste writes onto a block: the whole look when the types match (the content stays), only the shared fields otherwise.
  * @param {object} block The target as it stands
  * @param {{type: string, props: object, shared: object}} style
  * @returns {{props?: object, shared: object}}

@@ -152,3 +152,32 @@ test('publishing writes a clean SVG to media/, and keeps a scripted one or one n
   assert.ok(percent.src.startsWith('data:image/svg+xml,'));
   assert.equal(files.length, 1);
 });
+
+test('svgToDataUrl reads an SVG as text alone: it never reaches for a document or a markup parser, and its code names none', () => {
+  const touched = [];
+  const names = ['document', 'DOMParser', 'XMLSerializer', 'Range'];
+  const kept = names.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]);
+  for (const name of names) Object.defineProperty(globalThis, name, { configurable: true, get() { touched.push(name); return undefined; } });
+  try {
+    for (const [, text] of BENIGN) svgToDataUrl(text);
+    for (const [, text] of HOSTILE) assert.throws(() => svgToDataUrl(text));
+  } finally {
+    for (const [name, descriptor] of kept) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+  assert.deepEqual(touched, []);
+  const MARKUP = /\bDOMParser\b|\.innerHTML\b|\.outerHTML\b|\binsertAdjacentHTML\b|\bcreateContextualFragment\b|\bdocument\.write\b|\bsetHTML(?:Unsafe)?\b|\bparseHTML(?:Unsafe)?\b/;
+  for (const fn of [svgToDataUrl, svgProblem]) assert.doesNotMatch(fn.toString(), MARKUP, fn.name);
+});
+
+test('an unsafe SVG is refused whole with svgUnsafe, never stripped, and a clean one is packed exactly as written', () => {
+  for (const [name, text] of HOSTILE) {
+    assert.throws(() => svgToDataUrl(text), (err) => err.code === 'svgUnsafe' && err.problem === svgProblem(text), name);
+  }
+  for (const [name, text] of BENIGN) {
+    const packed = svgToDataUrl(text).dataUrl;
+    assert.equal(Buffer.from(packed.slice('data:image/svg+xml;base64,'.length), 'base64').toString('utf8'), text, name);
+  }
+});

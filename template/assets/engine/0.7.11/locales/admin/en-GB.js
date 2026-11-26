@@ -1,6 +1,5 @@
 /**
- * Admin strings, British English. Overlays the Bokmål base (nb.js);
- * the parity test keeps the key sets in sync.
+ * Admin strings, British English, over the Bokmål base (nb.js).
  */
 export default {
   lang: 'en-GB',

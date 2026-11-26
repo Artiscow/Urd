@@ -1,7 +1,6 @@
 /**
- * The presets that suggest a section's layout on the phone (0.7.3.14), in the editor only: pure, node-tested (tests/phone-layouts.test.mjs).
- * A preset fills the phone's eight cell columns with the section's units in the phone's order, a block alone or a stack (phone-moves.js phoneTree), as a starting point the owner changes freely afterwards.
- * Its change writes the cells of each unit's blocks (`frames.mobile.col` and `cols`), and for «Alternate sides» the order that puts the picture first on every other line, since a block later in the order never stands left of an earlier one on its line.
+ * The presets that suggest a section's layout on the phone: each fills the eight columns with the section's units in order, a start the owner changes.
+ * Pure.
  */
 import { phoneTree, settle, flowing } from './phone-moves.js';
 import { phoneSetupOf, phoneParts, stackOrder } from './phone-order.js';
@@ -12,7 +11,7 @@ import { pinsOnPhone, stickyLeads } from './sticky-model.js';
 export const PHONE_LAYOUTS = ['two-per-line', 'pairs', 'alternate', 'wide-two', 'big-two', 'one-column'];
 
 /**
- * The rows an owner's own layout is made of (site.phoneLayouts, additive from 0.7.3.28), each a part of the phone's two columns: one cell across the row, two halves, a tall half on the left beside two stacked on the right, or two stacked on the left beside a tall half on the right.
+ * The rows an owner's own layout is made of (site.phoneLayouts): one cell across, two halves, or a tall half beside two stacked, on the left or the right.
  */
 export const PHONE_ROWS = ['full', 'two', 'big-left', 'big-right'];
 
@@ -96,7 +95,7 @@ export function ownLayoutFits(blocks, setup) {
 }
 
 /**
- * The presets for a section, the ones that fit first and the best of those first, each saying whether it fits; one that does not fit is shown greyed, never left out. The site's own layouts follow Urd's, in the order they were kept, each fitting a section of two units or more (ownLayoutFits), and a layout whose id stands twice is offered once, the first kept.
+ * The presets for a section, the fitting ones first and the best of those first, an unfitting one greyed, never left out; the site's own follow, each id once.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} setup The section's rule, or its setup (phoneSetupOf)
  * @param {unknown[]} [own] The site's own layouts (site.phoneLayouts)
@@ -135,7 +134,7 @@ export function phoneLayouts(blocks, setup, own = []) {
 }
 
 /**
- * Each unit's cells under a preset, in the units' order; for «Pairs» and «Alternate sides» the pairs instead, whose cells are given by where they stand once read the other way round where asked (`flip`).
+ * Each unit's cells under a preset; for «Pairs» and «Alternate sides» the pairs instead, and those to read the other way round (`flip`).
  * @returns {{cells: Array<{col: number, cols: number}|null>, flip: number[], pairs: number[]}}
  */
 function plan(units, id) {
@@ -171,11 +170,10 @@ function written(blocks, setup, change) {
 }
 
 /**
- * A preset's change for a section: the cells of every block of every unit (null for the full row), and for «Alternate sides» the exceptions, stacks or custom order that read every other pair the other way round.
+ * A preset's change for a section: each block's cells, the order «Alternate sides» needs, and the own phone heights of the blocks it places cleared.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {string|object} id A preset of PHONE_LAYOUTS, or an own layout (ownLayoutOf), whose rows fill the units' cells in turn
- * A preset is a fresh start: it also takes away the own phone heights of the blocks it places (`heights`), which «Same height» and an earlier preset left, so the heights a preset asks for after it are measured anew.
  * @returns {{cells: Record<string, {col: number, cols: number}|null>, heights?: Record<string, null>, places?: Record<string, object|null>, stacks?: string[][], list?: string[]}|null} The change, a block's cells null for the full row (where a width set by hand stays); null where the press would change nothing
  */
 export function phoneLayoutChange(blocks, rawSetup, id) {
@@ -203,7 +201,7 @@ export function phoneLayoutChange(blocks, rawSetup, id) {
     if (step.list) change.list = step.list;
     work = written(work.blocks, work.setup, step);
   }
-  // A pair stands side by side where its two units stand next to each other once the moves are made, the one read first on the left; a pair that could not be read the other way round stands as it reads.
+  // A pair whose units end up next to each other stands side by side, the one read first on the left.
   if (pairs.length) {
     const final = phoneTree(work.blocks, work.setup).map((node) => (node.children ? node.children.map((c) => c.id) : [node.id]));
     const at = (unit) => final.findIndex((ids) => ids.includes(unit.ids[0]));
@@ -228,8 +226,7 @@ export function phoneLayoutChange(blocks, rawSetup, id) {
 }
 
 /**
- * The section's lines on the phone, as the row grid draws them (render.js): the flowing blocks in the phone's order, those one after another in the same cells standing in one cell (a stack in its first block's cells), each cell placed on the line it fits after the one before it and on the next where it does not; a block across the row stands on a line of its own. A block pinned on the phone while the page scrolls stands in its own cells through its slot, apart from the blocks before and after it; a block pinned to rows, and a block hidden on phones, stands on no line.
- * Pure, tested.
+ * The section's lines on the phone as the row grid draws them; blocks one after another in the same cells share a cell.
  * @param {object} section The section, its blocks and its phone order
  * @returns {Array<Array<{ids: string[], col: number, cols: number}>>} Each line's cells, left to right; a block across the row as a line of one cell of the full row
  */
@@ -273,8 +270,7 @@ export function phoneLines(section) {
 }
 
 /**
- * «Same width»: the cells on each line of the phone that holds more than one share the line's span, from its first cell's left edge to its last cell's right, as evenly as the eight columns allow, the columns left over going to the first cells, left to right without gaps.
- * Pure, tested.
+ * «Same width»: the cells on each line of more than one share its span as evenly as the eight columns allow, the columns left over going to the first.
  * @param {object} section The section, its blocks and its phone order
  * @returns {{cells: Record<string, {col: number, cols: number}>}|null} The change, every block of a cell given the cell's new columns; null where every line already stands so
  */
@@ -299,7 +295,7 @@ export function phoneSameWidths(section) {
 }
 
 /**
- * A preset drawn small: the section's blocks after its change, a cell per run of blocks in the same cells, each with its blocks' marks, at most `max` blocks; a preset that changes nothing draws the section as it stands.
+ * A preset drawn small: the section's blocks after its change, a cell per run of blocks in the same cells with their marks, at most `max` blocks.
  * @param {object} section The section, its blocks and its phone order
  * @param {string|object} id A preset of PHONE_LAYOUTS, or an own layout (ownLayoutOf)
  * @param {number} [max]
@@ -311,7 +307,7 @@ export function phoneLayoutSketch(section, id, max = 9) {
   const change = phoneLayoutChange(blocks, setup, id) ?? { cells: {} };
   const next = written(blocks, setup, change);
   const out = [];
-  // Each flowing block in the order the change leaves, in its own cells as the page draws it: those one after another in the same cells under each other in one cell.
+  // Each flowing block in the order the change leaves, in its own cells; those one after another in the same cells share one.
   for (const block of stackOrder(next.blocks, next.setup).filter(flowing).slice(0, max)) {
     const cells = block.id in change.cells ? change.cells[block.id] : phoneCells(block.frames?.mobile);
     const { col, cols } = cells ?? { col: 1, cols: 8 };

@@ -1,18 +1,17 @@
 /**
- * The preview's editing of the calendar block: the words written in place on the canvas, their hints, the help chip, the example events the editor's bar switches, and the block menu's variants.
- * Loaded with the preview's editing layer (preview-edit.js), it attaches itself to the block as it loads (attachEditing in calendar.js); a visitor's page never loads it.
+ * The preview's editing of the calendar: its words written in place, their hints, the help chip, the example events and the block menu's variants.
  */
 import { ta, adminLocaleReady } from '../i18n.js';
 import { attachEditing, loadCard } from './calendar.js';
 import { calendarParts, loadDesign, DESIGN_MODULES } from './calendar-load.js';
 
-/** The calendars in the editor whose bar chose the example events on or off, by block id, for the editing session; a calendar not listed shows them while it has no sources. */
+/** The calendars whose bar turned the example events on or off, by block id; a calendar not listed shows them while it has no sources. */
 const EXAMPLES = new Map();
 
-/** What each calendar in the editor shows, by block id, as last drawn: its box, whether the example events stand in for its own, why it has none of its own where a feed failed (read in the admin's language when asked), and its way to be drawn again. */
+/** What each calendar in the editor shows, by block id: its box, whether the example events stand in, why its feed gave none, and its redraw. */
 const SHOWN = new Map();
 
-/** What a calendar in the editor shows, for its bar's button (preview-edit.js): whether the example events stand in for its own, and why its feed gave none where one failed; null until it is drawn. */
+/** What a calendar shows, for its bar's button: whether the example events stand in, and why its feed gave none; null until it is drawn. */
 export function calendarExamples(blockId) {
   const state = SHOWN.get(blockId);
   return state ? { examples: state.examples, reason: state.reason?.() ?? null } : null;
@@ -41,14 +40,14 @@ function keepDesignVariants(cd) {
 }
 
 /**
- * Loads what a calendar draws with ahead of the first one, every design's renderer among it, so a calendar added in the editor draws at once; a part that cannot be loaded now is loaded when a calendar draws.
+ * Loads what a calendar draws with, each design's renderer among it, so a calendar added in the editor draws at once.
  * @returns {Promise<void>}
  */
 function warmCalendar() {
   return calendarParts().then(() => Promise.all([...Object.keys(DESIGN_MODULES).map(loadDesign), loadCard()])).then(() => {}, () => {});
 }
 
-// The editor's block menu lists the designs, so the preview loads the design model up front, and what a calendar draws with once the editor is idle (a timer where the browser has no idle callback); a visitor loads it with the first calendar on a page.
+// In the preview: the design model loads at once for the block menu, and what a calendar draws with once the editor is idle.
 if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('preview')) {
   import('../calendar-designs.js').then(keepDesignVariants, () => {});
   if (typeof requestIdleCallback === 'function') requestIdleCallback(() => warmCalendar(), { timeout: 3000 });
@@ -84,17 +83,15 @@ function markLine(node, blank) {
 }
 
 /**
- * Makes a drawn word writable in place: the text toolbar attaches to it, and every change posts the whole props with the words under their slot in `texts`.
- * `env` is what the block's draw hands its editing (makeUi in calendar.js): its words, its drawing of them, the block and its settings.
+ * Makes a drawn word writable in place: each change posts the whole props, the words under their slot in `texts`.
+ * `env` comes from makeUi in calendar.js.
  */
 function wireText(node, key, env) {
   env.drawn.add(node);
-  // The text toolbar attaches to .urd-text fields; a click in the words edits them and never reaches the button or link around them.
-  // In the Clean view the words are plain text, as every text written in place is there, and the link around them works (cleanTexts in urd.js, which also gives them back).
+  // The text toolbar attaches to .urd-text; a click in the words reaches no button or link around them, outside the Clean view.
   node.classList.add('urd-text');
   node.contentEditable = 'true';
-  // The words stop the press, so a link around them is never followed.
-  // A fold's summary follows the block's two-step model: the press that selects the block leaves the fold, the next press opens or closes it and goes into the words, and the presses after that edit the words until they lose focus.
+  // On a fold's summary, the press that selects the block leaves the fold, and the next opens or closes it and goes into the words.
   let selectedBefore = false;
   let editing = false;
   node.addEventListener('pointerdown', () => { selectedBefore = env.el.classList.contains('urd-selected'); });
@@ -112,8 +109,8 @@ function wireText(node, key, env) {
     const slot = env.cd.calTextSlot(key, form);
     const html = serialize(node, key, env);
     const blank = env.cd.calBlankHtml(html);
-    // The texts rewritten since this render are kept together: the editor stores what it is sent and does not render again.
-    // An emptied content line is removed; any other emptied text goes back to the dictionary's words.
+    // The texts rewritten since this render are sent together.
+    // An emptied content line is removed; another emptied text takes the dictionary's words.
     if (blank && env.cd.CAL_CONTENT_TEXTS.includes(key)) env.rewritten[slot] = false;
     else if (blank) delete env.rewritten[slot];
     else env.rewritten[slot] = html;

@@ -1,7 +1,5 @@
 /**
- * Schematic SVG thumbnail of a footer layout, for the visual template picker in
- * admin. Pure string building (no DOM), analogous to preset-thumb.js. Takes a
- * small description (not the whole footer config): layout flags plus counts.
+ * Schematic SVG thumbnail of a footer layout for the design picker, drawn from layout flags and counts.
  *
  * @param {{center?: boolean, row?: boolean, mega?: boolean, fat?: boolean,
  *   bigcta?: boolean, tag?: boolean, cta?: boolean, cols?: number,

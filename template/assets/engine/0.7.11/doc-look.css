@@ -1,6 +1,6 @@
 /*
- * The document designs' own rules (doc-look.js), loaded with it by the text, terms and privacy blocks, placed after base.css in the order ENGINE_SHEETS keeps (sheets.js).
- * Its reasoning stands in docs/STYLES.md, under doc-look.css.
+ * The document designs' own rules (doc-look.js), loaded with them after base.css in ENGINE_SHEETS order (sheets.js).
+ * Its reasoning stands in docs/STYLES.md.
  */
 /* Documents */
 .urd-doc {

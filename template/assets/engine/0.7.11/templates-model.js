@@ -1,12 +1,6 @@
 /**
- * The template model: pure helpers for user templates in content/maler/.
- *
- * The contract (docs/SCHEMA.md, Templates): the template file stores the source
- * ids untouched; EVERY insertion deep-clones and assigns new ids BEFORE
- * posting, so the same template can be inserted several times without
- * collision. Block groups are stored with frames as they stand; normalisation
- * (anchor plus clamp inside the section) happens here on insertion, never on
- * save. No DOM - node-testable.
+ * User templates in content/maler/: a file keeps its source ids, and each insertion deep-clones it with new ids and places its frames.
+ * Pure.
  */
 import { slugify } from './imageTools.js';
 import { groupDelta } from './selection.js';
@@ -18,17 +12,14 @@ export const TEMPLATE_SCHEMA_VERSION = 1;
 /** Valid template kinds; the payload key in the file equals the kind. */
 export const TEMPLATE_KINDS = ['section', 'blocks', 'page'];
 
-/** Template id from the display name (the same id regime as collections); an
- *  empty string means an invalid name and must be rejected by the caller. */
+/** Template id from the display name; an empty string is an invalid name, for the caller to refuse. */
 export function templateId(name) {
   return slugify(String(name ?? ''), '');
 }
 
 const r2 = (v) => Math.round(v * 100) / 100;
 
-/** Template payloads are inserted outside the page lift, so a template saved
- *  before the row grid (ADR-0019) can carry frames.mobile in the old
- *  full-frame form. Lifted per block on insertion. */
+/** Lifts a block's frames.mobile to the row grid form (ADR-0019), as template payloads bypass the page lift. */
 function liftBlockMobile(block) {
   if (block.frames?.mobile) {
     block.frames.mobile = liftMobileFrame(block.frames.mobile, block.frames.desktop);
@@ -51,7 +42,7 @@ function followSpotsInText(html, ids) {
 }
 
 /**
- * Points the links inside copied blocks at the copies: a link to a spot on its own page (a `target` with no `page`, the link shape in SCHEMA.md, or the same in a rich text) whose spot was copied along follows the spot's new id.
+ * Points the links inside copied blocks at the copies: a link to a spot on its own page whose spot was copied along follows its new id.
  * Changed in place.
  * @param {Array<object>} blocks
  * @param {Map<string, string>} ids The old ids to the new
@@ -77,7 +68,7 @@ function followCopiedSpots(blocks, ids) {
 }
 
 /**
- * A copied block's place in the phone order (`phonePlace`) follows the block it names to that block's new id; one naming a block left out of the copy is dropped, so the copy follows its section's rule.
+ * A copied block's `phonePlace` follows the block it names to its new id, and is dropped when that block was left out of the copy.
  * @param {object[]} blocks The copied blocks, with their new ids
  * @param {Map<string, string>} ids Old id to new id
  */
@@ -92,7 +83,7 @@ function followCopiedPlaces(blocks, ids) {
 }
 
 /**
- * A copied section's custom order on the phone (`phoneList`), its stacks (`phoneStacks`) and the blocks taken out of the rule's columns (`phoneLoose`) follow its blocks to their new ids; a block left out of the copy leaves them, and a stack of fewer than two blocks is dropped.
+ * A copied section's `phoneList`, `phoneStacks` and `phoneLoose` follow its blocks to their new ids; a block left out leaves them.
  * @param {object} section The copied section
  * @param {Map<string, string>} ids Old id to new id
  */
@@ -110,9 +101,7 @@ function followCopiedOrder(section, ids) {
 }
 
 /**
- * Prepares a section template for insertion: deep clone with a new section id
- * and new block ids.
- * Geometry and props are left alone, apart from a link to one of the template's own spots, which follows the spot's new id.
+ * Prepares a section template for insertion: a deep clone with new ids, its links to its own spots following them.
  * @param {object} section The section from the template file (not mutated)
  * @param {(prefix: string) => string} makeId The id factory (sections/presets.js)
  */
@@ -133,8 +122,7 @@ export function cloneSectionForInsert(section, makeId) {
     if (ids.has(attention.blockId)) attention.blockId = ids.get(attention.blockId);
     else delete attention.blockId;
   }
-  // Templates saved before v3 carry the old Norwegian contract tokens (ADR-0021); renamed here since payloads bypass the page lift.
-  // A map saved before page v5 carries its height as a setting, lifted into the frame, a calendar saved before page v6 its own size, lifted to the block, a gallery band saved before page v7 its height, lifted into the frame, and a text in a document design saved before page v8 becomes the terms block.
+  // Template payloads bypass the page lift, so their contract tokens, map heights, calendar size, gallery bands and terms blocks are lifted here.
   liftContractTokens(out);
   liftMapHeights(out);
   liftCalendarScale(out);
@@ -144,10 +132,7 @@ export function cloneSectionForInsert(section, makeId) {
 }
 
 /**
- * Prepares a page template for insertion: deep clone where meta points at the
- * NEW page (id is the page slug, validated by the caller against reserved
- * names and existing pages - never a makeId string), and every section and
- * block gets new ids. Geometry, props and schemaVersion are left alone.
+ * Prepares a page template for insertion: a deep clone whose meta names the new page, the caller checking its slug, and every section and block with new ids.
  * @param {object} page The page file from the template (not mutated)
  * @param {(prefix: string) => string} makeId The id factory (sections/presets.js)
  * @param {{id: string, title: string}} meta The new page's slug and title
@@ -170,12 +155,7 @@ export function clonePageForInsert(page, makeId, { id, title }) {
 }
 
 /**
- * Prepares a block group template for insertion: deep clone with new ids, the
- * whole group moved so the top left corner lands on the anchor (clamped
- * inside the section by groupDelta), and minBottom for section growth
- * (urd-add-blocks). Without an anchor the stored positions are kept (clamp
- * only). The internal layout is always preserved; frames.mobile comes along,
- * lifted to the row grid form if the template was saved in the old one.
+ * Prepares a block group template for insertion: a deep clone with new ids, its top left moved to the anchor within the section, and its lowest bottom.
  * @param {Array<object>} blocks The blocks from the template file (not mutated)
  * @param {(prefix: string) => string} makeId The id factory
  * @param {{anchor?: {x: number, y: number}|null}} [opts] Anchor in section coordinates (x in %, y in px)

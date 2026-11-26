@@ -1,6 +1,6 @@
 /*
- * The map block's own rules (blocks/map.js), loaded with the module by core-types.js, placed after base.css in the order BLOCK_SHEETS keeps.
- * Its reasoning stands in docs/STYLES.md, under blocks/map.css.
+ * The map block's own rules (blocks/map.js), loaded with it after base.css in BLOCK_SHEETS order.
+ * Its reasoning stands in docs/STYLES.md.
  */
 /* The map block */
 /* The map's box is its frame */

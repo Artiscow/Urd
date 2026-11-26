@@ -1,7 +1,8 @@
 /**
  * Contract tests for the theme's pure light/dark logic (theme.js):
  * mode resolution and token selection. The DOM application (applyTheme,
- * toggleThemeMode) and the nav switch are tested manually.
+ * toggleThemeMode) and the nav switch are tested manually, apart from the
+ * storage key they share with theme-init.js.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -262,4 +263,41 @@ test('onlyColoursChanged: the theme\'s colours, its dark variant\'s, its colour 
   assert.ok(performance.now() - t0 < 5, 'a site holding a picture is compared without writing it out');
   const urd = readFileSync(new URL('urd.js', ENGINE_DIR), 'utf8');
   assert.match(urd, /msg\?\.type === 'urd-site' && msg\.site && !msg\.page && onlyColoursChanged\(state\.site, msg\.site\)\) \{[^}]*state\.site\.theme = msg\.site\.theme;\s+applyTheme\(state\.site\.theme\);\s+\}/, 'the engine draws the theme alone for it');
+});
+
+test('theme-init.js reads the light or dark choice under the key theme.js stores and reads it under, before the first paint', async () => {
+  const { runInNewContext } = await import('node:vm');
+  const { toggleThemeMode, applyTheme } = await engineImport('theme.js');
+  /** A storage that remembers the keys asked for. */
+  const storage = (stored = {}) => {
+    const log = { read: [], written: [] };
+    return { log, getItem: (k) => { log.read.push(k); return stored[k] ?? null; }, setItem: (k, v) => { log.written.push(k); stored[k] = String(v); } };
+  };
+  const root = () => {
+    const attrs = {};
+    return { attrs, setAttribute: (k, v) => { attrs[k] = v; }, removeAttribute: (k) => { delete attrs[k]; }, style: { setProperty() {}, removeProperty() {} } };
+  };
+  const names = ['localStorage', 'document', 'window'];
+  const kept = names.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]);
+  const engineStore = storage();
+  try {
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: engineStore });
+    Object.defineProperty(globalThis, 'document', { configurable: true, value: { documentElement: root() } });
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: { matchMedia: () => ({ matches: false }) } });
+    applyTheme({ tokens: {} }, root());
+    toggleThemeMode({ tokens: {} });
+  } finally {
+    for (const [name, descriptor] of kept) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else delete globalThis[name];
+    }
+  }
+  const [key] = engineStore.log.written;
+  assert.ok(key, 'the switch stores the choice');
+  assert.deepEqual(engineStore.log.read, [key], 'the engine reads the choice under the key it stores it under');
+  const early = storage({ [key]: 'dark' });
+  const html = root();
+  runInNewContext(readFileSync(new URL('theme-init.js', ENGINE_DIR), 'utf8'), { localStorage: early, document: { documentElement: html } });
+  assert.deepEqual(early.log.read, [key], 'theme-init.js reads the same key');
+  assert.equal(html.attrs['data-urd-theme'], 'dark', 'and sets the stored choice on the page');
 });

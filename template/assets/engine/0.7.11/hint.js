@@ -1,29 +1,15 @@
 /**
- * The help chip (ADR-0008): every block/section/element with SPECIAL features
- * has a «?» chip in the preview that opens a persistent help card explaining
- * all of them. The card stays up until you click outside or press Escape, so
- * it can be read at leisure.
- *
- * Used by core blocks AND plugins (the same rule for both):
- *   import { attachHint } from '/assets/urd/hint.js';
- *   attachHint(hostElement, { title: 'Calendar', lines: ['…', '…'] });
- *
- * Preview layer only: call it only when ctx.preview is true. Chip and card are
- * hidden in Clean view (chrome-off) and never exist for visitors.
+ * The help chip (ADR-0008): a «?» in the preview that opens a help card, up until a click outside or Escape.
+ * Plugins import it from /assets/urd/hint.js.
  */
 
-// The module is loaded in preview only, by the editing layer beside the admin dictionary and by the blocks as they attach their chips:
-// ta() is called as a chip is attached, once its call site has awaited adminLocaleReady, never at module level (ADR-0012).
+// ta() is called as a chip is attached, after its caller awaited adminLocaleReady, never at module level (ADR-0012).
 import { ta } from './i18n.js';
 
 let openCard = null;
 let teardown = null;
 
-/* Self-contained styling (the same pattern as plugin CSS): the chip is a small
-   circle shown ONLY while the pointer is over the block, like the source button.
-   On a host without a bar it sits left of the rotate handle and above it in the
-   stack, so the handle neither covers the chip nor takes the pointer from it,
-   and it counter-scales and counter-rotates like the rest of the block chrome. */
+/* The chip shows while the pointer is over its block, left of and above the rotate handle, and counter-scales and counter-rotates like the block chrome. */
 const HINT_CSS = `
 .urd-hint-chip {
   position: absolute; top: -32px; z-index: 1001;
@@ -87,10 +73,7 @@ export function closeHint() {
 }
 
 /**
- * Opens the help card under an anchor (or above it when the room below is
- * short), with the title and one line per function; a card already open
- * closes first. The admin panels open it from their own «?» buttons, the
- * preview's chips through attachHint, so every help card has one form.
+ * Opens the help card under an anchor, or above where the room below is short, closing any card already open; the admin's «?» buttons use it too.
  * @param {HTMLElement} anchor The element the card is placed by
  * @param {{title: string, lines?: string[]}} help
  * @returns {HTMLDivElement} the card
@@ -115,8 +98,7 @@ export function openHintCard(anchor, { title, lines = [] }) {
 
   // A chip on a bar the page does not show (the phone view's, which the editor draws) places the card by its block.
   const rect = (anchor.getClientRects().length ? anchor : anchor.closest('.urd-block') ?? anchor).getBoundingClientRect();
-  // The DRAWN size, which the counter-scale decides: offsetWidth and
-  // offsetHeight never see a transform.
+  // The drawn size, set by the counter-scale: offsetWidth and offsetHeight never see a transform.
   const scale = Number.parseFloat(
     getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale'),
   ) || 1;

@@ -1,6 +1,6 @@
 /*
- * The calendar's ApeironLF designs and the dark agenda (blocks/calendar-more.js): their own rules, loaded with the renderer by blocks/calendar-load.js (loadDesign).
- * The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+ * The ApeironLF and dark agenda designs' rules, loaded with blocks/calendar-more.js.
+ * Its reasoning stands in docs/STYLES.md, under blocks/calendar-more.css.
  */
 .urd-cal-phone .urd-cal-apv {
   padding: 1em 0.8em;
@@ -585,7 +585,6 @@
 }
 
 /* F5 Agenda, dark */
-/* The dark card is the calendar's own theme: the shared parts drawn in it (the view switcher, the search field, the week and the month of the switcher, the empty state) take its colours. */
 .urd-cal-d-mobileAgenda {
   --urd-color-text: var(--urd-cal-s-text, #f5f5f7);
   --urd-color-bg: var(--urd-cal-s-ground, #121216);

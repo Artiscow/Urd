@@ -1,6 +1,6 @@
 /*
- * The quote block's own rules (blocks/quote.js), loaded with the module by core-types.js, placed after base.css in the order BLOCK_SHEETS keeps.
- * Its reasoning stands in docs/STYLES.md, under blocks/quote.css.
+ * The quote block's own rules (blocks/quote.js), loaded with it after base.css in BLOCK_SHEETS order.
+ * Its reasoning stands in docs/STYLES.md.
  */
 .urd-block[data-urd-align="stretch"] > .urd-quote {
   align-items: center;

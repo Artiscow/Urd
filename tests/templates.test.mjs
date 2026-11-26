@@ -244,3 +244,24 @@ test('a copied section\'s phone words follow its own spots as the desktop words 
   const lone = cloneSectionForInsert({ ...original, responsive: { mobile: { attention: { needed: true, reason: 'words-changed', blockId: 'blk-gone' } } } }, makeId);
   assert.equal(lone.responsive.mobile.attention.blockId, undefined, 'a flag naming a block not in the copy names none');
 });
+
+test('clonePageForInsert: the new page\'s id is the slug it is given, never an id from makeId, and the editor gives it the page\'s slug', async () => {
+  const given = [];
+  const recording = (prefix) => {
+    const id = makeId(prefix);
+    given.push(id);
+    return id;
+  };
+  const template = { ...page(), meta: { id: 'mal-sommer', title: 'Mal' } };
+  const out = clonePageForInsert(template, recording, { id: 'sommerfest', title: 'Sommerfest' });
+  assert.equal(out.meta.id, 'sommerfest');
+  assert.ok(given.length > 0);
+  assert.ok(!given.includes(out.meta.id));
+  assert.ok(given.every((id) => /^(?:sec|blk)-/.test(id)), 'makeId names sections and blocks alone');
+  const { readFileSync } = await import('node:fs');
+  const site = readFileSync(new URL('../editor/src/state/site.svelte.js', import.meta.url), 'utf8');
+  const calls = [...site.matchAll(/clonePageForInsert\(([^;]*?), makeId, \{ id: (\w+), title/g)];
+  assert.equal(calls.length, (site.match(/clonePageForInsert\(/g) ?? []).length, 'every insert is read');
+  assert.ok(calls.length >= 2);
+  for (const [, , id] of calls) assert.equal(id, 'slug', 'the editor passes the page\'s slug as its id');
+});

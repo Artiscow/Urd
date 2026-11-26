@@ -1,11 +1,9 @@
 /**
- * Snapping on the desktop canvas (0.7.10, the grid and guides rework): the pure rules behind the smart guides.
- * A dragged box snaps to the edges and centres of its neighbours, to the content surface's quarters and midlines, and to the gaps its neighbours keep between them (equal-gap snapping, the tldraw rule), within a tolerance that follows the preview's zoom, so a snap feels the same at every zoom level (the Excalidraw rule: eight screen px).
- * preview-edit.js measures the DOM and draws the lines; nothing here touches it.
- * The grid is counted out from the middle of the content (0.7.34): a line on its centre and the cells counted out to both sides, so a block lined up with the grid can stand centred, and the part cell left over is split equally between the two edges.
+ * Snapping on the desktop canvas: a dragged box snaps to its neighbours' edges, centres and gaps and to the content's quarters, within eight screen px.
+ * Pure.
  */
 
-/** How the grid is drawn, per browser (`urd-grid-look`): a quiet grid of lines, the default; dots where the lines would cross; or only in a drag, with the content's quarters as columns at rest. */
+/** How the grid is drawn, per browser: lines, the default; dots where lines would cross; or only in a drag. */
 export const GRID_LOOKS = ['lines', 'dots', 'drag'];
 
 /**
@@ -32,8 +30,7 @@ export function gridLine(at, step, middle = 50) {
 export const SNAP_SCREEN_PX = 8;
 
 /**
- * The snap distance in the page's own px: the screen distance divided by the
- * preview's zoom, which the chrome scale carries (1 / zoom).
+ * The snap distance in the page's own px: the screen distance times the chrome scale (1 / zoom).
  * @param {number|string} chromeScale The page's --urd-chrome-scale
  * @returns {number}
  */
@@ -43,12 +40,7 @@ export function snapTolerance(chromeScale) {
 }
 
 /**
- * The nearest line a box's start, middle or end can snap to on one axis.
- * Among the content surface's own lines (`surface`), one marked `prefer`
- * (the midline) wins over the others whenever it is within reach, so a box
- * can be centred even where an edge of it lies a little nearer a quarter
- * line; against a neighbour's edge or centre the nearest line wins, so
- * aligning with another block stays in reach.
+ * The nearest line a box's start, middle or end can snap to on one axis; among the content's own lines, one marked `prefer` wins while in reach.
  * @param {number} start The box's start on the axis, in px
  * @param {number} size The box's size on the axis, in px
  * @param {Array<{at: number, from: number, to: number, surface?: boolean, prefer?: boolean}>} targets The lines, each with the span it comes from on the other axis
@@ -70,11 +62,8 @@ export function edgeSnap(start, size, targets, tol) {
 }
 
 /**
- * Every line a box's start, middle or end stands on, within a hair: a box
- * placed by one snap can stand on more lines than that one (a block half the
- * width snapped to the midline also stands on the quarters), and all of them
- * are drawn. A place met by several lines comes back once, with their spans
- * joined.
+ * Every line a box's start, middle or end stands on, within a hair.
+ * A place met by several lines comes back once, with their spans joined.
  * @param {number} start The box's start on the axis, in px
  * @param {number} size The box's size on the axis, in px
  * @param {Array<{at: number, from: number, to: number}>} targets The lines
@@ -99,11 +88,7 @@ export function alignedLines(start, size, targets, eps = 1) {
 }
 
 /**
- * Equal-gap snapping on one axis: the box keeps the same distance to a
- * neighbour as that neighbour keeps to the next one, or stands between two
- * neighbours with the same air on both sides. Only the neighbours that
- * overlap the box on the other axis count, so a block in another row never
- * pulls.
+ * Equal-gap snapping on one axis: the box lands beyond a pair at the pair's own gap, or between two with the same air on both sides.
  * @param {number} start The box's start on the axis, in px
  * @param {number} size The box's size on the axis, in px
  * @param {Array<{start: number, end: number}>} neighbours The neighbours' spans on the axis

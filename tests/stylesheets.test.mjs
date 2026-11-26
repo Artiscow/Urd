@@ -488,6 +488,15 @@ function blockOwners() {
   return owners;
 }
 
+/** A sheet's labels: its header names docs/STYLES.md, each later comment is one line of at most 72 characters, and no comment stands inside a rule. */
+function assertLabels(sheet) {
+  const comments = [...sheet.text.matchAll(/\/\*([\s\S]*?)\*\//g)].map((m) => m[1].trim());
+  const [header, ...labels] = comments;
+  assert.match(header, /docs\/STYLES\.md/, `${sheet.file} names where its reasoning stands`);
+  for (const label of labels) assert.ok(!label.includes('\n') && label.length <= 72, `${sheet.file}: a label is one short line: ${label.slice(0, 60)}`);
+  for (const body of sheet.text.replace(/^\/\*[\s\S]*?\*\//, '').match(/\{[^{}]*\}/g) ?? []) assert.doesNotMatch(body, /\/\*/, `${sheet.file}: a comment inside a rule`);
+}
+
 test('each block module\'s sheet holds its own rules: every rule names a class its module writes and none another module\'s alone, with one-line labels and its reasoning in docs/STYLES.md', () => {
   const owners = blockOwners();
   for (const sheet of blockSheets()) {
@@ -499,14 +508,18 @@ test('each block module\'s sheet holds its own rules: every rule names a class i
       assert.ok(names.some(mine.alone), `${sheet.file}: «${sel}» names no class that blocks/${sheet.name}.js and its own helpers alone write`);
       for (const name of names) if (!mine(name)) assert.ok(!others.some((owns) => owns(name)), `${sheet.file}: «${sel}» names ${name}, another block module's alone`);
     }
-    const comments = [...sheet.text.matchAll(/\/\*([\s\S]*?)\*\//g)].map((m) => m[1].trim());
-    const [header, ...labels] = comments;
-    assert.match(header, /docs\/STYLES\.md/, `${sheet.file} names where its reasoning stands`);
-    for (const label of labels) assert.ok(!label.includes('\n') && label.length <= 72, `${sheet.file}: a label is one short line: ${label.slice(0, 60)}`);
-    for (const body of sheet.text.replace(/^\/\*[\s\S]*?\*\//, '').match(/\{[^{}]*\}/g) ?? []) assert.doesNotMatch(body, /\/\*/, `${sheet.file}: a comment inside a rule`);
+    assertLabels(sheet);
   }
   const styles = readFileSync(new URL('../docs/STYLES.md', import.meta.url), 'utf8');
-  for (const [, name] of styles.matchAll(/^# blocks\/([a-z]+)\.css, rule by rule$/gm)) assert.ok(owners.has(name), `STYLES.md's ${name}.css is a block sheet`);
+  for (const [, name] of styles.matchAll(/^# blocks\/([a-z]+)\.css, rule by rule$/gm)) assert.ok(owners.has(name) || SHEETS.some((sheet) => sheet.file === `blocks/${name}.css`), `STYLES.md's ${name}.css is a block sheet or a calendar sheet`);
+});
+
+test('each calendar sheet carries one-line labels, its reasoning in docs/STYLES.md', () => {
+  const styles = readFileSync(new URL('../docs/STYLES.md', import.meta.url), 'utf8');
+  for (const sheet of SHEETS) {
+    assertLabels(sheet);
+    assert.match(styles, new RegExp(`^# ${sheet.file.replace('.', '\\.')}, rule by rule$`, 'm'), `STYLES.md holds ${sheet.file}'s reasoning`);
+  }
 });
 
 test('each engine sheet holds its own rules, loads with the code that draws them before the block sheets, with one-line labels and its reasoning in docs/STYLES.md', async () => {

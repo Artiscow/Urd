@@ -1,9 +1,5 @@
 /**
- * The block search and the element menu's search: plain text matching for
- * the insertion menus and the settings. Matches against the VISIBLE
- * (ta-translated) labels the menus already show, never against keys or
- * re-translations. Diacritics and letter case do not matter
- * (NFD stripping). No DOM - node-testable.
+ * The block search and the element menu's search: plain matching against the labels the menus show, ignoring case and diacritics.
  */
 
 /** Comparable form: lower case without diacritical marks. */
@@ -15,9 +11,8 @@ export function normalize(str) {
 }
 
 /**
- * Ranking for the hit list: 0 = the label starts with the query, 1 = a word in
- * the label starts with the query, 2 = the query occurs in the label, -1 = miss.
- * An empty query matches everything (rank 2), so the caller can show the whole list.
+ * Ranking for the hit list: 0 the label starts with the query, 1 a word in it does, 2 it holds the query, -1 a miss.
+ * An empty query ranks 2.
  */
 export function rankLabel(label, query) {
   const q = normalize(query).trim();
@@ -35,9 +30,7 @@ export function matchLabel(label, query) {
 }
 
 /**
- * True when every word of the query occurs in the text, in any order: the
- * element menu's search, where «colour text» finds «Text colour». An empty
- * query matches everything.
+ * True when every word of the query occurs in the text, in any order; an empty query matches everything.
  */
 export function matchWords(text, query) {
   const t = normalize(text);
@@ -45,8 +38,7 @@ export function matchWords(text, query) {
 }
 
 /**
- * Filter and rank a list of entries against the query: best rank first,
- * equal ranks keep the list order (stable sort).
+ * Filters and ranks a list of entries against the query: best rank first, equal ranks in list order.
  * @param {Array<object>} items
  * @param {string} query
  * @param {(item: object) => string} getLabel

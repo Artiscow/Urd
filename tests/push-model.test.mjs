@@ -527,3 +527,67 @@ test('phoneHandoff: a side menu\'s column narrows the canvas, so the section tur
   assert.match(edit, /const host = document\.querySelector\('\.urd-section-active:not\(\.urd-handoff\)'\) \?\? document\.querySelector\('\.urd-section:not\(\.urd-handoff\)'\);/);
   assert.match(edit, /document\.querySelector\(`\.urd-section:not\(\.urd-handoff\) \.urd-block\[data-block-id=/);
 });
+
+/** A top-level function of preview-edit.js as its own text, from `function name(` to its closing brace. */
+function editFunction(name) {
+  const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
+  const start = edit.indexOf(`\nfunction ${name}(`) + 1;
+  assert.ok(start > 0, `preview-edit.js has ${name}`);
+  return edit.slice(start, edit.indexOf('\n}\n', start) + 2);
+}
+
+test('setMinHeight in the editing layer writes the section\'s height to its style and to the dataset copy the push pass restores', () => {
+  const setMinHeight = new Function(`${editFunction('setMinHeight')}\nreturn setMinHeight;`)();
+  const host = { style: {}, dataset: {} };
+  setMinHeight(host, 612);
+  assert.equal(host.style.minHeight, '612px');
+  assert.equal(host.dataset.urdMinHeight, '612px', 'the copy the push pass reads back at each measurement (render.js)');
+  const render = readFileSync(new URL('render.js', ENGINE_DIR), 'utf8');
+  assert.match(render, /host\.style\.minHeight = host\.dataset\.urdMinHeight \?\? '';/, 'the pass restores the height from the copy');
+});
+
+test('settleFrames settles only growth, and never writes the section\'s own height', () => {
+  // The DOM helpers stood in for: each block's drawn growth (a block sized by its frame) or its height at rest (one that follows its content).
+  const growth = { grew: 40, still: 0 };
+  const resting = { faq: 90, shorter: 30 };
+  const synced = [];
+  const helpers = {
+    canvasOf: () => ({ querySelector: (sel) => ({ id: /data-block-id="([^"]+)"/.exec(sel)[1] }) }),
+    CSS: { escape: (s) => s },
+    followsContent,
+    drawsAtContent: () => true,
+    visitorHeights: (el) => ({ natural: resting[el.id] + 10, resting: resting[el.id] }),
+    pushGrowthOf: (host, id) => growth[id] ?? 0,
+    drawnWidth: (el, canvas, frame) => frame.w,
+    fitMovesAll,
+    syncSectionHeight: (host) => synced.push(host),
+  };
+  const settleFrames = new Function(...Object.keys(helpers), `${editFunction('settleFrames')}\nreturn settleFrames;`)(...Object.values(helpers));
+  const frame = (y, h) => ({ desktop: { x: 0, y, w: 50, h } });
+  const section = () => ({
+    id: 'sec', size: { minHeight: '480px' },
+    blocks: [
+      { id: 'grew', type: 'text', frames: frame(0, 100) },
+      { id: 'still', type: 'image', frames: frame(0, 100) },
+      { id: 'faq', type: 'faq', frames: frame(120, 60) },
+      { id: 'shorter', type: 'faq', frames: frame(300, 60) },
+      { id: 'below', type: 'text', frames: frame(400, 40) },
+    ],
+  });
+  const host = {};
+  const s = section();
+  const settle = settleFrames(host, s, ['grew', 'still', 'faq', 'shorter']);
+  const h = (id) => s.blocks.find((b) => b.id === id).frames.desktop.h;
+  assert.equal(h('grew'), 140, 'a block that grew past its frame takes the growth');
+  assert.equal(h('faq'), 90, 'a block that follows its content takes its height at rest where it is taller');
+  assert.equal(h('still'), 100, 'a block that did not grow keeps its frame');
+  assert.equal(h('shorter'), 60, 'a block drawn shorter than its frame keeps it');
+  assert.deepEqual(s.size, section().size, 'the section\'s own height is the owner\'s');
+  assert.deepEqual(Object.keys(s).sort(), ['blocks', 'id', 'size']);
+  assert.deepEqual(host, {}, 'nor the section element\'s');
+  assert.ok(settle.ids.includes('grew') && settle.ids.includes('faq') && !settle.ids.includes('still') && !settle.ids.includes('shorter'));
+  settle.undo();
+  assert.deepEqual(s, section(), 'undo puts every frame back');
+  assert.deepEqual(synced, [host, host], 'the drawn floor is read again from the frames, at the settle and at its undo');
+  assert.equal(settleFrames(host, s, ['still', 'shorter']), null, 'nothing grew, nothing settled');
+});

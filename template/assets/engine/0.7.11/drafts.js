@@ -1,10 +1,5 @@
 /**
- * The draft view (0.7.28.7): a public page opened with `?draft=1` renders the drafts this browser's editor keeps, through the visitor's path and not the preview's, so the owner tries what only the published page does (a payment) on changes not yet published.
- * The drafts are the editor's own storage (editor/src/lib/draftStore.js): the site under `urd-draft-site`, a page under `urd-draft-<page id>` and a collection under `urd-draft-collection-<id>`.
- * A saved draft looked at in a tab of its own (`?draft=look&look=<id>`) is handed over by the editor under `urd-look-<id>`, which the tab moves into its own session storage at its first load (receiveLook), so a reload draws it again; there it stands over this browser's drafts (overlayDrafts).
- * A browser without drafts reads nothing and shows the published page; nothing leaves the browser.
- * The editor's preview reads the same drafts for its first paint, before the editor's own messages arrive.
- * Loaded on demand by urd.js, so visitors never fetch it.
+ * The draft view: a page opened with `?draft=1` draws the drafts this browser's editor keeps, as a visitor's page does; the preview reads them too.
  */
 
 const COLLECTION_PREFIX = 'urd-draft-collection-';
@@ -63,7 +58,7 @@ export function overlayDrafts(top, under) {
 const LOOK_ID = /^[a-z0-9]{6,24}$/;
 
 /**
- * A saved draft handed over to this tab (`urd-look-<id>` in the shared storage, `{at, texts: {key: text}}`), moved into the tab's own storage, the draft keys alone, and only then taken away; a hand-over that is not there, not of that shape, or cannot be written whole stays where it is and moves nothing.
+ * Moves a saved draft handed to this tab (`urd-look-<id>`, `{at, texts}`) into the tab's own storage, its draft keys alone, then takes the hand-over away.
  * @param {string|null} id
  * @param {Storage} shared The storage every tab of the site reads (localStorage)
  * @param {Storage} own The tab's own storage (sessionStorage)

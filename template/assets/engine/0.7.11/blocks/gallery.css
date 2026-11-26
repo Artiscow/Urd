@@ -1,6 +1,6 @@
 /*
- * The gallery block's own rules (blocks/gallery.js), loaded with the module by core-types.js (for the gallery, and for the slideshow background, which draws one), placed after base.css in the order BLOCK_SHEETS keeps.
- * Its reasoning stands in docs/STYLES.md, under blocks/gallery.css.
+ * The gallery's rules (blocks/gallery.js), for it and the slideshow background, after base.css in BLOCK_SHEETS order.
+ * Its reasoning stands in docs/STYLES.md.
  */
 .urd-gallery-tile {
   display: block;

@@ -1,7 +1,5 @@
 /**
- * Visitor-facing strings, British English. Overlays the Bokmål base
- * (nb.js); the parity test keeps the key sets in sync. Date names come
- * from Intl.
+ * Visitor-facing strings, British English, over the Bokmål base (nb.js); date names come from Intl.
  */
 export default {
   lang: 'en-GB',

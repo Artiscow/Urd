@@ -339,3 +339,38 @@ test('loader: a visitor\'s page (loadPlugins) never loads the language-pack modu
   await loadPluginList(freshUrd(), '0.7.11', ['lang-yy']);
   assert.ok(log.includes('/assets/urd/language-packs.js'), 'the editor\'s preview registers the pack\'s languages');
 });
+
+test('a plugin imports only /assets/urd/ paths or files of its own, never the versioned engine, in its code and in the plugin guide\'s examples', async () => {
+  const { readFileSync, readdirSync, existsSync } = await import('node:fs');
+  const { stripComments } = await import('./_engine.mjs');
+  const TEMPLATE = new URL('../template/', import.meta.url);
+  const PLUGINS = new URL('plugins/', TEMPLATE);
+  /** Every specifier a module names: a static import, a re-export and a dynamic import of a string. */
+  const specifiers = (src) => [
+    ...stripComments(src).matchAll(/\b(?:import|export)\b[^'"`;]*?\bfrom\s*['"]([^'"]+)['"]|\bimport\s*['"]([^'"]+)['"]|\bimport\(\s*(?:\/\*[^*]*\*\/\s*)?['"`]([^'"`]+)['"`]\s*\)/g),
+  ].map((m) => m[1] ?? m[2] ?? m[3]);
+  /** A specifier a plugin may use: a shell of the stable plugin API that exists, or a relative path within the plugin's own folder. */
+  const allowed = (spec, from, folder) => {
+    if (spec.startsWith('/assets/urd/')) return existsSync(new URL(spec.slice(1), TEMPLATE));
+    if (!spec.startsWith('./') && !spec.startsWith('../')) return false;
+    return new URL(spec, from).href.startsWith(folder.href);
+  };
+  assert.deepEqual(specifiers(`import { t } from '/assets/urd/i18n.js';\nimport './own.js';\nexport { x } from "../y.js";\nconst m = await import(/* @vite-ignore */ '/assets/engine/0.7.11/hint.js');`), ['/assets/urd/i18n.js', './own.js', '../y.js', '/assets/engine/0.7.11/hint.js'], 'the reader finds every form of import');
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? walk(new URL(`${entry.name}/`, dir)) : [new URL(entry.name, dir)]));
+  const folders = readdirSync(PLUGINS, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => new URL(`${d.name}/`, PLUGINS));
+  assert.ok(folders.length > 0, 'the template ships a plugin');
+  for (const folder of folders) {
+    for (const file of walk(folder).filter((url) => /\.m?js$/.test(url.pathname))) {
+      for (const spec of specifiers(readFileSync(file, 'utf8'))) assert.ok(allowed(spec, file, folder), `${file.pathname.slice(PLUGINS.pathname.length)} imports ${spec}`);
+    }
+  }
+  // The guide's code examples are what a plugin author copies.
+  const guide = readFileSync(new URL('README.md', PLUGINS), 'utf8');
+  const examples = [...guide.matchAll(/```js\n([\s\S]*?)```/g)].map((m) => m[1]);
+  assert.ok(examples.length > 0, 'the guide has code examples');
+  const named = examples.flatMap(specifiers);
+  assert.ok(named.length > 0, 'the guide\'s examples import something');
+  const example = new URL('example/index.js', PLUGINS);
+  for (const spec of named) assert.ok(allowed(spec, example, new URL('example/', PLUGINS)), `the guide imports ${spec}`);
+  for (const [, spec] of guide.matchAll(/`import [^`]*?from '([^']+)'`/g)) assert.ok(allowed(spec, example, new URL('example/', PLUGINS)), `the guide's text imports ${spec}`);
+});

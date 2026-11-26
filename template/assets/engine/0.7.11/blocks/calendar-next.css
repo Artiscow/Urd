@@ -1,6 +1,6 @@
 /*
- * The calendar's «Coming up» designs (blocks/calendar-next.js): their own rules, loaded with the renderer by blocks/calendar-load.js (loadDesign).
- * The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+ * The «Coming up» designs' own rules, loaded with blocks/calendar-next.js.
+ * Its reasoning stands in docs/STYLES.md, under blocks/calendar-next.css.
  */
 .urd-cal-band-track.urd-cal-band-still {
   overflow-x: auto;
@@ -15,7 +15,7 @@
   font-size: 1.7em;
 }
 
-/* N1 Billboard: the card as a lit billboard in a dark frame, two lamps over its top edge throwing light down on it and two legs under it; a pulse before the date, the facts as tiles. */
+/* N1 Billboard's card: a lit billboard in a dark frame */
 .urd-cal-dialog.urd-cal-dlg-billboard {
   background-image:
     radial-gradient(ellipse 130px 120px at 22% 0, rgb(255 250 220 / 22%), transparent 70%),
@@ -106,7 +106,7 @@
   border-radius: 10px;
 }
 
-/* N3 Noticeboard: the card as a note pinned to the board, a little askew, with the day on a second note pinned over its top corner. */
+/* N3 Noticeboard's card: a note pinned to the board */
 .urd-cal-dialog.urd-cal-dlg-noticeboard {
   padding-top: 1.5rem;
   transform: none;
@@ -145,7 +145,7 @@
   border-radius: 6px;
 }
 
-/* M5 Dark glass: the card as smoked glass lit along its edges by the two colour blobs, a dot before the date and the title glowing. */
+/* M5 Dark glass's card: smoked glass lit along its edges */
 .urd-cal-dialog.urd-cal-dlg-darkGlass {
   --urd-cal-dgc-a: var(--urd-cal-s-blobA, var(--urd-color-accent));
   --urd-cal-dgc-b: var(--urd-cal-s-blobB, #3fb8a4);
@@ -788,9 +788,7 @@
   animation-play-state: paused;
 }
 
-/* The band's pause (blocks/calendar-next.js bandPause): a round button at the band's right edge, in the band's own colours.
-   In the touch form it is drawn only while it has focus, which only the keyboard can give a one-pixel button; a touch on the
-   band pauses it there. */
+/* The band's pause: a round button at the band's right edge */
 .urd-cal-band-pause {
   display: grid;
   flex: none;

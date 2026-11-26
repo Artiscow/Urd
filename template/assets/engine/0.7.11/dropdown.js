@@ -1,29 +1,10 @@
 /**
- * Theme-driven dropdown for the canvas (ADR-0009): native select popups are
- * drawn by the browser/OS and turn unreadable in dark toolbars and panels, so
- * ALL editing UI in the preview (and plugins) uses this instead.
- * Self-contained styling (its own style tag), like hint.js: the button takes the colour of what it stands in, and the menu takes the admin's theme (the --urd-admin-* variables the editor sends the preview), with a dark surface of its own outside the admin.
- * The chosen item is ringed in the accent lightened a quarter toward the text, as the text toolbar's active button is, at 3:1 or more in every admin theme.
- *
- *   const dd = createDropdown({ value, options: [['p', 'Paragraph'], …], onchange });
- *   parent.appendChild(dd.el);  dd.set('h2');
- *
- * An option may carry a fourth entry, a face `{ font, sample? }`: the label is drawn in that font, or with `sample` in the UI's font with the sample beside it in that font, in the menu and on the button alike (fontChoices in fonts.js).
- * The third entry is unused here, since the admin's Dropdown keeps a note there, and a fourth entry without a font name is no face.
- *
- * The buttons do not steal focus (mousedown is prevented), so a text field's
- * selection survives the choice - which is why it fits in the text toolbar.
- *
- * Two branches (ADR-0011 decisions 1 and 2, anchored.js decides): with the Popover
- * API and anchor positioning the menu opens in the top layer under its
- * button, flipped by the browser when it does not fit, with light dismiss
- * for the outside click and Escape; otherwise it is appended to body,
- * position: fixed, placed by measuring, and closed by the listeners below.
+ * Theme-driven dropdown for the canvas and plugins (ADR-0009), with its own style tag.
+ * Its menu is a popover where anchored.js allows, else placed by measuring.
  */
 import { nativeAnchoring, anchorName } from './anchored.js';
 
-// The caret is drawn, never a character (chrome is icons only). It is sized
-// in em so it keeps following the button's text size.
+// The caret, sized in em to follow the button's text size.
 const CARET_SVG = '<svg viewBox="0 0 16 16" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6"/></svg>';
 
 let openMenu = null;
@@ -87,6 +68,7 @@ export function closeDropdowns() {
 }
 
 /**
+ * A dropdown that leaves the focus where it is; an option's fourth entry is a face `{ font, sample? }` its label is drawn in.
  * @param {{ value?: string, options: Array<[string, string, unknown?, {font: string, sample?: string}?]>, onchange: (value: string) => void, title?: string }} spec
  * @returns {{ el: HTMLElement, set: (value: string) => void }}
  */
@@ -153,9 +135,7 @@ export function createDropdown({ value = null, options = [], onchange, title = '
   };
 
   if (nativeAnchoring()) {
-    // The menu lives inside the root (the top layer lifts it out of any
-    // clipping), the button is its invoker, and the toggle event fills it
-    // with the current choice marked on every open.
+    // The menu lives in the root and opens in the top layer; the toggle event fills it on every open.
     const name = anchorName('urd-dd');
     btn.style.setProperty('anchor-name', name);
     btn.setAttribute('popovertarget', name.slice(2));

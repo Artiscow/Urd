@@ -1,11 +1,5 @@
 /**
- * Search in every language (0.7.10.5): a word typed in any of the admin's built-in languages finds the labels the menus show in the current one, so «kalender» finds «Calendar» in an English menu and «calendar» finds «Kalender» in a Norwegian one.
- * The searches still match the words the menus show (palette-search.js); this module adds, for each word typed, the labels it stands for in the admin language.
- * A word stands for a label when, in some language, the label's string has a word that starts with it, or holds it inside a compound once the word is five letters long («farge» in «Tekstfarge»).
- * Only short strings count as labels; the words of a sentence (a tooltip, a hint) would find too much.
- * A label found this way matches the menu's text only where it starts a word there, and a label shorter than four letters only as a whole word, so «Mål» found for «size» does not match inside «Normal»; a label of one or two letters is not used.
- * The admin dictionaries are loaded on the first search, from the absolute paths initAdminLocale uses, so a language already loaded is not fetched again; the admin dictionaries of the enabled language packs (language-packs.js) are loaded with them, so a word in a pack's language is found too.
- * The core is pure (buildIndex, makeLanguageSearch) and node-tested with plain dictionaries; the menus use the bound functions below.
+ * Search in every language: a word typed in any of the admin's languages finds the labels the menus show in the current one («kalender» finds «Calendar»).
  */
 import { SUPPORTED_LANGS, ta } from './i18n.js';
 import { normalize, rankLabel, matchWords } from './palette-search.js';
@@ -50,8 +44,8 @@ function holds(text, term) {
 const WORD_CHAR = /[\p{L}\p{N}]/u;
 
 /**
- * Where a label found through another language stands in a menu's text, both normalised: 0 at the start of the text, 1 at the start of a later word, -1 nowhere.
- * A label shorter than WHOLE_BELOW must also end where a word ends.
+ * Where a label from another language stands in a menu's text: 0 at its start, 1 at a later word, -1 nowhere.
+ * One shorter than WHOLE_BELOW must end a word.
  */
 function atWord(text, label) {
   const whole = label.length < WHOLE_BELOW;
@@ -87,7 +81,7 @@ export function makeLanguageSearch(index, current) {
   };
 
   /**
-   * Whether the text matches the query: every word found in it as typed (matchWords), the whole query standing for a label it holds at a word, or, word by word, each word found as typed or through a label it stands for.
+   * Whether the text matches the query: every word as typed, the whole query through a label it holds at a word, or each word as typed or through a label.
    * @param {string} text
    * @param {string} query
    */
@@ -100,7 +94,7 @@ export function makeLanguageSearch(index, current) {
   };
 
   /**
-   * The rank of a label for the query (palette-search.js rankLabel): a hit as typed ranks first (0 to 2), a hit through another language after it (3 at the label's start, 4 at a later word), -1 is a miss.
+   * The rank of a label for the query: 0 to 2 for a hit as typed (rankLabel), 3 or 4 for one through another language, at its start or a later word, -1 a miss.
    * @param {string} label
    * @param {string} query
    */

@@ -1,8 +1,7 @@
 /*
- * The preview's own rules: the editing layer's handles, bars, menus and marks, which a visitor's page never draws.
- * Every rule here needs the preview's body class `.urd-preview`, which only the boot sets, in the preview (urd.js), or names a class only the editing layer's modules write; the boot loads this sheet there alone, after base.css.
+ * The preview's own rules, which a visitor's page never draws: each needs `.urd-preview` or a class only the editing layer writes.
  */
-/* The editing layer's own parts (the colour picker, the set's bar, the selection frame, the seams, the drag cursor, the hidden scrollbar), first, so the preview's rules below win where they meet them at equal specificity. */
+/* The editing layer's own parts (colour picker, set bar, selection frame, seams, drag cursor, scrollbar) first, so the rules below win at equal specificity. */
 /* The shared color picker (color-picker.js): a floating card in preview mode */
 .urd-cp {
   position: fixed;
@@ -345,16 +344,14 @@ body.urd-marqueeing {
   background: transparent;
 }
 
-/* The phone view's set bar (0.7.36.3): its count and buttons in a row of their own, which the editor watches for the copy it draws beside the phone. */
+/* The phone view's set bar: its count and buttons in a row of their own, which the editor watches for the copy it draws beside the phone. */
 .urd-phone-set-body {
   display: flex;
   align-items: center;
   gap: 2px;
 }
 
-/* The preview hides the viewport scrollbar (scrolling still works with wheel and touch).
-   The canvas is a scaled-down iframe, not a real window, so a scrollbar there measures the editor's height, which a visitor never has.
-   Visitors and «View site» keep the browser's ordinary scrollbar. */
+/* The preview hides the viewport scrollbar; wheel and touch still scroll. */
 html:has(body.urd-preview) {
   scrollbar-width: none;
 }
@@ -363,8 +360,7 @@ html:has(body.urd-preview)::-webkit-scrollbar {
   display: none;
 }
 
-/* Mobile view in the editor: the structure tools (the bars on the seams with their grips) are hidden; mobile is for layout adjustment and review.
-   Its own seams (preview-edit.js phoneSeam) carry only the grip of the room above and below the sections' blocks. */
+/* The phone view hides the section seams; its own seams (preview-edit.js phoneSeam) carry only the grip of the room above and below the blocks. */
 body.urd-mobile .urd-add-section:not(.urd-phone-seam) {
   display: none !important;
 }
@@ -374,15 +370,13 @@ body:not(.urd-mobile) .urd-phone-seam,
   display: none;
 }
 
-/* With the menu outside the flow (floating pill or overlay) the first section's top lies under the menu, and its content starts the menu's height below it (the nav clearance).
-   The first seam stands there, its line, chip and grip with it, so they are seen and reached on the line where the content starts, as on every other seam. */
+/* Under a menu outside the flow, the first seam stands where the first section's content starts, below the menu. */
 #urd-nav.urd-nav-float + #urd-root > .urd-add-section:first-child,
 #urd-nav.urd-nav-overlay + #urd-root > .urd-add-section:first-child {
   top: var(--urd-nav-h, 0px);
 }
 
-/* A directional cursor while a section boundary is dragged (preview-edit sets the class on the root element): arrow down when dragging down, arrow up when dragging up.
-   It is !important, so the cursor holds over every element beneath. */
+/* A directional cursor while a section boundary is dragged (preview-edit sets the class on the root element), held over every element beneath. */
 html.urd-drag-down,
 html.urd-drag-down * {
   cursor: s-resize !important;
@@ -568,31 +562,18 @@ body.urd-preview.urd-chrome-off .urd-nav-side-resize {
   cursor: pointer;
 }
 
-/* The editing chrome holds the band, so the words can be read and typed. The
-   rule sits on the body rather than on a class from the render: Clean view is
-   a class toggle with no re-render, and a decision made at render would stick.
-   Clean view, the published page and «Play the motion» (urd-motion-demo, six
-   seconds from the panel) all show the real motion. */
+/* The editing chrome holds the band still so its words can be read and typed; Clean view and «Play the motion» (urd-motion-demo) show the motion. */
 body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .urd-ribbon-track {
   animation: none;
 }
 
-/* The block menu's place (preview only): top right in the section, below the section
-   toolbar, where the / key opens it; the toolbar's «New block» and a double click move it
-   under themselves. Absolute position: it must never take part in the flow (a flow margin
-   would collapse out of the section and leave a band without background at the top of
-   every section). */
+/* The block menu's place: top right in the section, below the section toolbar, where the / key opens it; absolute, out of the flow. */
 .urd-preview .urd-add-block {
-  /* Counter-scaling: the handle should keep the same on-screen size as
-     the admin panels at any zoom level (urd-zoom). */
+  /* Counter-scaled to the admin panels' on-screen size at any zoom (urd-zoom). */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: top right;
   position: absolute;
-  /* The offset is counter-scaled along with the menu: the section toolbar above
-     is counter-scaled too, so a fixed offset keeps the two apart at
-     every zoom level. The nav clearance (--urd-section-clear, first section only,
-     under a menu outside the flow) is added, so the menu starts below the
-     parked toolbar instead of behind the site's menu. */
+  /* Counter-scaled with the menu, below the section toolbar and the nav clearance (--urd-section-clear) under a menu outside the flow. */
   top: calc(var(--urd-section-clear, 0px) + 46px * var(--urd-chrome-scale, 1));
   right: calc(10px * var(--urd-chrome-scale, 1));
   /* Above the block lift (99999): an overhanging block must not cover the menu */
@@ -604,11 +585,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   transition: opacity 0.12s ease;
 }
 
-/* The editor menus (the block menu and the section gallery) follow the Urd admin
-   color theme, not the page being edited: the editor reports the theme as
-   --urd-admin-* variables (urd-admin-theme), and here the page's variables are
-   overridden locally. The fallbacks are the admin default theme ("grey"), so the
-   menus stay readable even when the preview is opened outside admin. */
+/* The editor menus take the admin's colours (--urd-admin-*, urd-admin-theme) over the page's; the fallbacks are the admin's default theme. */
 .urd-preview .urd-add-block,
 .urd-preview .urd-add-section {
   --urd-color-bg: var(--urd-admin-bg, #0e0f11);
@@ -622,18 +599,14 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   pointer-events: auto;
 }
 
-/* Opened with a double click or from the toolbar: the menu stands at the pointer or under
-   the button, visible regardless of the hover rules. Raised ABOVE the section chrome (the
-   seams 100001), so that chrome sits UNDER the menu instead of poking through it. */
+/* Opened with a double click or from the toolbar: the menu stands at the pointer or under the button, above the seams (100001). */
 .urd-preview .urd-add-block.urd-at-pointer {
   opacity: 1;
   pointer-events: auto;
   z-index: 100002;
 }
 
-/* The + New block menu (preview-edit.js addBlockAdder).
-   Groups on the side, the default form, is a box of fixed size: the search on top, the groups' list at the left and the chosen group's blocks beside it, where only the list and the blocks scroll, so the box never grows with the palette.
-   Its fit to the screen (turning upwards, the height held to the room, the sideways move) is set by fitBlockMenu. */
+/* The + New block menu (preview-edit.js addBlockAdder): a box of fixed size with the search on top, the groups at the left and a group's blocks beside them. */
 .urd-preview .urd-add-block-menu {
   display: none;
   position: absolute;
@@ -734,8 +707,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   padding: 6px 8px;
   text-align: left;
   cursor: pointer;
-  /* Long labels without spaces (plugin views, for example) must never
-     burst the cell: break the word instead of overflowing the menu. */
+  /* Long labels without spaces break instead of overflowing the menu. */
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -759,8 +731,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   background: color-mix(in srgb, var(--urd-color-accent) 12%, transparent);
 }
 
-/* The row the arrow keys have walked to, marked a shade stronger than hover
-   so the keyboard and the pointer can be told apart. */
+/* The row the arrow keys have walked to, a shade stronger than hover. */
 .urd-preview .urd-add-block-menu button.urd-pick-active {
   border-color: var(--urd-color-accent);
   background: color-mix(in srgb, var(--urd-color-accent) 22%, transparent);
@@ -802,9 +773,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   opacity: 0.6;
 }
 
-/* The slim form (the Urd settings): the groups' list alone, 240 px wide and as tall as its rows, under the blocks added last.
-   A group's blocks open in a panel beside the menu (fitFlyout), so this form lets the panel out of its box and scrolls the list instead.
-   The panel's arrow points to the side it opens on. */
+/* The slim form (the Urd settings): the groups' list alone, 240 px wide; a group's blocks open in a panel beside the menu (fitFlyout). */
 .urd-preview .urd-add-block-menu.urd-abm-slim {
   width: 240px;
   height: auto;
@@ -913,8 +882,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   z-index: 100001;
 }
 
-/* In preview the menu is raised above the section handles (100000), so the bars
-   still slide under it; the editor panels (100001+) sit above everything */
+/* In preview the sticky menu stands above the section handles (100000), so the bars slide under it. */
 .urd-preview .urd-nav-sticky {
   z-index: 100001;
 }
@@ -963,18 +931,12 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   z-index: 100001;
 }
 
-/* Smart guides: snap lines while a block is dragged (preview only).
-   A line between the block and a neighbour spans the two, a line of the content surface reaches a little past the block with its share in a label, so preview-edit sets the span inline.
-   Each line ends in a dot. */
+/* Smart guides: snap lines while a block is dragged, each ending in a dot; preview-edit sets each line's span inline. */
 .urd-preview .urd-smart-guide {
   position: absolute;
   /* Above the block lift (99999): the dragged block is raised to it, and a line through an opaque block (a video, a picture) must still show */
   z-index: 100000;
-  /* The thickness is counter-scaled (urd-zoom), so the line keeps its on-screen
-     thickness at every zoom level. The color is DELIBERATELY a fixed magenta and not
-     the admin accent: guides must stand apart from both the grid (which uses
-     the accent) and the page's own colors, whatever the admin theme. The same
-     convention as Figma and Wix. The shadow gives contrast against light surfaces. */
+  /* A fixed magenta apart from the grid's accent and the page's colours, its thickness counter-scaled (urd-zoom), with a shadow for light surfaces. */
   background: #ff2d87;
   box-shadow: 0 0 0 calc(0.5px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 45%, transparent);
   pointer-events: none;
@@ -1029,15 +991,13 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   translate: -100% -50%;
 }
 
-/* The section a dragged block will move to (preview-edit.js): a dashed frame
-   inside its edge in the admin accent while the block is held wholly outside
-   its own section over it, so the landing place is read before the release */
+/* The section a dragged block will move to (preview-edit.js): a dashed frame in the admin accent inside its edge. */
 .urd-preview .urd-section.urd-drop-target {
   outline: calc(2px * var(--urd-chrome-scale, 1)) dashed var(--urd-admin-accent, #6c5ce7);
   outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
 }
 
-/* The phone's eight cell columns, drawn faintly over the row grid while a flowing block is dragged or sized on the phone (preview-edit.js flowDrag, cellResize): the 90 % between the two outer tracks of 5 %, cut in eighths */
+/* The phone's eight cell columns, drawn faintly while a flowing block is dragged or sized on the phone (preview-edit.js flowDrag, cellResize). */
 .urd-preview .urd-phone-cells {
   position: absolute;
   inset: 0 5%;
@@ -1049,7 +1009,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   border-inline: 1px solid color-mix(in srgb, #ff2d87 45%, transparent);
 }
 
-/* Where the dragged block lands on the phone: a line across the row before or after a block, or the room it will take beside a block or above or below it in its column, in the guides' magenta; while a width is dragged, the cells it will take with their share */
+/* Where the dragged block lands on the phone, in the guides' magenta: a line across the row or the room it takes, and while a width is dragged its cells. */
 .urd-preview .urd-phone-land {
   position: absolute;
   z-index: 100000;
@@ -1066,7 +1026,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   cursor: grabbing;
 }
 
-/* Where the dragged block will stand, as the section shows the drop's outcome or on the row a pinned block lands on: a dashed box in the guides' magenta, lightly filled, behind the block */
+/* Where the dragged block will stand: a dashed box in the guides' magenta, lightly filled, behind the block. */
 .urd-preview .urd-phone-landing {
   position: absolute;
   /* Under the lifted block (99999) */
@@ -1078,7 +1038,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   background: color-mix(in srgb, #ff2d87 12%, transparent);
 }
 
-/* A flowing block's room above it while a drag over its own place sets it (preview-edit.js flowDrag): the gap above where it will stand, striped in the guides' magenta, with its size */
+/* A flowing block's room above it while a drag sets it (preview-edit.js flowDrag): the gap striped in the guides' magenta, with its size. */
 .urd-preview .urd-phone-space {
   position: absolute;
   left: 0;
@@ -1104,12 +1064,12 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 60%, transparent);
 }
 
-/* The block a drag or a handle would squeeze under «Force readable text» (ADR-0034, preview-edit.js showTooNarrow): greyed and faded for as long as the pointer asks for it, the editor's notice line saying why; faded by the filter, so it adds to the lifted block's own opacity */
+/* The block a drag or a handle would squeeze under «Force readable text» (preview-edit.js showTooNarrow), greyed and faded by a filter. */
 .urd-preview .urd-block.urd-readable-blocked {
   filter: grayscale(1) opacity(0.55);
 }
 
-/* A stack the dragged block joins, outlined round its blocks and the landing while the drag shows it (preview-edit.js phonePreview), in the amber the Phone Drop Map draws stacks in */
+/* A stack the dragged block joins (preview-edit.js phonePreview), outlined in the amber the Phone Drop Map draws stacks in. */
 .urd-preview .urd-phone-stackmark {
   position: absolute;
   z-index: 99998;
@@ -1167,8 +1127,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
 }
 
-/* Equal gaps: a band over each gap that becomes equal, with its size in px,
-   in the same magenta as the lines */
+/* Equal gaps: a band over each gap that becomes equal, with its size in px, in the guides' magenta. */
 .urd-preview .urd-smart-gap {
   position: absolute;
   z-index: 100000;
@@ -1188,8 +1147,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   border-radius: calc(3px * var(--urd-chrome-scale, 1));
 }
 
-/* Multi-selection: the selection frame (marquee), member highlighting and the
-   floating align/distribute toolbar */
+/* Multi-selection: the marquee, the members' highlight and the floating align and distribute toolbar. */
 .urd-preview .urd-marquee {
   position: absolute;
   z-index: 1002;
@@ -1203,7 +1161,7 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   outline-offset: -1px;
 }
 
-/* Where Urd settings «Bars in the phone view» puts the bars beside the phone (urd-bars-beside), the editor draws the set's bar there: the page keeps its own unseen, for the editor's presses to press its buttons. */
+/* With «Bars in the phone view» beside the phone (urd-bars-beside), the editor draws the set's bar; the page keeps its own unseen for the editor's presses. */
 body.urd-preview.urd-mobile.urd-bars-beside .urd-multi-toolbar.urd-phone-set {
   display: none;
 }
@@ -1215,10 +1173,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-multi-toolbar.urd-phone-set {
   pointer-events: none;
 }
 
-/* Page-wide guides (the on/off button next to the view choices): the content's quarters as solid lines in the full accent with a thin dark edge, each with its share written at its top.
-   Opaque, so the three look the same whether or not a grid line lies under one, and set apart from the grid's faint lines and from the smart guides' magenta.
-   Never clickable, never shown to visitors.
-   Line and label are counter-scaled like the rest of the editing chrome, so the guide stays readable at a strong zoom out instead of thinning to nothing. */
+/* Page-wide guides: the content's quarters as solid accent lines with a thin dark edge, each with its share at its top, counter-scaled and never clickable. */
 .urd-preview .urd-page-guide-v {
   top: 0;
   bottom: 0;
@@ -1286,11 +1241,7 @@ body.urd-preview:not(.urd-chrome-off) .urd-gallery-frame-empty .urd-gallery-skin
   outline-offset: -1px;
 }
 
-/* Mobile review (urd-attention on the section): the section needs a pass
-   over the mobile layout. The flag is told by the top bar's badge and the
-   review card in the mobile view; the section itself is never outlined. */
-
-/* The phone view's numbers (preview-edit.js enhanceSection): each block's place in the reading order, small and half over the block's top edge by its right corner, off its words and clear of the corner's handle, shown on the section under the pointer and on the section at work; a block placed by its own exception in amber */
+/* The phone view's numbers (preview-edit.js enhanceSection): each block's place in the reading order by its top right corner, amber for its own exception. */
 .urd-preview .urd-phone-num {
   position: absolute;
   top: 0;
@@ -1320,7 +1271,7 @@ body.urd-preview:not(.urd-chrome-off) .urd-gallery-frame-empty .urd-gallery-skin
   color: #1a1508;
 }
 
-/* A section lit from its heading in the order's column: a frame and a tint over the whole section, its background layers and blocks included, so it reads as lit on any background; it takes no press */
+/* A section lit from its heading in the order's column: a frame and a tint over the whole section that take no press. */
 .urd-preview .urd-section.urd-lit::after {
   content: '';
   position: absolute;
@@ -1338,7 +1289,7 @@ body.urd-preview:not(.urd-chrome-off) .urd-gallery-frame-empty .urd-gallery-skin
   outline-offset: -1px;
 }
 
-/* Words selected while they are written: a see-through mark in the admin's accent over the words' own colours, so a colour or a highlight given to them from the text bar shows while they are still selected (the browser's own selection draws them in its colours) */
+/* Words selected while written: a see-through mark in the admin's accent, so a colour given from the text bar shows while still selected. */
 body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"])::selection,
 body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"]) ::selection {
   background-color: color-mix(in srgb, var(--urd-admin-accent, #2ec8b5) 35%, transparent);
@@ -1356,8 +1307,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   color: var(--urd-admin-accent-text, #fff);
 }
 
-/* The pin marker on a block pinned on the phone: it keeps its own spot while the other blocks flow around it.
-   The same shape as the sticky pin, yellow like the review flag, small and half over the block's top edge by its left corner, off its words and clear of the corner's handle. */
+/* The pin marker on a block pinned on the phone: the sticky pin's shape in yellow, half over the block's top left corner. */
 .urd-preview .urd-mobile-pin {
   /* Upright on a rotated block, like the handles above. */
   transform: translate(-50%, -50%) rotate(calc(-1 * var(--urd-block-rot, 0deg)));
@@ -1380,8 +1330,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   height: calc(8px * var(--urd-chrome-scale, 1));
 }
 
-/* A block with words of its own on the phone (ADR-0033): the same amber round mark as the pin, with lines of text, half over the block's top edge by its left corner, clear of the corner's handle, beside the pin where the block has one.
-   It takes the pointer for its tooltip; a press on it reaches the block it stands on. */
+/* A block with words of its own on the phone (ADR-0033): an amber round mark by its top left corner, beside the pin; a press on it reaches the block. */
 .urd-preview .urd-phone-words {
   transform: translate(-50%, -50%) rotate(calc(-1 * var(--urd-block-rot, 0deg)));
   position: absolute;
@@ -1408,8 +1357,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   height: calc(8px * var(--urd-chrome-scale, 1));
 }
 
-/* The list of a section's blocks hidden in the view (hidden on phones in the phone view, shown on phones only on the desktop): a floating panel below the section toolbar, with
-   one row per block and the eye button that brings it back. */
+/* The list of a section's blocks hidden in the view: a floating panel below the section toolbar, a row per block with the eye that brings it back. */
 .urd-preview .urd-hidden-list {
   position: absolute;
   top: calc(var(--urd-section-clear, 0px) + 46px * var(--urd-chrome-scale, 1));
@@ -1452,12 +1400,8 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   background: color-mix(in srgb, var(--urd-admin-text, #e8eaf0) 16%, transparent);
 }
 
-/* The editing layer - applies ONLY in preview mode (body.urd-preview,
-   set by the engine inside the editor's iframe) */
 .urd-preview .urd-grid-overlay {
-  /* The cell size (preview-edit.js sets --urd-grid) and the line's width.
-     The line width is counter-scaled (urd-zoom), so the lines keep their on-screen width and stay crisp at every zoom level.
-     The cell size itself is NOT counter-scaled: it is the page's own geometry and follows the zoom. */
+  /* The cell size (preview-edit.js sets --urd-grid) follows the zoom; the line width is counter-scaled (urd-zoom) to stay crisp. */
   --urd-grid-cell: var(--urd-grid, 16px);
   --urd-grid-line: calc(1px * var(--urd-chrome-scale, 1));
   --urd-grid-minor: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 10%, transparent);
@@ -1466,9 +1410,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  /* The quiet grid (0.7.34, the default look): faint lines with every fourth stronger, so it measures without covering the page.
-     The columns are counted out from the content's middle: a line on its centre (each tile starts at 50 % plus half its own width), the part cell left over split equally between the two edges, as snap-model.js gridLine snaps.
-     The rows run from the section's top. */
+  /* The quiet grid: faint lines, every fourth stronger; columns counted out from the content's middle as snap-model.js gridLine snaps, rows from the section's top. */
   background-image:
     linear-gradient(to right, var(--urd-grid-major) var(--urd-grid-line), transparent var(--urd-grid-line)),
     linear-gradient(to bottom, var(--urd-grid-major) var(--urd-grid-line), transparent var(--urd-grid-line)),
@@ -1517,28 +1459,20 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
 }
 
 .urd-preview .urd-edit-toolbar {
-  /* Counter-scaling: the handle should keep the same on-screen size as
-     the admin panels at any zoom level (urd-zoom). The counter-rotation
-     keeps it upright on a rotated block (--urd-block-rot, written with the
-     frame in render.js); a uniform scale commutes with a rotation, so the
-     order of the two is free. */
+  /* Counter-scaled to the admin panels' size at any zoom (urd-zoom), and counter-rotated upright on a rotated block (--urd-block-rot). */
   transform: rotate(calc(-1 * var(--urd-block-rot, 0deg))) scale(var(--urd-chrome-scale, 1));
   transform-origin: bottom left;
   position: absolute;
   bottom: 100%;
   left: 0;
-  /* An invisible bridge down to the block edge, so hover is not lost on the way
-     up to the handles */
+  /* An invisible bridge down to the block edge keeps the hover on the way up to the handles. */
   padding-bottom: 5px;
   display: none;
   gap: 2px;
   z-index: 1000;
 }
 
-/* The toolbar sits above the block, also near the top of a section: sections
-   never clip, so there is usually nothing to make room for. The exception is
-   blocks at the top of the PAGE: there is no room above the top of the document, and
-   preview-edit sets the class that flips the bar below the block instead. */
+/* At the top of the page preview-edit flips the toolbar below the block. */
 .urd-preview .urd-edit-toolbar.urd-toolbar-under {
   bottom: auto;
   top: 100%;
@@ -1553,9 +1487,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   display: flex;
 }
 
-/* The right-click menu on a block (openContextMenu in preview-edit.js): a
-   narrow list at the pointer in the admin's colours, counter-scaled like the
-   toolbar; the first item is the one Enter would take, the last the deletion */
+/* The right-click menu on a block (openContextMenu in preview-edit.js): a narrow list at the pointer in the admin's colours, counter-scaled like the toolbar. */
 .urd-preview .urd-ctx {
   position: fixed;
   z-index: 100010;
@@ -1682,7 +1614,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   cursor: pointer;
 }
 
-/* The bar's size (Urd settings «Toolbar size», preview-edit.js barSize), for the block's bar and the section's: the bar laid out at the size with zoom, so its words and drawings are drawn sharp at it rather than a scaled picture of them; the regular size, the default, is the bar as drawn, and a browser without zoom draws every size so */
+/* The bar's size («Toolbar size», preview-edit.js barSize), laid out with zoom so its words and drawings stay sharp; the regular size is the bar as drawn. */
 .urd-preview .urd-edit-toolbar.urd-bar-size-small .urd-bar-body,
 .urd-preview .urd-section-toolbar.urd-bar-size-small {
   zoom: 0.85;
@@ -1698,7 +1630,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   zoom: 1.25;
 }
 
-/* The bar's own body inside the toolbar, which keeps the hover bridge to the block; the looks below frame it (Urd settings «Toolbar look», preview-edit.js barLook) */
+/* The bar's own body inside the toolbar, which keeps the hover bridge to the block; the looks below frame it («Toolbar look», preview-edit.js barLook). */
 .urd-preview .urd-edit-toolbar .urd-bar-body {
   display: flex;
   align-items: center;
@@ -1788,7 +1720,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   height: 34px;
 }
 
-/* Glass: the strip frosted, the page showing through it (its body after the capsules', below); the accent glass, the default, keeps the main act in the admin's accent, the glass a white one */
+/* Glass: the strip frosted, the page showing through it; the accent glass, the default, keeps the main act in the admin's accent. */
 .urd-preview .urd-edit-toolbar:is(.urd-bar-glass, .urd-bar-glass-accent, .urd-bar-glass-capsule) button {
   color: #fff;
 }
@@ -1813,8 +1745,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   height: 15px;
 }
 
-/* Each tool's drawing in its button's own box, so the two are rounded to the screen's pixels together and the drawing stands in the middle at every size, zoom and screen scale.
-   The drawing fills the box and is scaled about its middle to the size it is drawn at, a share of the box's height (--urd-tool-icon); with captions the drawing stands above its word in the flow. */
+/* Each tool's drawing in its button's own box, centred and scaled to a share of the box's height (--urd-tool-icon); with captions it stands above its word. */
 .urd-preview .urd-edit-toolbar:not(.urd-bar-captions) button {
   position: relative;
 }
@@ -1910,7 +1841,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   border-radius: 7px;
 }
 
-/* A tool on the block's bar lit under the pointer and at the keyboard's focus: a veil of its own drawing's colour over each look's ground, so it shows on the dark looks, the accent and the white capsule alike; the bin keeps its red below */
+/* A tool on the block's bar under the pointer or at the keyboard's focus: a veil of its drawing's colour over the look's ground; the bin keeps its red below. */
 .urd-preview .urd-edit-toolbar button:not(.urd-edit-delete, :disabled):focus-visible {
   background-image: linear-gradient(color-mix(in srgb, currentColor 18%, transparent), color-mix(in srgb, currentColor 18%, transparent));
 }
@@ -1996,9 +1927,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
 .urd-preview .urd-edit-resize[data-edge="nw"] { transform-origin: top left; }
 .urd-preview .urd-edit-resize[data-edge="sw"] { transform-origin: bottom left; }
 
-/* A block whose height follows its content (ADR-0025): on the desktop its handle changes the width only, and a pull up or down stops at the content's edge, where a bar says why for as long as the pointer is held.
-   On the phone its handles set its height as well (0.7.3.18), so they keep their own cursors.
-   The bar takes the smart guides' fixed magenta, for the same reason: it is drag feedback and must stand apart from the page's colours and the grid. */
+/* A block whose height follows its content (ADR-0025): its desktop handle sets the width alone, and a pull stops at the content's edge under a magenta bar. */
 .urd-preview:not(.urd-mobile) .urd-block[data-urd-height="content"] > .urd-edit-resize {
   cursor: ew-resize;
 }
@@ -2029,10 +1958,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   white-space: nowrap;
 }
 
-/* The size readout while a block is resized (ADR-0025 decision 7): the width
-   in percent and the height in px, under the block's bottom left corner so
-   it stays clear of the stop bar's label at the right. Drag feedback, so it
-   takes the guides' magenta like the bar. */
+/* The size readout while a block is resized (ADR-0025): the width in percent and the height in px under its bottom left corner, in the guides' magenta. */
 .urd-preview .urd-edit-readout {
   position: absolute;
   left: 0;
@@ -2052,9 +1978,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
 
 /* Rotation handle: a small circle at the block's top right corner */
 .urd-preview .urd-edit-rotate {
-  /* Counter-scaling and counter-rotation, as for the toolbar above.
-     Anchored above the block on the toolbar's row, clear of the resize
-     corner on a thin block at every zoom. */
+  /* Counter-scaled and counter-rotated as the toolbar, above the block on the toolbar's row, clear of the resize corner. */
   transform: rotate(calc(-1 * var(--urd-block-rot, 0deg))) scale(var(--urd-chrome-scale, 1));
   transform-origin: bottom right;
   position: absolute;
@@ -2072,8 +1996,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   z-index: 1000;
 }
 
-/* The toolbar flipped under the block (the top of the page): the handle
-   follows it below. */
+/* The toolbar flipped under the block: the handle follows it below. */
 .urd-preview .urd-edit-toolbar.urd-toolbar-under ~ .urd-edit-rotate {
   bottom: auto;
   top: 100%;
@@ -2086,10 +2009,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
 }
 
 /* Selected block: a persistent outline and always visible handles */
-/* The selection outline overlaps the box edge by a pixel: the preview is
-   scaled, so a box edge can fall between device pixels, and an outline drawn
-   just outside it would leave a seam of the section's background between
-   the two. */
+/* The selection outline overlaps the box edge by a pixel, leaving no seam between the two in the scaled preview. */
 .urd-preview .urd-block.urd-selected {
   outline: calc(2px * var(--urd-chrome-scale, 1)) solid var(--urd-admin-accent, #5f6a75);
   outline-offset: -1px;
@@ -2104,11 +2024,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   outline: calc(2px * var(--urd-chrome-scale, 1)) solid var(--urd-admin-accent, #5f6a75);
 }
 
-/* A blended picture's stand-in (preview-blend.js): a blend covers everything
-   a block draws, its bar, handles and outline too, so while the tools are on
-   the stand-in draws the picture and its blend under the block, in the
-   block's own place and layer, and the block draws its tools alone. The
-   block keeps its picture, unseen, for everything that measures or drags it. */
+/* A blended picture's stand-in (preview-blend.js): while the tools are on, it draws the picture and its blend under the block, which draws its tools alone. */
 .urd-preview .urd-blend-ghost {
   position: absolute;
   pointer-events: none;
@@ -2130,10 +2046,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   opacity: 0;
 }
 
-/* The whole block surface can be dragged directly; editable text keeps the
-   text cursor, the rich text block's and the plain-text cells, numbers,
-   quotes and events the other blocks mark with plaintext-only (the same set
-   the drag lets through in preview-edit.js). */
+/* The whole block surface drags; its editable text keeps the text cursor. */
 .urd-preview .urd-editable {
   cursor: move;
 }
@@ -2142,7 +2055,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   cursor: text;
 }
 
-/* In the Clean view no block is moved and no text written in (preview-edit.js, urd.js), so the cursors are the published page's, and a link in a block, which is followed there, shows the pointer; while editing, a press on a link selects the block or places the caret, and the cursors above stand. */
+/* In the Clean view the cursors are the published page's, a link in a block showing the pointer. */
 .urd-preview.urd-chrome-off .urd-editable {
   cursor: auto;
 }
@@ -2152,9 +2065,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   cursor: pointer;
 }
 
-/* While editing, the block under the pointer or the selected block is raised visually to the top, so that the handles can always be reached even if other blocks lie above it (z order).
-   The raised one is the smallest block under the pointer (preview-edit.js sets the class), so a small block over a larger one can be reached.
-   The true layer order is shown when the block is deselected - and ALWAYS in Clean view (chrome-off), which must be exactly what visitors see. */
+/* While editing, the block under the pointer or the selected one is raised on top so its handles can be reached; Clean view keeps the true layer order. */
 .urd-preview:not(.urd-chrome-off) .urd-editable.urd-hover-top {
   z-index: 99998 !important;
 }
@@ -2176,7 +2087,7 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
   display: flex;
 }
 
-/* In the phone view, where Urd settings «Bars in the phone view» puts the bars beside the phone (urd-bars-beside, preview-edit.js), the editor draws the selected block's bar there (0.7.3.19.2, editor/src/lib/CanvasBar.svelte): the page keeps its own unseen, for the editor's presses to press its tools. */
+/* With «Bars in the phone view» beside the phone (urd-bars-beside), the editor draws the selected block's bar (CanvasBar.svelte); the page keeps its own unseen. */
 body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   display: none;
 }
@@ -2185,16 +2096,13 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   display: block;
 }
 
-/* A pin on blocks with "Pin on scroll": the pinning is invisible until you
-   scroll, so the marker shows that it is on. Always visible with chrome
-   on (not only on hover), and gone in Clean view like the rest of the chrome. */
+/* A pin on blocks with «Pin while scrolling», shown whenever the chrome is on, so the pinning is seen before a scroll. */
 .urd-preview .urd-sticky-badge {
   /* Upright on a rotated block, like the handles above. */
   transform: rotate(calc(-1 * var(--urd-block-rot, 0deg)));
   transform-origin: top left;
   position: absolute;
-  /* Counter-scaling (urd-zoom): the marker keeps admin size like the mobile pin
-     marker (.urd-mobile-pin), and lets clicks through to the block. */
+  /* Counter-scaled (urd-zoom) to the admin's size like the phone pin, letting clicks through to the block. */
   top: calc(-7px * var(--urd-chrome-scale, 1));
   left: calc(-7px * var(--urd-chrome-scale, 1));
   width: calc(16px * var(--urd-chrome-scale, 1));
@@ -2217,9 +2125,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   display: none;
 }
 
-/* The "+ New section" bars float ON TOP OF the boundary between sections and take
-   zero space in the flow, so the sections sit flush exactly
-   as visitors see them (preview only) */
+/* The "+ New section" bars float on the boundary between sections and take no room, so the sections sit flush. */
 .urd-preview .urd-add-section {
   position: relative;
   height: 0;
@@ -2227,13 +2133,9 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   display: flex;
   justify-content: center;
   gap: 6px;
-  /* Above the block lift on hover and selection (99998/99999): the chip, the seam's grip
-     and the gallery are never taken by a block that hangs over the seam. The bar itself
-     is 0 px tall and pointer-events: none, so only they sit above anything. */
+  /* Above the block lift (99998/99999): a block hanging over the seam never covers the chip, the grip or the gallery. */
   z-index: 100001;
-  /* Hidden until the mouse is over an adjacent section (or the bar itself):
-     less noise, and the topmost bar does not collide with the menu. Shown
-     as a cut, not a fade: a fade restarts at every change of hover owner. */
+  /* Hidden until the pointer is over a neighbouring section or the bar, shown as a cut rather than a fade. */
   opacity: 0;
   pointer-events: none;
 }
@@ -2247,9 +2149,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   pointer-events: auto;
 }
 
-/* Empty page: the only bar has no neighboring section to be revealed by, so
-   the hover rules above can never show it. It therefore stays visible and fills
-   the surface as an empty state, otherwise the page cannot be built on at all. */
+/* Empty page: the only bar stays shown and fills the surface as the page's start. */
 .urd-preview #urd-root > .urd-add-section:only-child {
   opacity: 1;
   pointer-events: auto;
@@ -2257,8 +2157,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   align-items: center;
 }
 .urd-preview #urd-root > .urd-add-section:only-child > button {
-  /* Empty page: the bar fills the surface, so the chip must not be centered on a
-     zero-height line. The counter-scaling is kept. */
+  /* Empty page: the chip is counter-scaled without the centring on the line. */
   transform: scale(var(--urd-chrome-scale, 1));
 }
 
@@ -2269,8 +2168,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   right: 0;
   top: 0;
   height: 1px;
-  /* The line is drawn only; the hover stays with the section that shows
-     the bar. */
+  /* The line is drawn only; the hover stays with the section that shows the bar. */
   pointer-events: none;
   background: repeating-linear-gradient(
     90deg,
@@ -2280,8 +2178,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
 }
 
 .urd-preview .urd-add-section button {
-  /* translateY centers the chip on the 0 px tall bar; scale is
-     the counter-scaling that keeps admin size at any zoom (urd-zoom). */
+  /* translateY centres the chip on the 0 px tall bar; scale counter-scales it to the admin's size (urd-zoom). */
   transform: translateY(-50%) scale(var(--urd-chrome-scale, 1));
   border: 1px dashed color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 60%, transparent);
   border-radius: 999px;
@@ -2299,17 +2196,12 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   border-style: solid;
 }
 
-/* The seam's «New section» chip stands only on an empty page, as its start; on a seam
-   the section toolbar's «New section» opens the gallery of the seam below (preview-edit.js
-   openSectionGalleryBelow), and the seam holds its grip alone */
+/* The seam's «New section» chip stands only on an empty page; any other seam holds its grip alone. */
 .urd-preview #urd-root > .urd-add-section:not(:only-child) > .urd-add-section-chip {
   display: none;
 }
 
-/* The seam's grip (preview-edit.js seamGrip; the Section Seams canvas, look A): a pill on the
-   line that grows a section, a tab above and below it that shrinks the section it stands in.
-   It stands in the middle of the line at the admin's own size; the tabs come forward while
-   the pointer is on the grip (their own places included), a part has the focus, or a drag lasts. */
+/* The seam's grip (preview-edit.js seamGrip): a pill mid-line that grows a section, with a tab above and below that shrinks the one it stands in. */
 .urd-preview .urd-seam-grip {
   position: absolute;
   left: 50%;
@@ -2426,20 +2318,16 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   pointer-events: auto;
 }
 
-/* The category sidebar form (G2): a narrow category rail on the left,
-   search + grid on the right. The scroll lives in the content pane, not in the menu. */
+/* The category sidebar form: a narrow category rail on the left, search and grid on the right, the scroll in the content pane. */
 .urd-preview .urd-preset-menu {
   position: absolute;
   top: 8px;
   left: 50%;
-  /* translateX centers the menu; scale is the counter-scaling that keeps it at
-     admin size at any zoom (urd-zoom). The origin is at the top so it grows
-     downwards from the bar instead of moving. */
+  /* translateX centres the menu and scale counter-scales it (urd-zoom), from its top so it grows downwards from the bar. */
   transform: translateX(-50%) scale(var(--urd-chrome-scale, 1));
   transform-origin: top center;
   display: flex;
-  /* The caps are divided by the scale, so the drawn gallery fits the frame.
-     placePresetMenu (preview-edit.js) chooses the side and holds the height to the room there. */
+  /* The caps are divided by the scale, so the gallery fits the frame; placePresetMenu (preview-edit.js) picks the side and the height. */
   width: min(560px, calc((100vw - 16px) / var(--urd-chrome-scale, 1)));
   max-height: min(calc(70vh / var(--urd-chrome-scale, 1)), 460px);
   overflow: hidden;
@@ -2459,11 +2347,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   transform-origin: bottom center;
 }
 
-/* The category colors (F2): five fixed steps derived from
-   the admin accent. Without relative color syntax support every step falls
-   back to the accent alone (the ADR-0011 pattern). Red is
-   not used (reserved for destructive actions). The saturation floor max(c, 0.09)
-   gives the grey theme muted but distinguishable tones. */
+/* The category colours: five fixed steps from the admin accent, each the accent alone without relative colour syntax, never red, with a saturation floor. */
 .urd-preview .urd-preset-menu {
   --urd-category-1: var(--urd-admin-accent, #5f6a75);
   --urd-category-2: var(--urd-admin-accent, #5f6a75);
@@ -2514,9 +2398,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   color: var(--urd-color-text);
 }
 
-/* The category buttons: the chip rule (.urd-add-section button) hits every
-   button in the bar, so the selector goes through .urd-preset-menu and resets
-   transform and opacity. */
+/* The category buttons, reset from the chip rule (.urd-add-section button) through .urd-preset-menu. */
 .urd-preview .urd-preset-menu .urd-preset-rail button {
   display: flex;
   align-items: center;
@@ -2602,10 +2484,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   cursor: pointer;
 }
 
-/* Both forms of the picker are counter-scaled like the section toolbar they open from, and kept clear of it.
-   The toolbar's height (--urd-picker-clear, measured when the picker opens) grows with the scale past its box in the flow, which the drop clears.
-   The sticky offset parks the picker under the parked toolbar.
-   The negative bottom margin gives the drop back, so the section takes the same height at any scale. */
+/* Both forms of the picker are counter-scaled like the section toolbar and drop clear of it (--urd-picker-clear); the bottom margin gives the drop back. */
 .urd-preview .urd-layout-strip,
 .urd-preview .urd-layout-menu {
   --urd-picker-scale: var(--urd-chrome-scale, 1);
@@ -2617,11 +2496,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   box-sizing: border-box;
 }
 
-/* The change-layout strip (variant B): a horizontal row of thumbnails that
-   sticks to the screen while you are in the section (like the toolbar, right
-   below it), so the choice stays visible in tall sections too. The same
-   z as the nav and the toolbar: later in the DOM wins, so the strip sits above
-   the floating menu. */
+/* The change-layout strip: a row of thumbnails that sticks below the toolbar while in the section, at the nav's and the toolbar's z. */
 .urd-preview .urd-layout-strip {
   position: sticky;
   z-index: 100001;
@@ -2638,8 +2513,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   border-radius: 10px;
 }
 
-/* The gallery menu variant (a personal choice in the Urd settings): the same
-   cards in a 2-column panel anchored at the toolbar, also sticky. */
+/* The gallery menu form (the Urd settings): the same cards in a 2-column panel at the toolbar, also sticky. */
 .urd-preview .urd-layout-menu {
   position: sticky;
   z-index: 100001;
@@ -2707,7 +2581,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   border-radius: 5px;
 }
 
-/* A phone layout preset drawn small (preview-edit.js buildPhoneLayoutCards): the phone's eight cell columns, each cell with its blocks' marks, a picture as a tall block, a heading as a thick line, text as a thin one and a button as a short pill */
+/* A phone layout preset drawn small (preview-edit.js buildPhoneLayoutCards): the phone's eight columns with each block's mark. */
 .urd-preview .urd-layout-thumb.urd-phone-sketch {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -2773,8 +2647,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   overflow-wrap: break-word;
 }
 
-/* Block search in the + New block menu: a field at the top.
-   During an active search the menu's ordinary content is hidden and a flat, ranked result list is shown instead (the urd-searching class), scrolling inside the menu. */
+/* Block search in the + New block menu: a field at the top; a search hides the menu's content for a ranked list (urd-searching). */
 .urd-preview .urd-block-search {
   flex: none;
   display: flex;
@@ -2829,8 +2702,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   color: color-mix(in srgb, var(--urd-color-text) 55%, transparent);
 }
 
-/* The My templates category: a 2-column grid with a large thumbnail, name and
-   delete button (revealed on hover over the card) */
+/* The My templates category: a 2-column grid of cards with a large thumbnail, a name and a delete button shown under the pointer. */
 .urd-preview .urd-template-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2921,9 +2793,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   align-items: center;
 }
 
-/* The group headings in the "All" view stick to the top of the scroll pane,
-   so you always see which group the cards below belong to. The text is tinted in
-   the category color (F2). */
+/* The group headings in the "All" view stick to the top of the scroll pane, tinted in the category colour. */
 .urd-preview .urd-preset-group {
   position: sticky;
   top: 0;
@@ -2940,8 +2810,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   color: color-mix(in srgb, var(--urd-category-color, var(--urd-color-text)) 70%, var(--urd-color-text));
 }
 
-/* The preset grid (G2): cards with a thumbnail above the name; the hint lives in
-   the tooltip (title), not as a permanent subtitle. */
+/* The preset grid: cards with a thumbnail above the name, the hint in the title. */
 .urd-preview .urd-preset-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2993,23 +2862,12 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   white-space: nowrap;
 }
 
-/* The section toolbar (move up/down, fit height, delete) - visible
-   only while the pointer is inside the section; always on top (above lifted
-   blocks) */
+/* The section toolbar (move up and down, fit height, delete), shown while the pointer is inside the section, above lifted blocks. */
 .urd-preview .urd-section-toolbar {
-  /* Counter-scaling: the handle should keep the same on-screen size as
-     the admin panels at any zoom level (urd-zoom). */
+  /* Counter-scaled to the admin panels' on-screen size at any zoom (urd-zoom). */
   transform: scale(var(--urd-chrome-scale, 1));
   transform-origin: top right;
-  /* Sticky inside the section (not absolute): in sections taller than the viewport the
-     toolbar follows along, so the "+ card" button can always be reached when adding
-     repeatedly. It stands before the canvas (preview-edit.js addSectionToolbar), so it
-     starts at the section's top in both views. The sticky offset reads the unshrunk menu
-     height (--urd-nav-h-base from nav.js), so the bar parks right below the menu instead
-     of at a guessed fixed offset, and stands still while the scroll shrink runs. It takes
-     no room in the section: the negative bottom margin gives its height back, so the
-     section keeps its height when the bar shows, on the phone, where the canvas is in
-     flow below it, as on the desktop. */
+  /* Sticky in the section, ahead of the canvas, parked under the unshrunk menu (--urd-nav-h-base); the negative bottom margin gives its height back. */
   position: sticky;
   top: calc(var(--urd-nav-h-base, var(--urd-nav-h, 56px)) + 8px * var(--urd-chrome-scale, 1));
   display: none;
@@ -3038,7 +2896,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-block > .urd-edit-toolbar {
   align-items: center;
 }
 
-/* In the phone view the editor draws the section's bar beside the phone (0.7.3.23, editor/src/lib/CanvasBar.svelte), level with the section's top, as long as the bars stand beside it (urd-bars-beside): the page keeps its own unseen, for the editor's presses to press its tools, and the section's first block stays uncovered. */
+/* In the phone view, with the bars beside the phone (urd-bars-beside), the editor draws the section's bar (CanvasBar.svelte); the page keeps its own unseen. */
 body.urd-preview.urd-mobile.urd-bars-beside .urd-section > .urd-section-toolbar {
   display: none;
 }
@@ -3068,7 +2926,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-section > .urd-section-toolbar 
   color: var(--urd-admin-accent-text, #fff);
 }
 
-/* The section's delete: the bin on the dark red of every deletion, lighter on hover, and bright red while armed by its first press (preview-edit.js armedButton), until the second press or until the pointer or the focus leaves it */
+/* The section's delete: the bin on the dark red of every removal, lighter on hover, bright red while armed (preview-edit.js armedButton). */
 .urd-preview .urd-section-toolbar button.urd-sec-delete {
   background: #5e1c22;
   color: #ffd4d4;
@@ -3095,7 +2953,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-section > .urd-section-toolbar 
   padding: 5px 8px;
 }
 
-/* The bar of a section showing its phone layout in the desktop view, since its words would be too narrow at this width (preview-edit.js addHandoffBar, ADR-0034): it stands whether or not the pointer is in the section, which looks unlike its neighbours; its mark says what is shown, its help chip why, and «Edit on the phone» opens the section there */
+/* The bar of a section showing its phone layout on the desktop (preview-edit.js addHandoffBar, ADR-0034), shown whether or not the pointer is in it. */
 .urd-preview .urd-section > .urd-handoff-bar {
   display: flex;
   align-items: center;
@@ -3119,8 +2977,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-section > .urd-section-toolbar 
   flex: none;
 }
 
-/* Clean view: the editor can hide every editing handle, so the page
-   is seen exactly as visitors see it */
+/* Clean view hides every editing handle, so the page is seen as visitors see it. */
 .urd-preview.urd-chrome-off .urd-add-block,
 .urd-preview.urd-chrome-off .urd-add-section,
 .urd-preview.urd-chrome-off .urd-edit-toolbar,
@@ -3146,9 +3003,7 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-section > .urd-section-toolbar 
   display: none !important;
 }
 
-/* A block measured as a visitor sees it (ADR-0025): the push pass and the
-   editor's fit leave out the editor's own adders and the placeholders of empty
-   fields. The list is EDITOR_ONLY in render.js; a test holds the two equal. */
+/* A block measured as a visitor sees it (ADR-0025): the push pass and the fit leave out these editor parts, EDITOR_ONLY in render.js. */
 .urd-preview .urd-fit-measure .urd-collection-image-adder,
 .urd-preview .urd-fit-measure .urd-product-adder,
 .urd-preview .urd-fit-measure .urd-collection-placeholder:empty,

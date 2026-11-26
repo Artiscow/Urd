@@ -1,8 +1,5 @@
 /**
- * Swedish admin texts: the editor's panels, tooltips, status messages,
- * hints and seed texts. The same shape and keys as the engine's
- * locales/admin/<code>.js; the bokmål base sits underneath, so a key
- * missing here falls back to Norwegian instead of disappearing.
+ * Swedish admin texts, with the keys of the engine's locales/admin/<code>.js; a key missing here falls back to the Bokmål base.
  */
 export default {
   lang: 'sv',

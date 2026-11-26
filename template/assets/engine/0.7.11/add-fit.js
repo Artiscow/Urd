@@ -1,11 +1,10 @@
 /**
- * A new block's box fitted to what it draws, as it is added from «+ New block», the Blocks panel or the palette: the preview measures the block (fitNewBlock in preview-edit.js), the narrowest width at which its content wraps no more and spills nowhere, and the height its content needs there; the editor writes it into the frame as part of adding the block (state/blocks.svelte.js).
- * A block whose box is what it draws keeps the size it is added at, and a pasted or duplicated block keeps its own.
- * Pure, node-tested (tests/add-fit.test.mjs); outside the visitor closure, loaded by the preview's editing layer and bundled by the editor.
+ * A new block's box fitted to what it draws: the narrowest width at which its content wraps no more, and the height it needs there.
+ * Pure; tests/add-fit.test.mjs.
  */
 import { NARROW_PX, PHONE_DESIGNS } from './push-model.js';
 
-/** The kinds whose box is what they draw, a picture, a film, a map, a shape, a grid of pictures or cards, a moving band, a form and its fields, a player, a space, which keep the size they are added at. */
+/** The kinds whose box is what they draw, which keep the size they are added at. */
 export const KEEPS_ADDED_SIZE = new Set(['image', 'video', 'map', 'shape', 'gallery', 'collection', 'product', 'ribbon', 'form', 'checkout', 'audio', 'spacer']);
 
 /**
@@ -18,7 +17,7 @@ export function fitsWhenAdded(block) {
   return !(block.type === 'text' && block.props?.box);
 }
 
-/** The kinds that draw their content after the block stands, a calendar once its design is loaded and the privacy page once it has read the pages, and say so with the event `urd-drawn` on the block, which a new block's fit waits for. */
+/** The kinds that draw their content after the block stands and send `urd-drawn` on the block, which a new block's fit waits for. */
 export const DRAWS_LATE = new Set(['calendar', 'privacy']);
 
 /** The narrowest a fitted text stands, in px: room for the words typed into it, which the desktop's readable floor holds too (ADR-0034). */
@@ -28,7 +27,7 @@ export const TEXT_FLOOR = 140;
 export const BLOCK_FLOOR = 24;
 
 /**
- * The narrowest a new block may be fitted to, in px: a text's floor or a grip's; and a block with a phone design (PHONE_DESIGNS) added at NARROW_PX or wider is never fitted below it, since it would then be drawn again in that design, by the editor, after it is shown. A calendar, which turns narrow in place, is measured again in its narrow layout instead (preview-edit.js beginNewFit).
+ * The narrowest a new block may be fitted to, in px: a text's floor or a grip's, and NARROW_PX for a block with a phone design added at that width or wider.
  * @param {{type?: string}} block
  * @param {number} [startPx] The width it was added at
  * @returns {number}
@@ -39,7 +38,7 @@ export function addedFloor(block, startPx = 0) {
 }
 
 /**
- * Whether a plugin's block is fitted as it is added: only where its definition asks for it (`fitWhenAdded: true`, template/plugins/README.md), since a plugin may draw a loading state that says nothing of the content to come.
+ * Whether a block type's definition lets it be fitted as it is added: a core type's always, a plugin's only with `fitWhenAdded: true`.
  * @param {{fromPlugin?: unknown, fitWhenAdded?: boolean}|null|undefined} def The block type's definition
  * @returns {boolean}
  */
@@ -48,7 +47,7 @@ export function pluginFits(def) {
 }
 
 /**
- * The narrowest whole width between `lo` and `hi` at which `changes(width)` is false, found by halving; `changes(hi)` is taken as false, and a content that changes at every width narrower than `hi` keeps `hi`.
+ * The narrowest whole width between `lo` and `hi` at which `changes(width)` is false, found by halving; `changes(hi)` is taken as false.
  * @param {number} lo The narrowest width allowed
  * @param {number} hi The width the block is added at
  * @param {(width: number) => boolean} changes Whether the content at that width wraps more or spills, compared with `hi`

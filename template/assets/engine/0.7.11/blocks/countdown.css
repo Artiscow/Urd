@@ -1,6 +1,6 @@
 /*
- * The countdown block's own rules (blocks/countdown.js), loaded with the module by core-types.js, placed after base.css in the order BLOCK_SHEETS keeps.
- * Its reasoning stands in docs/STYLES.md, under blocks/countdown.css.
+ * The countdown block's own rules (blocks/countdown.js), loaded with it after base.css in BLOCK_SHEETS order.
+ * Its reasoning stands in docs/STYLES.md.
  */
 .urd-block[data-urd-align="stretch"] > .urd-countdown .urd-countdown-unit {
   align-content: center;

@@ -155,3 +155,24 @@ test('termsHtml: the template\'s [bracketed] words are marked to fill in, the se
   const bare = termsHtml({ text });
   assert.ok(bare.includes('<span data-urd-fill="contact">[the seller&#39;s name]</span>') || bare.includes('<span data-urd-fill="contact">[the seller\'s name]</span>'));
 });
+
+test('makeId: crypto.getRandomValues where crypto.randomUUID is missing, as on the local server opened over http', async () => {
+  const { makeId } = await engineImport('sections/presets.js');
+  const kept = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+  const asked = [];
+  const ids = [];
+  try {
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      value: { getRandomValues: (bytes) => { asked.push(bytes.constructor.name); return (kept.get ? kept.get.call(globalThis) : kept.value).getRandomValues(bytes); } },
+    });
+    for (let i = 0; i < 20; i++) ids.push(makeId('blk'));
+  } finally {
+    Object.defineProperty(globalThis, 'crypto', kept);
+  }
+  assert.equal(asked.length, 20);
+  assert.ok(asked.every((name) => name === 'Uint8Array'));
+  for (const id of ids) assert.match(id, /^blk-[0-9a-f]{8}$/);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.match(makeId('sec'), /^sec-[0-9a-f]{8}$/, 'with randomUUID the id has the same shape');
+});

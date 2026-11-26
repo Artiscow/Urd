@@ -1,6 +1,5 @@
 /**
- * Admin strings, Turkish. Overlays the Bokmål base (nb.js); the parity
- * test keeps the key sets in sync.
+ * Admin strings, Turkish, over the Bokmål base (nb.js).
  */
 export default {
   lang: 'tr',

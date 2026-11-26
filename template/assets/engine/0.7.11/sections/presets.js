@@ -1,19 +1,9 @@
 /**
- * The core section presets: data factories that produce a starting section.
- * A preset is NOT a code path - once created, every section is an equal,
- * generic container (see docs/SCHEMA.md). Plugins can define further presets
- * through the same API.
- *
- * The library is built against the patterns from the site survey (the inspiration sites plus ApeironLF, see docs/BACKLOG.md).
- * Everything is a composition of existing block types with theme colour tokens, so the presets follow the user's palette.
- * `group` and `hint` are optional fields the "+ New section" menu uses for grouping and description.
- * `item`/`itemLabel` are optional factories for repeating elements: the section toolbar then shows a "+ card/row" button.
+ * The core section presets: data factories for a starting section, built of block types in theme colour tokens.
+ * Once created, a section is a plain container.
  */
 
-/** Short, collision-safe id for sections and blocks made in the editor.
- *  crypto.randomUUID exists only in secure contexts (https/localhost); on for instance http://0.0.0.0
- *  (the local test server) crypto.getRandomValues is used, since it works everywhere and anything
- *  minting new ids would otherwise die silently there. */
+/** Short, collision-safe id for sections and blocks: crypto.randomUUID where it exists, else crypto.getRandomValues, as on the local server over http. */
 export function makeId(prefix) {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
@@ -23,10 +13,7 @@ export function makeId(prefix) {
   return `${prefix}-${hex}`;
 }
 
-// The seed rule (ADR-0012): ta() is called ONLY inside the factory functions
-// (create/item/the block factories), at the moment of insertion - never at
-// module level. The module is in the visitor closure and gets bundled; at a
-// visitor the factories never run.
+// ta() is called only inside the factories, as a section is inserted, never at module level (ADR-0012).
 import { ta } from '../i18n.js';
 import { defaultFormFields } from '../blocks/form.js';
 
@@ -89,14 +76,14 @@ const contact = (fr, props = {}) => ({
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 /*
- * A part the owner fills in: the template's words in [brackets], marked so the editor counts the parts still open and the preview shows them (editor/src/lib/fill-in.js, base.css).
- * `contact` marks the seller's details where the site's contact details had none; the text block drops a part's mark once its brackets are gone (blocks/text.js).
+ * A part the owner fills in: the template's words in [brackets], marked so the editor counts the parts still open.
+ * `contact` marks the seller's details.
  */
 const fillIn = (words, kind = '') => `<span data-urd-fill${kind ? `="${kind}"` : ''}>${words}</span>`;
 const markFills = (html) => html.replace(/\[[^[\]<>]+\]/g, (part) => fillIn(part));
 
 /**
- * The terms of sale as one text, from the seed texts in the site's language (`opts.text`, the admin's own where none are given) and the site's facts (`opts.facts`): the seller and its details, the privacy page's link, and the standard withdrawal form in the visitor texts (`opts.formText`).
+ * The terms of sale as one text, from the seed texts in the site's language and its facts: the seller, its details, the privacy link and the withdrawal form.
  * @param {{text?: (key: string, vars?: object) => string, formText?: (key: string) => string, facts?: {seller?: string, details?: string, privacy?: {href: string, page: string, title: string}|null}}} opts
  * @returns {string}
  */
@@ -283,15 +270,11 @@ const glowLayer = (x, y, opacity, radius = 0.5) => ({
   type: 'glow', version: 1, props: { x, y, color: 'accent', radius, opacity },
 });
 
-/* Extendable presets: item(section) makes the NEXT element (card/row/logo) ready-placed in the first FREE slot (freeSlot below), so the button works even after the owner has deleted or moved elements.
-   item can additionally return moves ([{blockId, dy}]) that shift existing blocks, for instance FAQ pushing the closing line down.
-   The placement assumes the preset layout; if the owner has rebuilt the section entirely, the new element is still ordinary blocks that can be dragged into place. */
+/* Extendable presets: item(section) makes the next card or row in the first free slot, and may return moves ([{blockId, dy}]) that shift blocks below it. */
 const maxBottom = (sec) => Math.max(0, ...sec.blocks.map((b) => b.frames.desktop.y + b.frames.desktop.h));
 const gridSlot = (n, per, x0, dx, y0, dy) => ({ x: x0 + (n % per) * dx, y: y0 + Math.floor(n / per) * dy });
 
-/* Free-slot search: TRIES the slots in order instead of counting elements.
-   That refills the hole when the owner has deleted an element in the middle, instead of the counter dropping and the next element landing on top of an existing one.
-   yOff/h describe the whole card's footprint around the slot (the icon sitting above the box, for instance). */
+/* Free-slot search: the slots are tried in order, so a hole left by a deleted element is filled first; yOff and h give the card's whole footprint. */
 const freeSlot = (sec, per, x0, dx, y0, dy, w, h, yOff = 0) => {
   const hits = (r) => sec.blocks.some((b) => {
     const d = b.frames.desktop;
@@ -304,8 +287,7 @@ const freeSlot = (sec, per, x0, dx, y0, dy, w, h, yOff = 0) => {
   return { x: x0, y: maxBottom(sec) + 16, n: 0 };
 };
 
-/* Mobile stacking key: keeps a card's blocks together in the auto stacking (see stackOrder in phone-order.js).
-   The key is read on the same scale as desktop y: column 0 sorts first, and the elements within the card keep their relative order. */
+/* Mobile stacking key: keeps a card's blocks together in the auto order, on desktop y's scale, column 0 first. */
 const cardOrder = (baseY, col, idx) => baseY + col * 0.1 + idx * 0.01;
 
 const section = (preset, minHeight, background, blocks, grid = null) => ({
@@ -388,8 +370,7 @@ export function registerSectionPresets(Urd) {
               parallax: 0, bleed: 'none', motion: 'kenburns', motionSpeed: 24,
             },
           },
-          // The veil: the photo is the owner's own, so the text needs a floor to
-          // stand on whatever they pick.
+          // The veil: a dark floor for the text on whatever photo the owner picks.
           {
             type: 'gradient',
             version: 2,
@@ -561,7 +542,7 @@ export function registerSectionPresets(Urd) {
     ]),
   });
 
-  // The shop's terms of sale, made only by the page template (`pageOnly`), which hands over the seed texts in the site's language and the site's facts: the seller from the contact details, and the privacy page.
+  // The shop's terms of sale, made only by the page template, which hands over the seed texts in the site's language and the site's facts.
   Urd.sections.define('terms', {
     label: 'Terms of sale',
     labelKey: 'preset.terms.label',
@@ -577,8 +558,7 @@ export function registerSectionPresets(Urd) {
     ]),
   });
 
-  /* No "Footer" section preset: the shared footer lives in the Footer panel
-     (site.footer), not as a section per page. */
+  /* No «Footer» section preset: the shared footer is site.footer, set in the Footer panel. */
 
   /* ---------- Cards and lists ---------- */
 
@@ -810,9 +790,7 @@ export function registerSectionPresets(Urd) {
     groupKey: 'presetGroup.cards',
     hint: 'Questions and answers in cards',
     hintKey: 'preset.faq.hint',
-    // Uses the faq block rather than a text-box imitation. New questions are
-    // added in Properties or straight in the preview, so the preset needs no
-    // item button.
+    // The faq block; new questions are added in its settings or in the preview, so the preset has no item button.
     create: () => section('faq', '520px', bg(colorLayer('bg')), [
       text(frame(25, 24, 50, 36), ta('seed.faq.title'), { align: 'center' }),
       faq(frame(20, 80, 60, 320), [
@@ -954,8 +932,7 @@ export function registerSectionPresets(Urd) {
     groupKey: 'presetGroup.shop',
     hint: 'Real product cards from a product collection, with a basket',
     hintKey: 'preset.shop.hint',
-    // The basket sits below the chrome band (y 88), so its block toolbar
-    // never ends up behind the sticky section toolbar.
+    // The basket sits below the chrome band (y 88), its block toolbar clear of the sticky section toolbar.
     create: () => section('shop', '544px', bg(colorLayer('bg')), [
       text(frame(6, 28, 50, 38), ta('seed.shop.title')),
       cart(frame(78, 88, 16, 48)),
@@ -1121,8 +1098,7 @@ export function registerSectionPresets(Urd) {
     groupKey: 'presetGroup.highlight',
     hint: 'Large quote with attribution',
     hintKey: 'preset.quote.hint',
-    // Uses the quote block (semantic blockquote) rather than two loose text
-    // blocks.
+    // The quote block, a semantic blockquote.
     create: () => section('quote', '300px', bg(colorLayer('bg')), [
       quote(frame(20, 56, 60, 190), {
         text: ta('seed.quoteBlock.text'),
@@ -1139,8 +1115,7 @@ export function registerSectionPresets(Urd) {
     groupKey: 'presetGroup.highlight',
     hint: 'Three big numbers with labels',
     hintKey: 'preset.stats.hint',
-    // Uses the statistics block (count-up on entry) rather than two text
-    // blocks per number.
+    // The statistics block, which counts up on entry.
     create: () => {
       const stat = (x, col, value, suffix, label) => {
         const s = stats(frame(x, 76, 25, 120), { value, suffix, label });

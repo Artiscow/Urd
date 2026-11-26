@@ -1,8 +1,5 @@
 /**
- * Pure typography logic for the text toolbar (the "Office bar"): size steps
- * with clamping, indent steps and font stack recognition. No DOM here; the
- * DOM surgery (caret normalisation) lives in preview-edit.js and is verified
- * in a headless browser.
+ * Pure typography logic for the text toolbar: size steps with clamping, indent steps and font stack recognition.
  */
 import { FONT_STACKS } from './fonts.js';
 
@@ -23,9 +20,7 @@ export function stepSize(px, delta) {
 }
 
 /**
- * The size ladder that A-up/A-down jumps through, the way Word/LibreOffice
- * does it: small steps at the bottom, larger steps at the top. Values outside
- * the ladder round to the nearest rung in the step direction.
+ * The size ladder A-up and A-down jump through, small steps at the bottom and larger at the top; a size between rungs goes to the next rung.
  */
 export const SIZE_LADDER = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 64, 80, 96, 120];
 
@@ -59,9 +54,7 @@ export const INDENT_STEP_EM = 2;
 export const INDENT_MAX_EM = 16;
 
 /**
- * One indent step from a marginLeft value. Empty string at zero indent (the
- * style attribute can be dropped). Values in units other than em (an old px
- * margin from pasted content, say) are reset and stepped from 0.
+ * One indent step from a marginLeft value: an empty string at zero, and a value not in em stepped from 0.
  */
 export function stepIndent(marginLeft, dir) {
   const m = /^(\d+(?:\.\d+)?)em$/.exec(String(marginLeft || '').trim());
@@ -77,8 +70,7 @@ export function firstFamily(css) {
 }
 
 /**
- * Find the FONT_STACKS value if the stack matches a computed font-family
- * (compared on the first font name), otherwise an empty string (shown as inherit).
+ * The FONT_STACKS value whose first font name matches a computed font-family, else an empty string.
  */
 export function matchFontStack(css) {
   const wanted = firstFamily(css);

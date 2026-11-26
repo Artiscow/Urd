@@ -1,9 +1,5 @@
 /**
- * Shared glyph data: the categories of the glyph/emoji picker and the logic
- * for the recents list. Used both by the admin panel's GlyphPicker and by
- * the glyph menu of the text editor bar (preview-edit.js), so the two always
- * show the same selection and share the recents history (same localStorage
- * key, same origin).
+ * The glyph picker's categories and recents, shared by the admin's GlyphPicker and the text bar's glyph menu under one localStorage key.
  */
 
 export const GLYPH_RECENT_KEY = 'urd-recent-glyphs';
@@ -13,9 +9,10 @@ export const GLYPH_RECENT_MAX = 16;
 /** The recents list of the drawn icons (icon ids from icons.js), kept apart from the glyphs. */
 export const ICON_RECENT_KEY = 'urd-recent-icons';
 
-/** @type {Array<[string, string]>} Category-name KEY (looked up with ta() by the
- *  consumer; the module sits in the visitor closure and can never call ta() at
- *  module level) + space-separated glyphs. */
+/**
+ * Each category's name key and its glyphs, space-separated.
+ * @type {Array<[string, string]>}
+ */
 export const GLYPH_CATEGORIES = [
   ['glyphCat.symbols', '★ ☆ ✦ ✧ ✩ ✪ ✫ ✭ ✮ ✯ ✵ ✳ ✴ ❖ ❋ ✿ ❀ ❁ ✾ ❃ ☘ ◆ ◇ ● ○ ◎ ■ □ ▣ ▲ △ ▼ ▽ ⬡ ⬢ ♦ ♠ ♣ ♥ ♡ ✓ ✔ ✕ ✖ ✗ ✘ ✚ ✜ ☀ ☾ ♪ ♫ ♬ ☮ ☯ ⚜ ⚓ ⚡ ☂ ✂ ✏ ✒ ✉ ☎ ⌛ ⏳ ♻ ⚠ ☑ ⚙ § © ® ™ ° ± × ÷ ∞ ≈ ≠ ≤ ≥ € £ ¥ • ‣ ⁂'],
   ['glyphCat.arrows', '→ ← ↑ ↓ ↔ ↕ ↗ ↘ ↙ ↖ ⇒ ⇐ ⇑ ⇓ ⇔ ➜ ➤ ➔ ↩ ↪ ⤴ ⤵ ↺ ↻ ⟲ ⟳ « » ‹ ›'],
@@ -28,12 +25,11 @@ export const GLYPH_CATEGORIES = [
   ['glyphCat.hearts', '❤ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💗 💓 💕 💖 💘 💝 💞 💟'],
 ];
 
-/** What an emoji is drawn with: a character presented as emoji by default, one asked to be with U+FE0F, a pictograph above the basic plane (which text fonts do not draw), and the joiners, skin tones, keycaps, flags and tags that build a sequence. */
+/** What an emoji is drawn with: emoji-presented characters, U+FE0F requests, pictographs above the basic plane, and the parts that build a sequence. */
 const EMOJI_PARTS = /\p{Emoji_Presentation}|[^️]️|(?=\p{Extended_Pictographic})[\u{10000}-\u{10FFFF}]|\p{Emoji_Modifier}|\p{Regional_Indicator}|[‍︎️⃣\u{E0020}-\u{E007F}]/gu;
 
 /**
- * Whether a glyph takes a colour: true when it holds a character drawn as text (★ ♥ →), false when it is emoji alone, which is drawn in its own colours.
- * Follows each character's default presentation in Unicode, so ❤ takes a colour and ❤️ (with U+FE0F) does not; a pictograph above the basic plane counts as emoji, as text fonts do not draw it.
+ * Whether a glyph takes a colour: true when it holds a character drawn as text (★ ♥ →), false for emoji alone, by each character's default presentation.
  * @param {string} glyph
  * @returns {boolean}
  */

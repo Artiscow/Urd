@@ -1,6 +1,5 @@
 /**
- * The preview's draw queue (ADR-0036 decision 4): a message that draws waits until the code of what it draws is in, and the messages after it wait behind it, in order.
- * Loaded with the editing layer, in the preview alone; pure apart from the loaders it calls, node-tested (tests/preview-queue.test.mjs).
+ * The preview's draw queue (ADR-0036): a message that draws waits until the code of what it draws is in, and those after it wait behind it, in order.
  */
 import { onlyColoursChanged } from './theme.js';
 import { pageTypes } from './plugins.js';
@@ -11,8 +10,7 @@ import { loadFeatures, siteFeatures, pageFeatures } from './features.js';
 export const REDRAW = Symbol('redraw');
 
 /**
- * The page and site a message draws: a section in the page held, a page, the site with the page it carries or the page held, the view, and a redraw of the page held.
- * Null for a message that draws nothing, and for a change of the theme's colours alone, which applies without a redraw.
+ * The page and site a message draws; null for one that draws nothing or changes only the theme's colours, which apply without a redraw.
  * @param {unknown} msg
  * @param {{page: object|null, site: object}} state What the preview holds
  * @returns {{page: object|null, site: object}|null}
@@ -37,7 +35,7 @@ export function drawnBy(msg, state) {
 }
 
 /**
- * What a page and its site draw with, loaded: the core types of the page, the menu and the footer, the site's and the page's features with the collections, and the blocks readied.
+ * Loads what a page and its site draw with: the core types of the page, menu and footer, the features with the collections, and the blocks readied.
  * @param {typeof window.Urd} Urd
  * @param {{page: object|null, site: object}} drawn
  * @param {'desktop'|'mobile'} viewport
@@ -65,8 +63,8 @@ export function loadEverything(Urd) {
 const report = (err) => (typeof globalThis.reportError === 'function' ? globalThis.reportError(err) : console.error(err));
 
 /**
- * A queue that hands each message to `handle` in the order the messages came: at once while none waits and `pending` has nothing to load for it, else once what it loads is in.
- * `pending` is asked for each message as its turn comes, so it reads what the messages before it changed.
+ * A queue that hands each message to `handle` in order, each once what `pending` loads for it is in.
+ * `pending` is asked as each message's turn comes.
  * @param {(msg: unknown) => void} handle
  * @param {(msg: unknown) => Promise<void>|null} pending
  * @returns {(msg: unknown) => void}

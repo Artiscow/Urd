@@ -1,6 +1,6 @@
 /*
- * The privacy block's own rules (blocks/privacy.js), loaded with the module by core-types.js, placed after base.css in the order BLOCK_SHEETS keeps.
- * Its reasoning stands in docs/STYLES.md, under blocks/privacy.css.
+ * The privacy block's own rules (blocks/privacy.js), loaded with it after base.css in BLOCK_SHEETS order.
+ * Its reasoning stands in docs/STYLES.md.
  */
 .urd-privacy .urd-doc-part > summary > h2 {
   font-size: 1.1em;

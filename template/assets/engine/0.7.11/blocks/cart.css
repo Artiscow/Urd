@@ -1,6 +1,6 @@
 /*
- * The cart block's own rules (blocks/cart.js), loaded with the module by core-types.js for the cart block and by nav.js for the menu's basket, placed after base.css in the order BLOCK_SHEETS keeps.
- * Its reasoning stands in docs/STYLES.md, under blocks/cart.css.
+ * The cart block's rules (blocks/cart.js), loaded with it and the menu's basket after base.css in BLOCK_SHEETS order.
+ * Its reasoning stands in docs/STYLES.md.
  */
 /* The cart */
 .urd-cart-button {

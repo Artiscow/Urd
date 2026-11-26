@@ -99,3 +99,36 @@ test('the preview draws this browser\'s drafts from its first paint, read alongs
   assert.ok(read < urd.indexOf("const siteRes = await fetch('/content/site.json');"), 'the read starts before site.json is awaited');
   assert.match(urd, /if \(!preview && drafts && \(drafts\.site \|\| draftPage \|\| Object\.keys\(drafts\.collections\)\.length\)\) markDraftView\(\);/);
 });
+
+test('the draft view reads the drafts under the keys the editor writes them under: the site, a page by its id, a collection by its id, and a saved draft handed to a tab', async () => {
+  const { readFileSync } = await import('node:fs');
+  const STATE = new URL('../editor/src/state/', import.meta.url);
+  const source = (name) => readFileSync(new URL(name, STATE), 'utf8');
+  /** The key forms a source writes, an id in a key written as <id>. */
+  const forms = (src, re) => new Set([...src.matchAll(re)].map((m) => m[2].replace(/\$\{[^}]+\}/g, '<id>')));
+  const publish = source('publish.svelte.js');
+  const stores = forms(publish, /createDraftStore\(\s*(['`])(urd-[^'`]+)\1/g);
+  const pageKeys = forms(publish, /const key = (`)(urd-[^`]+)`;\s*if \(newPageIds\.includes\(pageState\.pageId\)\)/g);
+  const handed = forms(source('saved.svelte.js'), /localStorage\.setItem\((`)(urd-look-[^`]+)`/g);
+  const KEYS = { site: 'urd-draft-site', page: 'urd-draft-<id>', collection: 'urd-draft-collection-<id>', look: 'urd-look-<id>' };
+  assert.ok(stores.has(KEYS.site), 'publish.svelte.js keeps the site\'s draft under urd-draft-site');
+  assert.ok(stores.has(KEYS.collection), 'and a collection\'s under urd-draft-collection-<id>');
+  assert.deepEqual([...pageKeys], [KEYS.page], 'and a page\'s under urd-draft-<id>');
+  assert.deepEqual([...handed], [KEYS.look], 'saved.svelte.js hands a saved draft over under urd-look-<id>');
+  // draftStore.js stores under the key it is made with, and nothing else.
+  const store = readFileSync(new URL('../editor/src/lib/draftStore.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(store.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, ''), /['`]urd-(?:draft|look)-/, 'draftStore.js names no key of its own');
+  const key = (form, id) => form.replace('<id>', id);
+  const drafts = readDrafts(storage({
+    [KEYS.site]: JSON.stringify({ site: { title: 'Bakeriet' } }),
+    [key(KEYS.page, 'om-oss')]: JSON.stringify({ meta: { id: 'om-oss' }, sections: [] }),
+    [key(KEYS.collection, 'kaker')]: JSON.stringify({ entries: [{ id: 'kake' }] }),
+  }));
+  assert.equal(drafts.site?.site.title, 'Bakeriet');
+  assert.equal(drafts.page('om-oss')?.meta.id, 'om-oss');
+  assert.deepEqual(Object.keys(drafts.collections), ['kaker']);
+  const map = new Map([[key(KEYS.look, 'abc123def'), JSON.stringify({ at: 1, texts: { [key(KEYS.page, 'om-oss')]: '{}' } })]]);
+  const own = new Map();
+  receiveLook('abc123def', { getItem: (k) => map.get(k) ?? null, removeItem: (k) => map.delete(k) }, { setItem: (k, v) => own.set(k, v) });
+  assert.deepEqual([...own.keys()], [key(KEYS.page, 'om-oss')], 'the tab takes the hand-over the editor wrote');
+});

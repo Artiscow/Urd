@@ -1735,3 +1735,441 @@ A filled button has a line only where the owner gives it one, so a button withou
 ### `.urd-button.urd-button-own-hover:hover`
 
 A fill of the owner's own under the pointer takes the place of the design's lightening
+
+# blocks/calendar.css, rule by rule
+
+blocks/calendar.css holds the rules every calendar draws with: its plain views, cards, settings, print and phone forms, and the rules several design families share. blocks/calendar-load.js loads it with the calendar's modules, before the page is drawn on a page that holds a calendar, so a page without one never fetches it. Each design family's own rules stand in blocks/calendar-<family>.css, loaded with its renderer; the sheets keep this file's order (SHEETS in calendar-load.js). The loading state stands in base.css, since it shows before this sheet is in.
+
+### `.urd-cal, .urd-cal-pd`
+
+The calendar block: the four views share the collection block's rows and cards; the chips, the next panel and the month grid are its own.
+
+Its colours are slots the owner can override in the Style tab (calendar-designs.js writes --urd-cal-s-<slot> on the host); every slot falls back to the theme, so a block without overrides follows the theme. --urd-cal-color is the event's own calendar colour, set per box by the block.
+
+A design drawn as another calendar's phone view (`.urd-cal-pd`) works its variables out again in its own box, from its own set and colours.
+
+### `.urd-cal, .urd-cal-pd : grid-template-columns`
+
+One column as wide as the block: no child can widen the calendar past it, whatever it holds.
+
+### `.urd-block > .urd-cal.urd-cal-wait, .urd-block > .urd-cal[data-cal-copy]`
+
+While the feeds are on the way (blocks/calendar.js): the calendar in its own design, drawn with the sample events into the height the loading state kept, from its top, their words and pictures hidden, and the loading note over it in the design's colours. Without a way to hide the words alone, the drawing is hidden and the note stands by itself. A calendar drawn again shows a copy of its last drawing instead (data-cal-copy), at the height that drawing had.
+
+### `.urd-cal-wait > :not(.urd-cal-wait-note)`
+
+Each part of the drawing keeps its own layers to itself, so the note stands over every design.
+
+### `.urd-cal, .urd-cal-dialog, .urd-cal-pd`
+
+The colour sets (calendar-designs.js `set`, the class `urd-cal-set-<id>` on the block and on its card): the event card, the switcher's week and month, the finding tools and the phone view are drawn from these variables alone, so a design overrides its set by redefining one under its own class (`urd-cal-d-<id>` on the block, `urd-cal-dlg-<id>` on the card). The theme set follows the site; the others take the design's colour slots.
+
+### `.urd-cal-set-pad`
+
+The retro sets: each stylised design draws its set from its own slots.
+
+### `.urd-cal-switch`
+
+The view switcher: the design, the week and the month as one pill of pressed buttons.
+
+### `.urd-cal-set-apCream .urd-cal-switch, .urd-cal-set-apNavy .urd-cal-switch`
+
+The sets whose tools have a form of their own: the Ap sets' gold-framed group, the poster's square frames, the cork board's pinned notes, the board's tiles.
+
+### `.urd-cal-stripes .urd-collection-row, .urd-cal-stripes .urd-collection-card, .urd-cal-stripes .urd-cal-next-row, .urd-cal-stripes .urd-cal-agenda-row, .urd-cal-stripes .urd-cal-tl-body, .urd-cal-stripes .urd-cal-table td:first-child, .urd-cal-stripes .urd-cal-booklet-row, .urd-cal-stripes .urd-cal-numbered-row, .urd-cal-stripes .urd-cal-ap-row, .urd-cal-stripes .urd-cal-glass-card, .urd-cal-stripes .urd-cal-poster, .urd-cal-stripes .urd-cal-ticket, .urd-cal-stripes .urd-cal-daycard, .urd-cal-stripes .urd-cal-photo, .urd-cal-stripes .urd-cal-apcard, .urd-cal-stripes .urd-cal-bento-tile, .urd-cal-stripes .urd-cal-wstrip-day, .urd-cal-stripes .urd-cal-plan-event, .urd-cal-stripes .urd-cal-wplan-pill, .urd-cal-stripes .urd-cal-dplan-pill, .urd-cal-stripes .urd-cal-layers-bar, .urd-cal-stripes .urd-cal-side-card, .urd-cal-stripes .urd-cal-wheel-card, .urd-cal-stripes .urd-cal-bb, .urd-cal-stripes .urd-cal-stack-card, .urd-cal-stripes .urd-cal-nb-note, .urd-cal-stripes .urd-cal-split, .urd-cal-stripes .urd-cal-line-row, .urd-cal-stripes .urd-cal-ring, .urd-cal-stripes .urd-cal-dg-inner, .urd-cal-stripes .urd-cal-nbento-tile, .urd-cal-stripes .urd-cal-apn-next, .urd-cal-stripes .urd-cal-apv-first, .urd-cal-stripes .urd-cal-apv-tile, .urd-cal-stripes .urd-cal-aps-row, .urd-cal-stripes .urd-cal-pa-row, .urd-cal-stripes .urd-cal-magenda-body`
+
+The edge stripe on the design's boxes: the owner's colour, else the event's calendar colour, else the accent.
+
+### `.urd-cal .urd-cal-tx`
+
+A design's words (a label, a button's words, the words of a time or a countdown) are edited in place in the preview, where the text toolbar attaches to them.
+
+### `.urd-cal-place-link`
+
+A place leads to the map and a description keeps its links, both in the colour of the words around them.
+
+### `.urd-cal .urd-cal-clamp`
+
+The announcement's text stops after a few lines (the design sets how many), and a text that does not fit opens the announcement in full in a card («Read it all»).
+
+### `.urd-cal-dialog`
+
+The event in full: a native dialog over the page, drawn in its calendar's set (the set class and the colour slots are copied onto it by the block), with the theme set as the fallback.
+
+The card lies over its calendar, under the navigation bar; the calendar and the page behind are left as they are.
+
+### `.urd-cal-dlg-pad`
+
+R1 Tear-off pad's card: a pad page with the perforation holes along its top edge, the date as the month bar, and the close cross on the bar.
+
+### `.urd-cal-dlg-index`
+
+R2 Index cards' card: a typewritten card with the punched hole at its top, the date as the head over the rule, and the facts and the text on the lines.
+
+### `.urd-cal-dialog-source`
+
+The calendar's own words and page from the site's registry, under the event's description.
+
+### `.urd-cal-set-cork.urd-cal-dialog`
+
+The sets whose card has a form of its own: the cork board's card is a pinned note, the poster's a square sheet, the glass sets' a pane over a blurred ground.
+
+### `.urd-cal-set-apNavy:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier), .urd-cal-set-board:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier), .urd-cal-set-darkGlass:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier), .urd-cal-set-cork:has(> .urd-cal-tools, > .urd-cal-chips, > .urd-cal-nomatch, > .urd-cal-earlier)`
+
+The sets whose ground is not the page's (navy, the dark board, dark glass and the cork board) draw their tools on their own ground, so the set's words read; without `:has` the tools stand on the page.
+
+### `.urd-cal-tools-s .urd-cal-tools, .urd-cal-tools-s .urd-cal-chips, .urd-cal-tools-s .urd-cal-swview .urd-cal-month-head, .urd-cal-tools-s .urd-cal-swview .urd-cal-wstrip-head`
+
+The tools' size (`toolsSize`): the switcher, the chips, the search and the arrows of the week and the month, small or large.
+
+### `.urd-cal-program`
+
+The link to the whole programme, and the words on an event without a sign-up.
+
+### `.urd-cal-tools`
+
+The switcher and the search on one row; the search's button shows on a phone alone.
+
+### `.urd-cal-search`
+
+The visitor's search, the «nothing matches» line and the «Earlier» fold of events that are over.
+
+### `.urd-cal .urd-collection-badge`
+
+A named calendar with a colour of its own tints its chips and date badges.
+
+### `.urd-cal-pday`
+
+A day of a month on the phone is a button: its own look comes from the design's day cell, which stands after this in the sheet.
+
+### `.urd-cal-swview .urd-cal-month-head strong, .urd-cal-swview .urd-cal-wstrip-label strong`
+
+The switcher's month and week in the block's set: the head in the set's label words, the day cells on the set's ground, today in the set's accent.
+
+### `.urd-cal-empty`
+
+The empty state: an icon over a line of text, centred in the block, so a calendar with nothing coming up reads as empty rather than as broken.
+
+### `.urd-cal-next-row + .urd-cal-next-row`
+
+Several events in the «next» card stand under each other with a rule between.
+
+### `.urd-cal-d-apList`
+
+The cream words belong on the navy rows and buttons; the shared parts around them (the view switcher, the zone line, «Earlier») stand on the page in its own text colour.
+
+### `.urd-cal-wheel-seg:focus`
+
+A month shows focus in its own shape, never as the box round it a browser draws for a focused drawing: the keyboard's focus thickens it.
+
+### `.urd-cal-wheel-more`
+
+In the editor a press on the button's words rewrites them, so the button keeps room of its own beside them, as the view switcher's do; the words stand in line with the list.
+
+### `.urd-cal-o-panelSide-under .urd-cal-side`
+
+The designs' own settings (calOptions): the ones the style sheet draws.
+
+### `.urd-cal-print`
+
+Print: the events as a plain list, without the design and its buttons.
+
+### `.urd-cal-phone .urd-cal-tools`
+
+The phone: the seven-column designs with their days under each other, and the months as dots that open the day.
+
+The finding tools on a phone: the switcher across the width with the search as a button beside it, the field across the width when the button opens it, and the calendar chips in one row that scrolls sideways.
+
+### `.urd-cal-phone :is(.urd-cal-posters, .urd-cal-photos, .urd-cal-index)`
+
+The poster wall and the picture cards flow into one column on a phone, whatever the columns option says, and the first poster spans no more than the column.
+
+### `.urd-cal :is(.urd-cal-f-title, .urd-cal-f-place, .urd-cal-f-description, .urd-cal-f-category)`
+
+A word wider than the calendar breaks inside the event's text fields instead of running out of the block. `anywhere`, not `break-word`: only it lets the break points count towards an item's smallest width, so a flex or grid item can shrink.
+
+### `.urd-cal-pa`
+
+The phone design (calPhoneDesign, `.urd-cal-phone-design` on the host): one stacked agenda drawn from the set's variables, with the set's words for the dates and the set's type for the titles.
+
+### `.urd-cal-index`
+
+R2 Index cards: typewritten cards on lined paper, the lines in pixels so the writing sits on them, each card a little askew.
+
+### `.urd-cal-pd`
+
+A design drawn as another block's phone view (calPhoneCandidates, `.urd-cal-pd`): its box stands in the block in the design's own set.
+
+### `.urd-cal-set-marquee.urd-cal-dialog .urd-cal-dialog-title`
+
+The marquee's set card: the board's paper in the red frame, the title in the display face.
+
+### `.urd-cal-d-apNow, .urd-cal-d-apNavy, .urd-cal-d-apSeries, .urd-cal-d-apList, .urd-cal-d-apGrid, .urd-cal-d-apMonth`
+
+The ApeironLF set: the colours its designs in four families share.
+
+### `.urd-cal-apempty`
+
+The ApeironLF empty state: a pill, the dashed box and the subscribe button in gold.
+
+# blocks/calendar-list.css, rule by rule
+
+blocks/calendar-list.css holds the own rules of the calendar's list designs (blocks/calendar-list.js), loaded with the renderer by blocks/calendar-load.js (loadDesign). The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+
+### `.urd-cal-tl`
+
+The list designs (blocks/calendar-list.js). Each design's slots are read as --urd-cal-s-<slot> with the design's own default.
+
+### `.urd-cal-phone.urd-cal-d-apList .urd-cal-signup`
+
+With long titles some designs run wider than a phone, so on a phone the sign-up of List on navy takes its own line, the large titles of Regular event and Billboard are set smaller, and Billboard's frame and its tiles' units take less room.
+
+### `.urd-cal-dialog.urd-cal-dlg-booklet`
+
+07 Programme booklet: a page out of the booklet, the binding shaded along its left edge with two staples, «Program» over a rule at its top.
+
+### `.urd-cal-dialog.urd-cal-dlg-glass`
+
+M2 Glass: the card as a frosted glass plate with the three colour blobs glowing through it, the date on a glass pill and the facts on an inner pane; the calendar behind it is blurred rather than darkened, so the glass has colour to break.
+
+# blocks/calendar-cards.css, rule by rule
+
+blocks/calendar-cards.css holds the own rules of the calendar's card designs (blocks/calendar-cards.js), loaded with the renderer by blocks/calendar-load.js (loadDesign). The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+
+### `.urd-cal-dialog.urd-cal-dlg-tickets`
+
+The cards of their own (`ownCard` in the design list): each card has the same form as the thing its design imitates. Each is drawn on the card under the design's card class and its set, and a design's module adds a part the card has no element for (its `cards`). The rules stand after the sets' card rules and carry the card's own class too, so they win over them.
+
+03 Tickets: an admission ticket, the stub across the top with the day large, and a tear-off line with a half-moon notch at each end above the buttons.
+
+### `.urd-cal-dialog.urd-cal-dlg-posters`
+
+02 Poster wall: the card as a poster in the second poster colour, taped at its two top corners and a little askew, the day large in the third.
+
+# blocks/calendar-time.css, rule by rule
+
+blocks/calendar-time.css holds the own rules of the calendar's month, week, day and year designs (blocks/calendar-time.js), loaded with the renderer by blocks/calendar-load.js (loadDesign). The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+
+### `.urd-cal-swview`
+
+The box the switcher's week or month is drawn in: it carries the chosen design's class, and the block's set is its theme, so a design drawn from the theme's colours takes the set's.
+
+### `.urd-cal-swview .urd-cal-wplan-grid`
+
+The week plan behind the switcher's button: its hour rows at half their height, so a day's hours fit under the block's own design.
+
+### `.urd-cal-swview .urd-cal-wstrip-head .urd-cal-nav`
+
+The week strip's head in the switcher: the week on one line with its arrows, not a head of its own.
+
+### `.urd-cal-stripes .urd-cal-swview .urd-cal-wstrip-day`
+
+The block's edge stripe reaches the week strip's days behind the switcher's button, over the set's own borders.
+
+### `.urd-cal-pill-time`
+
+The month, week, day and year designs (blocks/calendar-time.js).
+
+Shared: a pill with the time and the title, tinted with the calendar colour.
+
+### `@container (max-width: 540px) { .urd-cal-wstrip-grid`
+
+A week strip too narrow for seven readable columns (a narrow frame on a wide screen) lays its days under each other, as on the phone.
+
+### `.urd-cal-wheel : align-items`
+
+The wheel stays where it is when the month's list beside it grows or shrinks, so it never moves under the pointer.
+
+### `.urd-cal-wheel-svg : overflow`
+
+The month names sit on the drawing's edge; the ones at the sides reach a little past it.
+
+### `.urd-cal-wheel-list-all`
+
+The whole month, opened by «Show all»: a list that scrolls, as tall as the wheel beside it (its height written by calendar-time.js).
+
+# blocks/calendar-retro.css, rule by rule
+
+blocks/calendar-retro.css holds the own rules of the calendar's retro designs (blocks/calendar-retro.js), loaded with the renderer by blocks/calendar-load.js (loadDesign). The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+
+### `.urd-cal-dlg-departures .urd-cal-dialog-title`
+
+R3 Departure board's card: the title in capitals on the condensed face, the button in amber.
+
+### `.urd-cal-pad`
+
+R1 Tear-off pad: the paper page with its stack of torn pages under it; the display face is a condensed sans where the device has one, the page a serif.
+
+### `.urd-cal-pad-row`
+
+A row that runs out of width keeps its title whole and lets the time wrap under it.
+
+### `.urd-cal-index-head`
+
+The head grows with a category that wraps, a whole ruled line at a time, so the title stands under it; the red rule keeps its place under the first line.
+
+### `.urd-cal-dep, .urd-cal-dlg-departures, .urd-cal-dlg-depHead, .urd-cal-dlg-depTitle, .urd-cal-dlg-depScreen`
+
+R3 Departure board: split-flap rows on a dark board. A run of cells is one text on a tiled background from the run's left edge: the monospace face advances one tile per letter (1ch plus the spacing), and the padding sets each letter in the middle of its tile, so the words stay text. The variables serve the board, its phone designs and its cards alike.
+
+### `.urd-cal-dep-cells .urd-cal-cancelled.urd-cal-f-title`
+
+A cancelled row says so in its status: a title on flaps is dimmed, not struck through them.
+
+### `.urd-cal-dep-plain .urd-cal-dep-row`
+
+Without rewriting the rows hold the calendar's own text whole: no tiles, no fixed cells, wrapping as it must.
+
+### `@supports (grid-template-columns: subgrid) { .urd-cal-dep-plain .urd-cal-dep-rows`
+
+Where the browser has subgrid the plain rows share one set of columns with the heads; without it each row lays itself out, which still reads.
+
+### `.urd-cal-dep-event`
+
+The board on a phone: two phone designs of its own. The compact board stacks each event as two flap rows; the strip keeps one flap row over the title.
+
+### `.urd-cal-dlg-depHead .urd-cal-dialog-title, .urd-cal-dlg-depScreen .urd-cal-dialog-title`
+
+The board's three card designs (CAL_CARD_DESIGNS): the board row on top, the title on the flaps, and the screen; each brings the board's set to the card wherever it is chosen.
+
+### `.urd-cal-mq, .urd-cal-mqp, .urd-cal-dlg-marquee`
+
+R4 Cinema marquee: a letter board in a red frame between two rows of glowing bulbs, the letters on rails, the display face condensed and in capitals by the style sheet.
+
+### `.urd-cal-mq-row`
+
+A row holds the date, the name and the time in three columns, the names under each other.
+
+### `@supports (grid-template-columns: subgrid) { .urd-cal-mq-rows`
+
+Where the browser has subgrid the rows share one set of columns, so the names start at one line whatever the dates' widths; without it the date column has a width of its own, which lines them up for the usual dates.
+
+### `.urd-cal-dialog.urd-cal-dlg-marquee`
+
+R4 Cinema marquee's own card: a cinema ticket, a row of bulbs in its red top, the date, title and facts on its face with a dashed stub down the right side holding the day, and a tear line above the description and the buttons.
+
+### `.urd-cal-rc, .urd-cal-dlg-receipt`
+
+R5 Receipt: a till receipt on paper with a torn bottom edge, in a monospace face and in capitals: the head centred, the rows of date, title, dot leader and time between dashed rules, the totals, and the barcode that is the subscribe link. The dot leader is a run of dots clipped to the room it gets. The paper is the background: whole down to its last half em, and teeth below that, so the edge is torn inside the box and the shadow follows it. The variables serve the receipt and its card alike.
+
+### `.urd-cal-rc`
+
+The slip is as wide as a till's paper at most, centred in a wider block, as the pad is.
+
+A row holds the date, the title and the time, with the place and status line and the excerpt under the title. The dot leader is one run of dots behind the title's and the time's columns, and the title and the time stand on the paper over it, so the dots run from the end of the title to the start of the time on every row. The date column is at least as wide as the dates the receipt writes (04.10, or the calendar's own 18. okt), so the rows in the fold start their titles where the receipt's do.
+
+### `@supports (grid-template-columns: subgrid) { .urd-cal-rc-rows`
+
+Where the browser has subgrid the rows share one set of columns, so the titles and the times stand in one column whatever the dates' and times' widths; without it the date column keeps its least width, which lines up the usual dates, and the times keep to the right edge.
+
+### `.urd-cal-rc .urd-cal-rc-title, .urd-cal-rc-time`
+
+The title is cut to its row with room left for a few dots, and the time keeps to the right. A cell's gap after the title keeps the dots on the title's character grid, so the first dot stands one cell after the last letter on every row.
+
+### `.urd-cal-rc .urd-cal-rc-place`
+
+The place keeps the calendar's own letters; the status words are the receipt's.
+
+### `.urd-cal-rc-plain :is(.urd-cal-rc-date, .urd-cal-rc-time, .urd-cal-rc-text)`
+
+Without rewriting the rows hold the calendar's own text: its own letters, and the title wrapping as it must.
+
+### `.urd-cal-rc .urd-cal-rc-code`
+
+The subscribe link is the barcode with its words under it; a second link (another calendar, Google) is a line of its own.
+
+### `.urd-cal-dialog.urd-cal-dlg-receipt`
+
+R5 Receipt's own card: a receipt with its torn edge and the shadow round it, the number over the centred title, the facts as dot-leader lines between dashed rules, the button in ink on the paper and the thanks at the foot. The calendar's data takes capitals only with rewriting.
+
+### `.urd-cal-sv, .urd-cal-dlg-seventies`
+
+R6 Seventies poster: a rounded cream poster with a sunrise of concentric arcs at its top, the heading in a rounded display face, and a mustard panel of cream pills, each with a round date badge. The variables serve the poster and its card alike.
+
+### `.urd-cal-sv::before`
+
+The sunrise: rings of cream, mustard, orange, brown, cream and mustard around a point on the bottom edge, each blended over a pixel so the arcs stay smooth.
+
+### `.urd-cal-sv .urd-cal-sv-period`
+
+The line under the heading is a content line (ui.line): it stays a plain block of centred text.
+
+### `.urd-cal-sv-row`
+
+A pill: the badge, then the text with the sign-up at its end. Its ends are round at the height of one line of text and stay so as a pill grows with its text.
+
+### `.urd-cal-sv-main`
+
+The text takes the room the line has, and the sign-up stands at its end while the text keeps a width of 10em beside it, under the text when it cannot: every pill breaks at the same width, so the titles and the buttons keep their columns.
+
+### `.urd-cal-phone .urd-cal-sv`
+
+A narrow calendar keeps the poster's look with less room around the panel and the pills.
+
+### `.urd-cal-dialog.urd-cal-dlg-seventies`
+
+R6 Seventies poster's own card: a band of brown, orange, mustard and cream stripes across its top with the calendar's name on its brown foot, a row of matches standing under the band, the title in the display face, a brown pill button ringed in mustard, and a halftone strip at the foot.
+
+### `.urd-cal-deco, .urd-cal-dlg-deco`
+
+R7 Art deco: a programme in a gold double frame on black, a sunburst of gold rays over the heading, the display face geometric and in capitals by the style sheet, and the rows in three columns they share.
+
+### `.urd-cal-deco-frame::before`
+
+The sunburst: fifteen gold rays from the middle of its foot, one straight up and none along the foot, cut to a half circle by the ground laid over everything outside it.
+
+### `.urd-cal-deco-heading`
+
+The spacing after the last letter is matched before the first, so the spaced words stand in the middle.
+
+### `.urd-cal-deco-row`
+
+A row holds the day, the event and the countdown in three columns; the day's column has a width of its own, so the titles start at one line.
+
+### `@supports (grid-template-columns: subgrid) { .urd-cal-deco-rows`
+
+Where the browser has subgrid the rows share one set of columns, so the countdowns stand in one column too.
+
+### `.urd-cal-deco-meta > * + *::before`
+
+The diamond goes with the place, so a line that must break breaks before it.
+
+### `.urd-cal-deco-rest .urd-cal-deco-frame`
+
+The events a list folds away: rows alone in the frame, without the sunburst, the heading and the foot.
+
+### `@container urd-block (max-width: 480px) { .urd-cal-deco-frame`
+
+In a narrow calendar the frame keeps less room at its sides and the countdown moves under the event.
+
+### `.urd-cal-dialog.urd-cal-dlg-deco`
+
+R7 Art deco's own card: a gold double frame with a fan piece in each corner, thin rays over the date, the title in the display face over a rule with a diamond, the facts labelled in gold, and the sign-up as a gold bar across the card.
+
+# blocks/calendar-next.css, rule by rule
+
+blocks/calendar-next.css holds the own rules of the calendar's «Coming up» designs (blocks/calendar-next.js), loaded with the renderer by blocks/calendar-load.js (loadDesign). The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+
+### `.urd-cal-dialog.urd-cal-dlg-billboard`
+
+N1 Billboard: the card as a lit billboard in a dark frame, two lamps over its top edge throwing light down on it and two legs under it; a pulse before the date, the facts as tiles.
+
+### `.urd-cal-dialog.urd-cal-dlg-noticeboard`
+
+N3 Noticeboard: the card as a note pinned to the board, a little askew, with the day on a second note pinned over its top corner.
+
+### `.urd-cal-dialog.urd-cal-dlg-darkGlass`
+
+M5 Dark glass: the card as smoked glass lit along its edges by the two colour blobs, a dot before the date and the title glowing.
+
+### `.urd-cal-band-pause`
+
+The band's pause (blocks/calendar-next.js bandPause): a round button at the band's right edge, in the band's own colours. In the touch form it is drawn only while it has focus, which only the keyboard can give a one-pixel button; a touch on the band pauses it there.
+
+# blocks/calendar-more.css, rule by rule
+
+blocks/calendar-more.css holds the own rules of the calendar's ApeironLF designs and the dark agenda (blocks/calendar-more.js), loaded with the renderer by blocks/calendar-load.js (loadDesign). The sheet stands after blocks/calendar.css, in the order SHEETS in calendar-load.js keeps.
+
+### `.urd-cal-d-mobileAgenda`
+
+The dark card is the calendar's own theme: the shared parts drawn in it (the view switcher, the search field, the week and the month of the switcher, the empty state) take its colours.

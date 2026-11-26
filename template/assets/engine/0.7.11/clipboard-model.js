@@ -1,7 +1,6 @@
 /**
  * The editing clipboard (Ctrl+C, Ctrl+X and Ctrl+V on the page): blocks with the section they came from, or one whole section.
- * The preview (preview-edit.js) copies into it and pastes from it; the editor keeps the last copy and hands it to every page the preview loads, so a copy pastes on another page too.
- * Pure, node-tested (tests/clipboard-model.test.mjs).
+ * Pure.
  */
 
 import { cloneSectionForInsert } from './templates-model.js';
@@ -50,8 +49,8 @@ export function readClipboard(value) {
 }
 
 /**
- * The section on the clipboard, ready to land on a page: fresh ids for the section and its blocks (the template insertion's re-id).
- * The anchor names are made free by the editor, which knows the page (anchor-model.js claimAnchors).
+ * The section on the clipboard, with fresh ids for it and its blocks.
+ * The editor frees its anchor names (anchor-model.js claimAnchors).
  * @param {{kind: string, section?: object}} clip The clipboard
  * @param {(prefix: string) => string} makeId The id factory
  * @returns {object|null}

@@ -229,3 +229,50 @@ test('the boot reads the engine version from its own folder, and draws a page wi
   const privacy = readFileSync(new URL('blocks/privacy.js', ENGINE_DIR), 'utf8');
   assert.match(privacy, /host\.setAttribute\('aria-busy', 'true'\);[\s\S]{0,80}host\.removeAttribute\('aria-busy'\);/);
 });
+
+/** The HTML pages Urd owns: the site's shell, the admin's and the 404 page; the slug copies are the shell byte for byte. */
+const PAGES = ['index.html', 'admin/index.html', '404.html'];
+const page = (name) => readFileSync(new URL(name, TEMPLATE), 'utf8');
+/** A page's tags of one name, each with its attributes and what stands between it and its end tag. */
+const tagsOf = (html, name) => [...html.matchAll(new RegExp(`<${name}\\b([^>]*)>([\\s\\S]*?)</${name}>`, 'gi'))].map(([, attrs, body]) => ({ attrs, body }));
+
+test('the HTML pages carry no inline script, which the CSP\'s script-src does not allow: every script has a src and nothing inside, and no tag has an on… handler', () => {
+  const headers = readFileSync(new URL('_headers', TEMPLATE), 'utf8');
+  const scriptSrc = [...headers.matchAll(/Content-Security-Policy:[^\n]*?\bscript-src ([^;\n]*)/g)].map((m) => m[1]);
+  assert.ok(scriptSrc.length > 0, 'the CSP names its script sources');
+  for (const sources of scriptSrc) assert.doesNotMatch(sources, /'unsafe-inline'|'unsafe-hashes'|'nonce-|'sha(?:256|384|512)-/, 'the CSP lets no inline script run');
+  for (const name of PAGES) {
+    const html = page(name);
+    for (const { attrs, body } of tagsOf(html, 'script')) {
+      assert.match(attrs, /\ssrc="[^"]+"/, `${name}: a script without a src`);
+      assert.equal(body.trim(), '', `${name}: a script with code inside`);
+    }
+    assert.equal((html.match(/<script\b/gi) ?? []).length, tagsOf(html, 'script').length, `${name}: every script tag is closed`);
+    assert.doesNotMatch(html, /<[a-z][^>]*\son[a-z]+\s*=/i, `${name}: an inline handler`);
+    assert.doesNotMatch(html, /\bjavascript:/i, `${name}: a script address`);
+  }
+  // The two small scripts that run before the engine and the editor stand as files of their own.
+  const themeInit = tagsOf(page('index.html'), 'script').find(({ attrs }) => attrs.includes('/theme-init.js'));
+  assert.ok(themeInit, 'the shell loads theme-init.js');
+  assert.doesNotMatch(themeInit.attrs, /\btype=|\basync\b|\bdefer\b/, 'theme-init.js is a classic script that blocks the parser, so it runs before the first paint');
+  assert.ok(tagsOf(page('admin/index.html'), 'script').some(({ attrs }) => /\ssrc="\.\/favicon-boot\.js"/.test(attrs)), 'the admin loads favicon-boot.js as a file');
+});
+
+test('the 404 page names no engine file, so an engine swap never leaves it pointing at a folder that has gone', () => {
+  const html = page('404.html');
+  assert.doesNotMatch(html, /assets\/engine\//);
+  assert.doesNotMatch(html, /<script\b|rel="modulepreload"/i);
+});
+
+test('the shell loads the site\'s theme.css after base.css, and the engine\'s boot.js as a render-blocking module', () => {
+  const html = readFileSync(INDEX, 'utf8');
+  const sheets = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1].replace(/\?.*$/, ''));
+  const base = sheets.indexOf('/assets/styles/base.css');
+  const theme = sheets.indexOf('/content/theme.css');
+  assert.ok(base >= 0 && theme >= 0, 'both stylesheets are linked');
+  assert.ok(theme > base, 'theme.css after base.css, so the site\'s theme wins');
+  const boot = tagsOf(html, 'script').find(({ attrs }) => attrs.includes(`/assets/engine/${ENGINE_VERSION}/boot.js"`));
+  assert.ok(boot, 'the shell loads boot.js');
+  assert.match(boot.attrs, /\stype="module"/);
+  assert.match(boot.attrs, /\sblocking="render"/);
+});

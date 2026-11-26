@@ -1,7 +1,6 @@
 /**
- * The owner's moves in a section's phone order, in the editor only (the visitor reads the order in phone-order.js): pure, node-tested (tests/phone-order.test.mjs).
- * The order is shown as a tree of one level (phoneTree): a block alone, or a stack of blocks, the owner's own or a column the rule reads whole.
- * A move is a new order of that tree, settled into the section's data (settle): the stacks as they stand, and either the custom order as listed, or the exception that puts the moved block or stack there, the other blocks keeping their order.
+ * The owner's moves in a section's phone order: the order as a tree one level deep (phoneTree), and a move settled into the section's data (settle).
+ * Pure.
  */
 import { phoneParts, phoneSetupOf } from './phone-order.js';
 import { phoneCells, phoneSpace, PHONE_COLUMNS } from './migrate.js';
@@ -10,8 +9,7 @@ import { phoneCells, phoneSpace, PHONE_COLUMNS } from './migrate.js';
 export const flowing = (block) => !Number.isFinite(block.frames?.mobile?.row);
 
 /**
- * A block's phone placement unpinned: back into the phone's order, keeping its cells and its turn (ADR-0019); its rows go, and with them the left edge and width in percent and the stacking a pin gives.
- * Null where nothing of its own is left, so the block follows the desktop again.
+ * A block's phone placement unpinned: back into the phone's order with its cells and turn (ADR-0019), its rows, x, w and z gone; null where nothing is left.
  * @param {object|null|undefined} placement The block's `frames.mobile`
  * @returns {object|null}
  */
@@ -31,7 +29,7 @@ const setupFrom = (setup) => (setup && typeof setup === 'object' ? { list: null,
 const same = (a, b) => a.length === b.length && a.every((id, i) => id === b[i]);
 
 /**
- * The flowing blocks in the phone's order as a tree of one level: each node a block alone (`{ id }`), or a stack of two or more (`{ id: 'stack:<first>', kind, children: [{ id }, ...] }`), `kind` 'stack' for the owner's own and 'column' for a column the rule reads whole.
+ * The flowing blocks in the phone's order as a tree one level deep: a block alone, or a stack, `kind` 'stack' for the owner's or 'column' for the rule's.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} setup The section's rule, or its setup (phoneSetupOf)
  * @returns {Array<{id: string, kind?: 'stack'|'column', children?: Array<{id: string}>}>}
@@ -60,8 +58,7 @@ export function phoneTree(blocks, setup) {
 const unitsOf = (tree) => tree.map((node) => (node.children ? node.children.map((c) => c.id) : [node.id]));
 
 /**
- * The blocks whose exception leads to a unit, directly or through another such block: they move with it.
- * A stack's block other than its first has no exception that counts (phoneParts), so it leads nowhere.
+ * The blocks whose exception leads to a unit, directly or through another such block, which move with it; a stack's block after its first leads nowhere.
  * @param {object[]} blocks
  * @param {string[]} unit
  * @param {string[][]} [stacks] The stacks as they hold
@@ -99,9 +96,7 @@ function withPlaces(blocks, places) {
 const trialIds = (blocks, setup) => phoneParts(blocks, setup).order.filter(flowing).map((b) => b.id);
 
 /**
- * A new order of the tree settled into the section's data: the stacks as they stand, and the custom order as listed, or the exceptions that bring the moved unit to its place.
- * A stack of two blocks or more is the owner's own, written as one, unless it is a column of the rule left as it stood; it keeps the blocks of it the phone does not show in the list (hidden on phones or placed by hand), and a stack the list shows none of stands as it was. A block taken into a stack leaves its exception, and a stack's first block carries the stack's.
- * Without a custom order the exception is sought among the other units, the nearest first: one that gives the order exactly, else one that keeps every other block's order with the moved unit among them where it was put, the blocks placed against it following it, and a block placed against it that the moved unit lands right beside, on the other side of the block it names, losing its exception. What is left of a stack the moved block left keeps its place, by an exception of its own where it needs one.
+ * A new order of the tree settled into the section's data: the stacks, and the custom order as listed or the exceptions that bring the moved unit there.
  * @param {object[]} blocks The section's blocks
  * @param {string|{rule: string, list: string[]|null, stacks: string[][]}} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {Array<{id: string, kind?: string, children?: Array<{id: string}>}>} tree The order as it stands (phoneTree)
@@ -121,7 +116,7 @@ export function settle(blocks, rawSetup, tree, want, moved) {
   const ruled = new Set(phoneParts(blocks, setup).columns.map((column) => column.filter((id) => listed.has(id)).join(' ')));
   /** The blocks of a stack the list does not show. */
   const unlisted = (stack) => stack.filter((id) => !listed.has(id));
-  /** A unit with the unlisted blocks of the stacks it holds on to: those it keeps a block of that stayed, or all of whose listed blocks it took along; each where it stood in its stack. */
+  /** A unit with the unlisted blocks of the stacks it holds on to, each where it stood in its stack. */
   const withUnlisted = (unit) => {
     const out = [...unit];
     for (const stack of stored) {
@@ -137,7 +132,7 @@ export function settle(blocks, rawSetup, tree, want, moved) {
   };
   const stacks = [];
   for (const unit of want) {
-    // A column left as it stood, or one in the rule's order that keeps some of its blocks in place, is the rule's: a block dropped back into its column, a column a block left.
+    // A column left as it stood, or in the rule's order with some of its blocks kept in place, is the rule's.
     if (columns.has(unit.join(' ')) && !unit.some((id) => moved.includes(id))) continue;
     if (ruled.has(unit.join(' ')) && !unit.every((id) => moved.includes(id))) continue;
     const full = withUnlisted(unit);
@@ -170,8 +165,7 @@ export function settle(blocks, rawSetup, tree, want, moved) {
     return done(change, flat);
   }
   const mover = want.find((unit) => unit.some((id) => moved.includes(id)));
-  // A block placed against the moved unit, or against a block that follows it, lets go of it where the moved unit lands right beside it on the other side of the block it names: the move takes the unit past it.
-  // The followers further off are left where they stood in the new order, and follow the unit.
+  // A block placed against the moved unit lets go of it where the unit lands right beside it, past the block it names; the followers further off follow the unit.
   if (mover) {
     const pos = new Map(flat.map((id, i) => [id, i]));
     const current = new Map(withPlaces(blocks, places).map((b) => [b.id, b]));
@@ -196,7 +190,7 @@ export function settle(blocks, rawSetup, tree, want, moved) {
   const followers = followersOf(placed, mover, stacks);
   const outside = (ids) => ids.filter((id) => !mover.includes(id) && !followers.has(id));
   const rank = (ids) => outside(ids.slice(0, ids.indexOf(head))).length;
-  // What is left of the stack the moved block came from keeps its place: as it stands, without an exception of its own, or after the unit before it or before the unit after it.
+  // What is left of the stack the moved block came from keeps its place: as it stands, without its exception, or after the unit before or before the unit after.
   const origin = unitsOf(tree).find((unit) => unit.includes(moved[0])) ?? [];
   const left = want.find((unit) => unit !== mover && !unit.some((id) => moved.includes(id)) && unit.some((id) => origin.includes(id)) && unit.join(' ') !== origin.join(' '));
   const holds = [{}];
@@ -236,8 +230,7 @@ function nodeAt(tree, key) {
 }
 
 /**
- * A row of the tree moved to a drop, as the list's drag lands it (the drop reckoned by the editor's lib/nav-drop.js, a tree one level deep): before or after a row, or into one, which makes a stack of a block alone.
- * A block dragged out of a group, the owner's stack or a column the rule reads whole, is taken out of the rule's column it stands in (`loose`), so it stands on its own wherever it lands, right beside its column too; one dropped into the group of its own column, or among its blocks, is in the column again, in the rule's order where it is dropped into it.
+ * A row of the tree moved before or after a row, or into one as a stack; a block dragged out of a group leaves its rule's column (`loose`).
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {string} key The dragged row, by its path in the tree
@@ -294,8 +287,7 @@ export function phoneLand(blocks, rawSetup, key, drop) {
 }
 
 /**
- * A group taken apart, as «Ungroup» in the Phone panel's and the canvas's menus asks: the whole group (`whole`), or the one block taken out of it, standing right after what is left of it.
- * The owner's stack is let go of; the blocks of a column the rule reads whole, and those of the owner's stack that stand in one, are taken out of the rule's columns (`loose`), so no column gathers them again.
+ * A group taken apart, as «Ungroup» asks: the whole group, or one block standing right after what is left of it; its blocks leave the rule's columns (`loose`).
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {string} blockId A block of the group
@@ -319,9 +311,7 @@ export function phoneUngroup(blocks, rawSetup, blockId, whole) {
 }
 
 /**
- * A set's blocks made one stack on the phone, as «Group» and Ctrl+G ask in the phone view (0.7.36.3), in the phone's reading order, at the first one's place.
- * The owner's stacks the set touches join whole, so the stack stays one level deep; a block of a column the rule reads whole is taken out of the column (`loose`), as a drag out of it is, and its column's other blocks stay.
- * Blocks pinned on the phone or hidden there take no part.
+ * A set's blocks made one stack on the phone, as «Group» and Ctrl+G ask, in reading order at the first one's place; the owner's stacks it touches join whole.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {Iterable<string>} ids The set
@@ -362,8 +352,7 @@ export function phoneUngroupAll(blocks, rawSetup, ids) {
 }
 
 /**
- * The cells that put a block of `cols` of the phone's columns at the row's left edge, in its middle or at its right edge.
- * The eight columns have no half, so the middle of an odd width leans to the left by half a column.
+ * The cells that put a block of `cols` columns at the row's left edge, middle or right edge; an odd width's middle leans half a column left.
  * @param {number} cols
  * @param {'left'|'middle'|'right'} side
  * @returns {{col: number, cols: number}}
@@ -383,8 +372,7 @@ export function phoneHasMiddle(cols) {
 }
 
 /**
- * A set's blocks in cells moved to one side of the phone's row, each keeping its width, as the phone's set bar aligns them (0.7.36.3).
- * A block in the owner's stack moves its whole stack, which stands in its first block's cells; a block across the row, pinned or hidden on phones stays as it is, and so does one with no middle in the row (phoneHasMiddle) when the side is the middle.
+ * A set's blocks in cells moved to one side of the phone's row, each keeping its width; a stack moves whole, and a block across the row, pinned or hidden stays.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {Iterable<string>} ids The set
@@ -413,7 +401,7 @@ export function phoneAlignCells(blocks, rawSetup, ids, side) {
 }
 
 /**
- * A block moved one place in the phone's order, as the arrows on its bar and Alt with the arrow keys move it: within its stack where it stands in one of the owner's, else past the next block or stack; the blocks placed against it go with it and are passed over, unless nothing else stands beyond them, and a column of the rule counts its blocks one by one.
+ * A block moved one place in the phone's order: within its stack, else past the next block or stack, the blocks placed against it going along.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {string} blockId
@@ -447,7 +435,7 @@ export function phoneStep(blocks, rawSetup, blockId, dir) {
 }
 
 /**
- * The exception on one side that keeps a flowing block, or the stack it heads, where it stands: the nearest unit it can stand before (or after) without anything moving, else the nearest that keeps every other block's order; null where none can.
+ * The exception on one side that keeps a block or the stack it heads where it stands: the nearest unit that moves nothing, else one keeping the others' order.
  * @param {object[]} blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {string} blockId
@@ -476,7 +464,7 @@ export function phonePlaceKeeping(blocks, rawSetup, blockId, side) {
 }
 
 /**
- * Whether a block's exception holds in its section: it names another block the phone shows, is no part of a ring, and counts, the section having no custom order and the block no place inside a stack.
+ * Whether a block's exception holds: it names another block the phone shows, forms no ring, and counts, with no custom order and the block not inside a stack.
  * @param {object} block
  * @param {object[]} blocks The section's blocks
  * @param {object} [setup] The section's setup (phoneSetupOf)
@@ -498,11 +486,7 @@ export function phoneStackOf(blocks, setup, blockId) {
 }
 
 /**
- * Where a block dragged on the phone canvas lands, from the pointer over the other units' boxes (a block alone, or a stack's or a cell's blocks together), in the phone's order.
- * Over a unit, its left third lands beside it on the left and its right third on the right, sharing its width; its middle third lands above it in its column where the pointer is in the upper half, below it in the lower. In a unit of several blocks (a stack, a column) the halves are read on the block under the pointer, which `member` names.
- * Off every unit but level with some (the room their line leaves), beside the nearest of them in that room (`free`); off every line, the nearest unit: before it where the pointer is above it, else after it.
- * Before or after a unit that shares its line with others, units standing beside each other, is before the line's first or after its last, so a block across the row never splits a line; `at` is the line's top or bottom edge.
- * Over the dragged block's own place the block lands nowhere; level with it and nearer to it than to any unit on its line, it moves along its own line (`here`); nearer to it otherwise, nowhere.
+ * Where a block dragged on the phone canvas lands, from the pointer over the other units: beside, above or below a unit, before or after its line, or nowhere.
  * @param {Array<{id: string, left: number, top: number, right: number, bottom: number, members?: Array<{id: string, top: number, bottom: number}>}>} boxes The units' boxes, by their first block's id, a unit of several blocks with each block's height in it
  * @param {number} x
  * @param {number} y
@@ -528,7 +512,7 @@ export function phoneDropAt(boxes, x, y, own = null) {
     if (fx > 2 / 3) return { pos: 'right', of: hit.id };
     return { pos: fy < 0.5 ? 'above' : 'below', of: hit.id, ...(member ? { member: member.id } : {}) };
   } else {
-    // Off every unit but level with some, on their line: beside the nearest of them, in the room the line leaves, unless the block's own place stands beside it on that line, nearer.
+    // Off every unit but level with some: beside the nearest, in the room its line leaves, unless the block's own place stands nearer on that line.
     const level = boxes.filter((b) => y >= b.top && y <= b.bottom);
     target = (level.length ? level : boxes).reduce((best, b) => (away(b) < away(best) ? b : best));
     const ownLevel = Boolean(own) && y >= own.top && y <= own.bottom;
@@ -562,7 +546,7 @@ function lineOf(boxes, target) {
 }
 
 /**
- * The drop right after the line a block's unit stands on, as a drop in the gap below that line is (phoneDropAt): where a copy made in the phone view lands, and a block added from the Blocks panel over a block in the middle of the view.
+ * The drop right after the line a block's unit stands on: where a copy made in the phone view lands, and a block added over a block in the view.
  * @param {Array<{id: string, top: number, bottom: number, members?: Array<{id: string}>}>} boxes The units' boxes (phoneDropAt)
  * @param {string} id A block of the unit
  * @returns {{pos: 'after', of: string, at: number}|null} Null where no unit holds the block
@@ -575,7 +559,7 @@ export function phoneAfterLine(boxes, id) {
 }
 
 /**
- * Where a block stands across the row when it is placed at the pointer: centred on it, its first column on the quarters' lines, or on any column with `fine`, and kept inside the room from `from` to `to`.
+ * Where a block stands across the row when placed at the pointer: centred on it, its first column on the quarters or any with `fine`, kept in the room.
  * @param {number} x The pointer across the row, in columns from the row's left edge (0 to 8)
  * @param {number} cols The block's width in columns
  * @param {number} from The room's first column
@@ -590,12 +574,7 @@ export function placeAt(x, cols, from, to, fine = false) {
 }
 
 /**
- * The change a drop on the phone canvas makes (phoneDropAt): the dragged block moved in the order, and its cells, by the rules of the Phone Drop Map (decided 14 November 2026).
- * Beside a unit the two share the room of that line around it, its own columns and the free ones beside them, half each, the block on the side it was dropped; a stack takes its half whole. Dropped in the room beside it (`free`), the block keeps its own width at the pointer, or fills the room where its width does not fit, and the unit keeps its own.
- * Above or below a unit it joins it as a stack in the unit's columns, before or after the block `member` names, else first or last, a unit across the row included (`into` is below).
- * Before or after a unit, in a gap, and along its own line (`here`, a block alone on its line), it keeps its own width at the pointer; a block across the row stays across it.
- * `x` is where the pointer stands across the row, in columns, and `fine` any column (Alt); without `x` a block keeps its own place across the row.
- * A block of a column the rule reads whole that lands apart from the column's other blocks is taken out of the rule's columns (`loose`), as the Phone panel's drag does.
+ * The change a drop on the phone canvas makes: the dragged block moved in the order, and the cells it and the unit beside it get, by the Phone Drop Map.
  * @param {object[]} blocks The section's blocks
  * @param {string|object} rawSetup The section's rule, or its setup (phoneSetupOf)
  * @param {string} blockId The dragged block
@@ -611,7 +590,7 @@ export function phoneDropChange(blocks, rawSetup, blockId, drop) {
   drop = { ...drop };
   /** A unit's cells as the row grid draws them: its first block's, else the full row. */
   const cellsOf = (unit) => phoneCellsOf(byId.get(unit[0])) ?? { col: 1, cols: 8 };
-  /** The room of a unit's line around it: its own columns and the free ones beside them, from the unit before it where that one shares the line (it ends left of it), else from the row's edge, and the same to the unit after it. */
+  /** The room of a unit's line around it: its own columns and the free ones beside them, up to the units before and after it on that line, else the row's edges. */
   const roomOf = (list, i) => {
     const { col, cols } = cellsOf(list[i]);
     const end = col + cols - 1;
@@ -646,7 +625,7 @@ export function phoneDropChange(blocks, rawSetup, blockId, drop) {
       const start = pointed ? placeAt(drop.x, cols, room.from, room.to, drop.fine) : pos === 'left' ? room.to - cols + 1 : room.from;
       cells[blockId] = cols >= PHONE_COLUMNS ? null : { col: start, cols };
     } else {
-      // The two share the line's room around the unit, half each, the block on the side it was dropped; on a full line that is the unit's own columns, nothing else on the line moving.
+      // The two share the line's room around the unit, half each, the block on the side it was dropped.
       const span = to - from + 1;
       if (span < 2) return null;
       const half = Math.floor(span / 2);
@@ -691,7 +670,7 @@ export function phoneDropChange(blocks, rawSetup, blockId, drop) {
 const SPACE_STILL_PX = 6;
 
 /**
- * A flowing block's own room above it on the phone after it is dragged `moved` px down (up where negative) over its own place: the room it had and the move, in steps of `step` px, never taking more than the space between blocks.
+ * A flowing block's room above it on the phone after a drag of `moved` px over its own place, in steps of `step` px, never below minus the gap.
  * @param {{space?: number, row?: number}|null} placement The block's `frames.mobile`
  * @param {number} moved
  * @param {number} gap The section's space between blocks on the phone (mobileGapOf)
@@ -706,7 +685,7 @@ export function phoneSpaceDragged(placement, moved, gap, step = 4) {
 }
 
 /**
- * The span a flowing block dragged on the phone keeps its place in, where a release sets its room above it (phoneSpaceDragged) rather than moving it: from the bottom of the nearest block above it to the top of the nearest block below it, of the blocks that share its columns.
+ * The span a flowing block dragged on the phone keeps its place in: between the nearest blocks above and below it in its columns.
  * @param {Array<{left: number, top: number, right: number, bottom: number}>} others The other blocks' boxes as the drag began
  * @param {{left: number, top: number, right: number, bottom: number}} own The block's own box as the drag began
  * @returns {{top: number, bottom: number}}
@@ -719,8 +698,7 @@ export function phoneHomeSpan(others, own) {
 }
 
 /**
- * The change a drop of a selected set on the phone canvas makes: the dragged block lands as phoneDropChange lands it, and the set's other flowing blocks follow it one by one, each right after the one before it, or below it in the stack the dragged block joins, keeping its own cells.
- * Dropped beside a unit, they follow after that unit, so the line the dragged block shares with it stays whole; moved along its own line (`here`), the dragged block moves alone.
+ * A selected set's drop on the phone canvas: the dragged block lands as phoneDropChange lands it, and the set's other flowing blocks follow it in turn.
  * @param {object} section
  * @param {string} blockId The dragged block
  * @param {object|null} drop As phoneDropChange takes it
@@ -742,7 +720,7 @@ export function phoneSetDropChange(section, blockId, drop, followers) {
 }
 
 /**
- * The change that takes a section to another state of its phone order: the places, the stacks, the custom order, the blocks let go of the rule's columns and the flowing blocks' cells that differ.
+ * The change that takes a section to another state of its phone order: the places, stacks, custom order, loose blocks and flowing blocks' cells that differ.
  * @param {object} before
  * @param {object} after The same section with phone changes written in (phoneChangeApplied)
  * @returns {{places: Record<string, object|null>, cells: Record<string, {col: number, cols: number}|null>, stacks?: string[][], list?: string[], loose?: string[]}|null} Null where the two stand alike
@@ -766,8 +744,7 @@ export function phoneChangeBetween(before, after) {
 }
 
 /**
- * A section with a phone change written in, as the editor writes it (changeSectionPhone): the places, the stacks, the custom order, the cells, the heights, the rooms above the flowing blocks and the pinned blocks' layers; the section given is left as it is.
- * The cells take the place of a width and a left edge set by hand, a height is the block's own on the phone (null takes it away), and a block pinned to rows of its own keeps its place; a layer is a pinned block's own z on the phone (layer-order.js phoneLayerChanges), and a flowing block takes none.
+ * A section with a phone change written in as the editor writes it: places, stacks, order, cells, heights, rooms and pinned layers.
  * @param {object} section
  * @param {{places?: Record<string, object|null>, stacks?: string[][], list?: string[], loose?: string[], cells?: Record<string, {col: number, cols: number}|null>, heights?: Record<string, number|null>, spaces?: Record<string, number|null>, layers?: Record<string, number>}} change
  * @returns {object}
@@ -829,7 +806,7 @@ export function phoneChangeApplied(section, change) {
 }
 
 /**
- * The blocks with words a phone change would draw in fewer of the phone's columns than they read well in (ADR-0034, «Force readable text»): those the change gives cells, a block across the row never among them, so a block already narrow elsewhere does not count against the change; a block pinned to rows keeps its own cells and is never counted.
+ * The blocks with words a phone change would draw in fewer columns than they read well in (ADR-0034): only those the change gives cells, a pinned block never.
  * @param {object[]} blocks The section's blocks
  * @param {{cells?: Record<string, {col: number, cols: number}|null>}|null} change
  * @param {Iterable<string>} wordIds The blocks that hold words
@@ -847,7 +824,7 @@ export function phoneTooNarrow(blocks, change, wordIds, least) {
 }
 
 /**
- * A height dragged on the phone, snapped to the row grid's steps, or to the height that lines its bottom up with a block or stack beside it on its line («Same height»).
+ * A height dragged on the phone, snapped to the row grid's steps or to the height that lines its bottom up with a unit beside it («Same height»).
  * @param {number} raw The height the pointer asks for, in px
  * @param {number} top The block's top in the flow, in px
  * @param {{top: number, bottom: number}[]} beside The boxes of the blocks and stacks on its line, in the flow's px
@@ -866,8 +843,7 @@ export function phoneHeightSnap(raw, top, beside, step = 8, reach = 6) {
 }
 
 /**
- * The fewest of the phone's columns a cell holding words can take at a window's width without the words floor in base.css drawing it across the row.
- * The floor's own lines: a cell of one column always stands across the row, of two up to a 657 px window, of three up to 438 px and of four up to 328 px; wider cells never do.
+ * The fewest phone columns a cell holding words can take at a window's width without the words floor in base.css drawing it across the row.
  * @param {number} width The window's width in px
  * @returns {number} 2 to 5
  */
@@ -879,8 +855,7 @@ export function leastWordsCols(width) {
 }
 
 /**
- * The places a block walks through with the arrow keys on the phone canvas (preview-edit.js), each a drop as phoneDropAt would read it: for every other unit in the phone's order, before and after it where it stands across the row, and above and below it in its column where it stands in cells. Left and Right from a place are the drops beside that place's unit.
- * `home` is the first place where the block already stands, where the walk begins.
+ * The places a block walks through with the arrow keys on the phone canvas, each a drop as phoneDropAt reads it; `home` is the first where it already stands.
  * @param {object[]} blocks
  * @param {string|object} rawSetup
  * @param {string} blockId
@@ -907,8 +882,7 @@ export function phoneKeyDrops(blocks, rawSetup, blockId) {
 const ADDED_GAP = 24;
 
 /**
- * A section with blocks added in the phone view, which stand on the phone only (0.7.3.17): each shown on phones only (`hideDesktop`) and shown there, flowing in the phone's order with a pin it was copied with let go of, and its desktop frame below every block of the section, the group's own shape kept, so the desktop stays as it is and the block stands clear of the others should it be shown there.
- * The first lands where `drop` asks, read at the point as a drag's drop is (phoneDropAt, phoneDropChange), and the others after it in turn; without a drop they stand last in the phone's order.
+ * A section with blocks added in the phone view: shown on phones only, their desktop frames below every block, the first at `drop` and the rest after it.
  * @param {object} section
  * @param {object[]} added The new blocks, in the order they are read
  * @param {object|null} [drop] Where the first lands (phoneDropChange)

@@ -1,6 +1,5 @@
 /**
- * Admin strings, Norwegian Nynorsk. Overlays the Bokmål base (nb.js);
- * the parity test keeps the key sets in sync.
+ * Admin strings, Norwegian Nynorsk, over the Bokmål base (nb.js).
  */
 export default {
   lang: 'nn',

@@ -1,6 +1,6 @@
 /*
- * The footer's own rules (footer.js), loaded with it by features.js, placed after base.css in the order ENGINE_SHEETS keeps (sheets.js).
- * Its reasoning stands in docs/STYLES.md, under footer.css.
+ * The footer's own rules (footer.js), loaded with it after base.css in ENGINE_SHEETS order (sheets.js).
+ * Its reasoning stands in docs/STYLES.md.
  */
 /* Shared footer */
 #urd-footer .urd-footer {

@@ -1,10 +1,5 @@
 /**
- * The editor's stand-in for a blended picture (blocks/image.js `blend`).
- *
- * A blend covers everything its element draws, and a block's bar, handles and outline are drawn by the block, so a block that blends would blend its own tools.
- * While the editing tools are on, each blended block therefore draws no blend and no picture of its own: a stand-in (`.urd-blend-ghost`) with a copy of the picture stands under it, in the block's place and layer, and blends as the block does on the published page.
- * The block keeps its picture, unseen, so everything that measures, selects or drags it works on the block as before.
- * In the clean view the stand-ins go, and the blocks blend themselves, as a visitor's page draws them.
+ * The editor's stand-in for a blended picture (blocks/image.js `blend`): while the editing tools show, a copy under the block blends in its place.
  */
 import { BLOCK_CHROME } from './render.js';
 
@@ -43,8 +38,8 @@ function release(block) {
 }
 
 /**
- * Gives every blended block its stand-in, in its place, and takes away those of blocks that no longer blend or are gone.
- * Nothing is written where nothing differs, so the page's own changes are the only ones that call for another round.
+ * Gives every blended block its stand-in in its place and takes away the others' stand-ins.
+ * It writes only what differs.
  */
 function sync() {
   const on = !document.body.classList.contains('urd-chrome-off');
@@ -79,7 +74,7 @@ function sync() {
 }
 
 /**
- * Starts the stand-ins, once: they follow every change to the page (a block drawn again, dragged, turned or given another blend), the clean view switched on and off, and the window's size.
+ * Starts the stand-ins once: they follow every change to the page, the clean view and the window's size.
  */
 export function watchBlends() {
   if (watching || typeof MutationObserver !== 'function') return;

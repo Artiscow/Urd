@@ -1,9 +1,5 @@
 /**
- * The designs the blocks offer beside the calendar's (calendar-designs.js): the pure catalogue behind the editor's design picker and the pictures scripts/design-pictures.mjs draws of each.
- * A block's entry names the prop that holds its design, the designs in the order the picker shows them (in families where a block has many), how a stored value reads as a design, the frame a design is drawn in, and the sample content a picture is drawn with.
- * The labels are the menus' own option keys (`labelPrefix` + id); each design's description is `design.<type>.<id>` and a family's name `design.family.<family>` in the admin dictionaries.
- * The module is bundled by the editor and imported by the pictures script; the blocks never load it, so it stays outside the visitor closure, and it never calls ta(): the samples take the translating function as an argument.
- * tests/block-designs.test.mjs holds the entries, the dictionary keys and the pictures against each other.
+ * The catalogue of the blocks' designs beside the calendar's, for the design picker and scripts/design-pictures.mjs.
  */
 import { CONTACT_DESIGNS, contactDesign } from './contact-model.js';
 import { GALLERY_VIEWS, galleryView } from './gallery-model.js';
@@ -36,8 +32,7 @@ const hasContact = (site) => {
 };
 
 /**
- * Every block with designs, by its type.
- * `read` gives the design a stored props object shows (a missing or unknown value is the block's default); `frame` is the width in percent and the height in px a design is drawn at; `sample(text)` gives the props (and for the contact block the site's contact details) a picture is drawn with, merged over the block's defaults; `empty` says when a block has nothing of its own to show, so the picker's preview draws it with the sample instead.
+ * Every block with designs by type: `read` gives a stored design, `frame` its drawn size, `sample(text)` a picture's props, `empty` when to draw the sample.
  */
 export const BLOCK_DESIGNS = {
   contact: {
@@ -226,8 +221,7 @@ export function blockDesignEmpty(type, props, site) {
 const PREVIEW_MIN = 640;
 
 /**
- * The preview page for a block: as wide as the block's own width on a 1440 px screen needs with the site's gutters around it, so the block keeps its real size and fills the pane, and never narrower than PREVIEW_MIN.
- * The canvas is the viewport less two gutters (a share of the viewport) up to the content width (render.js, applySiteLayout), or up to the section's own width where it has one (`size.maxWidth`); the block is centred in the preview's canvas at its real width.
+ * The preview page for a block, wide enough for its real width on a 1440 px screen with the site's gutters and never under PREVIEW_MIN; the block is centred.
  * @param {object|null} site
  * @param {number} frameW The block's frame width in percent of its section's canvas
  * @param {string} [sectionWidth] The section's `size.maxWidth`

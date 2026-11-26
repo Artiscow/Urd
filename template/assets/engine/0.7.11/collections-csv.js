@@ -1,15 +1,6 @@
 /**
- * CSV export and import for collections (feature map C12): pure logic without DOM,
- * tested in tests/collections-csv.test.mjs. The module is imported ONLY by the
- * editor (bundled there) and deliberately kept outside the visitor closure:
- * visitors never need it.
- *
- * The format is RFC 4180-like: fields holding the separator, a quote or a newline are wrapped in quotes ("" is an escaped quote), and the first row holds the column names.
- * A collection writes the columns its kind uses (columnsFor), with the list separator and the decimal mark of the admin's language (separatorFor) and a byte-order mark, so a spreadsheet opens it in columns and reads its letters; a file is read with either separator, found from its header row.
- * The list fields are separated by «|», the yes-and-no fields write «yes», the picture's style is a cell of compact JSON, and the colours' pictures stand by position beside their names, so an export imported again changes nothing.
- * A file is read as UTF-8, or as windows-1252 where it is not UTF-8, as a spreadsheet's plain CSV save on Windows writes it (decodeCsv); numbers read with the decimal mark the separator goes with, so an export imported again reads its own numbers.
- * An import is a plan before anything is stored (readCsv, importPlan): each row is matched to an entry by its id, checked cell by cell, and named new, changed, unchanged or not stored with its reason; a column the file lacks leaves its field as it stands, and an empty cell clears it.
- * An entry's link to a page or a spot on it is written as the address the page draws (resolveLink), and an address that names a page of the register is read back as that page and its spot.
+ * CSV export and import for collections, in the admin's separator and decimal mark; an import is a plan before anything is stored.
+ * Pure and tested.
  */
 
 import { resolveLink } from './nav-model.js';
@@ -79,13 +70,13 @@ export function detectSeparator(text) {
   return best[1] > 0 ? best[0] : ',';
 }
 
-/** A cell a spreadsheet would read as a formula: one starting with =, +, -, @, a tab or a carriage return, unless it is a plain number; and one starting with the apostrophe that marks such a cell. */
+/** A cell a spreadsheet would read as a formula, unless it is a plain number, and one starting with the apostrophe that marks such a cell. */
 const FORMULA_START = /^[=+\-@\t\r']/;
 const PLAIN_NUMBER = /^[+-]?\d+(?:[.,]\d+)?$/;
 
 function csvField(value, sep) {
   const raw = String(value ?? '');
-  // An apostrophe in front keeps a spreadsheet from running the cell as a formula, and the import takes one away again (readCsv), so a cell of the owner's own that starts with one keeps it.
+  // An apostrophe in front keeps a spreadsheet from running the cell as a formula; readCsv takes one away again.
   const text = FORMULA_START.test(raw) && !PLAIN_NUMBER.test(raw) ? `'${raw}` : raw;
   return text.includes(sep) || /["\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
@@ -116,7 +107,7 @@ export function csvCell(entry, column, pages = [], decimal = '.') {
     case 'href': {
       if (!e.page) return e.href ?? '';
       const link = resolveLink(e, pages);
-      // A page the register no longer has is written by its id, so the link comes back as it was.
+      // A page missing from the register is written by its id, so the link comes back as it was.
       return link.missing ? `page:${e.page}${e.target ? `#${e.target}` : ''}` : link.href;
     }
     default:
@@ -141,13 +132,13 @@ export function entriesToCsv(entries, pages = [], { kind, sep = ',', bom = false
   return (bom ? '﻿' : '') + rows.join('\n') + '\n';
 }
 
-/** Raw CSV text → rows of cells (handles quotes and newlines inside fields, and a byte-order mark); empty rows (double newlines, a trailing line) are left out. */
+/** Raw CSV text → rows of cells, with quotes and newlines inside fields and a byte-order mark; empty rows are left out. */
 export function parseCsv(text, sep = ',') {
   return parseCsvRows(text, sep).map((r) => r.cells);
 }
 
 /**
- * Raw CSV text → the rows with their cells and the row number a spreadsheet gives them, the first row being 1 and an empty row counting though it is left out, so a row named in the preview is the row the owner finds in the file.
+ * Raw CSV text → the rows with their cells and the row number a spreadsheet shows, an empty row counted though it is left out.
  * @returns {Array<{row: number, cells: string[]}>}
  */
 export function parseCsvRows(text, sep = ',') {
@@ -188,7 +179,7 @@ export function parseCsvRows(text, sep = ',') {
 
 const pad = (n) => String(n).padStart(2, '0');
 
-/** A date cell as an ISO date: written 2026-11-02, or day first as a spreadsheet in the admin's languages writes it (02.11.2026, 02/11/2026); null for anything else or a day that does not exist. */
+/** A date cell as an ISO date, written 2026-11-02 or day first (02.11.2026, 02/11/2026); null for anything else or a day that does not exist. */
 export function readDate(raw) {
   const t = String(raw ?? '').trim();
   let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
@@ -204,8 +195,8 @@ export function readDate(raw) {
 }
 
 /**
- * A number cell as a number, with spaces between thousands: 1200.50, 1 200,50, 1.200,50 or 1,200.50; NaN for anything else.
- * A mark followed by three digits alone (1,125 or 1.125) is a thousand or a decimal by the file's own decimal mark, the one its separator goes with, as the export writes it.
+ * A number cell as a number: 1200.50, 1 200,50, 1.200,50 or 1,200.50; NaN for anything else.
+ * A mark before three digits alone reads by the file's decimal mark.
  * @param {string} raw
  * @param {'.'|','} [decimal] The file's decimal mark
  */
@@ -234,7 +225,7 @@ export function decodeCsv(buffer) {
 
 const splitList = (value) => String(value ?? '').split('|').map((s) => s.trim()).filter(Boolean);
 /**
- * Why a picture cell cannot be taken, or null where it can: a path in media/, a raster picture in base64, or an SVG in base64 that holds nothing that can run (svgProblem).
+ * Why a picture cell cannot be taken, or null: it is a path in media/, a raster picture in base64, or a base64 SVG with nothing that can run.
  * @param {string} value
  * @returns {null|'image'|'svgUnsafe'}
  */
@@ -265,7 +256,7 @@ function readStyle(raw) {
 }
 
 /**
- * Reads one row's cells into the fields they set, checked: `set` holds a field's new value, `null` clears it; the first cell that does not read gives the row's problem.
+ * Reads one row's cells into the fields they set: `set` holds each new value, `null` clears it, and the first cell that does not read is the problem.
  * @returns {{set: object, problem: {key: string, column?: string, value?: string}|null}}
  */
 function readRow(cells, columns, pages, decimal) {
@@ -342,7 +333,7 @@ function readRow(cells, columns, pages, decimal) {
     set.page = null;
     set.target = null;
     set.href = raw || null;
-    // A page by its id (as the export writes a page the register no longer has) is that page and its spot.
+    // A page by its id, as the export writes a page missing from the register, is that page and its spot.
     const byId = raw.match(/^page:([a-z0-9][a-z0-9-]*)(?:#([a-z0-9][a-z0-9-]{0,80}))?$/);
     if (byId) {
       set.href = null;
@@ -382,8 +373,7 @@ function readRow(cells, columns, pages, decimal) {
 }
 
 /**
- * Reads a CSV file for a collection: its separator, its columns (those of another kind and unknown ones set aside), and each row's fields, checked.
- * A row is numbered as a spreadsheet numbers it, the header being row 1 and an empty row counting.
+ * Reads a CSV file for a collection: its separator, its kind's columns, and each row's fields, checked and numbered as a spreadsheet does.
  * @param {string} text
  * @param {string} kind The collection's kind
  * @param {Array<{id: string, path: string}>} [pages] The page register, for an address that names a page
@@ -456,8 +446,7 @@ function withRow(entry, set) {
 }
 
 /**
- * What an import will do, before anything is stored: each row matched to an entry by its id and named, and the entries the collection will hold.
- * A row with a problem is not stored; a row whose id is already taken by an earlier row of the file is not either; a row without an id, or with an id no entry has, is new.
+ * What an import will do, before anything is stored: each row matched to an entry by its id or refused, and the entries the collection will hold.
  * @param {Array<object>} existing The collection's entries
  * @param {Array<{row: number, id: string, set: object, problem: object|null}>} rows From readCsv
  * @param {{matched?: 'update'|'skip', missing?: 'keep'|'remove'}} [options] What rows that match an entry do, and what becomes of the entries the file does not name
