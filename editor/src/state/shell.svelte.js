@@ -3,7 +3,7 @@
  */
 import { ta } from '$engine/i18n.js';
 import { TOOLBAR_FORMS, TOOLBAR_LOOKS, TOOLBAR_SIZES, TOOLBAR_GEARS, TOOLBAR_PHONES, TOOLBAR_PHONE_PLACES, TOOLBAR_DESIGNS } from '../menu/forms.js';
-import { relativeLuminance, contrastRatio } from '$engine/theme.js';
+import { relativeLuminance, contrastRatio, activeTokens } from '$engine/theme.js';
 import { liftSiteFile, SITE_SCHEMA_VERSION } from '$engine/migrate.js';
 import { createDraftStore } from '../lib/draftStore.js';
 import { PHONE_PANEL_LAYOUTS, PHONE_COLUMN_LOOKS } from '../lib/phone-panel.js';
@@ -11,6 +11,7 @@ import { tick } from 'svelte';
 import { ICONS } from '../lib/icons.js';
 import { opensShortcuts, togglesGrid } from '../lib/shortcuts.js';
 import { GRID_LOOKS, gridLookOf } from '$engine/snap-model.js';
+import { GAP_LOOKS, GUIDE_COLOURS, GUIDE_STRENGTHS, SNAP_COLOURS, SHADES, gapLookOf, guideColourOf, guideStrengthOf, snapColourOf, siteColoursOf, schemeOf, nearColour, autoSnap } from '$engine/guide-colours.js';
 import { UPDATE_NOTICES, updateNoticeForm } from '../lib/update-notice.js';
 import { SETTINGS_PLACES, settingsPlace as settingsPlaceOf, settingsPictures as settingsPicturesOf } from '../lib/settings-model.js';
 import { ADMIN_LAYOUTS } from '../lib/admin-designs.js';
@@ -964,6 +965,66 @@ function setGridLook(v) {
 
 const GRID_LOOK_OPTIONS = $derived(GRID_LOOKS.map((id) => [id, ta(`opt.gridLook.${id}`)]));
 
+/** How the canvas draws its guides and a drag's marks (guide-colours.js): kept per browser, read by the preview, the defaults kept as no entry. */
+let gapLook = $state(gapLookOf(localStorage.getItem('urd-gap-look')));
+let guideColour = $state(guideColourOf(localStorage.getItem('urd-guide-colour')));
+let guideStrength = $state(guideStrengthOf(localStorage.getItem('urd-guide-strength')));
+let snapColour = $state(snapColourOf(localStorage.getItem('urd-snap-colour')));
+
+/** Stores one of the canvas's looks and draws the guides again where they stand. */
+function storeLook(key, value, fallback) {
+  if (value === fallback) localStorage.removeItem(key);
+  else localStorage.setItem(key, value);
+  if (guidesOn) previewState.bridge?.sendShowGuides(true);
+}
+
+function setGapLook(v) {
+  gapLook = gapLookOf(v);
+  storeLook('urd-gap-look', gapLook, GAP_LOOKS[0]);
+}
+
+function setGuideColour(v) {
+  guideColour = guideColourOf(v);
+  storeLook('urd-guide-colour', guideColour, GUIDE_COLOURS[0]);
+}
+
+function setGuideStrength(v) {
+  guideStrength = guideStrengthOf(v);
+  storeLook('urd-guide-strength', guideStrength, 'medium');
+}
+
+function setSnapColour(v) {
+  snapColour = snapColourOf(v);
+  storeLook('urd-snap-colour', snapColour, SNAP_COLOURS[0]);
+}
+
+const lineColourWord = (id) => ta(`opt.lineColour.${id}`);
+const GAP_LOOK_OPTIONS = $derived(GAP_LOOKS.map((id) => [id, ta(`opt.gapLook.${id}`)]));
+const GUIDE_COLOUR_OPTIONS = $derived(GUIDE_COLOURS.map((id) => [id, id === 'quiet' ? ta('opt.guideColour.quiet') : lineColourWord(id)]));
+const GUIDE_STRENGTH_OPTIONS = $derived(GUIDE_STRENGTHS.map((id) => [id, ta(`opt.guideStrength.${id}`)]));
+
+/** The snap colours on this site: Auto's pick, and the colours that look close to one of the site's own, each with its tooltip. */
+const snapState = $derived.by(() => {
+  const site = siteState.siteDraft;
+  const colours = siteColoursOf(site);
+  const shown = site?.theme ? activeTokens(site.theme, previewState.previewMode).color?.bg : undefined;
+  const scheme = schemeOf(shown);
+  const near = new Map();
+  for (const id of SNAP_COLOURS) if (id !== 'auto') {
+    const found = nearColour(SHADES[id][scheme], colours);
+    if (found) near.set(id, found);
+  }
+  return { auto: autoSnap(colours, scheme, guideColour, shown), near };
+});
+
+const nearTip = (found) => (found.role === 'set'
+  ? ta('tip.snapColour.nearSet', { set: found.set ?? '' })
+  : ta('tip.snapColour.near', { role: ta(`color.${found.role}`) }));
+
+const SNAP_COLOUR_OPTIONS = $derived(SNAP_COLOURS.map((id) => (id === 'auto'
+  ? [id, ta('opt.snapColour.auto'), ta('tip.snapColour.auto', { name: lineColourWord(snapState.auto) })]
+  : [id, lineColourWord(id), snapState.near.has(id) ? nearTip(snapState.near.get(id)) : undefined])));
+
 // The panel's fold-all buttons act on its drawn details elements, shown only for a panel with group folds.
 let panelEl = $state(null);
 
@@ -1352,6 +1413,19 @@ export const shellState = {
   get gridLook() { return gridLook; },
   get GRID_LOOK_OPTIONS() { return GRID_LOOK_OPTIONS; },
   setGridLook,
+  get gapLook() { return gapLook; },
+  get GAP_LOOK_OPTIONS() { return GAP_LOOK_OPTIONS; },
+  setGapLook,
+  get guideColour() { return guideColour; },
+  get GUIDE_COLOUR_OPTIONS() { return GUIDE_COLOUR_OPTIONS; },
+  setGuideColour,
+  get guideStrength() { return guideStrength; },
+  get GUIDE_STRENGTH_OPTIONS() { return GUIDE_STRENGTH_OPTIONS; },
+  setGuideStrength,
+  get snapColour() { return snapColour; },
+  get SNAP_COLOUR_OPTIONS() { return SNAP_COLOUR_OPTIONS; },
+  get snapState() { return snapState; },
+  setSnapColour,
   get panelEl() { return panelEl; },
   set panelEl(v) { panelEl = v; },
   get panelHasGroups() { return panelHasGroups; },

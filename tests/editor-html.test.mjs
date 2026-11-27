@@ -38,7 +38,7 @@ const DRAWN = [
   ['panels/nav/NavScroll.svelte', "iconSvg(siteDraft.nav.tab.icon) || ''", 'an icon of the engine\'s set by the id the menu keeps'],
   ['panels/phone/PhoneOrder.svelte', 'icon', 'an ICONS drawing chosen for a row'],
   ['section/PhoneSectionRows.svelte', 'rowPicture(shape)', 'a phone layout\'s picture from the constant shapes (ROW_PICTURES)'],
-  ['settings/SettingControl.svelte', 'settingPicture(setting.look, id)', 'a setting\'s picture from the editor\'s own drawings'],
+  ['settings/SettingControl.svelte', 'settingPicture(setting.look, id, setting.pictureState?.(c))', 'a setting\'s picture from the editor\'s own drawings'],
   ['shell/DraftsWindow.svelte', "doc ? pageThumb(doc, { w: 34, h: 42, max: 4 }) : (PART_KINDS[part.kind]?.icon ?? '')", 'a page\'s schematic picture, its colours checked, or a kind\'s ICONS drawing'],
   ['shell/UndoButtons.svelte', 'l.icon', 'the ICONS drawing of a step\'s kind'],
 ];

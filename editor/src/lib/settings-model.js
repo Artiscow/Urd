@@ -204,6 +204,16 @@ export const SETTINGS_GROUPS = [
         options: (c) => c.ed.DRAG_MARK_OPTIONS, get: (c) => c.ed.dragMark, set: (c, v) => c.ed.setDragMark(v) },
       { id: 'gridLook', labelKey: 'settings.gridLook', tipKey: 'tip.gridLook', kind: 'choice', look: 'gridLook',
         options: (c) => c.ed.GRID_LOOK_OPTIONS, get: (c) => c.ed.gridLook, set: (c, v) => c.ed.setGridLook(v) },
+      // The canvas's guides and a drag's marks (guide-colours.js): how equal gaps show, the guides' colour and strength, and the snap colour.
+      { id: 'gapLook', labelKey: 'settings.gapLook', tipKey: 'tip.settings.gapLook', kind: 'choice', look: 'gapLook',
+        options: (c) => c.ed.GAP_LOOK_OPTIONS, get: (c) => c.ed.gapLook, set: (c, v) => c.ed.setGapLook(v) },
+      { id: 'guideColour', labelKey: 'settings.guideColour', tipKey: 'tip.settings.guideColour', kind: 'choice', look: 'guideColour',
+        options: (c) => c.ed.GUIDE_COLOUR_OPTIONS, get: (c) => c.ed.guideColour, set: (c, v) => c.ed.setGuideColour(v) },
+      { id: 'guideStrength', parent: 'guideColour', labelKey: 'settings.guideStrength', tipKey: 'tip.settings.guideStrength', kind: 'choice', look: 'guideStrength',
+        options: (c) => c.ed.GUIDE_STRENGTH_OPTIONS, get: (c) => c.ed.guideStrength, set: (c, v) => c.ed.setGuideStrength(v) },
+      // Auto's tile shows the colour it picks here, and a colour close to one of the site's carries a mark (settings-pictures.js).
+      { id: 'snapColour', labelKey: 'settings.snapColour', tipKey: 'tip.settings.snapColour', kind: 'choice', look: 'snapColour', pictureState: (c) => c.ed.snapState,
+        options: (c) => c.ed.SNAP_COLOUR_OPTIONS, get: (c) => c.ed.snapColour, set: (c, v) => c.ed.setSnapColour(v) },
     ],
   },
   {

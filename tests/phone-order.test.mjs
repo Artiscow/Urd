@@ -1091,12 +1091,13 @@ test('a block dragged freely on the phone has the desktop\'s smart guides: the o
   const guides = edit.slice(edit.indexOf('  function phoneGuides('), edit.indexOf('  function pinOnPhone('));
   assert.match(guides, /const ex = edgeSnap\(box\.left, box\.w, xs, tol\);\s*const gx = ex \? null : gapSnap\(box\.left, box\.w, besideX, tol\);\s*const ey = edgeSnap\(box\.top, box\.h, ys, tol\);\s*const gy = ey \? null : gapSnap\(box\.top, box\.h, besideY, tol\);/, 'the snap model the desktop drag uses');
   assert.match(guides, /\[0\.05, 0\.5, 0\.95\]\.map\(\(share\) => \(\{ at: fw \* share, from: 0, to: fh, surface: true, share, prefer: share === 0\.5 \}\)\)/, 'the content\'s edges and middle, the middle preferred');
-  assert.match(guides, /if \(free\) \{\s*settle\(\);\s*return \{ left: box\.left, top: box\.top \};/);
-  // The lines stand in one layer put in once, and are kept and moved from one move to the next, never put in the grid on a move.
-  assert.match(guides, /layer\.className = 'urd-guide-layer';[\s\S]*?flowEl\.appendChild\(layer\);/, 'one layer over the flow, put in as the drag begins');
-  assert.doesNotMatch(guides.slice(guides.indexOf('const draw = ')), /flowEl\.appendChild/, 'a line drawn on a move goes into the layer, never into the grid');
-  assert.match(guides, /if \(item\.css !== css\) item\.node\.style\.cssText = item\.css = css;/, 'a line is written only where it moved');
-  assert.match(guides, /const done = \(\) => layer\.remove\(\);/);
+  assert.match(guides, /if \(free\) \{\s*marks\.clear\(\);\s*return \{ left: box\.left, top: box\.top \};/);
+  // The marks stand in one layer put in once, and are kept and moved from one move to the next (dragMarkLayer), never put in the grid on a move.
+  assert.match(guides, /layer\.className = 'urd-guide-layer';[\s\S]*?flowEl\.appendChild\(layer\);\s*applyGuideLook\(\);\s*const marks = dragMarkLayer\(layer\);/, 'one layer over the flow, put in as the drag begins, the marks drawn into it');
+  assert.doesNotMatch(guides.slice(guides.indexOf('const marks = ')), /flowEl\.appendChild/, 'a mark drawn on a move goes into the layer, never into the grid');
+  const layerCode = edit.slice(edit.indexOf('function dragMarkLayer('), edit.indexOf('function enhanceBlock('));
+  assert.match(layerCode, /if \(item\.css !== css\) item\.node\.style\.cssText = item\.css = css;/, 'a mark is written only where it moved');
+  assert.match(guides, /const done = \(\) => \{\s*marks\.done\(\);\s*layer\.remove\(\);\s*\};/);
   const pinnedAt = edit.indexOf('  function mobileDrag(');
   const pinned = edit.slice(pinnedAt, edit.indexOf('\n  function ', pinnedAt + 10));
   assert.match(pinned, /guides = phoneGuides\(flowEl, setIds\);/);

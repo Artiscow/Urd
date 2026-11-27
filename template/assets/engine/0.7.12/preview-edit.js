@@ -23,7 +23,8 @@ import { clampSize, stepSize, LINE_HEIGHTS, stepIndent, matchFontStack } from '.
 import { TEXT_BLOCKS, unwrap, stripDescendantProp, applyWholeStyle } from './text-whole.js';
 import { frameAtPoint, toolbarAnchor, menuFit, shiftInto, flyoutFit } from './place.js';
 import { seamDrag, phoneSeamDrag } from './section-size.js';
-import { snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis, gridLookOf, gridLine } from './snap-model.js';
+import { snapTolerance, edgeSnap, gapSnap, lockAxis, gridLookOf, gridLine, SNAP_SHARES, guideShares, strongShare, dragMarks, measureAt } from './snap-model.js';
+import { guideVars, gapLookOf, fitDash } from './guide-colours.js';
 import { blocksInRect, alignMoves, distributeMoves, groupDelta } from './selection.js';
 import { suspendSticky, resumeSticky, dockInset } from './sticky.js';
 import { PALETTE_GROUPS, PALETTE_KINDS, EXTRA_GROUP_PICTURES, shopOn, recentKinds, rememberKind } from './block-palette.js';
@@ -1761,28 +1762,92 @@ export function toggleGridOverlays(visible, page, site) {
 /** Whether the guide lines are on (controlled by the editor's top bar button). */
 let guideOverlaysOn = false;
 
-/** Shows or hides the page's guide lines at the content surface's quarters, where a drag snaps: lines in the accent, or ticks where the grid is drawn as dots. */
+/** A choice of the guides' and marks' look, stored per browser by the editor's Urd settings (guide-colours.js). */
+function lookPref(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+/** Sets the guides' and marks' colours on the page from the stored choices, the site's colours and its Background as drawn, in the mode shown. */
+function applyGuideLook() {
+  // The Background resolved as the page draws it, a light-dark() pair included.
+  const probe = document.createElement('span');
+  probe.style.cssText = 'position:absolute;visibility:hidden;color:var(--urd-color-bg);';
+  document.body.appendChild(probe);
+  const bg = getComputedStyle(probe).color;
+  probe.remove();
+  const prefs = { guide: lookPref('urd-guide-colour'), strength: lookPref('urd-guide-strength'), snap: lookPref('urd-snap-colour') };
+  for (const [name, value] of Object.entries(guideVars(prefs, siteNow, bg))) {
+    if (value) document.body.style.setProperty(name, value);
+    else document.body.style.removeProperty(name);
+  }
+}
+
+/** Shows or hides the page's guide lines: the content's twelfths, the quarters on the phone, in the guide colour (applyGuideLook). */
 export function toggleGuideOverlays(visible) {
   guideOverlaysOn = visible;
   document.querySelectorAll('.urd-page-guide').forEach((el) => el.remove());
   if (!visible) return;
+  applyGuideLook();
   document.querySelectorAll('.urd-section:not(.urd-handoff)').forEach((host) => addGuideOverlays(host));
+  // A section that grows or shrinks moves the ones below it, whose dashes and labels are lined up again.
+  guideRunsWatch ??= new ResizeObserver(() => {
+    if (guideOverlaysOn) queueGuideRuns();
+  });
+  guideRunsWatch.observe(document.body);
 }
+
+/** Watches the page's size while the guides are on (queueGuideRuns). */
+let guideRunsWatch = null;
 
 function addGuideOverlays(host) {
   const surface = canvasOf(host);
-  const ticks = gridLook() === 'dots';
-  const share = new Intl.NumberFormat(adminLang(), { style: 'percent' });
-  for (const at of [0.25, 0.5, 0.75]) {
+  surface.querySelectorAll(':scope > .urd-page-guide').forEach((el) => el.remove());
+  const format = new Intl.NumberFormat(adminLang(), { style: 'percent' });
+  for (const share of guideShares(isMobile())) {
     const line = document.createElement('div');
-    line.className = `urd-page-guide urd-page-guide-v${ticks ? ' urd-page-guide-ticks' : ''}`;
-    line.style.left = `${at * 100}%`;
+    line.className = `urd-page-guide urd-page-guide-v${strongShare(share) ? ' urd-page-guide-strong' : ''}`;
+    line.dataset.share = String(share);
+    placeGuide(line, surface);
     const label = document.createElement('span');
     label.className = 'urd-page-guide-share';
-    label.textContent = share.format(at);
+    label.textContent = format.format(share);
     line.appendChild(label);
     surface.appendChild(line);
   }
+  queueGuideRuns();
+}
+
+/** A guide centred on its share by a transform from the surface's left, which keeps fractions of a pixel as the block's handles do. */
+function placeGuide(line, surface) {
+  const s = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale')) || 1;
+  line.style.translate = `${(Number(line.dataset.share) * surface.clientWidth - s / 2).toFixed(3)}px 0`;
+}
+
+let guideRunsFrame = 0;
+
+/** Lines up the guides down the page once the sections stand: labelled only where a run of one content width starts, dashes continuing across. */
+function queueGuideRuns() {
+  if (guideRunsFrame) return;
+  guideRunsFrame = requestAnimationFrame(() => {
+    guideRunsFrame = 0;
+    let last = null;
+    for (const host of document.querySelectorAll('.urd-section:not(.urd-handoff)')) {
+      const surface = canvasOf(host);
+      if (!surface.querySelector(':scope > .urd-page-guide')) continue;
+      const r = surface.getBoundingClientRect();
+      host.classList.toggle('urd-guides-head', !last || Math.abs(r.left - last.left) > 0.5 || Math.abs(r.width - last.width) > 0.5);
+      last = r;
+      // The surface's top in the page's own px, so each section's dashes take up the pattern where the one above left it.
+      let top = 0;
+      for (let node = surface; node; node = node.offsetParent) top += node.offsetTop;
+      surface.style.setProperty('--urd-guide-phase', `${top}px`);
+      for (const line of surface.querySelectorAll(':scope > .urd-page-guide')) placeGuide(line, surface);
+    }
+  });
 }
 
 /** The cursor of a section height drag: an arrow down or up as the pointer last moved by 2 px or more (the classes in preview.css). */
@@ -2636,6 +2701,8 @@ let siteNow = null;
  */
 export function enhancePage(root, page, site) {
   siteNow = site;
+  // A new theme or mode draws the guides in its own colours.
+  if (guideOverlaysOn) applyGuideLook();
   initTextToolbar();
   watchBlends();
   root.querySelectorAll('.urd-add-section').forEach((el) => el.remove());
@@ -5453,6 +5520,141 @@ function showGridOverlay(host, grid, look) {
   return overlay;
 }
 
+/**
+ * A drag's marks in `container` (preview.css): lines, notches, the centre dot, the guide met and the gaps, drawn anew on each move.
+ * @param {HTMLElement} container
+ */
+function dragMarkLayer(container) {
+  /** The marks drawn, each kept for the next move with the class, place and drawing it shows, so a move writes only what changed. */
+  const pool = [];
+  let used = 0;
+  const HIDDEN = 'display:none;';
+  const met = [];
+  const s = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale')) || 1;
+  const format = new Intl.NumberFormat(adminLang(), { style: 'percent' });
+  const boxes = gapLookOf(lookPref('urd-gap-look')) === 'boxes';
+  const r = (v) => Math.round(v * 1000) / 1000;
+  /** A mark's place and size: a transform from the container's corner keeps fractions of a pixel, as the block's handles do. */
+  const place = (x, y, w, h) => `left:0;top:0;translate:${r(x)}px ${r(y)}px;${w === undefined ? '' : `width:${r(w)}px;`}${h === undefined ? '' : `height:${r(h)}px;`}`;
+  const add = (className, css, html = '') => {
+    let item = pool[used];
+    if (!item) {
+      item = { node: document.createElement('div'), className: '', css: '', html: '' };
+      container.appendChild(item.node);
+      pool.push(item);
+    }
+    used += 1;
+    if (item.className !== className) item.node.className = item.className = className;
+    if (item.css !== css) item.node.style.cssText = item.css = css;
+    if (item.html !== html) item.node.innerHTML = item.html = html;
+  };
+  /** A gap's size on a tag; the words are a number. */
+  const tag = (className, x, y, size) => add(`urd-smart-tag ${className}`, `left:${r(x)}px;top:${r(y)}px;`, String(Math.round(size)));
+  /** An SVG over a box of the container, its strokes in the page's px. */
+  const svg = (className, x, y, w, h, inner) => add(className, place(x, y, w, h),
+    `<svg aria-hidden="true" width="${r(w)}" height="${r(h)}" viewBox="0 0 ${r(w)} ${r(h)}" overflow="visible">${inner}</svg>`);
+  const seg = (cls, x1, y1, x2, y2, width, dash = '') => `<line class="${cls}" x1="${r(x1)}" y1="${r(y1)}" x2="${r(x2)}" y2="${r(y2)}" stroke-width="${r(width)}"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`;
+
+  /** A gap's measure: a 2 px stem centred on `at` with a crossbar at each end, an edge in the page's Background, and its size on a tag beside it. */
+  const measure = (axis, at, from, to) => {
+    const len = to - from;
+    const half = 6.5 * s;
+    const mid = at;
+    const parts = axis === 'h'
+      ? [[half, s, half, len - s], [0, s, half * 2, s], [0, len - s, half * 2, len - s]]
+      : [[s, half, len - s, half], [s, 0, s, half * 2], [len - s, 0, len - s, half * 2]];
+    const inner = parts.map((p) => seg('urd-mark-edge', ...p, 4 * s)).join('') + parts.map((p) => seg('urd-mark-line', ...p, 2 * s)).join('');
+    if (axis === 'h') {
+      svg('urd-smart-measure', mid - half, from, half * 2, len, inner);
+      tag('urd-smart-tag-beside', mid, (from + to) / 2, len);
+    } else {
+      svg('urd-smart-measure', from, mid - half, len, half * 2, inner);
+      tag('urd-smart-tag-above', (from + to) / 2, mid, len);
+    }
+  };
+
+  /** A gap as a square box with a dashed edge, each side spread so the dashes meet as an L in every corner, its size in the middle. */
+  const box = (x, y, w, h, size) => {
+    const sw = 2 * s;
+    const side = (x1, y1, x2, y2) => {
+      const gap = fitDash(Math.hypot(x2 - x1, y2 - y1), 6 * s, 4 * s);
+      return seg('urd-mark-line', x1, y1, x2, y2, sw, gap ? `${r(6 * s)} ${r(gap)}` : '');
+    };
+    const k = sw / 2;
+    svg('urd-smart-box', x, y, w, h, `<rect class="urd-mark-fill" width="${r(w)}" height="${r(h)}"/>`
+      + side(0, k, w, k) + side(0, h - k, w, h - k) + side(k, 0, k, h) + side(w - k, 0, w - k, h));
+    tag('urd-smart-tag-mid', x + w / 2, y + h / 2, size);
+  };
+
+  /** The page's guides drawn where the met lines stand, `xs` in the container's px, take the snap colour down the page. */
+  const meet = (xs) => {
+    if (!guideOverlaysOn || !xs.length) return;
+    const left = container.getBoundingClientRect().left;
+    for (const line of document.querySelectorAll('.urd-page-guide')) {
+      const rect = line.getBoundingClientRect();
+      if (!xs.some((x) => Math.abs(rect.left + rect.width / 2 - (left + x)) <= 0.5)) continue;
+      line.classList.add('urd-page-guide-met');
+      met.push(line);
+    }
+  };
+
+  /** Hides the marks the last drawing left unused. */
+  const settle = () => {
+    for (const item of pool.slice(used)) if (item.css !== HIDDEN) item.node.style.cssText = item.css = HIDDEN;
+    used = 0;
+  };
+  const unmeet = () => {
+    for (const line of met) line.classList.remove('urd-page-guide-met');
+    met.length = 0;
+  };
+  const clear = () => {
+    used = 0;
+    settle();
+    unmeet();
+  };
+
+  /**
+   * Draws a drag's marks: `xs` and `ys` from dragMarks, the equal gaps `gx` (across) and `gy` (down), the dragged box, and the guides' lines for the measures.
+   * @param {{xs: Array<object>, ys: Array<object>, gx: Array<{from: number, to: number}>, gy: Array<{from: number, to: number}>, box: {left: number, top: number, right: number, bottom: number}, guideXs?: Array<{at: number, strong: boolean}>}} m
+   */
+  const draw = ({ xs, ys, gx, gy, box: b, guideXs = [] }) => {
+    used = 0;
+    unmeet();
+    document.body.classList.add('urd-guides-drag');
+    for (const [axis, list] of [['v', xs], ['h', ys]]) {
+      for (const m of list) {
+        const css = axis === 'v' ? place(m.at - s / 2, m.from, undefined, m.to - m.from) : place(m.from, m.at - s / 2, m.to - m.from);
+        // A line of the content shows its share past its end where the page's guides are off.
+        const label = m.share !== undefined && axis === 'v' && !guideOverlaysOn ? `<span class="urd-smart-guide-share">${format.format(m.share)}</span>` : '';
+        add(`urd-smart-guide urd-smart-guide-${axis}`, css, label);
+        if (m.notch !== undefined) add(`urd-smart-notch urd-smart-notch-${axis}`, axis === 'v' ? place(m.at - 1.5 * s, m.notch - 4.5 * s) : place(m.notch - 4.5 * s, m.at - 1.5 * s));
+      }
+    }
+    const cx = xs.find((m) => m.part === 'middle');
+    const cy = ys.find((m) => m.part === 'middle');
+    if (cx && cy) add('urd-smart-dot', place(cx.at - 2.5 * s, cy.at - 2.5 * s));
+    meet(xs.filter((m) => m.share !== undefined).map((m) => m.at));
+    for (const g of gx) {
+      if (boxes) box(g.from, b.top, g.to - g.from, b.bottom - b.top, g.to - g.from);
+      else measure('v', (b.top + b.bottom) / 2, g.from, g.to);
+    }
+    for (const g of gy) {
+      if (boxes) box(b.left, g.from, b.right - b.left, g.to - g.from, g.to - g.from);
+      else measure('h', measureAt(b.left, b.right, guideXs), g.from, g.to);
+    }
+    settle();
+  };
+
+  const done = () => {
+    unmeet();
+    for (const item of pool) item.node.remove();
+    pool.length = 0;
+    used = 0;
+    document.body.classList.remove('urd-guides-drag');
+  };
+  return { draw, clear, done };
+}
+
 function enhanceBlock(el, block, section, grid, host) {
   el.classList.add('urd-editable');
   if (block.id === selectedBlockId) el.classList.add('urd-selected');
@@ -6760,8 +6962,6 @@ function enhanceBlock(el, block, section, grid, host) {
     const fw = flowEl.clientWidth;
     const fh = flowEl.scrollHeight;
     const xs = [0.05, 0.5, 0.95].map((share) => ({ at: fw * share, from: 0, to: fh, surface: true, share, prefer: share === 0.5 }));
-    /** How far a line of the content reaches past the block, in the page's px: the chrome's 16 screen px at every zoom. */
-    const reach = 16 * (Number(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale')) || 1);
     const ys = [];
     const boxes = [];
     for (const other of flowEl.querySelectorAll('.urd-block')) {
@@ -6774,53 +6974,27 @@ function enhanceBlock(el, block, section, grid, host) {
       for (const at of [top, top + r.height / 2, top + r.height]) ys.push({ at, from: left, to: left + r.width });
       boxes.push({ left, top, right: left + r.width, bottom: top + r.height });
     }
-    // The lines stand in one layer over the flow, put in as the drag begins: a line drawn, moved or hidden changes only the layer, never the grid's own items.
+    // The page's guides on the phone, the quarters of the canvas, in the flow's px, for where a measure stands.
+    const cr = canvasOf(host).getBoundingClientRect();
+    const guideXs = guideOverlaysOn ? guideShares(true).map((share) => ({ at: cr.left - fr.left + cr.width * share, strong: strongShare(share) })) : [];
+    // The marks stand in one layer over the flow, put in as the drag begins: a mark drawn or taken away changes only the layer, never the grid's own items.
     const layer = document.createElement('div');
     layer.className = 'urd-guide-layer';
     layer.style.cssText = 'position:absolute;inset:0;z-index:100002;pointer-events:none;contain:layout style;';
     flowEl.appendChild(layer);
-    /** The layer's lines and gaps, each kept for the next move, with the class, place and size it shows. */
-    const pools = { line: [], gap: [] };
-    const used = { line: 0, gap: 0 };
-    const HIDDEN = 'display:none;';
-    /** Shows the next line or gap of its pool, written only where it differs from what it shows. */
-    const draw = (kind, className, css, text) => {
-      let item = pools[kind][used[kind]];
-      if (!item) {
-        const node = document.createElement('div');
-        if (kind === 'gap') node.appendChild(document.createElement('span'));
-        item = { node, className: '', css: '', text: '' };
-        layer.appendChild(node);
-        pools[kind].push(item);
-      }
-      used[kind] += 1;
-      if (item.className !== className) item.node.className = item.className = className;
-      if (item.css !== css) item.node.style.cssText = item.css = css;
-      if (text !== undefined && item.text !== text) item.node.firstChild.textContent = item.text = text;
-    };
-    /** Hides every line and gap the last drawing left unused. */
-    const settle = () => {
-      for (const kind of ['line', 'gap']) {
-        for (const item of pools[kind].slice(used[kind])) if (item.css !== HIDDEN) item.node.style.cssText = item.css = HIDDEN;
-        used[kind] = 0;
-      }
-    };
-    /** A line from `from` to `to` at `at`, upright ('v') or across ('h'). */
-    const line = (axis, at, from, to) => draw('line', `urd-smart-guide urd-smart-guide-${axis}`, axis === 'v'
-      ? `left:${at}px;top:${from}px;height:${to - from}px;`
-      : `top:${at}px;left:${from}px;width:${to - from}px;`);
-    /** An equal gap from `from` to `to` on its axis, as a band across the dragged block's span, with its size. */
-    const gap = (axis, from, to, across) => draw('gap', `urd-smart-gap urd-smart-gap-${axis}`, axis === 'v'
-      ? `left:${from}px;width:${to - from}px;top:${across.from}px;height:${across.to - across.from}px;`
-      : `top:${from}px;height:${to - from}px;left:${across.from}px;width:${across.to - across.from}px;`, String(Math.round(to - from)));
-    /** Hides every line. */
-    const clear = settle;
+    applyGuideLook();
+    const marks = dragMarkLayer(layer);
+    /** Takes the marks away. */
+    const clear = () => marks.clear();
     /** Takes the layer away as the drag ends. */
-    const done = () => layer.remove();
-    /** The box moved onto the nearest line or equal gap within reach, its lines drawn; Ctrl or Cmd, or snapping off, leave it free. */
+    const done = () => {
+      marks.done();
+      layer.remove();
+    };
+    /** The box moved onto the nearest line or equal gap within reach, its marks drawn; Ctrl or Cmd, or snapping off, leave it free. */
     const snap = (box, free) => {
       if (free) {
-        settle();
+        marks.clear();
         return { left: box.left, top: box.top };
       }
       const besideX = boxes.filter((b) => b.bottom > box.top && b.top < box.top + box.h).map((b) => ({ start: b.left, end: b.right }));
@@ -6831,12 +7005,15 @@ function enhanceBlock(el, block, section, grid, host) {
       const gy = ey ? null : gapSnap(box.top, box.h, besideY, tol);
       const left = box.left + (ex?.d ?? gx?.d ?? 0);
       const top = box.top + (ey?.d ?? gy?.d ?? 0);
-      // A line between the block and another spans the two; a line of the content reaches a little past the block.
-      if (ex) for (const l of alignedLines(left, box.w, xs)) line('v', l.at, l.share !== undefined ? top - reach : Math.min(top, l.from), l.share !== undefined ? top + box.h + reach : Math.max(top + box.h, l.to));
-      if (gx) for (const g of gx.gaps) gap('v', g.from, g.to, { from: top, to: top + box.h });
-      if (ey) for (const l of alignedLines(top, box.h, ys)) line('h', l.at, Math.min(left, l.from), Math.max(left + box.w, l.to));
-      if (gy) for (const g of gy.gaps) gap('h', g.from, g.to, { from: left, to: left + box.w });
-      settle();
+      const shown = { left, top, right: left + box.w, bottom: top + box.h };
+      marks.draw({
+        xs: ex ? dragMarks(left, box.w, { from: top, to: shown.bottom }, xs) : [],
+        ys: ey ? dragMarks(top, box.h, { from: left, to: shown.right }, ys) : [],
+        gx: gx?.gaps ?? [],
+        gy: gy?.gaps ?? [],
+        box: shown,
+        guideXs,
+      });
       return { left, top };
     };
     return { snap, clear, done };
@@ -7325,13 +7502,11 @@ function enhanceBlock(el, block, section, grid, host) {
         onMove(lastEv);
       };
 
-      // Smart guides (snap-model.js): the neighbours' edges and centres, the content's quarters and midline, and equal gaps, within a reach that follows the zoom.
+      // Smart guides (snap-model.js): the neighbours' edges and centres, the content's shares and midline, and equal gaps, within a reach that follows the zoom.
       const tol = snapTolerance(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale'));
-      const guideEls = [];
-      const clearGuides = () => {
-        for (const g of guideEls) g.remove();
-        guideEls.length = 0;
-      };
+      if (kind === 'move') applyGuideLook();
+      const marks = dragMarkLayer(canvas);
+      const clearGuides = () => marks.clear();
       let targetHost = host;
       /** The section drawn as the drop target, while the block is held wholly outside its own over it. */
       let markedTarget = null;
@@ -7349,7 +7524,7 @@ function enhanceBlock(el, block, section, grid, host) {
           const secTop = sectionHost.getBoundingClientRect().top - here.top;
           const secBottom = secTop + sectionHost.offsetHeight;
           // The surface's own lines, its midlines preferred among them (edgeSnap): centring wins where a quarter line lies as near.
-          for (const share of [0.25, 0.5, 0.75]) xs.push({ at: ox + c.clientWidth * share, from: secTop, to: secBottom, surface: true, share, prefer: share === 0.5 });
+          for (const share of SNAP_SHARES) xs.push({ at: ox + c.clientWidth * share, from: secTop, to: secBottom, surface: true, share, prefer: share === 0.5 });
           ys.push({ at: oy + c.clientHeight / 2, from: ox, to: ox + c.clientWidth, surface: true, share: 0.5, prefer: true });
           for (const other of c.querySelectorAll(':scope > .urd-block')) {
             if (other === el || groupParts.some((g) => g.el === other)) continue;
@@ -7366,56 +7541,15 @@ function enhanceBlock(el, block, section, grid, host) {
         targets = { xs, ys, boxes };
       };
       collectTargets();
-      const shareText = new Intl.NumberFormat(adminLang(), { style: 'percent' });
-      /** A snap line from `from` to `to`, with a dot at each end, and where it is a line of the content its share in a label past its end. */
-      const drawLine = (axis, at, from, to, share) => {
-        const g = document.createElement('div');
-        g.className = `urd-smart-guide urd-smart-guide-${axis}`;
-        if (axis === 'v') {
-          g.style.left = `${at}px`;
-          g.style.top = `${from}px`;
-          g.style.height = `${to - from}px`;
-        } else {
-          g.style.top = `${at}px`;
-          g.style.left = `${from}px`;
-          g.style.width = `${to - from}px`;
-        }
-        if (share !== undefined) {
-          const label = document.createElement('span');
-          label.className = 'urd-smart-guide-share';
-          label.textContent = shareText.format(share);
-          g.appendChild(label);
-        }
-        canvas.appendChild(g);
-        guideEls.push(g);
-      };
-      const drawGap = (axis, from, to, across) => {
-        const g = document.createElement('div');
-        g.className = `urd-smart-gap urd-smart-gap-${axis}`;
-        if (axis === 'v') {
-          g.style.left = `${from}px`;
-          g.style.width = `${to - from}px`;
-          g.style.top = `${across.from}px`;
-          g.style.height = `${across.to - across.from}px`;
-        } else {
-          g.style.top = `${from}px`;
-          g.style.height = `${to - from}px`;
-          g.style.left = `${across.from}px`;
-          g.style.width = `${across.to - across.from}px`;
-        }
-        const label = document.createElement('span');
-        label.textContent = String(Math.round(to - from));
-        g.appendChild(label);
-        canvas.appendChild(g);
-        guideEls.push(g);
-      };
       /**
        * Moves current onto the nearest snap line or equal gap and draws it, with every line the box then stands on; read from `raw`, before the grid snaps.
        * @param {{x: number, y: number}} raw The frame's x (percent) and y (px) under the pointer, unsnapped
        */
       const applyGuides = (raw) => {
-        clearGuides();
-        if (kind !== 'move') return;
+        if (kind !== 'move') {
+          clearGuides();
+          return;
+        }
         const cw = canvas.clientWidth;
         const wPx = (current.w / 100) * cw;
         // The box as shown, which the lines are drawn against.
@@ -7436,18 +7570,15 @@ function enhanceBlock(el, block, section, grid, host) {
         const left = (current.x / 100) * cw;
         const top = current.y + shift;
         const snapped = { left, top, right: left + wPx, bottom: top + hPx };
-        // The reach of a content line past the block, in the page's px: the chrome's 16 screen px at every zoom.
-        const reach = 16 * (Number(getComputedStyle(document.documentElement).getPropertyValue('--urd-chrome-scale')) || 1);
-        if (ex) for (const line of alignedLines(left, wPx, targets.xs)) {
-          if (line.share !== undefined) drawLine('v', line.at, snapped.top - reach, snapped.bottom + reach, line.share);
-          else drawLine('v', line.at, Math.min(snapped.top, line.from), Math.max(snapped.bottom, line.to));
-        }
-        if (gx) for (const gap of gx.gaps) drawGap('v', gap.from, gap.to, { from: snapped.top, to: snapped.bottom });
-        if (ey) for (const line of alignedLines(top, hPx, targets.ys)) {
-          if (line.share !== undefined) drawLine('h', line.at, snapped.left - reach, snapped.right + reach, line.share);
-          else drawLine('h', line.at, Math.min(snapped.left, line.from), Math.max(snapped.right, line.to));
-        }
-        if (gy) for (const gap of gy.gaps) drawGap('h', gap.from, gap.to, { from: snapped.left, to: snapped.right });
+        const guideXs = guideOverlaysOn ? guideShares(false).map((share) => ({ at: cw * share, strong: strongShare(share) })) : [];
+        marks.draw({
+          xs: ex ? dragMarks(left, wPx, { from: snapped.top, to: snapped.bottom }, targets.xs) : [],
+          ys: ey ? dragMarks(top, hPx, { from: snapped.left, to: snapped.right }, targets.ys) : [],
+          gx: gx?.gaps ?? [],
+          gy: gy?.gaps ?? [],
+          box: snapped,
+          guideXs,
+        });
       };
 
       const onMove = (ev) => {
@@ -7565,7 +7696,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointercancel', onCancel);
         document.removeEventListener('keydown', onEscape, true);
         for (const o of overlays) o.remove();
-        clearGuides();
+        marks.done();
         markedTarget?.classList.remove('urd-drop-target');
         stop?.remove();
         readout?.remove();
@@ -7593,7 +7724,7 @@ function enhanceBlock(el, block, section, grid, host) {
         handle.removeEventListener('pointercancel', onCancel);
         document.removeEventListener('keydown', onEscape, true);
         for (const o of overlays) o.remove();
-        clearGuides();
+        marks.done();
         markedTarget?.classList.remove('urd-drop-target');
         stop?.remove();
         readout?.remove();

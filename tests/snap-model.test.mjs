@@ -1,13 +1,13 @@
 /**
- * The snapping rules of the desktop canvas (snap-model.js, 0.7.10): the
- * tolerance that follows the zoom, the edge and centre lines, the equal gaps
- * and the axis lock.
+ * The snapping rules of the canvas (snap-model.js, 0.7.10): the
+ * tolerance that follows the zoom, the edge and centre lines, the equal gaps,
+ * the axis lock, the guides' shares and the marks a drag shows.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 
-const { SNAP_SCREEN_PX, snapTolerance, edgeSnap, gapSnap, alignedLines, lockAxis, GRID_LOOKS, gridLookOf, gridLine } = await engineImport('snap-model.js');
+const { SNAP_SCREEN_PX, snapTolerance, edgeSnap, gapSnap, lockAxis, GRID_LOOKS, gridLookOf, gridLine, SNAP_SHARES, guideShares, strongShare, dragMarks, measureAt } = await engineImport('snap-model.js');
 
 test('snapTolerance: eight screen px, in the page\'s px at every zoom', () => {
   assert.equal(SNAP_SCREEN_PX, 8);
@@ -53,17 +53,6 @@ test('lockAxis: the smaller delta is dropped', () => {
   assert.deepEqual(lockAxis(4, 4), { dx: 4, dy: 0 });
 });
 
-test('alignedLines: every line the box stands on, each place once with the spans joined', () => {
-  const quarters = [250, 500, 750].map((at) => ({ at, from: 0, to: 600 }));
-  // A block half the width snapped to the midline stands on all three.
-  assert.deepEqual(alignedLines(250, 500, quarters).map((l) => l.at), [250, 500, 750]);
-  // A block a little narrower stands on the midline only.
-  assert.deepEqual(alignedLines(255, 490, quarters).map((l) => l.at), [500]);
-  // A neighbour's edge on the midline joins the midline's span.
-  const joined = alignedLines(400, 200, [...quarters, { at: 500.4, from: 700, to: 900 }]);
-  assert.deepEqual(joined, [{ at: 500, from: 0, to: 900 }]);
-  assert.deepEqual(alignedLines(10, 20, quarters), [], 'no line, nothing drawn');
-});
 
 test('edgeSnap: a preferred line within reach wins over a nearer one, so a box can be centred', () => {
   const quarter = { at: 352, from: 0, to: 600, surface: true };
@@ -101,7 +90,34 @@ test('the grid\'s looks: lines, the default, dots, and in a drag only; anything 
   assert.equal(gridLookOf('columns'), 'lines');
 });
 
-test('alignedLines: a line of the content keeps its share for the label it is drawn with', () => {
-  const lines = alignedLines(100, 50, [{ at: 125, from: 0, to: 400, share: 0.5 }, { at: 125, from: 10, to: 60 }, { at: 150, from: 0, to: 30 }]);
-  assert.deepEqual(lines, [{ at: 125, from: 0, to: 400, share: 0.5 }, { at: 150, from: 0, to: 30 }]);
+test('the guides\' shares: the twelfths on the desktop with the quarters, thirds and half strong, the quarters on the phone; a block snaps to the strong ones', () => {
+  const desk = guideShares(false);
+  assert.equal(desk.length, 11);
+  assert.deepEqual(desk.filter(strongShare).map((s) => Math.round(s * 100)), [25, 33, 50, 67, 75]);
+  assert.deepEqual(guideShares(true), [0.25, 0.5, 0.75]);
+  assert.deepEqual(SNAP_SHARES.map((s) => Math.round(s * 100)), [25, 33, 50, 67, 75]);
+});
+
+test('dragMarks: a centre line runs through the block and on to the nearest block it lines up with, a notch on that block\'s facing edge', () => {
+  // A card centred under one picture, a second block further below on the same centre.
+  const marks = dragMarks(690, 201, { from: 430, to: 531 }, [{ at: 790.5, from: 156, to: 356 }, { at: 790.5, from: 700, to: 800 }]);
+  assert.deepEqual(marks, [{ at: 790.5, part: 'middle', from: 356, to: 531, notch: 356 }]);
+  // A centre on a line of the content alone: the line spans the block, no further.
+  assert.deepEqual(dragMarks(490, 221, { from: 308, to: 352 }, [{ at: 600.5, from: 0, to: 680, share: 0.5 }]), [{ at: 600.5, part: 'middle', from: 308, to: 352, share: 0.5 }]);
+  assert.deepEqual(dragMarks(10, 20, { from: 0, to: 10 }, [{ at: 500, from: 0, to: 600 }]), [], 'no line, nothing drawn');
+});
+
+test('dragMarks: an edge line spans the block and every block it lines up with, and keeps a share it stands on', () => {
+  const marks = dragMarks(600, 210, { from: 386, to: 566 }, [{ at: 600, from: 156, to: 356 }, { at: 600, from: 0, to: 680, share: 0.5 }]);
+  assert.deepEqual(marks, [{ at: 600, part: 'start', from: 156, to: 566, share: 0.5 }]);
+  const end = dragMarks(100, 50, { from: 0, to: 40 }, [{ at: 150, from: 60, to: 90 }]);
+  assert.deepEqual(end, [{ at: 150, part: 'end', from: 0, to: 90 }]);
+});
+
+test('measureAt: a gap\'s measure stands on the guide nearest the middle of its span, a strong one first, else at the middle', () => {
+  const lines = guideShares(false).map((share) => ({ at: 100 + 1000 * share, strong: strongShare(share) }));
+  assert.equal(measureAt(490, 711, lines), 600);
+  assert.equal(Math.round(measureAt(100, 500, lines)), 350, 'the strong 25 % before the nearer faint lines');
+  assert.equal(measureAt(10, 50, lines), 30, 'no line inside, the middle');
+  assert.equal(measureAt(10, 50), 30);
 });

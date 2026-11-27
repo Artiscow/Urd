@@ -2,6 +2,7 @@
  * The pictures of the Urd settings' look choices (settings-model.js): small SVG drawings of the admin in the text colour, the accent on what the choice changes.
  */
 import { COVER_LOOKS, coverPicture } from './canvas-cover.js';
+import { SHADES } from '$engine/guide-colours.js';
 
 const ACCENT = 'var(--urd-color-accent, #7c5cff)';
 
@@ -151,6 +152,28 @@ const GRID_LOOK_PICS = {
   dots: gridDotsIn(8, 8, 56, 32) + block(16, 12, 24, 16),
   drag: `<rect x="10.5" y="8.5" width="24" height="16" rx="1" stroke="currentColor" stroke-dasharray="2 2" opacity="0.45"/>` + gridLinesIn(16, 8, 56, 32, 0.3) + block(24, 16, 24, 16),
 };
+
+/** The canvas's guides and a drag's marks (guide-colours.js), drawn in each colour's shade for a dark page, which the admin's pictures stand on. */
+const shade = (id) => SHADES[id]?.dark ?? '#fe6a9a';
+const dashes = (xs, colour, o = 1) => xs.map((x) => `<path d="M${x} 4V36" stroke="${colour}" stroke-dasharray="2 2" opacity="${o}"/>`).join('');
+/** A block over a dragged block over a block, the gaps between them as measures or as boxes. */
+const gapScene = (marks) => dim(14, 4, 36, 6, 0.3) + block(22, 15, 20, 10) + dim(14, 30, 36, 6, 0.3) + marks;
+const measureMark = (y1, y2, c) => `<path d="M32 ${y1}V${y2}M29 ${y1}H35M29 ${y2}H35" stroke="${c}" stroke-width="1.6"/>`;
+const boxMark = (y, h, c) => `<rect x="22.5" y="${y}" width="19" height="${h}" fill="${c}" fill-opacity="0.15" stroke="${c}" stroke-dasharray="2 1.5"/>`;
+const GAP_LOOK_PICS = {
+  measures: gapScene(measureMark(10.5, 14.5, shade('magenta')) + measureMark(25.5, 29.5, shade('magenta'))),
+  boxes: gapScene(boxMark(10.5, 4, shade('magenta')) + boxMark(25.5, 4, shade('magenta'))),
+};
+const GUIDE_COLOUR_PICS = Object.fromEntries(['quiet', 'cyan', 'blue', 'violet', 'magenta', 'orange']
+  .map((id) => [id, dim(1, 1, 62, 38, 0.06) + dashes([16.5, 32.5, 48.5], id === 'quiet' ? 'currentColor' : shade(id), id === 'quiet' ? 0.5 : 1)]));
+const GUIDE_STRENGTH_PICS = { faint: dashes([16.5, 32.5, 48.5], 'currentColor', 0.22), medium: dashes([16.5, 32.5, 48.5], 'currentColor', 0.45), strong: dashes([16.5, 32.5, 48.5], 'currentColor', 0.95) };
+/** A snap colour: a circle in its two shades, the dark site's on the left, the light site's on the right. */
+const twoShades = (id) => `<circle cx="32" cy="20" r="10" fill="${SHADES[id].dark}"/><path d="M32 10a10 10 0 0 1 0 20z" fill="${SHADES[id].light}"/>`;
+/** Auto: the colour it picks, with two arrows round its corner. */
+const autoMark = (id) => `<circle cx="32" cy="20" r="10" fill="${shade(id)}"/><g transform="translate(43 6)" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M1.5 5.5a4.5 4.5 0 0 1 8-2.6M10.5 6.5a4.5 4.5 0 0 1-8 2.6M9.8.2v2.9H6.9M2.2 11.8V8.9h2.9"/></g>`;
+/** The mark of a colour that looks close to one of the site's own: two rings overlapping. */
+const nearMark = `<g transform="translate(43 6)" stroke="currentColor" stroke-width="1.2"><circle cx="4" cy="5" r="3.6"/><circle cx="8.5" cy="5" r="3.6"/></g>`;
+const SNAP_COLOUR_PICS = { auto: autoMark('magenta'), ...Object.fromEntries(['magenta', 'violet', 'blue', 'cyan', 'orange'].map((id) => [id, twoShades(id)])) };
 
 /** What covers the canvas while its page loads: the canvas with each look's drawing finished at its middle (canvas-cover.js). */
 const CANVAS_COVERS = Object.fromEntries(COVER_LOOKS.map((id) => [id, coverPicture(id)]));
@@ -364,6 +387,10 @@ const LOOKS = {
   press: PRESS,
   canvasCover: CANVAS_COVERS,
   gridLook: GRID_LOOK_PICS,
+  gapLook: GAP_LOOK_PICS,
+  guideColour: GUIDE_COLOUR_PICS,
+  guideStrength: GUIDE_STRENGTH_PICS,
+  snapColour: SNAP_COLOUR_PICS,
   tabMenus: TAB_MENUS,
   sidebarFolds: SIDEBAR_FOLDS,
   dragMark: DRAG_MARKS,
@@ -376,9 +403,17 @@ export function themeSwatch(id) {
   return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true" fill="none"><rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="3" fill="${t.bg}" stroke="currentColor" opacity="0.9"/><rect x="1" y="1" width="20" height="${H - 2}" rx="2" fill="${t.surface}"/><rect x="4" y="6" width="12" height="3" rx="1" fill="${t.accent}"/><rect x="4" y="13" width="14" height="2" fill="${t.text}" opacity="0.6"/><rect x="4" y="18" width="10" height="2" fill="${t.text}" opacity="0.6"/><rect x="26" y="8" width="30" height="4" rx="1" fill="${t.text}" opacity="0.8"/><rect x="26" y="16" width="24" height="2" fill="${t.text}" opacity="0.45"/><rect x="26" y="21" width="28" height="2" fill="${t.text}" opacity="0.45"/><rect x="26" y="28" width="12" height="5" rx="2.5" fill="${t.accent}"/></svg>`;
 }
 
-/** The picture of one option of a look, or null for an option no picture is drawn for. */
-export function settingPicture(look, id) {
+/**
+ * The picture of one option of a look, or null for an option no picture is drawn for.
+ * @param {string} look
+ * @param {string} id
+ * @param {{auto?: string, near?: Map<string, object>}} [state] For the snap colours: Auto's pick on this site, and the colours close to the site's
+ */
+export function settingPicture(look, id, state) {
   if (look === 'theme') return themeSwatch(id);
+  if (look === 'snapColour' && state && LOOKS.snapColour[id]) {
+    return frame((id === 'auto' ? autoMark(state.auto ?? 'magenta') : twoShades(id)) + (state.near?.has(id) ? nearMark : ''));
+  }
   const inner = LOOKS[look]?.[id];
   return inner ? frame(inner) : null;
 }

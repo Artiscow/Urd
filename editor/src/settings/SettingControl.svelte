@@ -18,7 +18,7 @@
   <div class="st-tiles" class:compact style="--st-cols: {cols}" role="group" aria-labelledby={nameId}>
     {#each options as [id, word, tip] (id)}
       <button type="button" class="st-tile" class:on={value === id} aria-pressed={value === id} title={tip ?? word} onclick={() => setting.set(c, id)}>
-        <span class="st-pic">{@html settingPicture(setting.look, id)}</span>
+        <span class="st-pic">{@html settingPicture(setting.look, id, setting.pictureState?.(c))}</span>
         <span class="st-tile-name">{word}</span>
       </button>
     {/each}

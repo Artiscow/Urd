@@ -2,6 +2,22 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.111): the guide lines, a drag's lines and their colours, and four admin fixes
+
+- [ ] With Guides on: eleven lines on the desktop, the quarters, thirds and half dashed and the rest dotted, each with its share once at the top of the page; a section with its own content width shows its own shares at its top; on the phone, the quarters
+- [ ] Where two sections of one width meet, the lines run on unbroken, with no longer dash at the seam
+- [ ] Zoom in on a guide that falls on a grid line (the middle): the two are one line; a block's top handle, its centre line and the 50 % guide stand on one line when it is centred
+- [ ] Drag a block until its middle lines up with another block's middle: one line through its middle, on to that block with a small notch on its edge, and none past the dragged block's own edges; both middles lined up: both lines and a dot
+- [ ] Drag a block until an edge lines up with another block's edge: one line along that edge across both blocks
+- [ ] With Guides on, drag a block to the page's middle: the 50 % guide turns the snap colour down the page with its tag, the other guides dim, and the dragged block stands over them; a block also snaps to 33 % and 67 %
+- [ ] Drag a block to equal space above and below: each space shows a measure with its size, standing on a guide where one lies inside the block's width; with «Gaps drawn as» on «Boxes», square dashed boxes with L-shaped corners and the size in the middle
+- [ ] Urd settings, «Editing»: «Gaps drawn as», «Guide colour» (six tiles), «Guide strength» under it and «Snap colour», in the desktop and the phone view; each choice shows on the canvas at once, Strong clearly stronger than Medium
+- [ ] «Snap colour» on a site whose accent is pink: Auto's tooltip says Cyan, the canvas draws Cyan, and Magenta carries the two rings, its tooltip naming the site's colour; with «Guide colour» on Magenta, Auto moves off Magenta
+- [ ] On a dark site the snap colour is the lighter shade and the tags' numbers read in dark ink
+- [ ] In nb and tr the four settings, their choices and tooltips read in that language
+- [ ] The panel's fold buttons: the double arrows are centred, «Expand all» is the size of the fold button, and the button that folds the panel away stands in the sidebar and rail layouts
+- [ ] The image editor: «Cancel» beside «Done» closes it without changing the picture
+
 ### Test batch (0.7.10.33): reading windows in Updates, and a test update on the local server
 
 - [ ] On the local server (`python3 dev-server.py`), Updates shows «Test update» with three cases made from the site's own files; «Update to …» asks its question and then says «A test update writes nothing», and no dot or pill outside the panel tells of the made-up version

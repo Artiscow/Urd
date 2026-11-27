@@ -161,8 +161,8 @@
                   aria-label={ta(ed.panelAllOpen ? 'ui.collapseAll' : 'ui.expandAll')}
                   onclick={ed.togglePanelGroups}>{@html ICONS.foldToggle}</button>
               {/if}
-              <!-- The rail folds the panel away; the other layouts close it from the tab or the word that opened it -->
-              {#if ed.adminLayout === 'rail'}
+              <!-- The panel's own button to fold it away; the tab layouts have theirs beside the tabs (PanelNav) -->
+              {#if ed.adminLayout !== 'panel-tabs' && ed.adminLayout !== 'page-tabs'}
                 <button type="button" class="fold-all panel-fold" title={ta('ui.foldPanel')} aria-label={ta('ui.foldPanel')} onclick={() => (ed.activePanel = null)}>{@html ICONS.foldLeft}</button>
               {/if}
             </span>

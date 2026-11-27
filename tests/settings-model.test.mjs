@@ -5,8 +5,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { SETTINGS_BANDS, SETTINGS_GROUPS, SETTINGS_PLACES, settingsPlace, settingsPictures, pictured, settingMatches, visibleGroups, inBands } from '../editor/src/lib/settings-model.js';
-import { settingPicture, picturedIds, THEME_SWATCHES } from '../editor/src/lib/settings-pictures.js';
 import { engineImport } from './_engine.mjs';
+import './_svelte-loader.mjs';
+
+// The pictures read the guide colours' shades from the engine, through the editor's $engine alias.
+const { settingPicture, picturedIds, THEME_SWATCHES } = await import('../editor/src/lib/settings-pictures.js');
 
 const dict = (await engineImport('locales/admin/nb.js')).default.strings;
 
@@ -39,6 +42,15 @@ function ctx() {
     dragMark: 'slot',
     GRID_LOOK_OPTIONS: ['lines', 'dots', 'drag'].map((id) => [id, id]),
     gridLook: 'lines',
+    GAP_LOOK_OPTIONS: [['measures', 'Measures'], ['boxes', 'Boxes']],
+    gapLook: 'measures',
+    GUIDE_COLOUR_OPTIONS: ['quiet', 'cyan', 'blue', 'violet', 'magenta', 'orange'].map((id) => [id, id]),
+    guideColour: 'quiet',
+    GUIDE_STRENGTH_OPTIONS: ['faint', 'medium', 'strong'].map((id) => [id, id]),
+    guideStrength: 'medium',
+    SNAP_COLOUR_OPTIONS: ['auto', 'magenta', 'violet', 'blue', 'cyan', 'orange'].map((id) => [id, id]),
+    snapColour: 'auto',
+    snapState: { auto: 'magenta', near: new Map() },
     grid: { size: 16, snap: true },
     TAB_MENU_OPTIONS: ['groups', 'lines', 'plain'].map((id) => [id, id]),
     tabMenus: 'groups',

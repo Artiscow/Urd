@@ -516,6 +516,7 @@
         {/if}
         <label class="ghost filepick pe-upload" title={ta('tip.pic.upload')}>{@html ICONS.upload}{pic.src ? ta('pic.upload') : ta('ui.chooseImage')}
           <input type="file" accept="image/*" onchange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; ed.replacePicture(f); }} /></label>
+        <button type="button" class="ghost pe-cancel" onclick={() => ed.cancelPicture()}>{ta('confirm.cancel')}</button>
         <button type="button" class="primary pe-done" disabled={ed.pictureBaking} onclick={() => ed.donePicture()}>{ta('pic.done')}</button>
       </footer>
     </div>
@@ -991,7 +992,8 @@
     gap: 0.4rem;
   }
 
-  .pe-done {
+  .pe-done,
+  .pe-cancel {
     min-width: 6rem;
   }
 

@@ -937,64 +937,102 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   z-index: 100001;
 }
 
-/* Smart guides: snap lines while a block is dragged, each ending in a dot; preview-edit sets each line's span inline. */
-.urd-preview .urd-smart-guide {
+/* A drag's marks (preview-edit dragMarkLayer): its lines, notches, dot, measures, boxes and tags, in the snap colour (guide-colours.js). */
+.urd-preview :is(.urd-smart-guide, .urd-smart-notch, .urd-smart-dot, .urd-smart-measure, .urd-smart-box, .urd-smart-tag) {
   position: absolute;
-  /* Above the block lift (99999): the dragged block is raised to it, and a line through an opaque block (a video, a picture) must still show */
+  /* Above the block lift (99999): the dragged block is raised to it, and a mark over an opaque block (a video, a picture) must still show */
   z-index: 100000;
-  /* A fixed magenta apart from the grid's accent and the page's colours, its thickness counter-scaled (urd-zoom), with a shadow for light surfaces. */
-  background: #ff2d87;
-  box-shadow: 0 0 0 calc(0.5px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 45%, transparent);
   pointer-events: none;
 }
 
+/* A line where the block meets something: 1 px, counter-scaled (urd-zoom), centred on its place by a transform (dragMarkLayer), edged in the Background. */
+.urd-preview .urd-smart-guide {
+  background: var(--urd-snap, #ff2d87);
+  box-shadow: 0 0 0 calc(0.5px * var(--urd-chrome-scale, 1)) color-mix(in srgb, var(--urd-color-bg, #fff) 70%, transparent);
+}
+
 .urd-preview .urd-smart-guide-v {
-  width: calc(1.5px * var(--urd-chrome-scale, 1));
+  width: calc(1px * var(--urd-chrome-scale, 1));
 }
 
 .urd-preview .urd-smart-guide-h {
-  height: calc(1.5px * var(--urd-chrome-scale, 1));
+  height: calc(1px * var(--urd-chrome-scale, 1));
 }
 
-/* A dot at each end of the line, so a short line reads as a measure between two points. */
-.urd-preview .urd-smart-guide::before,
-.urd-preview .urd-smart-guide::after {
-  content: '';
-  position: absolute;
-  width: calc(7px * var(--urd-chrome-scale, 1));
-  height: calc(7px * var(--urd-chrome-scale, 1));
+/* Where a centre line meets the other block: a short bar across the line on that block's edge; the dot, where both centre lines meet. Placed by dragMarkLayer. */
+.urd-preview :is(.urd-smart-notch, .urd-smart-dot) {
+  background: var(--urd-snap, #ff2d87);
+}
+
+.urd-preview .urd-smart-notch-v {
+  width: calc(3px * var(--urd-chrome-scale, 1));
+  height: calc(9px * var(--urd-chrome-scale, 1));
+}
+
+.urd-preview .urd-smart-notch-h {
+  width: calc(9px * var(--urd-chrome-scale, 1));
+  height: calc(3px * var(--urd-chrome-scale, 1));
+}
+
+.urd-preview .urd-smart-dot {
+  width: calc(5px * var(--urd-chrome-scale, 1));
+  height: calc(5px * var(--urd-chrome-scale, 1));
   border-radius: 50%;
-  background: #ff2d87;
-  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 50%, transparent);
+}
+
+/* A measure's and a box's strokes: the snap colour over an edge in the page's Background, which hides a guide behind it. */
+.urd-preview :is(.urd-smart-measure, .urd-smart-box) svg {
+  display: block;
+}
+
+.urd-preview :is(.urd-smart-measure, .urd-smart-box) .urd-mark-line {
+  stroke: var(--urd-snap, #ff2d87);
+}
+
+.urd-preview .urd-smart-measure .urd-mark-edge {
+  stroke: var(--urd-color-bg, #fff);
+}
+
+.urd-preview .urd-smart-box .urd-mark-fill {
+  fill: color-mix(in srgb, var(--urd-snap, #ff2d87) 12%, transparent);
+}
+
+/* A gap's size on a filled tag: beside a measure down, above one across, in the middle of a box. */
+.urd-preview .urd-smart-tag {
+  padding: calc(1px * var(--urd-chrome-scale, 1)) calc(4px * var(--urd-chrome-scale, 1));
+  font: 600 calc(11px * var(--urd-chrome-scale, 1)) / 1.2 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--urd-snap-ink, #fff);
+  white-space: nowrap;
+  background: var(--urd-snap, #ff2d87);
+  border-radius: calc(3px * var(--urd-chrome-scale, 1));
+  box-shadow: 0 0 0 calc(1px * var(--urd-chrome-scale, 1)) color-mix(in srgb, var(--urd-color-bg, #fff) 70%, transparent);
+}
+
+.urd-preview .urd-smart-tag-beside {
+  translate: calc(9px * var(--urd-chrome-scale, 1)) -50%;
+}
+
+.urd-preview .urd-smart-tag-above {
+  translate: -50% calc(-100% - 9px * var(--urd-chrome-scale, 1));
+}
+
+.urd-preview .urd-smart-tag-mid {
   translate: -50% -50%;
 }
 
-.urd-preview .urd-smart-guide-v::before { left: 50%; top: 0; }
-.urd-preview .urd-smart-guide-v::after { left: 50%; top: 100%; }
-.urd-preview .urd-smart-guide-h::before { left: 0; top: 50%; }
-.urd-preview .urd-smart-guide-h::after { left: 100%; top: 50%; }
-
-/* A line of the content's own: its share in a label past the line's end, below a block (clear of its toolbar above) and left of it. */
+/* A line of the content's own, with the page's guides off: its share on a tag past the line's end, below the block (clear of its toolbar above). */
 .urd-preview .urd-smart-guide-share {
   position: absolute;
-  padding: calc(2px * var(--urd-chrome-scale, 1)) calc(5px * var(--urd-chrome-scale, 1));
-  font: 600 calc(10px * var(--urd-chrome-scale, 1)) / 1 system-ui, sans-serif;
-  color: #fff;
-  white-space: nowrap;
-  background: #ff2d87;
-  border-radius: calc(3px * var(--urd-chrome-scale, 1));
-}
-
-.urd-preview .urd-smart-guide-v .urd-smart-guide-share {
   left: 50%;
   top: calc(100% + 10px * var(--urd-chrome-scale, 1));
   translate: -50% 0;
-}
-
-.urd-preview .urd-smart-guide-h .urd-smart-guide-share {
-  left: calc(-10px * var(--urd-chrome-scale, 1));
-  top: 50%;
-  translate: -100% -50%;
+  padding: calc(2px * var(--urd-chrome-scale, 1)) calc(5px * var(--urd-chrome-scale, 1));
+  font: 600 calc(10px * var(--urd-chrome-scale, 1)) / 1 system-ui, sans-serif;
+  color: var(--urd-snap-ink, #fff);
+  white-space: nowrap;
+  background: var(--urd-snap, #ff2d87);
+  border-radius: calc(3px * var(--urd-chrome-scale, 1));
 }
 
 /* The section a dragged block will move to (preview-edit.js): a dashed frame in the admin accent inside its edge. */
@@ -1133,26 +1171,6 @@ body.urd-preview:not(.urd-chrome-off):not(.urd-motion-demo) .urd-ribbon-stripe .
   outline-offset: calc(-2px * var(--urd-chrome-scale, 1));
 }
 
-/* Equal gaps: a band over each gap that becomes equal, with its size in px, in the guides' magenta. */
-.urd-preview .urd-smart-gap {
-  position: absolute;
-  z-index: 100000;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-  background: color-mix(in srgb, #ff2d87 22%, transparent);
-  outline: calc(1px * var(--urd-chrome-scale, 1)) solid #ff2d87;
-  outline-offset: calc(-1px * var(--urd-chrome-scale, 1));
-}
-
-.urd-preview .urd-smart-gap span {
-  padding: calc(1px * var(--urd-chrome-scale, 1)) calc(4px * var(--urd-chrome-scale, 1));
-  font: 600 calc(11px * var(--urd-chrome-scale, 1)) / 1.2 system-ui, sans-serif;
-  color: #fff;
-  background: #ff2d87;
-  border-radius: calc(3px * var(--urd-chrome-scale, 1));
-}
-
 /* Multi-selection: the marquee, the members' highlight and the floating align and distribute toolbar. */
 .urd-preview .urd-marquee {
   position: absolute;
@@ -1172,60 +1190,75 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-multi-toolbar.urd-phone-set {
   display: none;
 }
 
+/* Page-wide guides (preview-edit addGuideOverlays): the content's twelfths, the quarters, thirds and half dashed and the rest dotted, never clickable. */
 .urd-preview .urd-page-guide {
   position: absolute;
-  /* Above the block lift (99999), like the smart guides: the lines are drawn over the blocks, so an opaque block (a video, a picture) never hides one */
+  /* Above the block lift (99999), like a drag's marks: the lines are drawn over the blocks, so an opaque block (a video, a picture) never hides one */
   z-index: 100000;
   pointer-events: none;
+  /* Quiet guides take each section's own Text; a colour of the set comes in as --urd-guide-tone (guide-colours.js guideVars). */
+  --urd-guide-ink: var(--urd-guide-tone, var(--urd-color-text, #000));
+  --urd-guide-dash: calc(1px * var(--urd-chrome-scale, 1));
+  --urd-guide-line: color-mix(in srgb, var(--urd-guide-ink) var(--urd-guide-faint, 18%), transparent);
 }
 
-/* Page-wide guides: the content's quarters as solid accent lines with a thin dark edge, each with its share at its top, counter-scaled and never clickable. */
+.urd-preview .urd-page-guide-strong {
+  --urd-guide-dash: calc(3px * var(--urd-chrome-scale, 1));
+  --urd-guide-line: color-mix(in srgb, var(--urd-guide-ink) var(--urd-guide-strong, 30%), transparent);
+}
+
+/* A line one px wide centred on its share by a transform (placeGuide), as the grid's lines are, its dashes drawn from the page's top (--urd-guide-phase). */
 .urd-preview .urd-page-guide-v {
   top: 0;
   bottom: 0;
-  width: calc(1.5px * var(--urd-chrome-scale, 1));
-  background: var(--urd-admin-accent, #5f6a75);
-  box-shadow: 0 0 0 calc(0.5px * var(--urd-chrome-scale, 1)) color-mix(in srgb, #000 40%, transparent);
+  left: 0;
+  width: calc(1px * var(--urd-chrome-scale, 1));
+  background: repeating-linear-gradient(to bottom, var(--urd-guide-line) 0 var(--urd-guide-dash), transparent var(--urd-guide-dash) calc(var(--urd-guide-dash) * 2));
+  /* One dash and its gap per tile, so the phase lines the dashes up whatever the section's height */
+  background-size: 100% calc(var(--urd-guide-dash) * 2);
+  background-position: 0 calc(-1 * var(--urd-guide-phase, 0px));
 }
 
+/* Each line's share at the top of the page, and again where a section with its own width starts (urd-guides-head); a strong line's on a tinted tag. */
 .urd-preview .urd-page-guide-share {
   position: absolute;
-  top: calc(4px * var(--urd-chrome-scale, 1));
-  left: calc(4px * var(--urd-chrome-scale, 1));
-  padding: calc(2px * var(--urd-chrome-scale, 1)) calc(4px * var(--urd-chrome-scale, 1));
-  font: 600 calc(10px * var(--urd-chrome-scale, 1)) / 1 ui-monospace, monospace;
+  top: calc(6px * var(--urd-chrome-scale, 1));
+  left: 50%;
+  translate: -50% 0;
+  padding: calc(1px * var(--urd-chrome-scale, 1)) calc(5px * var(--urd-chrome-scale, 1));
+  font: 600 calc(10px * var(--urd-chrome-scale, 1)) / 1.3 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  color: var(--urd-admin-accent, #5f6a75);
-  background: color-mix(in srgb, var(--urd-admin-bg, #0e0f11) 70%, transparent);
-  border-radius: calc(3px * var(--urd-chrome-scale, 1));
+  color: color-mix(in srgb, var(--urd-guide-ink) var(--urd-guide-label, 54%), transparent);
+  background: color-mix(in srgb, var(--urd-color-bg, #fff) 85%, transparent);
+  border-radius: 999px;
 }
 
-/* Where the grid is drawn as dots: a tick on the section's top and bottom edges, with a faint line between and the share by the top tick. */
-.urd-preview .urd-page-guide-v.urd-page-guide-ticks {
-  background: color-mix(in srgb, var(--urd-admin-accent, #5f6a75) 22%, transparent);
-  box-shadow: none;
+.urd-preview .urd-section:not(.urd-guides-head) .urd-page-guide-share {
+  display: none;
 }
 
-.urd-preview .urd-page-guide-ticks::before,
-.urd-preview .urd-page-guide-ticks::after {
-  content: '';
-  position: absolute;
-  left: calc(-0.5px * var(--urd-chrome-scale, 1));
-  width: calc(2px * var(--urd-chrome-scale, 1));
-  height: calc(14px * var(--urd-chrome-scale, 1));
-  background: var(--urd-admin-accent, #5f6a75);
+.urd-preview .urd-page-guide-strong .urd-page-guide-share {
+  font-size: calc(11px * var(--urd-chrome-scale, 1));
+  color: var(--urd-guide-ink);
+  background: color-mix(in srgb, var(--urd-guide-ink) 16%, var(--urd-color-bg, #fff));
 }
 
-.urd-preview .urd-page-guide-ticks::before {
-  top: 0;
+/* In a drag the guides dim and pass behind the lifted block (99999); the one it meets takes the snap colour, dashed down the page. */
+.urd-preview.urd-guides-drag .urd-page-guide {
+  z-index: 99998;
+  opacity: 0.55;
 }
 
-.urd-preview .urd-page-guide-ticks::after {
-  bottom: 0;
+.urd-preview.urd-guides-drag .urd-page-guide.urd-page-guide-met {
+  --urd-guide-line: var(--urd-snap, #ff2d87);
+  --urd-guide-dash: calc(3px * var(--urd-chrome-scale, 1));
+  opacity: 1;
 }
 
-.urd-preview .urd-page-guide-ticks .urd-page-guide-share {
-  top: calc(16px * var(--urd-chrome-scale, 1));
+.urd-preview .urd-page-guide-met .urd-page-guide-share {
+  color: var(--urd-snap-ink, #fff);
+  background: var(--urd-snap, #ff2d87);
 }
 
 body.urd-preview:not(.urd-chrome-off) .urd-bg-demo,
@@ -1427,11 +1460,12 @@ body.urd-preview :is([contenteditable="true"], [contenteditable="plaintext-only"
     calc(var(--urd-grid-cell) * 4) calc(var(--urd-grid-cell) * 4),
     var(--urd-grid-cell) var(--urd-grid-cell),
     var(--urd-grid-cell) var(--urd-grid-cell);
+  /* Each line centred on its place, half its width before it, as the guides and a drag's lines are */
   background-position:
-    calc(50% + var(--urd-grid-cell) * 2) 0,
-    0 0,
-    calc(50% + var(--urd-grid-cell) / 2) 0,
-    0 0;
+    calc(50% + var(--urd-grid-cell) * 2 - var(--urd-grid-line) / 2) 0,
+    0 calc(var(--urd-grid-line) / -2),
+    calc(50% + var(--urd-grid-cell) / 2 - var(--urd-grid-line) / 2) 0,
+    0 calc(var(--urd-grid-line) / -2);
 }
 
 /* The grid as dots where its lines would cross, larger every fourth, centred on the crossings: the page between them stays untouched. */
@@ -2997,7 +3031,11 @@ body.urd-preview.urd-mobile.urd-bars-beside .urd-section > .urd-section-toolbar 
 .urd-preview.urd-chrome-off .urd-phone-words,
 .urd-preview.urd-chrome-off .urd-seam-floor,
 .urd-preview.urd-chrome-off .urd-smart-guide,
-.urd-preview.urd-chrome-off .urd-smart-gap,
+.urd-preview.urd-chrome-off .urd-smart-notch,
+.urd-preview.urd-chrome-off .urd-smart-dot,
+.urd-preview.urd-chrome-off .urd-smart-measure,
+.urd-preview.urd-chrome-off .urd-smart-box,
+.urd-preview.urd-chrome-off .urd-smart-tag,
 .urd-preview.urd-chrome-off .urd-page-guide,
 .urd-preview.urd-chrome-off .urd-marquee,
 .urd-preview.urd-chrome-off .urd-multi-toolbar,

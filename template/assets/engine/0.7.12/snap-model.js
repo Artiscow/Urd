@@ -1,5 +1,5 @@
 /**
- * Snapping on the desktop canvas: a dragged box snaps to its neighbours' edges, centres and gaps and to the content's quarters, within eight screen px.
+ * Snapping on the canvas: a dragged box snaps to its neighbours' edges, centres and gaps and to the content's shares within eight screen px.
  * Pure.
  */
 
@@ -62,32 +62,6 @@ export function edgeSnap(start, size, targets, tol) {
 }
 
 /**
- * Every line a box's start, middle or end stands on, within a hair.
- * A place met by several lines comes back once, with their spans joined.
- * @param {number} start The box's start on the axis, in px
- * @param {number} size The box's size on the axis, in px
- * @param {Array<{at: number, from: number, to: number}>} targets The lines
- * @param {number} [eps] How near counts as on the line, in px
- * @returns {Array<{at: number, from: number, to: number, share?: number}>} A line of the content keeps its `share` (0.25, 0.5, 0.75)
- */
-export function alignedLines(start, size, targets, eps = 1) {
-  const byAt = new Map();
-  for (const target of targets) {
-    if (![0, size / 2, size].some((offset) => Math.abs(target.at - (start + offset)) <= eps)) continue;
-    const key = Math.round(target.at);
-    const seen = byAt.get(key);
-    const line = seen
-      ? { at: seen.at, from: Math.min(seen.from, target.from), to: Math.max(seen.to, target.to) }
-      : { at: target.at, from: target.from, to: target.to };
-    // A line of the content itself carries its share of the content, for the label it is drawn with.
-    const share = seen?.share ?? target.share;
-    if (share !== undefined) line.share = share;
-    byAt.set(key, line);
-  }
-  return [...byAt.values()];
-}
-
-/**
  * Equal-gap snapping on one axis: the box lands beyond a pair at the pair's own gap, or between two with the same air on both sides.
  * @param {number} start The box's start on the axis, in px
  * @param {number} size The box's size on the axis, in px
@@ -118,6 +92,68 @@ export function gapSnap(start, size, neighbours, tol) {
     }
   }
   return best;
+}
+
+/** The content's shares a block snaps to on the desktop: the quarters, the thirds and the half. */
+export const SNAP_SHARES = [1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4];
+
+/** The guide lines' shares: the twelfths on the desktop, the quarters on the phone. */
+export const guideShares = (mobile) => (mobile ? [1 / 4, 1 / 2, 3 / 4] : Array.from({ length: 11 }, (_, i) => (i + 1) / 12));
+
+/** Whether a share is one of the strong lines, a quarter, a third or the half, drawn dashed and labelled stronger. */
+export const strongShare = (share) => SNAP_SHARES.some((s) => Math.abs(s - share) < 1e-6);
+
+/**
+ * The marks of the lines a dragged box stands on: a centre line on to the nearest block, a notch there; an edge line across the blocks.
+ * @param {number} start
+ * @param {number} size
+ * @param {{from: number, to: number}} span The box across
+ * @param {Array<{at: number, from: number, to: number, share?: number}>} targets
+ * @param {number} [eps]
+ * @returns {Array<{at: number, part: 'start'|'middle'|'end', from: number, to: number, share?: number, notch?: number}>}
+ */
+export function dragMarks(start, size, span, targets, eps = 1) {
+  const groups = new Map();
+  for (const target of targets) {
+    const part = [['start', 0], ['middle', size / 2], ['end', size]].find(([, offset]) => Math.abs(target.at - (start + offset)) <= eps)?.[0];
+    if (!part) continue;
+    const key = Math.round(target.at);
+    const group = groups.get(key) ?? { at: target.at, part, near: [] };
+    if (target.share !== undefined) group.share = target.share;
+    else group.near.push(target);
+    groups.set(key, group);
+  }
+  return [...groups.values()].map(({ at, part, near, share }) => {
+    const mark = { at, part, from: span.from, to: span.to };
+    if (share !== undefined) mark.share = share;
+    if (!near.length) return mark;
+    if (part !== 'middle') {
+      mark.from = Math.min(span.from, ...near.map((n) => n.from));
+      mark.to = Math.max(span.to, ...near.map((n) => n.to));
+      return mark;
+    }
+    const away = (n) => (n.to <= span.from ? span.from - n.to : n.from >= span.to ? n.from - span.to : 0);
+    const nearest = near.reduce((a, b) => (away(b) < away(a) ? b : a));
+    if (nearest.to <= span.from) Object.assign(mark, { from: nearest.to, notch: nearest.to });
+    else if (nearest.from >= span.to) Object.assign(mark, { to: nearest.from, notch: nearest.from });
+    return mark;
+  });
+}
+
+/**
+ * Where a gap's measure stands across the gap: on the guide line nearest the middle of the span, a strong one first, else at the middle.
+ * @param {number} from
+ * @param {number} to
+ * @param {Array<{at: number, strong?: boolean}>} [lines] The guide lines across the same axis
+ * @param {number} [pad] How far inside the span a line must stand
+ * @returns {number}
+ */
+export function measureAt(from, to, lines = [], pad = 6) {
+  const mid = (from + to) / 2;
+  const inside = lines.filter((line) => line.at >= from + pad && line.at <= to - pad);
+  const pool = inside.some((line) => line.strong) ? inside.filter((line) => line.strong) : inside;
+  if (!pool.length) return mid;
+  return pool.reduce((a, b) => (Math.abs(b.at - mid) < Math.abs(a.at - mid) ? b : a)).at;
 }
 
 /**

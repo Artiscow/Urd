@@ -579,6 +579,16 @@
     line-height: 0;
   }
   .panel-fold svg { display: block; }
+  /* The button that opens or folds every group: the fold button's box, so the two stand as one pair in a panel's head */
+  .fold-toggle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.55rem;
+    padding: 0;
+    line-height: 0;
+  }
+  .fold-toggle svg { display: block; width: 15px; height: 15px; }
   /* The tab layouts' column folded to a handle at the workspace's edge. */
   .panel-handle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     flex: none;

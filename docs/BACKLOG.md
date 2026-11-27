@@ -587,13 +587,8 @@ An entry inherits the number of the backlog item the work belongs under, plus on
   Done when: a menu laid out in the editor from its own parts stands anywhere on the page, works by the keyboard and on touch, and survives an Urd update.
 
 ## Bugs, (bad) functions and stuff that needs fixing
-- [ ] Guidelines look shabby - use /design
-- [ ] Add "Cancel" button to image editor (as well as the already "X"). The chancel button should be in bottom right corner, next to "Done"
 - [ ] The Updates panel offers «Keep mine» on a new file under `functions/_lib/` that a function the update writes imports; kept, the import does not resolve and the site's functions stop deploying (push review of 0.7.0.110p, 27 November 2026). The plan needs to know which optional files go together.
   Done when: a new `_lib` module that a written function imports is updated with it, and «Keep mine» on it is not offered alone.
-- [ ] "Expand all group" button needs to be a bit larger
-- [ ] Add button to hide left hand panels in the left hand panels
-- [ ] "Fold the order away" button - the arrows need to be centered
 
 ## Suggestions, Ideas and Wishes
 - [ ] Static image as background - while you scroll, the image stays still
