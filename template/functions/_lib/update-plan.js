@@ -57,7 +57,7 @@ export function isAtomPath(path) {
 }
 
 /**
- * Computes the change set for an update, with a conflict on each file the user has edited; user-owned paths and `_headers` stay outside it (ADR-0006).
+ * Computes the change set for an update, with a conflict on each file the user has edited; user-owned paths stay outside it, and `_headers` has a plan of its own.
  * @param {Record<string, string>} baselineTree The template's tree at v<engine>: path → blob SHA
  * @param {Record<string, string>} targetTree The template's tree at the target version: path → blob SHA
  * @param {Record<string, string>} userTree The user's tree (rootDir stripped): path → blob SHA
@@ -110,7 +110,7 @@ export function chunkEntries(entries, size = 300) {
 /** The template files one update call copies at most as blobs of their own, two subrequests each, under the free plan's cap of 50 (ADR-0014 decision 6). */
 export const BLOB_BATCH = 18;
 
-/** The files a call copies and still commits in: two subrequests each beside the committing call's own (about 13). */
+/** The files a call copies and still commits in: two subrequests each beside the committing call's own (about 16). */
 export const BLOB_ROOM = 10;
 
 /**

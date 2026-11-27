@@ -59,7 +59,7 @@ the editing surfaces are built on the new layout:
 - **The archive/data block pattern**: blocks that render collections of entries (news, notices, boards), designed together with the calendar. Calendar-dependent presets: news, notice board, «What's on».
 - **«Save as template»**: your own sections/pages are saved in `content/maler/` and can be shared as plugins. GitHub topic convention (`urd-plugin`, `urd-template`) for discoverability.
 - `urd-template` repo split + release Action («Use this template»).
-- Updater v1 ([ADR-0014](../adr/0014-updater-model.md)): a one-click Urd update from the template repo, where every Urd-owned file is classified by its checksum against the release tag, so a hand-edited file is shown before anything is written; `_headers` is never written and gets diff instructions instead.
+- Updater v1 ([ADR-0014](../adr/0014-updater-model.md)): a one-click Urd update from the template repo, where every Urd-owned file is classified by its checksum against the release tag, so a hand-edited file is shown before anything is written; `_headers` is written where unedited or only added to, the additions kept, and gets diff instructions otherwise.
 
 The phase was steered as milestones 0.6.1-0.6.9 in [BACKLOG.md](../BACKLOG.md), and grew along the way with an editor and design lift (0.6.6), templates and reuse (0.6.7) and the multilingual framework (0.6.8).
 
@@ -173,7 +173,7 @@ Nothing from the original brainstorm shall be lost:
 | SEO / visitors without JS (client-side rendering gives an empty shell to simple crawlers) | Accepted in v0; the SEO base package was delivered in 0.7.6, and «baked HTML on publishing» is planned in v0.8 - the editor already renders finished DOM that can be snapshotted |
 | Auto-derived mobile layout for decor blocks (lines/circles stack badly) | Delivered in v0.4 («decor» flag); the mobile model as a whole is decided in [ADR-0019](../adr/0019-synced-mobile-model.md) (synced per block, the row grid), with `hideMobile` taking over the mobile hiding |
 | Images in git (repo growth, file limits at hosts) | v0: size warnings in the editor; the media library (v0.8) shows sizes and unused files; external storage (e.g. R2) as a plugin question after v1 |
-| The updater vs. hand-edited Urd-owned files | Decided in [ADR-0014](../adr/0014-updater-model.md): every Urd-owned file is classified by its checksum against the release tag, a hand-edited file is shown as a conflict before anything is written, and `_headers` is never written |
+| The updater vs. hand-edited Urd-owned files | Decided in [ADR-0014](../adr/0014-updater-model.md): every Urd-owned file is classified by its checksum against the release tag, a hand-edited file is shown as a conflict before anything is written, and `_headers` is written only where the owner's own entries survive it |
 | Non-GitHub hosts (GitLab/Gitea) | The `functions/_lib` boundary is kept adapter-friendly; out of scope until after v1 (other static hosts for the site itself are planned in v0.9) |
 | Number of breakpoints | Two (desktop + mobile) in v1; tablet considered later |
 | Third-party services change under the site | Vipps Checkout is discontinued on 30 April 2027. The core stays gateway-free; the optional layer moved to the Vipps MobilePay ePayment API on 23 October 2026 ([ADR-0020](../adr/0020-optional-payment-layer-vipps-checkout.md)), and the shop of v1.1 names what it needs from the layer, not the provider ([ADR-0027](../adr/0027-a-shop-without-a-database.md)) |

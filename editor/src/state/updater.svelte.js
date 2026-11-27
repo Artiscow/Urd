@@ -112,6 +112,9 @@ const updateAvailable = $derived(Boolean(updateInfo && !updateInfo.upToDate));
 
 const updateTarget = $derived(updateInfo?.target ?? '');
 
+/** The site runs the latest Urd, and its `_headers` can be brought up to that version's, as the check offers. */
+const headersOffered = $derived(Boolean(updateInfo?.upToDate && ['unedited', 'added'].includes(updateInfo.headers?.state)));
+
 let updateBusy = $state(false);
 
 /** The check for a newer Urd is on its way; the panel says so while it has nothing to show. */
@@ -165,6 +168,7 @@ export const updaterState = {
   awaitPublishDeploy,
   get updateAvailable() { return updateAvailable; },
   get updateTarget() { return updateTarget; },
+  get headersOffered() { return headersOffered; },
   get updateInfo() { return updateInfo; },
   set updateInfo(v) { updateInfo = v; },
   get updateError() { return updateError; },

@@ -1,6 +1,6 @@
 # ADR-0017: Optional AI integration via a local MCP server
 
-Date: 10 August 2026. Status: accepted (v0.7; the read part is built in v0.8, the write part in v0.9). How the server finds the engine and how it is tested is described in [ARCHITECTURE.md](../ARCHITECTURE.md) and [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md).
+Date: 10 August 2026. Status: accepted (v0.7; the read part is built in v0.8, the write part in v0.9); the consequence on `_headers` rewritten 27 November 2026 with ADR-0014's decision 5, earlier text in [amended/](amended/0017-ai-via-local-mcp-server-until-2026-11-27.md). How the server finds the engine and how it is tested is described in [ARCHITECTURE.md](../ARCHITECTURE.md) and [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md).
 
 ## Context
 
@@ -32,7 +32,7 @@ Two alternative routes were considered and set aside for now. An AI assistant in
 - **Ownership:** `mcp/**` and `.mcp.json` are Urd-owned, and publishing can never write the MCP server.
 - **The site owner must have `node` installed** to run the server. The promise «cloned sites never need npm» stands, but this is the place Urd is closest to the line, and it shall be stated explicitly in the setup guide.
 - **Privacy:** the server sends the site's content to whichever LLM service the site owner's client uses. Urd cannot control that, only be clear: it is stated in plain words in the setup guide and in the server's own startup message. The technical counterweight is the path guard, which prevents the server from reading `.dev.vars`, `.env` or anything outside the site root.
-- **The `mcp/` files are served publicly** by Cloudflare Pages as inert source code without secrets. `/mcp/*  X-Robots-Tag: noindex` sits in `_headers` alongside `/admin/*`, but `_headers` is permanently exempt from the updater (ADR-0014), so existing sites get the line only via the diff instruction.
+- **The `mcp/` files are served publicly** by Cloudflare Pages as inert source code without secrets. `/mcp/*  X-Robots-Tag: noindex` sits in `_headers` alongside `/admin/*`, and existing sites get the line through the updater where their `_headers` is unedited or only added to, and by the diff instruction otherwise (ADR-0014 decision 5).
 - **The sanitisation is duplicated,** and that is the design's clearest drift point. `buildRich` in `engine/sanitize.js` is DOM-based and cannot run in Node, so the MCP side needs a text-mode counterpart built from the same allowlist (`RICH_TEXT`). The two must have a corpus-based parity test from day one, not as a cleanup afterwards.
 - **The residual risk is valid but ugly content** (overlapping blocks, text outside the frame), not invalid JSON: the schema covers the form, and `migrate.js` turns unknown types into neutral placeholders with the data preserved instead of crashing. The tool descriptions therefore instruct the agent to ask the site owner to look at the site in `/admin` afterwards.
 - **The tests never touch real content:** the tools are exercised against a temporary site root, and the invariants of decision 1 (no npm import, no network, no import of `mcp/` from outside) are tests, not conventions.

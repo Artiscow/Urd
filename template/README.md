@@ -28,7 +28,7 @@ Local preview without a host: run `python3 dev-server.py` from this folder and o
 
 ## Updating Urd
 
-Open the **Updates** panel in the admin: it checks against the template repository, shows what will change (hand-edited files are flagged), and writes the new version as one combined commit. `_headers` is never updated automatically; the panel shows what to copy in by hand if needed.
+Open the **Updates** panel in the admin: it checks against the template repository, shows what will change (hand-edited files are flagged), and writes the new version as one combined commit. `_headers` is updated too where you have not changed it, and what you have added to its rules, such as a host, is kept; if you have changed it in other ways, the panel shows what to copy in by hand.
 
 ## Content and structure
 

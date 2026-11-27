@@ -1,11 +1,11 @@
 /**
- * GET and POST /api/github/update: the updater (ADR-0014).
- * GET ?to= checks a template version against the site; POST { to, expect, skip? } commits it.
+ * The updater (ADR-0014): GET ?to= checks a version against the site, POST { to, expect, skip?, headers? } commits it, or `_headers` alone at its version.
  */
 import { gh, ghGraphql, cleanBase64, commitTree, triggerDeploy } from '../../_lib/github.js';
 import { requirePublisher } from '../../_lib/auth.js';
 import { isPageIndexCopy } from '../../_lib/guard.js';
 import { planUpdate, highestVersionTag, isOlderTag, VERSION_TAG_RE, chunkEntries, blobBatch, travelsAsBlob } from '../../_lib/update-plan.js';
+import { planHeaders, writesHeaders } from '../../_lib/update-headers.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -70,12 +70,13 @@ async function loadState(token, config, toParam) {
     if (!target) {
       throw Object.assign(new Error('The template repository has no version tags'), { code: 'updateNoBaseline', tag: '(none)' });
     }
+    const tagNames = templateTags?.map((t) => t.name) ?? null;
     if (target === `v${engine}`) {
-      return { head, engine, target, userTree, upToDate: true };
+      return { head, engine, target, userTree, tagNames, upToDate: true };
     }
     // An update only goes forward: a site ahead of every version offered is up to date, and an older version asked for by name is refused.
     if (isOlderTag(target, `v${engine}`)) {
-      if (!toParam) return { head, engine, target: `v${engine}`, userTree, upToDate: true };
+      if (!toParam) return { head, engine, target: `v${engine}`, userTree, tagNames, upToDate: true };
       throw Object.assign(new Error(`The version ${target} is older than the installed v${engine}`), { code: 'updateOlder', target });
     }
 
@@ -106,6 +107,7 @@ async function loadState(token, config, toParam) {
       engine,
       target,
       userTree,
+      tagNames,
       upToDate: false,
       baselineTree: treeAsMap(baselineTree.tree),
       targetTree: treeAsMap(targetTree.tree),
@@ -117,6 +119,32 @@ async function loadState(token, config, toParam) {
       { code: 'updateTemplateUnreachable', repo: templateRepo, detail: err.message.slice(0, 200) },
     );
   }
+}
+
+/** What the update does with the site's `_headers` (update-headers.js), its text, the target's and each release's up to it read in one GraphQL call. */
+async function headersOf(token, config, state) {
+  const listed = state.tagNames ?? (await gh(token, `/repos/${config.templateRepo}/tags?per_page=100`)).map((t) => t.name);
+  const tags = [...new Set([state.target, `v${state.engine}`, ...listed])]
+    .filter((tag) => VERSION_TAG_RE.test(tag) && !isOlderTag(state.target, tag))
+    .sort((a, b) => (isOlderTag(a, b) ? 1 : isOlderTag(b, a) ? -1 : 0));
+  const [owner, name] = config.templateRepo.split('/');
+  const [siteOwner, siteName] = config.repo.split('/');
+  const prefix = config.rootDir ? `${config.rootDir}/` : '';
+  const fields = tags.map((tag, i) => `t${i}: object(expression: ${JSON.stringify(`${tag}:_headers`)}) { ... on Blob { text } }`);
+  const data = await ghGraphql(token,
+    `{ template: repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(name)}) { ${fields.join(' ')} } `
+    + `site: repository(owner: ${JSON.stringify(siteOwner)}, name: ${JSON.stringify(siteName)}) { s: object(expression: ${JSON.stringify(`${state.head}:${prefix}_headers`)}) { ... on Blob { text } } } }`,
+    1, { partial: true });
+  const textOf = (node) => (typeof node?.text === 'string' ? node.text : null);
+  const texts = tags.map((tag, i) => textOf(data?.template?.[`t${i}`]));
+  // A full page of tags may leave releases out, and a release not read may be the closest one: then only an exact match is written.
+  const complete = listed.length < 100 && texts.every((text) => text !== null);
+  return planHeaders({
+    site: textOf(data?.site?.s),
+    target: texts[tags.indexOf(state.target)] ?? null,
+    released: [...new Set(texts.filter((text) => text !== null))],
+    complete,
+  });
 }
 
 /**
@@ -154,23 +182,18 @@ export async function onRequestGet({ request, env }) {
 
   try {
     const state = await loadState(token, config, to);
+    // What the update does with _headers; texts that cannot be read leave it out of the answer, never stopping the check.
+    const headers = await headersOf(token, config, state).catch(() => null);
     if (state.upToDate) {
-      // The installed version's release, named and linked in the panel.
+      // The installed version's release, named and linked in the panel, and the site's _headers where it can be brought up to it.
       const installed = await releaseOf(token, config.templateRepo, state.target);
-      return json({ current: state.engine, target: state.target, head: state.head, upToDate: true, changes: [], release: installed && { name: installed.name, url: installed.url } });
+      return json({
+        current: state.engine, target: state.target, head: state.head, upToDate: true, changes: [],
+        ...(writesHeaders(headers?.state) ? { headers } : {}),
+        release: installed && { name: installed.name, url: installed.url },
+      });
     }
     const { changes, upToDate } = planUpdate(state.baselineTree, state.targetTree, state.userTree);
-
-    // _headers is never written (ADR-0006): its upstream text is sent where the site's file differs from the target, for the admin to show.
-    const headers = {
-      changed: state.baselineTree['_headers'] !== state.targetTree['_headers'],
-      edited: state.userTree['_headers'] !== state.baselineTree['_headers'],
-      upstream: null,
-    };
-    if (state.targetTree['_headers'] && state.userTree['_headers'] !== state.targetTree['_headers']) {
-      const blob = await gh(token, `/repos/${config.templateRepo}/git/blobs/${state.targetTree['_headers']}`);
-      headers.upstream = decodeBlob(blob.content);
-    }
 
     // The target's release (optional): its name and page, and its notes.
     const offered = await releaseOf(token, config.templateRepo, state.target);
@@ -194,7 +217,7 @@ export async function onRequestPost({ request, env }) {
   } catch {
     return json({ error: 'Invalid JSON in the request', code: 'badJson' }, 400);
   }
-  const { to, expect, skip } = body ?? {};
+  const { to, expect, skip, headers: shown } = body ?? {};
   if (typeof to !== 'string' || !VERSION_TAG_RE.test(to)) {
     return json({ error: `Invalid target version '${to}'`, code: 'updateBadTarget', target: String(to) }, 400);
   }
@@ -211,14 +234,27 @@ export async function onRequestPost({ request, env }) {
     if (state.head !== expect) {
       return json({ error: 'The repository changed after the update check', code: 'updateRace' }, 409);
     }
+    const prefix = config.rootDir ? `${config.rootDir}/` : '';
+    // The site's _headers, written only as the check showed it (`headers`) and the plan of update-headers.js still gives it; a failed read writes nothing.
+    const headersEntry = async () => {
+      if (typeof shown !== 'string' || skip?.includes('_headers')) return [];
+      const headers = await headersOf(token, config, state).catch(() => null);
+      return writesHeaders(headers?.state) && headers.text === shown ? [{ path: `${prefix}_headers`, content: shown }] : [];
+    };
     if (state.upToDate) {
-      return json({ current: state.engine, target: state.target, upToDate: true });
+      // A version already installed: its _headers alone, where the site's can be brought up to it.
+      const entries = await headersEntry();
+      if (entries.length === 0) return json({ current: state.engine, target: state.target, upToDate: true });
+      const { sha } = await commitTree(token, config, { message: `Update the security headers to ${state.target} via admin`, entries, expect }, chunkEntries);
+      await triggerDeploy(env);
+      return json({ sha, current: state.engine, target: state.target, upToDate: true, written: 1, deleted: 0 });
     }
 
-    // The plan is recomputed server-side; the client may only opt out of files OUTSIDE the engine atom group (ADR-0014).
+    // The plan is recomputed server-side; the client may only opt out of files OUTSIDE the engine atom group (ADR-0014), and of _headers.
     const plan = planUpdate(state.baselineTree, state.targetTree, state.userTree);
     const planned = new Map(plan.changes.map((c) => [c.path, c]));
     for (const path of skip ?? []) {
+      if (path === '_headers') continue;
       const change = planned.get(path);
       if (!change || change.atom) {
         return json({ error: `The file '${path}' cannot be held back from the update`, code: 'updateBadSkip', path }, 400);
@@ -283,9 +319,10 @@ export async function onRequestPost({ request, env }) {
       }
     }
     const blobEntries = Object.fromEntries(blobPaths.map((p) => [p, state.targetTree[p]]));
+    const headers = await headersEntry();
 
-    const prefix = config.rootDir ? `${config.rootDir}/` : '';
     const entries = [
+      ...headers,
       ...writes.map((c) => (blobEntries[c.path] !== undefined
         ? { path: `${prefix}${c.path}`, sha: blobEntries[c.path] }
         : { path: `${prefix}${c.path}`, content: texts[c.path] })),
@@ -301,7 +338,7 @@ export async function onRequestPost({ request, env }) {
       expect,
     }, chunkEntries);
     await triggerDeploy(env);
-    return json({ sha, current: state.engine, target: to, written: writes.length + copyPaths.length, deleted: deletes.length });
+    return json({ sha, current: state.engine, target: to, written: writes.length + copyPaths.length + headers.length, deleted: deletes.length });
   } catch (err) {
     if (err.status === 409 || (err.status === 422 && /fast.?forward/i.test(err.message))) {
       return json({ error: 'The repository changed while the update was running', code: 'updateRace' }, 409);

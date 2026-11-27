@@ -28,7 +28,7 @@ Lokal titt uten host: kjør `python3 dev-server.py` fra denne mappen og åpne `h
 
 ## Oppdatere Urd
 
-Åpne **Oppdatering**-panelet i admin: det sjekker mot malrepoet, viser hva som endres (håndredigerte filer varsles), og skriver den nye versjonen som én samlet commit. `_headers` oppdateres aldri automatisk; panelet viser hva som eventuelt skal føres inn for hånd.
+Åpne **Oppdatering**-panelet i admin: det sjekker mot malrepoet, viser hva som endres (håndredigerte filer varsles), og skriver den nye versjonen som én samlet commit. `_headers` oppdateres også der du ikke har endret den, og det du har lagt til i reglene, som en vert, beholdes; har du endret den på andre måter, viser panelet hva som skal føres inn for hånd.
 
 ## Innhold og struktur
 

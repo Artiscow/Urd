@@ -8,7 +8,7 @@
  *     node scripts/release-headers.mjs urd-template/_headers
  *
  * The release block is the template's text byte for byte.
- * The updater shows a site's owner a «change by hand» note when the site's _headers differs from the template's at the version it updates to, so a site that never edited the file sees one only when the template's text changes.
+ * The updater compares a site's _headers with the template's released texts, so the release's text must be what the template repo holds: a site that never edited the file, or only added to its header lines, gets it written.
  */
 import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import process from 'node:process';

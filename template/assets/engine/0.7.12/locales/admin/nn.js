@@ -368,7 +368,6 @@ export default {
     'update.atomGroup.title': 'Motoren, skalla og HTML-skalla høyrer saman og blir bytte i same commit',
     'update.aboutVersion': 'Om {target}',
     'update.upToDate': 'Sida køyrer nyaste Urd-versjon',
-    'update.headersManual': '_headers blir aldri oppdatert automatisk (plugin-CSP kan vere handlaga): før innhaldet under inn i fila for hand',
     'update.headersTitle': 'Sikkerheitsheadere',
     'update.atomTitle': 'Motorfiler (blir bytte samla)',
     'update.optionalTitle': 'Valfrie filer',

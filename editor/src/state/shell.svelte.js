@@ -419,8 +419,8 @@ function setAdminLayout(v) {
 
 const ADMIN_LAYOUT_OPTIONS = $derived(ADMIN_LAYOUTS.map((id) => [id, ta(`opt.adminLayout.${id}`)]));
 
-/** The update notice drawn now (lib/update-notice.js): `dot` on the Updates panel's icon, word or tab, `pill` in the top bar, null while no update is out. */
-const updateNotice = $derived(updateNoticeForm(updaterState.updateAvailable, siteState.siteDraft?.admin?.updateNotice, folded.view));
+/** The update notice drawn now (lib/update-notice.js): `dot` on the Updates panel's icon, word or tab, `pill` in the top bar, null while nothing is offered. */
+const updateNotice = $derived(updateNoticeForm(updaterState.updateAvailable, siteState.siteDraft?.admin?.updateNotice, folded.view, updaterState.headersOffered));
 
 const UPDATE_NOTICE_OPTIONS = $derived(UPDATE_NOTICES.map((id) => [id, ta(`opt.updateNotice.${id}`)]));
 

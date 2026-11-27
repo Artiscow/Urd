@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.110): the security headers in the update
+
+- [ ] A site on 0.7.12 whose `_headers` is the 0.7.11 release's: Updates shows the dot, its tooltip reads «The security headers can be updated: open Updates», and the panel offers «Update the security headers» under «Security headers»; after «Update» in the question, the site's `_headers` holds the HSTS line and the dot is gone
+- [ ] The same with a host added by hand to `connect-src`: «Kept from your file» lists it, and the file written holds both the HSTS line and the host
+- [ ] The same with `X-Frame-Options` changed by hand: Updates shows no dot and offers nothing for the file
+- [ ] In the next version update with an unedited `_headers`: «Security headers» stands first under «Optional files», the question before the update says the security headers are updated too, and «Keep mine» crosses it out and leaves the file as it was
+- [ ] In the next version update with an edited `_headers`: «Security headers» shows its warning and the text to copy by hand, as before
+
 ### Test batch (0.7.0.97-0.7.9.5p): release 0.7.12
 
 - [ ] A product block with «Title lines» at 2: on the published page a long title shows two lines ending in an ellipsis, and Tab to the title shows its focus ring whole

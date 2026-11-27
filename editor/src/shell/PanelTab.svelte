@@ -31,7 +31,7 @@
   /** An icon is named by its label, read out with the amber dot's meaning; the words and the tabs carry their names. */
   const ariaLabel = $derived(drafts ? draftsLabel : variant === 'rail' ? (legalDot ? `${label}, ${ta('legal.dotLabel')}` : label) : undefined);
   /** The tooltip: the update's, else an icon's name where no menu's head names it; none on Drafts, which opens its window on a rest, headed by its name. */
-  const titleText = $derived(updateDot ? ta('tip.updateOut', { version: ed.updateTarget }) : drafts ? undefined : variant === 'rail' && !hasMenu ? label : undefined);
+  const titleText = $derived(updateDot ? (ed.updateAvailable ? ta('tip.updateOut', { version: ed.updateTarget }) : ta('tip.headersOut')) : drafts ? undefined : variant === 'rail' && !hasMenu ? label : undefined);
 
   /** The folds the menu lists: those the panel draws now, and a menu only where there is a choice of two or more. */
   const folds = $derived(panelFolds(name, { site: ed.siteDraft, legal: ed.legal, designs: menu.designsPref }));

@@ -57,7 +57,7 @@ redigeringsflatene bygges på den nye layouten:
 - **Arkiv/datablokk-mønsteret**: blokker som rendrer samlinger av innslag (nyheter, oppslag, styrer), designet sammen med kalenderen. Kalender-avhengige presets: nyheter, oppslagstavle, «Hva skjer».
 - **«Lagre som mal»**: egne seksjoner/sider lagres i `content/maler/` og kan deles som plugins. GitHub-topic-konvensjon (`urd-plugin`, `urd-template`) for oppdagbarhet.
 - `urd-template`-repo-splitt + release-Action («Use this template»).
-- Oppdaterer v1 ([ADR-0014](adr/0014-updater-model.md)): én-klikks Urd-oppdatering fra malrepoet, der hver Urd-eide fil klassifiseres etter sjekksummen mot utgivelsestaggen, så en håndredigert fil vises før noe skrives; `_headers` skrives aldri og får diff-instruks i stedet.
+- Oppdaterer v1 ([ADR-0014](adr/0014-updater-model.md)): én-klikks Urd-oppdatering fra malrepoet, der hver Urd-eide fil klassifiseres etter sjekksummen mot utgivelsestaggen, så en håndredigert fil vises før noe skrives; `_headers` skrives der den er uredigert eller bare lagt til i, med tilleggene beholdt, og får diff-instruks ellers.
 
 Fasen ble styrt som milepælene 0.6.1-0.6.9 i [BACKLOG.md](BACKLOG.md), og vokste underveis med et editor- og designløft (0.6.6), maler og gjenbruk (0.6.7) og flerspråk-rammeverket (0.6.8).
 
@@ -171,7 +171,7 @@ Ingenting fra den opprinnelige idemyldringen skal gå tapt:
 | SEO / besøkende uten JS (klientside-rendering gir tomt skall for enkle crawlere) | Akseptert i v0; SEO-grunnpakken ble levert i 0.7.6, og «bakt HTML ved publisering» er planlagt i v0.8 - editoren rendrer allerede ferdig DOM som kan snapshottes |
 | Auto-avledet mobil-layout for dekor-blokker (streker/sirkler stabler dårlig) | Levert i v0.4 («dekor»-flagg); mobilmodellen som helhet er avgjort i [ADR-0019](adr/0019-synced-mobile-model.md) (synket per blokk, radnettet), der `hideMobile` har tatt over mobilskjulingen |
 | Bilder i git (repo-vekst, filgrenser hos hoster) | v0: størrelsesvarsler i editor; mediebiblioteket (v0.8) viser størrelser og ubrukte filer; ekstern lagring (f.eks. R2) som plugin-spørsmål etter v1 |
-| Oppdaterer vs. håndredigerte Urd-eide filer | Avgjort i [ADR-0014](adr/0014-updater-model.md): hver Urd-eide fil klassifiseres etter sjekksummen mot utgivelsestaggen, en håndredigert fil vises som konflikt før noe skrives, og `_headers` skrives aldri |
+| Oppdaterer vs. håndredigerte Urd-eide filer | Avgjort i [ADR-0014](adr/0014-updater-model.md): hver Urd-eide fil klassifiseres etter sjekksummen mot utgivelsestaggen, en håndredigert fil vises som konflikt før noe skrives, og `_headers` skrives bare der eierens egne oppføringer overlever det |
 | Ikke-GitHub-hoster (GitLab/Gitea) | `functions/_lib`-grensen holdes adapter-vennlig; utenfor scope til etter v1 (andre statiske hoster for selve nettstedet er planlagt i v0.9) |
 | Antall breakpoints | To (desktop + mobil) i v1; nettbrett vurderes senere |
 | Tredjepartstjenester endrer seg under nettstedet | Vipps Checkout avvikles 30. april 2027. Kjernen forblir gateway-fri; det valgfrie laget flyttet til Vipps MobilePays ePayment-API 23. oktober 2026 ([ADR-0020](adr/0020-optional-payment-layer-vipps-checkout.md)), og butikken i v1.1 navngir hva den trenger fra laget, ikke leverandøren ([ADR-0027](adr/0027-a-shop-without-a-database.md)) |

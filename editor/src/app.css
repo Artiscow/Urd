@@ -4129,6 +4129,28 @@
 
   .update-run { margin-top: 0.5rem; width: 100%; }
 
+  /* The security headers the update writes: a card of their own on a tint of the accent, the kept additions listed */
+  .update-headers-card {
+    display: grid;
+    gap: 0.3rem;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid color-mix(in srgb, var(--urd-color-accent, #7c5cff) 45%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 10%, transparent);
+  }
+  .update-headers-card .update-run { margin-top: 0.2rem; }
+  .update-name { font-size: 0.8rem; font-weight: 600; overflow-wrap: anywhere; }
+  .update-name.skipped { opacity: 0.45; text-decoration: line-through; }
+  .update-kept { display: grid; gap: 0.25rem; margin: 0; padding-left: 1rem; font-size: 0.72rem; }
+  .update-kept li::marker { color: var(--urd-color-accent, #7c5cff); }
+  .update-kept code {
+    padding: 0.05em 0.3em;
+    border-radius: 4px;
+    background: rgb(255 255 255 / 8%);
+    overflow-wrap: anywhere;
+    box-decoration-break: clone;
+  }
+
   /* A dialog's own words: a question's lines and the setup wizard's welcome, muted under the heading */
   .dialog-line {
     margin: 0;

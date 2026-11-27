@@ -401,7 +401,6 @@ export default {
     'update.atomGroup.title': 'Motorn, skalen och HTML-skalen hör ihop och byts alltid i samma commit',
     'update.aboutVersion': 'Om {target}',
     'update.upToDate': 'Sidan kör senaste Urd-versionen',
-    'update.headersManual': '_headers uppdateras aldrig automatiskt (tilläggs-CSP kan vara handgjord): för in innehållet nedan i filen för hand',
     'update.headersTitle': 'Säkerhetsheaders',
     'update.atomTitle': 'Motorfiler (byts samlat)',
     'update.optionalTitle': 'Valfria filer',

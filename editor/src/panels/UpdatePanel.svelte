@@ -43,6 +43,13 @@
     ed.loadMediaFiles();
   });
 
+  /** The site's `_headers` as the check reports it; an updater without a plan for it sends the template's text alone, to copy by hand. */
+  const headers = $derived(updateInfo?.headers ?? null);
+  /** The update writes the site's `_headers`, as the owner never edited it or only added to its rules. */
+  const headersWritten = $derived(['unedited', 'added'].includes(headers?.state));
+  /** The template's `_headers` to copy by hand, where the update leaves the site's file as it is. */
+  const headersByHand = $derived(headersWritten ? null : headers?.state ? (headers.state === 'edited' ? headers.text : null) : headers?.upstream ?? null);
+
   function toggleUpdateSkip(path) {
     const next = new Set(ed.updateSkip);
     if (next.has(path)) next.delete(path);
@@ -55,14 +62,16 @@
     const skipped = [...ed.updateSkip];
     const applied = updateInfo.changes.filter((c) => !ed.updateSkip.has(c.path));
     const editedAtom = applied.filter((c) => c.atom && c.conflict);
+    const withHeaders = headersWritten && !ed.updateSkip.has('_headers');
     const ok = await askConfirm({
       title: ta('confirm.update.title'),
       lines: [
         ta('confirm.update.body', {
           target: updateInfo.target,
-          writes: applied.filter((c) => c.action === 'write').length,
+          writes: applied.filter((c) => c.action === 'write').length + (withHeaders ? 1 : 0),
           deletes: applied.filter((c) => c.action === 'delete').length,
         }),
+        ...(withHeaders ? [ta(headers.added?.length ? 'confirm.update.headersKept' : 'confirm.update.headers')] : []),
         ...(editedAtom.length > 0
           ? [ta('confirm.update.warnEdited', { paths: editedAtom.map((c) => c.path).join(', ') })]
           : []),
@@ -83,7 +92,7 @@
         res = await fetch('/api/github/update', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ to: updateInfo.target, expect: updateInfo.head, skip: skipped }),
+          body: JSON.stringify({ to: updateInfo.target, expect: updateInfo.head, skip: skipped, ...(withHeaders ? { headers: headers.text } : {}) }),
         });
         data = await res.json().catch(() => null);
         if (data?.code !== 'updateContinue' || !(data.copied > copied)) break;
@@ -104,6 +113,37 @@
       setStatus(ta('status.publishLayerUnreachable'), 'error');
     }
     ed.updateBusy = false;
+  }
+
+  /** The site's `_headers` alone brought up to the installed version's, with the hosts the owner added kept; the check runs again after it. */
+  async function runHeaders() {
+    if (!updateInfo?.upToDate || !headersWritten || ed.updateBusy) return;
+    const ok = await askConfirm({
+      title: ta('confirm.headers.title'),
+      lines: [ta(headers.added?.length ? 'confirm.headers.bodyKept' : 'confirm.headers.body', { target: updateInfo.target })],
+      okLabel: ta('confirm.headers.ok'),
+      cancelLabel: ta('confirm.cancel'),
+    });
+    if (!ok) return;
+    ed.updateBusy = true;
+    setStatus(ta('update.headersRunning'));
+    let check = false;
+    try {
+      await ed.renewIfDue();
+      const res = await fetch('/api/github/update', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ to: updateInfo.target, expect: updateInfo.head, headers: headers.text }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok) setStatus(ta(data?.sha ? 'update.headersDone' : 'update.upToDate'), 'ok');
+      else setStatus(taApiError(data) ?? ta('update.failed'), 'error');
+      check = res.ok || res.status === 409;
+    } catch {
+      setStatus(ta('status.publishLayerUnreachable'), 'error');
+    }
+    ed.updateBusy = false;
+    if (check) await loadUpdateCheck();
   }
 
   /**
@@ -148,11 +188,31 @@
     {:else if updateInfo.release?.name}
       <p class="update-release">{releaseLabel(updateInfo.release.name, updateInfo.target)}</p>
     {/if}
+    <!-- The site's new _headers: what of the owner's own it keeps, and the whole file folded away -->
+    {#snippet headersFile()}
+      {#if headers.added?.length}
+        <SubHeading text={ta('update.headersKept')} />
+        <ul class="update-kept">{#each headers.added as line (line)}<li><code>{line}</code></li>{/each}</ul>
+      {/if}
+      <Fold id="headers-file" surface="update" title={ta('update.headersFile')} tip={ta('update.headersAuto')}>
+        <pre class="update-headers">{headers.text}</pre>
+      </Fold>
+    {/snippet}
     {#if updateInfo.upToDate}
       <EmptyState text={ta('update.upToDate')} />
+      {#if headersWritten}
+        <!-- The latest Urd with the site's _headers behind its version's: offered on its own, marked -->
+        <div class="update-headers-card">
+          <SubHeading text={ta('update.headersTitle')} />
+          {@render headersFile()}
+          <button class="primary update-run" onclick={runHeaders}
+            disabled={ed.updateBusy || !auth?.allowed}
+            title={auth?.allowed ? undefined : ta('tip.history.needsAccess')}>{ta('update.headersRun')}</button>
+        </div>
+      {/if}
     {:else}
       <p class="update-summary">{ta('update.summary', {
-        writes: updateInfo.changes.filter((c) => c.action === 'write').length,
+        writes: updateInfo.changes.filter((c) => c.action === 'write').length + (headersWritten ? 1 : 0),
         deletes: updateInfo.changes.filter((c) => c.action === 'delete').length,
       })}</p>
       {#if updateInfo.notes}
@@ -161,11 +221,11 @@
           <ReleaseNotes text={updateInfo.notes} />
         </Fold>
       {/if}
-      {#if updateInfo.headers?.upstream}
-        <!-- The template's _headers, which the update never writes (ADR-0014): marked as a warning while closed -->
-        <Fold id="headers" surface="update" title={ta('update.headersTitle')} tip={ta('update.headersManual')}>
+      {#if headersByHand}
+        <!-- The template's _headers where the owner changed the site's beyond adding to its rules, to copy by hand: marked as a warning while closed -->
+        <Fold id="headers" surface="update" title={ta('update.headersTitle')} tip={ta('update.headersByHand')}>
           {#snippet value()}<span class="update-warn">{@html ICONS.warn}</span>{/snippet}
-          <pre class="update-headers">{updateInfo.headers.upstream}</pre>
+          <pre class="update-headers">{headersByHand}</pre>
         </Fold>
       {/if}
       <!-- Hand-edited engine files stand in view; the rest of the atom group is one swap, folded away. -->
@@ -186,11 +246,25 @@
           </div>
         {/each}
       </Fold>
-      {#if updateInfo.changes.some((c) => !c.atom)}
+      {#if headersWritten || updateInfo.changes.some((c) => !c.atom)}
         <div class="ctl-row update-opt-head">
           <SubHeading text={ta('update.optionalTitle')} />
           <span class="mini-label">{ta('update.keepMine')}</span>
         </div>
+        {#if headersWritten}
+          <!-- The site's _headers, written by the update as the owner never edited it or only added to it: first among the optional files, marked -->
+          <div class="update-headers-card">
+            <div class="update-row">
+              <span class="update-name" class:skipped={ed.updateSkip.has('_headers')}>{ta('update.headersTitle')}</span>
+              <span class="update-flags">
+                <input type="checkbox" checked={ed.updateSkip.has('_headers')}
+                  onchange={() => toggleUpdateSkip('_headers')}
+                  title={ta('update.keepMine.title')} aria-label={ta('update.keepMine')} />
+              </span>
+            </div>
+            {@render headersFile()}
+          </div>
+        {/if}
         {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}
           <div class="update-row">
             <span class="update-path" class:skipped={ed.updateSkip.has(c.path)} title={c.path}>{c.path}</span>

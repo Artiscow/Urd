@@ -28,7 +28,7 @@ Host olmadan yerel önizleme: bu klasörden `python3 dev-server.py` çalıştır
 
 ## Urd'u güncelleme
 
-Yönetici panelindeki **Güncelleme** bölümünü açın: şablon deposuyla karşılaştırır, nelerin değişeceğini gösterir (elle düzenlenmiş dosyalar işaretlenir) ve yeni sürümü tek birleşik commit olarak yazar. `_headers` hiçbir zaman otomatik güncellenmez; gerekiyorsa panel elle aktarılacak içeriği gösterir.
+Yönetici panelindeki **Güncelleme** bölümünü açın: şablon deposuyla karşılaştırır, nelerin değişeceğini gösterir (elle düzenlenmiş dosyalar işaretlenir) ve yeni sürümü tek birleşik commit olarak yazar. `_headers` de, değiştirmediğiniz yerde güncellenir ve kurallarına eklediğiniz şeyler, örneğin bir sunucu, korunur; dosyayı başka şekillerde değiştirdiyseniz panel elle aktarılacak içeriği gösterir.
 
 ## İçerik ve yapı
 

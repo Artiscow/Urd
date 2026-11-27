@@ -294,7 +294,6 @@ export default {
     'update.atomGroup.title': 'Mohtor, skálžžut ja HTML-skálžžut gullet oktii ja lonuhuvvojit álo seamma commitas',
     'update.aboutVersion': '{target} birra',
     'update.upToDate': 'Siidu vuodjá ođđaseamos Urd-veršuvnna',
-    'update.headersManual': '_headers ii ođasmahttojuvvo goassege automáhtalaččat (plugin-CSP sáhttá leat gieđain dahkkon): čále vuolábealde sisdoalu fiilii gieđain',
     'update.headersTitle': 'Sihkkarvuođa-headerat',
     'update.atomTitle': 'Mohtorfiillat (lonuhuvvojit oktan)',
     'update.optionalTitle': 'Válljehahtti fiillat',

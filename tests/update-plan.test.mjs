@@ -167,9 +167,9 @@ test('blobBatch: a batch of the files the site does not hold, and all of them wi
   assert.equal(blobBatch(paths, new Set(paths.slice(BLOB_ROOM + 1))).commit, false);
   assert.deepEqual(blobBatch(paths, new Set(paths)), { batch: [], copied: 40, total: 40, commit: true });
   assert.deepEqual(blobBatch([], new Set()), { batch: [], copied: 0, total: 0, commit: true });
-  // Two subrequests a file beside the call's own (about 7 copying, 13 committing) stay under the free plan's 50.
+  // Two subrequests a file beside the call's own (about 7 copying, 16 committing) stay under the free plan's 50; the function's own count is tested below.
   assert.ok(2 * BLOB_BATCH + 7 <= 50);
-  assert.ok(2 * BLOB_ROOM + 13 <= 50);
+  assert.ok(2 * BLOB_ROOM + 16 <= 50);
 });
 
 test('travelsAsBlob: only a blob GraphQL calls text and gives whole travels inline', () => {
@@ -195,8 +195,9 @@ afterEach(() => { globalThis.fetch = realFetch; });
 /**
  * A stand-in GitHub for the updater: the site's repository at HEAD `head` holding `site` (path -> blob sha, urd.json naming `engine`), and the template's trees by tag.
  * `binary` lists the target paths GraphQL calls binary, `held` the blob shas the site's repository holds, `release` answers the template's release of a tag.
+ * `headers` holds the `_headers` texts: the site's at `site`, and each tag's under `tags`; `fail` makes their GraphQL read fail.
  */
-function updateRepo({ engine = '0.7.11', site, tags, texts = {}, binary = [], held = [], release = () => reply({ message: 'Not Found' }, 404) }) {
+function updateRepo({ engine = '0.7.11', site, tags, texts = {}, binary = [], held = [], headers = {}, release = () => reply({ message: 'Not Found' }, 404) }) {
   const seen = { calls: [], trees: [], commits: [], refs: [], blobPosts: 0 };
   globalThis.fetch = async (url, init = {}) => {
     const u = new URL(String(url));
@@ -216,6 +217,12 @@ function updateRepo({ engine = '0.7.11', site, tags, texts = {}, binary = [], he
     if (path === '/repos/site/repo/git/blobs' && method === 'POST') { seen.blobPosts++; return reply({ sha: 'posted' }, 201); }
     if (path === '/graphql') {
       const query = JSON.parse(init.body).query;
+      if (/\bt0: object/.test(query)) {
+        if (headers.fail) return reply({ message: 'refused' }, 400);
+        const template = {};
+        for (const m of query.matchAll(/(t\d+): object\(expression: "([^":]+):_headers"\)/g)) template[m[1]] = typeof headers.tags?.[m[2]] === 'string' ? { text: headers.tags[m[2]] } : null;
+        return reply({ data: { template, site: { s: typeof headers.site === 'string' ? { text: headers.site } : null } } });
+      }
       if (query.includes('isBinary')) {
         const template = {};
         for (const m of query.matchAll(/(f\d+): object\(expression: "[^":]+:([^"]+)"\)/g)) template[m[1]] = { isBinary: binary.includes(m[2]), isTruncated: false };
@@ -352,4 +359,127 @@ test('an update that must continue answers 429 updateContinue with the files cop
   assert.equal(seen.blobPosts, designs.length - BLOB_BATCH);
   assert.equal(seen.commits.length, 1);
   assert.ok(seen.trees.flatMap((t) => t.tree).some((e) => e.path === 'admin/designs/d0.webp' && e.sha === 'design-0'));
+});
+
+/* ---------- The site's _headers through the update function ---------- */
+
+const OLD_HEADERS = '/*\n  X-Frame-Options: SAMEORIGIN\n  Content-Security-Policy: default-src \'self\'; connect-src \'self\'\n';
+const NEW_HEADERS = '/*\n  X-Frame-Options: SAMEORIGIN\n  Strict-Transport-Security: max-age=31536000\n  Content-Security-Policy: default-src \'self\'; connect-src \'self\'\n';
+const HEADER_TAGS = { 'v0.7.10': OLD_HEADERS, 'v0.7.11': OLD_HEADERS, 'v0.7.12': NEW_HEADERS };
+const headersEntry = (seen) => seen.trees.flatMap((t) => t.tree).find((e) => e.path.endsWith('_headers'));
+
+test('the check offers an unedited _headers for the update and the run writes it in the same commit, unless the owner keeps their own', async () => {
+  const site = { ...SITE, _headers: 'h-old' };
+  updateRepo({ site, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+  const check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.deepEqual(check.headers, { state: 'unedited', text: NEW_HEADERS, added: [] });
+  assert.ok(!check.changes.some((c) => c.path === '_headers'), 'the file stands outside the plan of the other files');
+
+  let seen = updateRepo({ site, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+  let res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: NEW_HEADERS } }), env: UPDATE_ENV });
+  assert.equal(res.status, 200);
+  assert.equal(seen.commits.length, 1, 'one commit');
+  assert.equal(headersEntry(seen).content, NEW_HEADERS);
+  assert.equal((await res.json()).written, 7, 'counted among the files written');
+
+  for (const [why, body] of [
+    ['held back like any optional file', { headers: NEW_HEADERS, skip: ['_headers'] }],
+    ['a run that was shown no file', {}],
+    ['a run shown another text than the plan gives now', { headers: OLD_HEADERS }],
+  ]) {
+    seen = updateRepo({ site, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+    res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', ...body } }), env: UPDATE_ENV });
+    assert.equal(res.status, 200, why);
+    assert.equal(seen.commits.length, 1, why);
+    assert.equal(headersEntry(seen), undefined, why);
+  }
+});
+
+test('the run carries the owner\'s added hosts into the new _headers, and leaves a file edited otherwise to the owner', async () => {
+  const added = OLD_HEADERS.replace("connect-src 'self'", "connect-src 'self' https://script.google.com");
+  const merged = NEW_HEADERS.replace("connect-src 'self'", "connect-src 'self' https://script.google.com");
+  updateRepo({ site: SITE, tags: TAGS, headers: { site: added, tags: HEADER_TAGS } });
+  const check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.deepEqual(check.headers, { state: 'added', text: merged, added: ['connect-src https://script.google.com'] });
+  let seen = updateRepo({ site: SITE, tags: TAGS, headers: { site: added, tags: HEADER_TAGS } });
+  await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: merged } }), env: UPDATE_ENV });
+  assert.equal(headersEntry(seen).content, merged);
+
+  const edited = OLD_HEADERS.replace('SAMEORIGIN', 'DENY');
+  updateRepo({ site: SITE, tags: TAGS, headers: { site: edited, tags: HEADER_TAGS } });
+  const by = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.deepEqual(by.headers, { state: 'edited', text: NEW_HEADERS, added: [] }, 'the template\'s text, to copy by hand');
+  seen = updateRepo({ site: SITE, tags: TAGS, headers: { site: edited, tags: HEADER_TAGS } });
+  await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: NEW_HEADERS } }), env: UPDATE_ENV });
+  assert.equal(headersEntry(seen), undefined, 'never written, whatever the run is sent');
+});
+
+test('at the installed version the check offers the site\'s _headers alone, and the run commits it alone', async () => {
+  updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+  const check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.equal(check.upToDate, true);
+  assert.deepEqual(check.headers, { state: 'unedited', text: NEW_HEADERS, added: [] }, 'a file from a release before the installed one');
+
+  for (const site of [NEW_HEADERS, NEW_HEADERS.replace('SAMEORIGIN', 'DENY')]) {
+    updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site, tags: HEADER_TAGS } });
+    assert.equal((await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json()).headers, undefined, 'nothing offered where it is current or edited');
+  }
+
+  let seen = updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+  const res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: NEW_HEADERS } }), env: UPDATE_ENV });
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { sha: 'cnew', current: '0.7.12', target: 'v0.7.12', upToDate: true, written: 1, deleted: 0 });
+  assert.deepEqual(seen.trees.flatMap((t) => t.tree), [{ path: '_headers', mode: '100644', type: 'blob', content: NEW_HEADERS }], 'the file alone');
+  assert.match(seen.commits[0].message, /security headers/);
+
+  seen = updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+  await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: NEW_HEADERS, skip: ['_headers'] } }), env: UPDATE_ENV });
+  assert.equal(seen.commits.length, 0, 'kept by the owner');
+  seen = updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+  await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: UPDATE_ENV });
+  assert.equal(seen.commits.length, 0, 'a run that was shown no file');
+  seen = updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+  const race = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'older', headers: NEW_HEADERS } }), env: UPDATE_ENV });
+  assert.equal(race.status, 409, 'a repository that moved since the check');
+  assert.equal(seen.commits.length, 0);
+});
+
+test('a failed or partial read of the texts writes no _headers: the check offers none, the run commits the rest, and additions wait for every release', async () => {
+  const site = OLD_HEADERS.replace("connect-src 'self'", "connect-src 'self' https://script.google.com");
+  updateRepo({ site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS, fail: true } });
+  let check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.equal(check.upToDate, false, 'the check still answers with the update');
+  assert.equal(check.headers, null);
+  let seen = updateRepo({ site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS, fail: true } });
+  const res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: NEW_HEADERS } }), env: UPDATE_ENV });
+  assert.equal(res.status, 200, 'the update itself goes through');
+  assert.equal(seen.commits.length, 1);
+  assert.equal(headersEntry(seen), undefined);
+
+  // The installed version's text unread: an exact match of another release is still written, additions are not.
+  const partial = { 'v0.7.10': OLD_HEADERS, 'v0.7.12': NEW_HEADERS };
+  const listed = { ...TAGS, 'v0.7.10': {} };
+  updateRepo({ site: SITE, tags: listed, headers: { site: OLD_HEADERS, tags: partial } });
+  check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.equal(check.headers.state, 'unedited');
+  updateRepo({ site: SITE, tags: listed, headers: { site, tags: partial } });
+  check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.equal(check.headers.state, 'edited');
+
+  // A full page of tags may leave releases out: additions wait the same way.
+  const many = { ...TAGS, ...Object.fromEntries(Array.from({ length: 98 }, (_, i) => [`v0.6.${i + 1}`, {}])) };
+  updateRepo({ site: SITE, tags: many, headers: { site, tags: HEADER_TAGS } });
+  check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.equal(check.headers.state, 'edited');
+});
+
+test('a committing call with the most files it copies, and the headers, stays under the free plan\'s 50 subrequests', async () => {
+  const designs = Array.from({ length: BLOB_ROOM }, (_, i) => `admin/designs/d${i}.webp`);
+  const tags = { 'v0.7.11': TAGS['v0.7.11'], 'v0.7.12': { ...TAGS['v0.7.12'], ...Object.fromEntries(designs.map((p, i) => [p, `design-${i}`])) } };
+  const seen = updateRepo({ site: SITE, tags, binary: designs, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+  const res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: NEW_HEADERS } }), env: UPDATE_ENV });
+  assert.equal(res.status, 200);
+  assert.equal(seen.blobPosts, BLOB_ROOM);
+  assert.ok(headersEntry(seen), 'the headers are written in it');
+  assert.ok(seen.calls.length + 1 <= 50, `${seen.calls.length} calls and the deploy hook`);
 });
