@@ -1,13 +1,5 @@
 <script>
-  /* The way to add a capability to the selected block (ADR-0031, menu/capabilities.js), in the form Urd settings «Adding extras» chooses (`menu.capAddPref`); each form is drawn where it stands and only while it is the one chosen.
-     `head` is the «+» in the menu's head (B5), which lists every capability the block can take, under its area's name, each with its drawing and one line on what it does.
-     `button` is one dashed «+ Add to Style» at the foot of an area (`area`, B2), which opens the same list of that area's capabilities; `chips` names that area's capabilities as dashed chips at its foot (B1), each added at a press, its line in its tooltip.
-     `folded` names them as a quiet column of «+ Name» at the area's foot (B3), in the catalogue's order, a capability added there standing as its card in its name's place, its settings under its name (`cards`, MenuArea.svelte), with the cards folding (lib/rows/Capability.svelte); `icons` draws each of the area's capabilities in the area's heading (B4), in a box of the admin's accent, dashed while the block does not use it and lit while it does: a press on a dashed one adds it, on a lit one brings its card into view.
-     Urd settings «The add list» draws a list as a list, with what the block already has dimmed at its foot, or as tiles in two columns.
-     A pick sets what the capability starts with (a switch it is), keeps its card on the block for the session, and gives the card the focus (lib/rows/Capability.svelte); with nothing left to add the «+» is not drawn.
-     A capability whose settings all stand in Pinned is not offered, since Pinned holds it.
-     The list stands in the top layer (the Popover API, ADR-0011), so no panel's edge clips it, placed under the «+» with its right edge at the «+»'s and kept inside the window; without the API it stands fixed in the same place.
-     The «+» opens the list at a press, and under a mouse as the pointer rests on it or on the list, closing a moment after the pointer leaves both; a touch is no hover (AGENTS.md, hybrid devices). As a menu that opens on hover, the «+» has its name for a screen reader and no tooltip, its empty title keeping the head's own from reaching it. */
+  /* Adds a capability to the selected block (ADR-0031) in the form «Adding extras» chooses: the head's «+», a button, chips, a column or icons. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS, CAP_ICONS } from '../lib/icons.js';
@@ -21,7 +13,7 @@
   import { folds } from '../lib/folds.svelte.js';
   import { menu, quickChoice } from './state.svelte.js';
   const ed = getContext('urd-editor');
-  /** The form this copy draws, and for the forms at an area's foot, the area; `cards` holds the cards added from the area's foot this session, by the capability's id (MenuArea.svelte), which the folded column draws in their names' places. */
+  /** The form this copy draws, the area for the forms in an area, and `cards`, the cards added from the area's foot this session by capability id. */
   let { form = 'head', area = null, cards = null } = $props();
   const AREAS = ['content', 'style', 'placement'];
   const AREA_WORDS = { content: 'props.tabContent', style: 'props.tabStyle', placement: 'props.tabPlacement' };
@@ -43,7 +35,7 @@
     const caps = CAPABILITIES.filter((cap) => carries(cap, block, ed) && !cap.inUse(block, ed) && !isAdded(block.blockId, cap.id) && !heldInPinned(cap));
     return areas.map((one) => [one, caps.filter((cap) => cap.area === one)]).filter(([, list]) => list.length);
   });
-  /** The folded column: each capability of the area in the catalogue's order, as its name while it is offered, or as its card where it was added from the area's foot. */
+  /** The folded column: each capability of the area in the catalogue's order, as its name while offered, or as its card where it was added here. */
   const column = $derived.by(() => {
     if (form !== 'folded' || !area || !block || !shown) return [];
     const named = new Set((offered[0]?.[1] ?? []).map((cap) => cap.id));
@@ -55,7 +47,7 @@
   const all = $derived(block && shown && form === 'icons'
     ? CAPABILITIES.filter((cap) => cap.area === area && carries(cap, block, ed) && !heldInPinned(cap)).map((cap) => [cap, cap.inUse(block, ed) || isAdded(block.blockId, cap.id)])
     : []);
-  /** A lit drawing's card, in the copy of the menu the drawing stands in, brought into view with the focus on its first setting (never its bin), at once under reduced motion. */
+  /** A lit drawing's card, brought into view with the focus on its first setting (never its bin), at once under reduced motion. */
   function toCard(cap, event) {
     const home = event.currentTarget.closest('.block-menu, aside.panel') ?? document;
     const card = home.querySelector(`.emenu-area [data-cap="${cap.id}"]`);
@@ -95,7 +87,7 @@
     }, 250);
   }
 
-  /** A press on the «+» opens the list with the focus on its first capability, or brings the focus into a list the mouse opened; a press on the «+» closes a list a press opened. */
+  /** A press on the «+» opens the list, its first capability focused, or focuses a list the mouse opened; a press closes a list a press opened. */
   async function toggle() {
     clearTimeout(hoverTimer);
     if (open && !openedByHover) {
@@ -117,8 +109,7 @@
     }
   }
 
-  /** The list in the top layer, under the «+» with its right edge at the «+»'s, or under an area's add button as wide as the button and so as its area, kept inside the window as the window changes.
-      Where the window has more room above its opener than below and the list does not fit below, it opens upward; a list that fits neither way whole scrolls in the larger room. */
+  /** The list in the top layer under its opener, kept inside the window; it opens upward when it does not fit below and there is more room above. */
   function placePop(node) {
     if (typeof node.showPopover === 'function') node.showPopover();
     const place = () => {
@@ -204,7 +195,7 @@
     {#if open}{@render list()}{/if}
   </div>
 {:else if column.length && form === 'folded'}
-  <!-- What this area can take, as a quiet column of names, each added at a press and standing as its card in its name's place, sliding in as it is added and out as it is taken away -->
+  <!-- What this area can take, as a quiet column of names, each added at a press and standing as its card in its name's place -->
   <div class="cap-names">
     {#each column as [cap, card] (cap.id)}
       {#if card}

@@ -1,8 +1,5 @@
 <script>
-  /* The Phone panel (0.7.3.13): what is set for the phone, gathered in one place; each setting stands in the Nav or Site panel, or in the section's or the block's menu too.
-     The section is the one at work on the canvas; where none is, as the panel opens or another page loads, the topmost one mostly in view, else the first. Another is picked at the top, which brings it into view.
-     Under it stand the folds of the whole site (the menu on the phone from the Nav panel, the space between blocks for every section from the Site panel) and of this section (PhoneSectionRows, one part per fold), with their values while closed.
-     The section's blocks in their order (phone/PhoneOrder.svelte) stand where Urd settings «Phone panel» puts them (lib/phone-panel.js): in a column of their own at the stage's right edge (phone/PhoneDock.svelte, drawn by App.svelte through the phone view, and on the desktop while this panel stands), first in the panel, or in a fold under its settings. */
+  /* The Phone panel: what is set for the phone, for the whole site and for the section at work, each setting also in its own panel or menu. */
   import { getContext, onMount, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sectionWords } from '$engine/anchor-model.js';
@@ -45,7 +42,7 @@
     const words = sectionWords(s);
     return [s.id, words ? `${ta('diff.section', { n: i + 1 })}: ${words}` : ta('diff.section', { n: i + 1 })];
   }));
-  /** The space between the section's blocks on the phone, its own, else the site's, else the standard, with the text that may shrink where «Force readable text» is off, as its fold says while closed. */
+  /** The space fold's value while closed: the space between the section's blocks on the phone, its room, and whether text may shrink. */
   const spaceValue = $derived.by(() => {
     const gap = `${mobileGapOf({ size: { mobileGap: ed.sectionMobileGap ?? undefined } }, ed.siteDraft)} px`;
     // The room above and below shows only where the section has its own.
@@ -77,7 +74,7 @@
     }
   }
 
-  // A section stands in the panel whenever the page has one: where none is at work, as the panel opens or another page loads, the one in view on this page, else the first.
+  // Where no section is at work, the one in view stands in the panel, else the first.
   $effect(() => {
     if (section || !sections.length) return;
     const ids = sections.map((s) => s.id);
@@ -113,7 +110,7 @@
     {/if}
   {/if}
 
-  <!-- The phone settings of the site's other panels, drawn by the same rows as there, so a change shows in both (0.7.3.24): the menu on the phone from the Nav panel, and the space between blocks for every section from the Site panel -->
+  <!-- The phone settings of the Nav and Site panels, drawn by the same rows as there -->
   <SubHeading text={ta('phone.wholeSite')} />
   <Fold id="nav-phone-bar" surface="phone" title={ta('phone.navBar')} tip={ta('tip.nav.mobileSame')} value={navFold.phoneBarValue()} group={navFold.phoneBarGroup()}>
     <NavMobile part="bar" />

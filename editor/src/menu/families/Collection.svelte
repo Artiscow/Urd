@@ -1,7 +1,5 @@
 <script>
-  /* The collection block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The collection block in the element menu: its Content and Style areas, and the settings it writes through the editor handle. */
   import { getContext } from 'svelte';
   import SelectRow from '../../lib/rows/SelectRow.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';

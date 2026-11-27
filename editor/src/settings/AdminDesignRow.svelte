@@ -1,6 +1,5 @@
 <script>
-  /* The admin design's line (ADR-0030), over its tiles first in the Urd settings: the design that stands, «Floating menu», or «Floating menu, changed» with the parts that differ named under it.
-     While a part differs, «Back to Floating menu» takes every part back to the design; after a design is chosen, «Undo» takes it back as one step while the parts stand as it left them (state/admin-design.svelte.js). */
+  /* The admin design's line (ADR-0030): the design that stands, or that it is changed with the parts that differ, the way back to it, and «Undo» after a choice. */
   import { ta, adminLang } from '$engine/i18n.js';
   import { ADMIN_DESIGNS } from '../lib/admin-designs.js';
   import { ICONS } from '../lib/icons.js';

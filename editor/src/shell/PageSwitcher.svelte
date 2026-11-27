@@ -1,7 +1,5 @@
 <script>
-  /* The page switcher at the top bar's left end: the open page's name on a button, and under it the site's pages to switch to, found by a search, each with its address and a gear to its own settings; at the foot the open page's settings and a new page.
-     The pages stand in the Pages panel's order, the open one marked, the front page with a house, a page hidden from visitors with an amber crossed eye, one hidden from search with a crossed magnifier, and a page with unpublished changes with a dot.
-     A tool menu as the top bar's others (ed.toolMenu 'page'), opened by a press or a mouse's rest on its button: a press outside, Escape, the window's blur and the mouse leaving it close it; the arrows walk the found pages and Enter opens the marked one. */
+  /* The page switcher at the top bar's left end: the open page's name, and a menu of the site's pages to search and switch to, with their settings. */
   import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -26,7 +24,7 @@
   /** The pages with unpublished changes, as the list of what waits to be published has them (the open page's change still waiting to be written included). */
   const drafted = $derived(new Set(ed.unpublished.filter((part) => part.kind === 'page').map((part) => part.id)));
 
-  /** The menu opened with its search empty and the open page marked; a press puts the focus in the search, a mouse's rest leaves it where it is, so what is being edited keeps it. */
+  /** The menu opens with its search empty and the open page marked; a press focuses the search, a mouse rest leaves the focus where it is. */
   async function openMenu(focus) {
     query = '';
     marked = Math.max(0, pages.findIndex((p) => p.id === ed.pageId));
@@ -55,7 +53,7 @@
     await openMenu(true);
   }
 
-  /** The menu opened on a mouse's rest and closed a moment after it leaves, as the tabs' menus are; a pass on the way elsewhere opens nothing, and a menu the focus has gone into (its search typed in) stays until a press outside or Escape. */
+  /** The menu opens on a mouse rest and closes soon after it leaves; one the focus has gone into stays until a press outside or Escape. */
   let wrapEl = $state(null);
   let restTimer = 0;
   function rest(on, event) {

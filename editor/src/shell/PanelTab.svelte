@@ -1,12 +1,5 @@
 <script>
-  /* A panel's button with its menu of folds, in every layout that reaches a panel this way (`variant`): a tab in the strip under the top bar and in the panel's own tabs (PanelStrip, PanelNav), a row of the top bar's Site menu in «The page's tabs» (TopBar), an icon of the rail and a word of the sidebar in its flyout form (Rail). One button, which opens the panel on a click.
-     A panel with folds (lib/panel-folds.js) has a menu of the folds: a mouse resting on the button, or the down arrow key on a tab and the right arrow key on the others, opens it, and a row opens the panel with that fold alone unfolded, or presses the fold's one button where that is all it holds. The menu stands in the top layer, under a tab and beside the others, so a narrow panel never clips it, and it slides in and out. Beside a rail's icon it is headed by the panel's name, which stands in place of the icon's tooltip and opens the panel.
-     The rows are set apart as the Urd settings' «Panel menus» chooses: in short groups under small labels (the default), with a hairline between them, or as a plain list. A row that presses a button carries that button's mark.
-     The arrow keys move through the rows, and Escape closes the menu and returns to the tab. Hover counts only for a mouse, so a tap on a touch screen opens the panel, where every fold stands.
-     The Legal tab carries an amber dot on its name's corner while something the law asks for is missing, and the same dot on the rows that need looking at (lib/legal-model.js).
-     The Collections tab's menu lists the site's collections, kept in step as they come and go, and ends in New collection. A mouse resting on a collection, or the right arrow key, opens a submenu of its entries beside it, ending in New entry; on an entry, a third menu of its common actions (its picture added or edited, the entry duplicated); the left arrow or Escape goes back a level.
-     A collection's row opens it in the panel, and an entry's row opens the entry.
-     The Drafts tab opens the Drafts window rather than a panel (state/drafts.svelte.js), on a mouse's rest as a tab's menu opens or on a press, and carries its marks (DraftsMarks); it keeps no tooltip, as a button that opens on a rest does not. As a row of the Site menu it opens on a press alone, so a mouse passing down the menu never takes the menu away. */
+  /* A panel's button in each layout (`variant`): a click opens the panel, and a resting mouse or an arrow key opens its menu of folds or collections. */
   import { tabMenuOpen } from './tab-menu-open.svelte.js';
   import { getContext, tick } from 'svelte';
   import { menuMotion } from '../lib/motion.svelte.js';
@@ -42,7 +35,7 @@
 
   /** The folds the menu lists: those the panel draws now, and a menu only where there is a choice of two or more. */
   const folds = $derived(panelFolds(name, { site: ed.siteDraft, legal: ed.legal, designs: menu.designsPref }));
-  /** The Collections tab's rows: the collections with their entries; its menu stands while the collections can be read, with New collection alone where there are none. */
+  /** The Collections tab's rows: the collections, each with its entries. */
   const collections = $derived(name === 'collections' ? collectionMenuRows(ed.collectionIds, ed.collectionsView, sortEntries) : []);
   const hasMenu = $derived(menus && (name === 'collections' ? !ed.collectionsUnavailable : folds.length > 1));
   const menuId = $derived(`panel-tab-menu-${name}`);
@@ -55,9 +48,9 @@
   let list = $state(null);
   let pos = $state({ top: 0, left: 0 });
   let timer = null;
-  /** Whether a mouse is on the tab or one of its menus, from its own pointer events, since a menu in the top layer does not light its ancestors' :hover in every browser. */
+  /** Whether a mouse is on the tab or one of its menus, from its own pointer events. */
   let hovering = false;
-  /** The collection whose entries stand in the submenu beside its row, and the entry whose actions stand in the third menu beside that; each with its place, and the wait before a resting mouse switches it. */
+  /** The collection whose entries stand in the submenu, and the entry whose actions stand in the third menu, each with its place and its timer. */
   let sub = $state(null);
   let subEl = $state(null);
   let subPos = $state({ top: 0, left: 0, maxHeight: 320 });
@@ -85,7 +78,7 @@
     setOpen(next);
   }
 
-  /** The menu's place: under a tab, or beside a row, an icon or a word, at its height; held inside the window, a menu beside its button turning to the button's other side where the window has no room. */
+  /** The menu's place: under a tab, or beside a row, an icon or a word; inside the window, on the button's other side where there is no room. */
   function place() {
     if (!tab) return pos;
     const r = tab.getBoundingClientRect();
@@ -131,7 +124,7 @@
 
   $effect(() => () => { clearTimeout(timer); clearTimeout(subTimer); clearTimeout(actTimer); });
 
-  /** A submenu's place beside its row: at the row's height, with the edges of the menu it stands from on either side, as tall as the window allows and scrolling beyond. */
+  /** A submenu's place beside its row: at the row's height, between the edges of the menu it stands from, as tall as the window allows. */
   function besideRow(row, from) {
     const r = row.getBoundingClientRect();
     const m = from.getBoundingClientRect();
@@ -193,8 +186,7 @@
     actTimer = setTimeout(() => showAct(id, row), 140);
   }
 
-  // A press outside the tab and its menu closes the menu; a scroll that moves the tab takes the menu along under it, and one that takes the tab out of sight closes it.
-  // A menu kept open after a pick (Urd settings «After a pick») stays where it stands while the mouse is on it, as a pick scrolls the panel the tab may stand in.
+  // A press outside closes the menu; a scroll moves it with the tab, and closes it once the tab is out of sight.
   $effect(() => {
     if (!open) return;
     const away = (event) => { if (!wrap?.contains(event.target)) now(false); };
@@ -223,7 +215,7 @@
     if (typeof node.showPopover === 'function') node.showPopover();
   }
 
-  /** A row opens the panel at its fold, or presses the fold's one button (`press`); the menu stays open until the mouse leaves it, unless the Urd settings close it at the pick («After a pick»). A row that opens a dialog closes it either way, since the dialog stands over it. */
+  /** A row opens the panel at its fold or presses its one button; the menu closes as «After a pick» says, and always for a row that presses a button. */
   function pick(fold) {
     if (ed.tabMenuStay !== 'stay' || fold.press) now(false);
     ed.openPanel(name, { fold: fold.id, press: fold.press === true });
@@ -282,7 +274,7 @@
     }
   }
 
-  /** The Collections panel at its list, with the caret in the new collection's name (panels/collections/CollectionList.svelte), once the panel's code is in (lib/parts.svelte.js). */
+  /** The Collections panel at its list, with the caret in the new collection's name once the panel's code is in. */
   async function newCollection() {
     now(false);
     ed.panelCollection = null;
@@ -293,7 +285,7 @@
     document.querySelector('[data-new-collection]')?.focus();
   }
 
-  /** The down and up arrows open a tab's menu and move through the rows of the menu the focus is in; the right arrow opens the menu beside a row, an icon or a word, on a collection its entries at the first, and on an entry its actions; the left arrow or Escape goes back a level; Escape in the first menu, and the left arrow in a menu beside its button, close it and return to the button. */
+  /** The arrow keys: down and up through the rows, right into the menu beside a row, left or Escape back a level and out of the first menu to the button. */
   async function keys(event) {
     if (!hasMenu) return;
     const active = document.activeElement;
@@ -377,7 +369,7 @@
   {#if legalDot}<span class="tab-menu-dot" role="img" aria-label={ta('legal.dotLabel')}></span>{/if}
 {/snippet}
 
-<!-- The button's face in each layout: a tab's word with its arrow, an icon with its dots at the corner, a row's or a word's name with its arrow toward the menu beside it -->
+<!-- The button's face: a tab's word with its arrow, an icon with its dots, or a row's or a word's name with its arrow toward the menu beside it -->
 {#snippet face()}
   {#if drafts}
     {#if variant === 'rail'}{@html ICONS.panel_drafts}<DraftsMarks corner />{:else if variant === 'tab'}<span class="tab-menu-word">{label}<DraftsMarks /></span>{:else}<span class="tab-menu-name">{label}</span><DraftsMarks />{/if}

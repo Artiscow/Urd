@@ -1,5 +1,5 @@
 <script>
-  /* The terms of sale in the element menu (0.7.24.8): the words are written on the page, and the Style area holds the look of the design it is drawn in (DocLook), then the whole text's font and size as the text block has them (WholeText.svelte). */
+  /* The terms of sale in the element menu: the words are written on the page; Style holds the look of its design (DocLook) and the whole text's font and size. */
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import DocLook from '../DocLook.svelte';

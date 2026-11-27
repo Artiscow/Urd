@@ -2,6 +2,13 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.109): text on the accent in the admin
+
+- [ ] With the admin theme set to Well or Gold in the top bar, the words on the accent read clearly: a chosen segment, the element menu's chosen chips, the «Done» button in the image editor, a badge and the mark picker's chosen tab; with Grey or Dusk they stay white
+- [ ] In the text bar, the «A» on the highlight in the site's accent reads clearly on a dark and on a light site accent
+- [ ] In the Theme panel, turning the accent's text colour off «auto» fills it with black or white, the one that reads better on the accent
+- [ ] An admin dialog, such as the shortcut sheet, fades out and closes without a lingering empty moment
+
 ### Test batch (0.7.0.102): spoken statuses, the growing description and the basket's count
 
 - [ ] With a screen reader on (NVDA, VoiceOver or Orca) in a browser that has `ariaNotify`, a status in the editor is spoken as it shows, such as «Undone» after an undo; an error is spoken ahead of what was queued

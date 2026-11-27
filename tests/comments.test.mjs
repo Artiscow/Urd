@@ -1,6 +1,6 @@
 /**
  * Short comments (ADR-0037): the code a site loads or runs holds each comment to LIMIT characters of words, a JSDoc tag's words after its type too.
- * No comment cites a release, tells what was before or wraps mid-sentence. SCOPE names the areas the rule holds, and grows as each is brought within it.
+ * No comment cites a release, tells what was before or wraps mid-sentence.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +15,7 @@ const walk = (dir) => readdirSync(dir).flatMap((name) => (statSync(dir + name).i
 const relative = (file) => file.slice(ROOT.length);
 const visitors = new Set(visitorModules().map((module) => ENGINE + module));
 
-/** The code the rule covers, by area: each area joins SCOPE in the round that brings it within the limit. */
+/** The code the rule covers, by area. */
 const AREAS = {
   functions: () => walk(`${ROOT}template/functions/`).filter((f) => f.endsWith('.js')),
   engine: () => [
@@ -29,8 +29,6 @@ const AREAS = {
   editorScripts: () => walk(`${ROOT}editor/src/`).filter((f) => f.endsWith('.js')),
   editorViews: () => walk(`${ROOT}editor/src/`).filter((f) => /\.(svelte|css)$/.test(f)),
 };
-/** The areas the rule holds today. */
-const SCOPE = new Set(['functions', 'engine', 'visitor', 'editorScripts']);
 
 /** A release or commit number of Urd's (0.7.26.5, 0.7.0.16-35p), or a release a thing dates from («since v0.6»). */
 const RELEASE = /(?<![\w.])0\.[1-9]\d*\.\d+(?:\.\d+)*(?:-\d+)?p?\b|\b(?:since|from|until)\s+v?0\.\d+(?:\.\d+)*/i;
@@ -115,18 +113,10 @@ function outOfBounds(area) {
   return found;
 }
 
-test('every comment in the areas the rule holds is short, cites no release and tells nothing of what was before', () => {
-  for (const area of SCOPE) {
+test('every comment in the code a site runs is short, cites no release and tells nothing of what was before', () => {
+  for (const area of Object.keys(AREAS)) {
     assert.ok(AREAS[area]().length > 0, `${area} has files`);
     assert.deepEqual(outOfBounds(area), [], `${area}: each comment says what the code does in at most ${LIMIT} characters (ADR-0037)`);
-  }
-});
-
-test('an area the rule does not hold yet still has comments to bring within it, so it joins SCOPE once it has none', (t) => {
-  for (const area of Object.keys(AREAS).filter((name) => !SCOPE.has(name))) {
-    const left = outOfBounds(area).length;
-    t.diagnostic(`${area}: ${left} comments left`);
-    assert.ok(left > 0, `${area} holds the rule, so it joins SCOPE`);
   }
 });
 

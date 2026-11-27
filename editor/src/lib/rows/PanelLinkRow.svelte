@@ -1,6 +1,5 @@
 <script>
-  /* A setting that lives in another panel, in the row kit (0.7.30.2): its name on the left, and the panel it opens on the right with an arrow.
-     `value` draws what the setting holds there beside its name, such as the legal name and what is still to fill in. */
+  /* A setting that lives in another panel, in the row kit: its name and `value` on the left, the panel it opens on the right with an arrow. */
   import { ICONS } from '../icons.js';
   let { label, to, title = undefined, onclick, value = undefined } = $props();
 </script>

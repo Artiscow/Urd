@@ -1,11 +1,5 @@
 <script>
-  /* The Collections panel in the layout «Collections editor» asks for (lib/collection-layout.js):
-     stepping in (the default), the collections, then a collection's entries, then one entry, a level at a time with a back arrow and the arrows to the entry before or after;
-     two columns, the panel widened while a collection is open with the entries at the left and the chosen entry at the right;
-     or the table, the collections here and the open one as a table over the page (collections/CollectionsTable.svelte).
-     The place (`panelCollection`, `panelEntry`) and the ticked entries (`panelTicks`) live in the collections state, so they are kept while the panel is closed and opened again.
-     The selected entries' bar stands under the search (collections/SelectionBar.svelte), and the collection's one ⋮ menu in its head, with what else acts on the selection (collections/CollectionMenu.svelte).
-     A CSV import waiting with «In the panel» as its preview stands in the panel's place until it is applied or cancelled (collections/ImportStep.svelte). */
+  /* The Collections panel in the layout «Collections editor» picks: stepping in, two columns, or the open collection as a table over the page. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
@@ -26,7 +20,7 @@
   /** The search over the open collection's entries (state/collections.svelte.js), shared with the heading's menu in the two columns. */
   const query = $derived(ed.panelQuery);
 
-  /** The chevrons stand a unit toward their point, so they read as centred in their square: the eye centres the triangle the two arms outline, whose middle lies a third of the way in from the open side. */
+  /** The chevrons stand a unit toward their point, so they read as centred in their square. */
   const BACK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6l-6 6 6 6"/></svg>';
   /** The steps to the entry before and after, as chevrons: the up and down arrows move an entry. */
   const PREV_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6l-6 6 6 6"/></svg>';
@@ -136,7 +130,7 @@
     ed.openRequest = null;
   });
 
-  // A click on a card in the preview (urd-open-entry), or an entry picked in the Collections tab's menu: its collection opens with the entry chosen and the field asked for focused, selected where asked.
+  // A card clicked in the preview (urd-open-entry), or an entry picked in a menu, opens its collection with that entry and the asked field focused.
   $effect(() => {
     const want = ed.focusEntry;
     const collection = ed.activeCollection;
@@ -160,7 +154,7 @@
 {/snippet}
 
 {#snippet entryHead(named = false)}
-  <!-- The chosen entry's head: its name beside the list (the two columns), where it stands among its collection's entries, the steps to its neighbours, and its removal -->
+  <!-- The chosen entry's head: its name in two columns, its place among the entries, the steps to its neighbours, and its removal -->
   <span class="coll-entry-head" class:coll-entry-head-named={named}>
     {#if named}<span class="coll-entry-name">{ed.plainTitle(entry.title)}</span>{/if}
     {#if place}<span class="coll-place">{ta('collections.position', { n: place.index + 1, count: place.count })}</span>{/if}
@@ -181,7 +175,7 @@
     <!-- The collections: the first level of the drill-in and of the two columns, and the table's own list -->
     <CollectionList selected={ed.collectionsLayout === 'table' ? ed.panelCollection : null} onselect={openCollection} />
   {:else if ed.collectionsLayout === 'columns'}
-    <!-- Two columns: the collection named in the panel's heading with its menu (CollectionHeading.svelte); its entries at the left between the search, held at the top, and New entry, held at the foot, the entries scrolling between them; the chosen entry at the right under its head, held while its fields scroll -->
+    <!-- Two columns: the entries at the left between the held search and New entry, the chosen entry at the right under its held head -->
     <div class="coll-cols">
       <div class="coll-list">
         <div class="coll-list-head">
@@ -279,7 +273,7 @@
     flex: 1;
   }
 
-  /* Two columns: the panel's height under the picker, the entries at the left and the chosen entry at the right, each scrolling on its own while the panel itself stands still */
+  /* Two columns under the picker, the entries and the chosen entry each scrolling on its own */
   .coll-panel-cols {
     flex: 1;
     grid-template-rows: minmax(0, 1fr);
@@ -301,7 +295,7 @@
     scrollbar-width: thin;
   }
 
-  /* The list: the search held at the top and New entry at the foot, on the panel's own surface, so the entries pass behind them as they scroll; a short list leaves New entry at the column's foot */
+  /* The list: the search held at the top and New entry at the foot, the entries scrolling behind them */
   .coll-list {
     display: flex;
     flex-direction: column;

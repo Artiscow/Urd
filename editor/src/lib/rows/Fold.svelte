@@ -1,16 +1,5 @@
 <script>
-  /* The fold of the row kit (0.7.30.2): the title, the current value while closed, the controls inside.
-     A fold that differs from the defaults is handed its reset, which stands under its controls; what was changed is told in the History panel, not marked on the fold.
-     In the search's copy of the element menu a fold opens where it holds a match, and what is kept open stays as it was left (lib/folds.svelte.js, by the surface the fold stands in).
-     A fold that is the only one in its area starts open (defaultOpen): the heading is still a menu, but the settings are one step nearer.
-     Where the family tells how many settings the fold holds now (`rows`), a fold of none is not drawn and a fold of one is drawn bare, its setting alone with its own reset: a group of one setting is no group.
-     A bare fold keeps its markup, so the setting stays where it is when a second one joins; the fold then stands open, with the setting just changed in sight.
-     In a panel the fold carries its id as `data-fold`, where the tab's menu finds it (lib/panel-folds.js), and `surface` is the panel's name; `ontoggle(open)` hears it open and close, and `tip` explains on its heading what it holds; `value` is words, or a snippet for a value drawn as a mark (the Legal panel's chips).
-     The element menu's folds follow the Urd settings' «Folds» and «Settings in a group» (menu/state.svelte.js); the folds of a panel and of the search's copy of the menu, which stand in no area, do not.
-     «One at a time» gives the folds of one area a name of their own (MenuArea.svelte), so the browser closes the others as one opens (`details name`, ADR-0011); «All open» opens every fold on its first showing after each choice of it.
-     «Settings in a group» on «Added as needed» hides the fold's setting rows (Setting.svelte) but the first and those with a value of their own, and lists the rest by their words behind a chip in the fold's foot, beside its reset, where the list opens in place under the rows; a row once shown, or once holding a value of its own, stays shown for the session (lib/folds.svelte.js), until the same list takes it away again, its value back to the standard. A row that is no setting row is always shown.
-     A row added from the list is drawn at the foot of the fold's rows, in the order added, and draws nothing where the family writes it (Setting.svelte `fold-rows`): the order on screen is the order of the markup, so the Tab key and a screen reader meet it as the eye does.
-     A small window of one group (`fold:<id>`, lib/only-group.js) shows every row of it, and holds the fold's reset in its head (menu/FloatingMenu.svelte). */
+  /* The row kit's fold: title, value while closed, controls and reset; given `rows`, a fold of one setting is drawn bare, of none not at all. */
   import { getContext, setContext, tick, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { folds } from '../folds.svelte.js';
@@ -20,19 +9,19 @@
   import { followOpen } from '../follow-open.js';
   import { SvelteMap } from 'svelte/reactivity';
   import Setting from './Setting.svelte';
-  /* `group` (groupOf in menu/groups.js) carries the defaults as well as the reset, so the Setting rows inside can offer the way back from the block's own values (0.7.20.7). */
+  /* `group` (groupOf in menu/groups.js) carries the defaults and the reset, for the Setting rows inside. */
   let { id, title, value, tip = undefined, reset = null, group = null, rows = undefined, defaultOpen = false, surface = 'menu', ontoggle = undefined, children } = $props();
   const folded = $derived(rows === undefined || rows > 1);
   // The area's heading counts its groups (MenuArea); the area also names the group its folds open one at a time in.
   const area = getContext('menu-area');
   /** Whether the element menu's own choices reach this fold: a fold in an area of a menu drawn for a block or a section. */
   const inMenu = $derived(surface === 'menu' && Boolean(area));
-  // Before the fold is drawn, so a fold that starts open is drawn open; with «All open» every fold does, again after each choice of it (setFoldsPref forgets its first showings).
+  // Before the fold is drawn, so a fold that starts open is drawn open; with «All open» every fold does, again after each choice of it.
   $effect.pre(() => {
     if (defaultOpen) folds.openOnce(surface, id);
     if (inMenu && menu.foldsPref === 'all') folds.openOnce(surface, id, 'all');
   });
-  // A small window of one group (ElementMenu.svelte `only`, menu/FloatingMenu.svelte) leaves the folds apart, so a group left open in the full menu never closes the one the window opens.
+  // A small window of one group (menu/FloatingMenu.svelte) keeps its fold apart from the full menu's one-at-a-time group.
   const onlyPanel = getContext('menu-only');
   const head = getContext('menu-head');
   const small = $derived(Boolean(onlyPanel?.only || head?.only));
@@ -77,7 +66,7 @@
       extraRowsNow = { hidden, shown };
     });
     apply();
-    // A row that comes or goes, or comes to hold a value of its own (an undo, a paste, the other copy of the menu), is read again; the attribute set here is not watched, so the pass does not call itself.
+    // A row that comes, goes or comes to hold a value of its own is read again; the attribute this pass sets is not watched.
     const watcher = new MutationObserver(apply);
     watcher.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-own'] });
     return () => watcher.disconnect();
@@ -97,8 +86,7 @@
     nameOf,
   });
 
-  /* The chip opens its list at a press, and under a mouse as the pointer rests on it or on the list; a pointer that leaves both closes it a moment later.
-     A touch is no hover (AGENTS.md, hybrid devices), so only a mouse opens it so. */
+  /* The chip opens its list at a press, or as a mouse rests on it or on the list; a pointer that leaves both closes it a moment later. */
   let hoverTimer = null;
   let openedByHover = false;
   // A timer still running as the fold goes away does nothing.
@@ -124,7 +112,7 @@
     }, 250);
   }
 
-  /** A press on the chip opens the list with the focus on its first row, or brings the focus into a list the mouse opened; a press on the chip closes a list a press opened. */
+  /** A press on the chip opens the list with the focus on its first row, or brings the focus into a list a mouse opened; a second press closes it. */
   async function toggleExtra() {
     clearTimeout(hoverTimer);
     if (extraOpen && !openedByHover) {
@@ -160,7 +148,7 @@
     (control ?? extraBtn)?.focus();
   }
 
-  /** A row taken away from the list: its value back to the standard, as its own way back does (Setting.svelte), then hidden again, the list closed and the focus on the chip. */
+  /** A row taken away from the list: its value back to the standard, then hidden again, the list closed and the focus on the chip. */
   async function takeAway(name) {
     const row = settingRow(name);
     if (row?.matches('[data-own]')) {

@@ -187,3 +187,27 @@ test('the settings of «Words only» stand directly under the design\'s words, b
   assert.ok(at('{#if wordsAlone}') < at('{#if shaped}'));
   assert.ok(at('{#if wordsAlone}') < at("<Setting key={sizeShown ? 'iconSize' : null}>"));
 });
+
+test('a choice of the button at its standard is taken away, so a site that sets nothing, or picks what it shows, stores nothing', async () => {
+  const totop = await engineImport('totop.js');
+  const panel = readFileSync(new URL('../editor/src/panels/site/SiteToTop.svelte', import.meta.url), 'utf8');
+  const start = panel.indexOf('\n  function write(') + 1;
+  assert.ok(start > 0, 'the panel writes each setting through write()');
+  const make = new Function('ed', `${panel.slice(start, panel.indexOf('\n  }\n', start) + 4)}\nreturn write;`);
+  const site = {};
+  const write = make({ siteDraft: site, siteMutate: (name, change) => change() });
+  write('size', 'l', 'm');
+  assert.deepEqual(site.layout.toTop, { size: 'l' });
+  write('size', 'm', 'm');
+  assert.equal(site.layout.toTop, undefined, 'back at its standard, the button stores nothing');
+  // Each choice the panel writes as picked, and the standard it writes against: the value a site that sets nothing shows.
+  const shown = toTopOf({});
+  const calls = [...panel.matchAll(/\bwrite\('(\w+)', (?:v|on|e\.currentTarget\.value), ('[^']*'|true|false|null|[A-Z_]+(?:\.\w+|\[\d+\])?)(?:, '[\w:-]+')?\)/g)];
+  assert.ok(calls.length >= 12, `the choices are read (${calls.length})`);
+  for (const [, key, expression] of calls) {
+    const standard = new Function(...Object.keys(totop), `return ${expression};`)(...Object.values(totop));
+    assert.equal(shown[key] ?? '', standard ?? '', `${key}: the standard is what a site that sets nothing shows`);
+    write(key, shown[key], standard);
+    assert.equal(site.layout.toTop, undefined, `${key}: picking what it shows stores nothing`);
+  }
+});

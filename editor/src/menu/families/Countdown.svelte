@@ -1,7 +1,5 @@
 <script>
-  /* The countdown block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The countdown block's Content and Style areas in the element menu. */
   import DatePicker from '../../lib/DatePicker.svelte';
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';

@@ -1,7 +1,5 @@
 <script>
-  /* One entry's fields, the same in every layout of the Collections panel: the title, the date, the text and the link, the picture with its alt text, and a product's price, member price, badge, sizes (with their presets), colours and the quantity the buyer types.
-     The picture opens the image editor (PictureEditor.svelte), the same the canvas's pictures open, and its thumbnail is drawn as the page draws it (engine picture.js).
-     The layout around it owns the entry's delete and its moves. `data-field` marks the fields a click on a card in the preview asks to focus. */
+  /* One entry's fields in every layout of the Collections panel; `data-field` marks the fields a click on a card in the preview asks to focus. */
   import { getContext, tick } from 'svelte';
   import { drawPicture } from '$engine/picture.js';
   import { ta } from '$engine/i18n.js';

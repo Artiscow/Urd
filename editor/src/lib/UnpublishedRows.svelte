@@ -1,9 +1,5 @@
 <script>
-  /* What waits to be published, as rows that lead to the change (lib/unpublished.js): a sign for the kind, the part's name, what it is, and a chevron that opens the row.
-     Open, a row lists the steps made on the part since the last publish, newest first, from the undo history (stepsForPart), each with its words and how long ago; a part with no step of its own kept (made inside another step, or before the kept steps) says so.
-     Drawn in the Publish menu and in History's «Not published yet», from the same parts, so the two never disagree; `onpick(part)` takes the owner to the change.
-     With `bands`, where the drafts can be saved (ADR-0032), the rows stand under «In this browser» and «Saved» by where each part stands (lib/saved-model.js standing), and a part saved on another device since this browser last saw it says so under its row, with `onuse(part)` taking the saved one.
-     With `ontick(name)`, each row has the tick the Drafts window's rows have (`later`, the parts unticked): ticked, the part goes with the next publish; unticked, it is kept for later, and says so; one unticked that goes anyway with another (`forced`, lib/publish-pick.js) stands ticked and fixed, and names the part it goes with. */
+  /* What waits to be published, as rows that open to each part's steps since the last publish (lib/unpublished.js), in the Publish menu and in History. */
   import { ta, adminLang } from '$engine/i18n.js';
   import { ICONS } from './icons.js';
   import { stepsForPart } from './unpublished.js';

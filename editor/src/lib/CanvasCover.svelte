@@ -1,13 +1,11 @@
 <script>
-  /* The cover over a canvas while its page loads (Urd settings «Canvas loading», lib/canvas-cover.js): the canvas's own ground, its dots in line with the ground around the canvas, and the chosen look at once, lifted as the page stands whole, so no block is seen coming in after the rest.
-     The look is drawn as the load goes: each step the canvas reports (`step`) carries the drawing to its point, it creeps on towards the next while a step takes long, and it is finished quickly as the cover lifts and fades.
-     With reduced motion asked for, the look stands finished and still, and the cover comes and goes at once. */
+  /* The cover over a canvas while its page loads, in the look «Canvas loading» chooses, drawn as the load goes and lifted once the page stands whole. */
   import { untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { coverArt, coverGoal, COVER_POINTS } from './canvas-cover.js';
 
   /**
-   * `step`: how far the canvas has come, 0 asked for its page, 1 its engine in (the frame loaded), 2 its page drawn (urd-ready); a lifted cover has come all the way.
+   * `step`: how far the canvas has come: 0 its page asked for, 1 the frame loaded, 2 the page drawn.
    * @type {{ covered: boolean, step?: number, look?: string }}
    */
   let { covered, step = 0, look = 'circle' } = $props();

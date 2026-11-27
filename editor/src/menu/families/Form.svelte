@@ -1,7 +1,5 @@
 <script>
-  /* The form block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The form block's Content and Style areas in the element menu. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import Fold from '../../lib/rows/Fold.svelte';
@@ -22,10 +20,7 @@
   const mode = $derived((selectedBlock.props.mode ?? 'mailto') === 'endpoint' ? 'endpoint' : 'mailto');
   const modeOptions = () => [['mailto', ta('form.modeMailto')], ['endpoint', ta('form.modeEndpoint')]];
 
-  /* The form block (Content): send mode, recipient or endpoint, the field
-     list and the texts. The field ids follow the engine's shape (a short
-     random id, like the former config panel); the option list follows only
-     the types that use it. */
+  /* The form's Content: send mode, recipient or endpoint, the fields with short random ids, and the texts; options only for the types that use them. */
   const FORM_FIELD_TYPES = ['text', 'email', 'tel', 'textarea', 'select', 'checkbox', 'radio', 'date'];
   const FORM_OPTION_TYPES = new Set(['select', 'radio']);
   const formFieldId = () => {

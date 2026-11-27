@@ -1,7 +1,5 @@
 <script>
-  /* The timeline block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The timeline block in the element menu: its Content and Style areas, drawn where the menu asks for one. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import ColourRow from '../../lib/rows/ColourRow.svelte';

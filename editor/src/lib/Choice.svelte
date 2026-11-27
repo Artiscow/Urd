@@ -1,11 +1,6 @@
 <script>
   /**
-   * A choice among a few named values as a segment of buttons (ADR-0009: themed, never a native select).
-   * Up to four short options sit beside the label on one row; five or more, or longer option texts, get the label above in capitals and the segment on its own line.
-   * An option of more than 18 characters puts every option on a row of its own, and so does `rows`.
-   * `stack` asks for the label above whatever the options, as a pinnable choice stands.
-   * An option may carry a third word, its own tooltip; one without shows none, never the tooltip of the row it stands in.
-   * `fill` is a segment of its own across the row, its buttons of one width and its label for a screen reader alone, as the panel's groups stand over its tabs; `mark(value)` draws what follows an option's words, such as a dot.
+   * A segment of buttons for a few named values (ADR-0009); many or long options stack under the label, and `fill` spans the row.
    * @type {{ label: string, title?: string, value: string, options: Array<[string, string, string?]>, onchange: (value: string) => void, stack?: boolean, rows?: boolean, fill?: boolean, mark?: import('svelte').Snippet<[string]> }}
    */
   let { label, title = undefined, value, options, onchange, stack = false, rows = false, fill = false, mark = undefined } = $props();
@@ -96,7 +91,7 @@
 
   /* The chosen button's pill is a layer under every button's words, which a new choice slides across (lib/seg-slide.js) */
   .choice-seg button.on {
-    color: var(--urd-color-bg);
+    color: var(--urd-color-accent-text);
   }
 
   .choice-seg button.on::before {

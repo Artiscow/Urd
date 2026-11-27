@@ -1,5 +1,5 @@
 <script>
-  /* The Nav panel's Scrolling and pages fold: what the bar does as the page scrolls (the bar and the floating forms; the column stands still), then the pages the menu shows on, how it is reached on the others, and the pull tab's own design. */
+  /* The Nav panel's «Scrolling and pages» fold: what the bar does as the page scrolls, the pages the menu shows on, and the pull tab's design. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import MarkPicker from '../../lib/MarkPicker.svelte';

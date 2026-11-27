@@ -1,5 +1,5 @@
 <script>
-  /* The setup wizard: the site's name and two colours on the first visit of a fresh clone. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle. */
+  /* The setup wizard: the site's name and two colours on the first visit of a fresh clone. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import ColorPicker from '../lib/ColorPicker.svelte';

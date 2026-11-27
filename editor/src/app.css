@@ -1,18 +1,8 @@
 /*
- * The admin's global stylesheet (0.7.26.2): the admin themes, the top bar,
- * the panels and their language (ADR-0016), the element menu and the preview
- * stage. Global, since the parts of the editor share the classes; a rule
- * whose subject is a form element, a .ghost or a .primary keeps out of the
- * lib components (Dropdown, ColorPicker, GlyphPicker, MarkPicker,
- * DesignPicker, Choice, StepField), which draw their own controls; the
- * guard is a :where(), so it adds no specificity and every rule keeps its
- * place against the others.
+ * The admin's global stylesheet: themes, top bar, panels, element menu and stage.
+ * A control's rule keeps out of the lib components by a :not(:where()) guard.
  */
-  /* The admin's color themes: override the engine's default variables
-     ONLY in the admin document (the preview iframe has its own document
-     and follows the user's theme). Picked in the top bar. */
-  /* The Urd brand palette (logo/mark): well-teal primary, with all the
-     color variants kept. A fixed brand color, independent of the admin theme. */
+  /* The Urd brand palette for the logo and the mark, the same in every admin theme. */
   :root {
     --urd-brand: #15b39a;         /* well-teal (primary, Urd's well + Yggdrasil) */
     --urd-brand-bronze: #c9a227;  /* runestone bronze */
@@ -20,20 +10,22 @@
     --urd-brand-mono: #eaf1ed;    /* monochrome (off-white) */
   }
 
-  /* The help card (the engine's hint.js) takes the admin's colours through the
-     --urd-admin-* variables the preview gets by message; in the admin itself they
-     are the theme's own tokens. */
+  /* The help card (hint.js) takes the admin's colours from the --urd-admin-* variables, here the theme's own tokens. */
   :root {
+    --urd-color-accent-text: #000000;
     --urd-admin-bg: var(--urd-color-bg);
     --urd-admin-surface: var(--urd-color-surface);
     --urd-admin-accent: var(--urd-color-accent);
+    --urd-admin-accent-text: var(--urd-color-accent-text);
     --urd-admin-text: var(--urd-color-text);
   }
 
+  /* The admin's colour themes, picked in the top bar, set the engine's variables in the admin document alone. */
   :root[data-admin-theme='purple'] {
     --urd-color-bg: #0b0e17;
     --urd-color-surface: #151a2b;
     --urd-color-accent: #7c5cff;
+    --urd-color-accent-text: #000000;
     --urd-color-text: #e8eaf0;
   }
 
@@ -41,6 +33,7 @@
     --urd-color-bg: #0b1418;
     --urd-color-surface: #13232a;
     --urd-color-accent: #2ec8b5;
+    --urd-color-accent-text: #000000;
     --urd-color-text: #e4eef0;
   }
 
@@ -48,6 +41,7 @@
     --urd-color-bg: #100e0a;
     --urd-color-surface: #1c1812;
     --urd-color-accent: #d9a441;
+    --urd-color-accent-text: #000000;
     --urd-color-text: #ede8dc;
   }
 
@@ -55,30 +49,34 @@
     --urd-color-bg: #0e0f11;
     --urd-color-surface: #191b1e;
     --urd-color-accent: #5f6a75;
+    --urd-color-accent-text: #ffffff;
     --urd-color-text: #e6e8ea;
   }
 
-  /* Nordlys: the Nord palette (arctic, low saturation) */
+  /* Northern lights: the Nord palette (arctic, low saturation) */
   :root[data-admin-theme='aurora'] {
     --urd-color-bg: #232831;
     --urd-color-surface: #2e3440;
     --urd-color-accent: #5e81ac;
+    --urd-color-accent-text: #000000;
     --urd-color-text: #eceff4;
   }
 
-  /* Skumring: Tokyo Night (neon night, blue) */
+  /* Dusk: Tokyo Night (neon night, blue) */
   :root[data-admin-theme='dusk'] {
     --urd-color-bg: #16161e;
     --urd-color-surface: #1a1b26;
     --urd-color-accent: #3d59a1;
+    --urd-color-accent-text: #ffffff;
     --urd-color-text: #c0caf5;
   }
 
-  /* Glo: Gruvbox (warm, glowing orange) */
+  /* Ember: Gruvbox (warm, glowing orange) */
   :root[data-admin-theme='ember'] {
     --urd-color-bg: #1d2021;
     --urd-color-surface: #282828;
     --urd-color-accent: #d65d0e;
+    --urd-color-accent-text: #000000;
     --urd-color-text: #ebdbb2;
   }
 
@@ -121,7 +119,7 @@
     right: 28px;
     z-index: 200;
     font: inherit;
-    color: #fff;
+    color: var(--urd-color-accent-text);
     background: var(--urd-color-accent, #7c5cff);
     border: 0;
     border-radius: 999px;
@@ -136,15 +134,12 @@
 
   .topbar {
     display: flex;
-    /* The bar NEVER wraps to two rows: the height is fixed, and what does
-       not fit is folded away in steps (see the fold steps at the bottom of
-       the file). */
+    /* One row at every width: what does not fit folds away in the fold steps at the end of the file. */
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem 0.75rem;
-    /* More air on the right: Publish is the last thing the eye lands on
-       and must not stick to the window edge. */
+    /* A wider padding on the right keeps Publish clear of the window's edge. */
     padding: 0.6rem 1.4rem 0.6rem 1rem;
     background: var(--urd-color-surface, #151a23);
     border-bottom: 1px solid rgb(255 255 255 / 8%);
@@ -161,19 +156,16 @@
     letter-spacing: 0.01em;
   }
 
-  /* Three groups on one row: left (tools), middle (draft status) and
-     right (view/publishing). None of them wrap. */
+  /* Three groups on one row: the tools, the draft's status, and the view and publishing; none of them wraps. */
   .topbar-group {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
     gap: 0.5rem 0.75rem;
-    /* min-width: auto (inherited) stops the group at min-content, i.e.
-       the page-name button's min-width plus the rest of the controls. */
+    /* Its min-width stays auto, so the group never shrinks below its controls. */
   }
 
-  /* The controls keep their natural width: the fold steps, not shrinking,
-     make room. Only the page name below is allowed to give way. */
+  /* The controls keep their natural width; only the page name gives way, and the fold steps make room. */
   .topbar-group > * {
     flex: none;
   }
@@ -196,14 +188,13 @@
 
   .badge {
     background: var(--urd-color-accent, #7c5cff);
-    color: #fff;
+    color: var(--urd-color-accent-text);
     border-radius: 999px;
     padding: 0.15em 0.7em;
     font-size: 0.78rem;
   }
 
-  /* Status messages as a toast in the bottom right: does not disturb the
-     top bar and can be read wherever you are working */
+  /* Status messages as a toast in the bottom right corner, clear of the top bar. */
   .toast {
     position: fixed;
     bottom: 22px;
@@ -287,16 +278,11 @@
     min-height: 0;
   }
 
-  /* A tight rail: narrow, no gaps between the items, and monospace that
-     ties the rail to Urd's own tone. Twelve items should take a small
-     corner of the canvas height, not most of it. */
+  /* A tight rail: narrow, no gaps between the items, in monospace. */
   .rail {
     display: flex;
     flex-direction: column;
-    /* The longest label is "Oppdatering": eleven characters in 0.74rem
-       monospace is just over 80 px, plus twice 0.9rem indent, and a word
-       with folds carries its dot and its arrow after it. 9.75rem gives them
-       room without the rail taking much space from the canvas. */
+    /* Wide enough for the longest panel name in the rail, with its indent, dot and arrow. */
     width: 9.75rem;
     flex: none;
     gap: 0;
@@ -314,9 +300,7 @@
     font-family: inherit;
     font-size: inherit;
     padding: 0.24rem 0.9rem;
-    /* The global button style makes all buttons inline-flex with
-       justify-content: center. On a flex container that overrides all
-       text alignment, so text-align alone has no effect here. */
+    /* Left-aligned: justify-content does it, as the global button style is inline-flex. */
     justify-content: flex-start;
     text-align: left;
     border-radius: 0;
@@ -330,8 +314,7 @@
 
   /* The settings gear at the bottom of the rail + the popover above it.
      position: fixed is not clipped by the rail's overflow. */
-  /* Uppercase label above each group, so the three levels read as groups
-     and not as one long list. */
+  /* An uppercase label over each group, so the three levels read as groups. */
   .rail-group {
     font-size: 0.54rem;
     letter-spacing: 0.14em;
@@ -358,7 +341,7 @@
   }
   .rail-icons .rail-icon.active:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     background: var(--urd-color-accent, #7c5cff);
-    color: var(--urd-color-surface, #151a23);
+    color: var(--urd-color-accent-text);
   }
   /* The update notice: a dot at an icon's corner, or after a word, in the accent. */
   .rail-icon { position: relative; }
@@ -495,8 +478,7 @@
     .topnav-caret { transition: none; }
   }
 
-  /* The mark lives at the bottom by the gear: mark on the left, settings
-     on the right, with a divider above. */
+  /* The mark and the gear at the rail's foot, the mark left and the gear right, a divider above. */
   .rail-settings {
     margin-top: auto;
     display: flex;
@@ -510,9 +492,7 @@
 
   .rail-brand {
     display: inline-flex;
-    /* The rune stands on the word's baseline: the svg (with no baseline of
-       its own) is aligned by its bottom edge, which is the glyph's foot
-       thanks to the cropped viewBox. */
+    /* The rune stands on the word's baseline: the svg aligns by its bottom edge, the glyph's foot in its cropped viewBox. */
     align-items: baseline;
     gap: 0.35rem;
     min-width: 0;
@@ -548,9 +528,7 @@
   .panel {
     width: 300px;
     flex-shrink: 0;
-    /* The scrollbar's gutter is always reserved (a thin one), so the
-       content keeps its width whether the panel scrolls or not; the gutter
-       itself gives the air at the right edge. */
+    /* A thin scrollbar gutter is always reserved, so the content keeps its width, and the gutter gives the right edge its room. */
     padding: 0.9rem 0.6rem 0.9rem 0.9rem;
     background: var(--urd-color-surface, #151a23);
     border-right: 1px solid rgb(255 255 255 / 8%);
@@ -565,7 +543,7 @@
     width: min(680px, 50vw);
   }
 
-  /* The two columns: the panel stands still and its columns scroll on their own (panels/CollectionsPanel.svelte); a CSV import shown in the panel scrolls the panel as any other */
+  /* Two columns that scroll on their own (panels/CollectionsPanel.svelte), the panel standing still; a CSV import scrolls the panel as any other. */
   .panel.panel-still {
     display: flex;
     flex-direction: column;
@@ -628,8 +606,7 @@
     margin-right: 0.6em;
   }
 
-  /* The fold-all toggle: the chevrons point outwards (expand) and flip
-     inwards (collapse) around their own centres. */
+  /* The fold-all toggle: the chevrons point out to expand and turn in to collapse, each about its own centre. */
   .fold-toggle .ft-top,
   .fold-toggle .ft-bot {
     transform-box: view-box;
@@ -671,8 +648,7 @@
 
   .panel-body {
     display: grid;
-    /* minmax(0, 1fr): the column can never grow wider than the panel, so
-       the rows are squeezed instead of causing horizontal scrolling */
+    /* minmax(0, 1fr): the column never grows wider than the panel, and its rows are squeezed instead. */
     grid-template-columns: minmax(0, 1fr);
     gap: 0.6rem;
   }
@@ -704,7 +680,7 @@
     font-weight: 600;
     font-size: 0.85rem;
     border-bottom: 1px solid rgb(255 255 255 / 12%);
-    /* The head is the handle that moves the menu (0.7.20.6) */
+    /* The head is the handle that moves the menu. */
     cursor: grab;
     user-select: none;
     touch-action: none;
@@ -732,7 +708,7 @@
     --menu-w: min(660px, 100vw - var(--menu-min, 8px) - 8px);
   }
 
-  /* Small: one group from a tool of the bar with small panels, as wide as what it holds between 18 and 25 rem, kept inside the window by its own measured size (--menu-fit-w and --menu-h, fitSmallMenu in state/page.svelte.js; MENU_SMALL_W in menu/state.svelte.js until it is measured) */
+  /* Small: one group of a tool from the bar, 18 to 25 rem wide, kept inside the window by its measured size (fitSmallMenu in state/page.svelte.js). */
   .block-menu.small {
     --menu-w: min(var(--menu-fit-w, 320px), 100vw - var(--menu-min, 8px) - 8px);
     top: clamp(8px, var(--menu-top), 100vh - min(var(--menu-h, 620px), 72vh, 620px) - 8px);
@@ -746,7 +722,7 @@
     flex: 1 1 auto;
   }
 
-  /* A small panel that holds one group alone (lib/only-group.js): the rest of the menu hidden, whatever a row's own layout says, as the search's copy hides what does not match; the areas' headings and frames left out, and a group's own heading too, since the panel's title names it */
+  /* A small panel holding one group alone (lib/only-group.js): the rest of the menu, the areas' headings and frames and the group's heading hidden. */
   .emenu-only [data-only-hidden] {
     display: none !important;
   }
@@ -832,8 +808,7 @@
     max-width: none;
   }
 
-  /* The search's copy of the areas: what does not match is left out, an area
-     with nothing left says so, and in the narrow menu the areas stand under each other */
+  /* The search's copy of the areas: what does not match is left out, an empty area says so, and the narrow menu stacks them. */
   .emenu-search .menu-miss {
     display: none !important;
   }
@@ -867,8 +842,7 @@
     border-radius: 10px;
   }
 
-  /* Wide: two columns, each area whole in one of them, on the menu's own surface (ElementMenu.svelte chooses which area stands where).
-     Two plain columns rather than CSS columns: a fold that opens grows inside its own column, and nothing is poured across while it does. */
+  /* Wide: two plain columns, each area whole in one of them (ElementMenu.svelte places them), so a fold that opens grows in its own column. */
   .emenu-cols.emenu-two {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1.1rem;
@@ -920,8 +894,6 @@
     overflow-wrap: anywhere;
   }
 
-  /* Pinned (0.7.30.3): the settings used most, as the rows they are in their areas, each with its pin.
-     Narrow, it stands over the areas with a rule under it; wide, it is the first part of the two columns, headed as an area is. */
   /* The shortcuts «Chips»: one chip for each area, jumping to where it starts, the one whose area is in view filled */
   .emenu-chips {
     display: flex;
@@ -1021,7 +993,7 @@
     opacity: 0.6;
   }
 
-  /* A fold's foot (lib/rows/Fold.svelte): «Add a setting» at the left and the group's reset at the right, on one line under the rows; the settings to add open in place under it, pushing what follows down; a hidden setting row keeps out of the flow */
+  /* A fold's foot (lib/rows/Fold.svelte): «Add a setting» at the left and the group's reset at the right, the settings to add opening in place under it. */
   .menu-group-foot {
     display: grid;
     gap: 0.3rem;
@@ -1038,7 +1010,7 @@
     margin-left: auto;
   }
 
-  /* «Add a setting»: a chip whose box stands in the rows' column, a soft tint of the admin's accent at rest, and a stronger one under the pointer, at the keyboard's focus and while its list stands open; the foot's class puts it over the buttons' own hover */
+  /* «Add a setting»: a chip in the rows' column, a soft accent tint at rest and a stronger one under the pointer, at focus and while its list is open. */
   .menu-group-foot-line .menu-extra:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     display: inline-flex;
     align-items: center;
@@ -1105,7 +1077,7 @@
     border-radius: 6px;
   }
 
-  /* The list's rows answer the pointer at once, as a menu's items do, in the chip's soft tint of the admin's accent; the list's class puts them over the buttons' own fade and hover */
+  /* The list's rows answer the pointer at once in the chip's soft accent tint, over the buttons' own fade and hover. */
   .menu-extra-list .menu-extra-part .menu-extra-opt:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     transition: none;
   }
@@ -1218,7 +1190,7 @@
     display: inline-flex;
   }
 
-  /* In the floating menu's head the block's actions and the «+» stand at the right, before the buttons for the width and closing, every button there the size of the «+» */
+  /* In the floating menu's head the block's actions and the «+» stand at the right, before the width and close buttons, each the size of the «+». */
   .block-menu-head .block-actions,
   .block-menu-head .cap-add-wrap {
     margin-left: auto;
@@ -1254,14 +1226,14 @@
     width: 1.75rem;
     height: 1.75rem;
     padding: 0;
-    color: var(--urd-color-bg, #0b0d12);
+    color: var(--urd-color-accent-text);
     cursor: pointer;
     background: var(--urd-color-accent, #7c5cff);
     border: 0;
     border-radius: 6px;
   }
 
-  /* The add list in the top layer, placed under its «+» by CapabilityAdd.svelte; the browser's own popover look is left out, and the head's weight and grab cursor do not reach it */
+  /* The add list in the top layer, placed under its «+» by CapabilityAdd.svelte, without the browser's popover look or the head's weight and cursor. */
   .cap-pop {
     position: fixed;
     inset: auto;
@@ -1341,7 +1313,7 @@
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  /* The ways to add at an area's foot (Urd settings «Adding extras»): the area's capabilities named as dashed chips under a small heading, or one dashed line that opens their list, a little apart from the groups above; dim until the pointer or the keys reach them */
+  /* The ways to add at an area's foot («Adding extras»): dashed chips under a small heading, or one dashed line that opens their list, dim until reached. */
   .cap-adds {
     display: grid;
     gap: 0.35rem;
@@ -1400,7 +1372,7 @@
     color: var(--urd-color-accent, #7c5cff);
   }
 
-  /* A column of names (folded cards): what an area can take as a quiet column of names at its foot, lit in the accent under the pointer or the keys; a card added stands in its name's place across the column */
+  /* A column of names: what an area can take, quiet names at its foot lit in the accent when reached; an added card stands in its name's place. */
   .cap-names {
     display: grid;
     justify-items: start;
@@ -1481,7 +1453,7 @@
     }
   }
 
-  /* Icons in each area's heading: each capability's drawing in a box of the admin's accent, dashed while the block does not use it and lit while it does; the drawing keeps the text's colour */
+  /* Icons in an area's heading: each capability's drawing in an accent box, dashed while unused and lit while in use, in the text's colour. */
   .cap-icons {
     display: inline-flex;
     flex-wrap: wrap;
@@ -1557,6 +1529,7 @@
     background: transparent;
   }
 
+  /* Pinned: the settings used most, each with its pin; narrow, over the areas with a rule under it; wide, the first part of the columns. */
   .emenu-pinned {
     display: grid;
     gap: 0.45rem;
@@ -1620,9 +1593,7 @@
     white-space: nowrap;
   }
 
-  /* Narrow: the three areas under each other on the panel's own surface, each
-     heading sticking to the top while its area scrolls past, in the accent as
-     a small capital line */
+  /* Narrow: the three areas stacked on the panel's surface, each heading a small accent capital line that sticks to the top as its area scrolls. */
   .emenu-stack {
     gap: 0.4rem;
   }
@@ -1694,7 +1665,7 @@
     gap: 0.4rem;
   }
 
-  /* A toggle's pin stands just left of the toggle, in room the row keeps for it, so the toggles of a group line up at the right edge whether they can be pinned or not */
+  /* A toggle's pin stands just left of the toggle, in room the row keeps for it, so a group's toggles line up at the right edge. */
   .pin-line > .gridmenu-snap:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     gap: calc(0.6rem + 24px + 0.3rem + var(--reset-room));
   }
@@ -1706,7 +1677,7 @@
     transform: translateY(-50%);
   }
 
-  /* Any other pinnable setting stands as its words over its control, with the pin at the end of the words' line, so the control keeps the row's full width and ends where the rows around it end */
+  /* Any other pinnable setting: its words over its control, the pin at the end of the words' line, the control keeping the row's full width. */
   .pin-line > label:not(.gridmenu-snap):has(+ .menu-pin):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
   .pin-line > .field-stack:has(+ .menu-pin),
   .pin-line > .choice:has(+ .menu-pin),
@@ -1729,7 +1700,7 @@
     max-width: none;
   }
 
-  /* The pin keeps inside its row's box, lifted to the words' line by a transform, which moves only what is drawn: a box reaching above its row would keep the two-column flow from balancing its columns */
+  /* The pin stays in its row's box, lifted to the words' line by a transform, so the two-column flow can balance its columns. */
   .pin-line > label:not(.gridmenu-snap) + .menu-pin,
   .pin-line > .field-stack + .menu-pin,
   .pin-line > .choice + .menu-pin,
@@ -1754,7 +1725,7 @@
     transform: translateY(-4px);
   }
 
-  /* A row with its words on the left and its control on the right (a number, a colour) keeps the control at the row's right edge, with the pin just left of it, as beside a switch */
+  /* A row with its words left and its control right (a number, a colour) keeps the control at the right edge, the pin just left of it. */
   .pin-line:has(> .ctl-row + .menu-pin) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
@@ -1790,8 +1761,7 @@
     transform: translateY(-50%);
   }
 
-  /* The buttons that open the design picker stand side by side, two to a line, each as wide and as tall as the others; the designs' pictures in place («Choosing a design») take the whole line.
-     The columns stand further apart than the lines, so a reset on a button's corner stays clear of the button beside it; a column too narrow for two buttons (the docked panel) holds one to a line. */
+  /* The buttons that open the design picker, two to a line and alike in size; the columns stand wider apart than the lines, clear of a reset badge. */
   .look-rows {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 8.75rem), 1fr));
@@ -1824,7 +1794,7 @@
     display: none;
   }
 
-  /* The reset of a setting whose control is a design's button: a round badge on the button's top-right corner, a little out over its edge, ringed in the colour it stands on (`--look-ground`, the menu's own unless a Pinned tile sets its own) so it reads as cut out of the edge; the button's words and its pin keep clear of it */
+  /* A design button's reset: a round badge over its top-right corner, ringed in --look-ground, the colour it stands on, so it reads as cut out of the edge. */
   .setting:has(> .setting-body > .row-picture:first-child, > .setting-body > .pin-line:first-child > .row-picture:first-child) {
     position: relative;
   }
@@ -1884,7 +1854,7 @@
     opacity: 1;
   }
 
-  /* A button that opens the design picker (PictureRow.svelte): filled as the admin's buttons are, so it never reads as a closed group, its picture at the start and the words beside it */
+  /* A button that opens the design picker (PictureRow.svelte): filled as the admin's buttons are, its picture first and its words beside it. */
   .menu-row {
     display: flex;
     align-items: center;
@@ -1921,8 +1891,7 @@
     max-width: 100%;
   }
 
-  /* A setting's row (Setting.svelte): the control, and the reset on the right while the value is the block's own;
-     a row that says its value in words (the phone placement in Placement.svelte) has them as a dimmed line under its label */
+  /* A setting's row (Setting.svelte): the control, the reset at the right while the value is the block's own, and any value in words dimmed under it. */
   .setting {
     --reset-room: 0px;
     display: flex;
@@ -1958,7 +1927,7 @@
     margin-top: 0.55rem;
   }
 
-  /* A setting whose words stand over its control (a stacked choice, a slider, a dropdown, a label in the element menu) has its reset at the end of the words' line, before the pin where it has one, and the control keeps the row's full width under it */
+  /* A setting with its words over its control: the reset at the end of the words' line, before any pin, the control keeping the row's full width. */
   .setting:has(> .setting-reset):has(> .setting-body > :is(.choice.stacked, .row-select, .field-stack):first-child, > .setting-body > :is(.row-slider, .look-choice):first-child > :is(.row-label, .row-sub):first-child, > .setting-body > .pin-line:first-child > :is(label:not(.gridmenu-snap), .field-stack, .choice, .row-select):first-child, > .setting-body > .pin-line:first-child > :is(.row-slider, .look-choice):first-child > :is(.row-label, .row-sub):first-child),
   :is(.emenu-col, .emenu-pinned) .setting:has(> .setting-reset):has(> .setting-body > label:not(.gridmenu-snap):first-child) {
     --reset-room: 1.8rem;
@@ -1977,7 +1946,7 @@
     right: 30px;
   }
 
-  /* A switch's reset stands just left of the toggle, before the pin where it has one, so the toggles of a group keep the right edge; with rows of its own under the switch it keeps to the switch's line (one line of words, 1.36rem, against the reset's 1.5rem) */
+  /* A switch's reset stands just left of the toggle, before any pin, so a group's toggles keep the right edge; it keeps to the switch's line. */
   .setting:has(> .setting-reset):has(> .setting-body > .gridmenu-snap:first-child, > .setting-body > .pin-line:first-child > .gridmenu-snap:first-child) {
     --reset-room: 1.8rem;
     position: relative;
@@ -2004,7 +1973,7 @@
     gap: calc(0.6rem + var(--reset-room));
   }
 
-  /* A setting whose words and control share a line that is not a switch's (a number, a colour, a short choice) has its reset at the end of that line, centred on it, and what stands under the line keeps the row's full width */
+  /* Words and control on one line, not a switch's (a number, a colour): the reset at the line's end, centred on it; the rows under it keep the full width. */
   .setting:has(> .setting-reset):has(> .setting-body > :is(.ctl-row, .choice:not(.stacked)):first-child, > .setting-body > .pin-line:first-child > .ctl-row:first-child) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -2170,8 +2139,7 @@
     outline-offset: 2px;
   }
 
-  /* All the "row buttons" in the panel (blocks, groups, file picker)
-     share the same height and layout, so the list looks even */
+  /* All the row buttons in a panel (blocks, groups, file picker) share one height and layout. */
   .panel-body .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
   .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
     display: flex;
@@ -2181,10 +2149,7 @@
     box-sizing: border-box;
   }
 
-  /* List buttons in the panels are left-aligned (the rows must read as a
-     list), even though buttons otherwise center their content. Action
-     buttons (.action: create page, add layer, etc.) are centered like
-     regular buttons. */
+  /* A panel's list buttons are left-aligned, as a list reads; its action buttons (.action) stay centred. */
   .panel-body .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
     justify-content: flex-start;
   }
@@ -2521,8 +2486,7 @@
     padding-bottom: 14px;
   }
 
-  /* The menu items as rows: closed, one line with the grip, the name, the
-     link and small marks for what is set; open, a card with every field. */
+  /* A menu item as a row: closed, one line with the grip, the name, the link and marks for what is set; open, a card with every field. */
   .nav-item {
     display: flex;
     flex-direction: column;
@@ -2692,9 +2656,7 @@
     opacity: 0.8;
   }
 
-  /* The row kit's drag (lib/rows/row-drag.svelte.js), the one look of a row moved anywhere in the admin.
-     The row dims in its place, its card of one line stands under the pointer, and a dashed slot with the card's faint copy, or the line chosen in the Urd settings, marks where it will land.
-     Once it has landed, the row flashes the accent. */
+  /* The row kit's drag (lib/rows/row-drag.svelte.js): the row dims in place, its one-line card follows the pointer, and a slot or a line marks where it lands. */
   [data-row-dragging] {
     opacity: 0.4;
     animation: row-drag-dim 0.15s ease-out;
@@ -2861,8 +2823,7 @@
     outline-offset: -1px;
   }
 
-  /* The actions: a two-by-two grid of small buttons at the right, shown on the
-     row under the pointer and on the selected row; the other rows show the dots */
+  /* The actions: a two-by-two grid of small buttons at the right of the hovered and the selected row; the other rows show the dots. */
   .nav-actions {
     flex: 0 0 auto;
     display: none;
@@ -3045,8 +3006,7 @@
     border-color: #e05252;
   }
 
-  /* The answer from a shared folder: how many pictures it holds, or why it
-     could not be read. */
+  /* The answer from a shared folder: how many pictures it holds, or why it could not be read. */
   .folder-status {
     margin: 0.2rem 0 0;
     padding: 0 0.2rem;
@@ -3132,9 +3092,7 @@
     align-self: stretch;
   }
 
-  /* The gradient bar: the gradient left to right with a handle per colour at
-     its position; a press on the bar adds a colour there, a handle is dragged
-     along it (startHandleDrag) or moved with the arrow keys */
+  /* The gradient bar, a handle per colour at its position: a press adds a colour, and a handle moves by drag (startHandleDrag) or the arrow keys. */
   .grad-preview {
     position: relative;
     height: 1.6rem;
@@ -3183,14 +3141,13 @@
     width: 3.6rem;
   }
 
-  /* Compact color buttons in the gradient rows (same height as the row buttons); a rule for a panel's own picker stops at a picker's card, so it never reaches the picker inside one (the set maker's) */
+  /* Compact colour buttons in the gradient rows, as tall as the row buttons; :not(.cp-pop *) keeps them off a picker inside a picker's card. */
   .grad-stop .cp-swatch:not(.cp-pop *) {
     width: 1.7rem;
     height: 1.7rem;
   }
 
-  /* The row kit's icon button (lib/rows/IconButton.svelte): a square of the control height with the icon in its middle, so it lines up with the field beside it.
-     Small, it is the square of a tool inside a row; quiet, it has no frame and stays faint until reached. */
+  /* The row kit's icon button (lib/rows/IconButton.svelte): a square of the control height, its icon centred; small inside a row, quiet without a frame. */
   .icon-btn:is(.ghost, .quiet):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
   .panel-body .icon-btn:is(.ghost, .quiet):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     flex: none;
@@ -3234,7 +3191,7 @@
     display: block;
   }
 
-  /* Every deletion in the admin, as the element menu's head draws a block's: a bin (ICONS.bin) on the dark red of a removal, lighter under the pointer, and brightest while a deletion that acts at its second press waits for it (ActionRow.svelte) */
+  /* Every removal: the bin on a removal's dark red, lighter under the pointer, brightest while a removal at its second press waits (ActionRow.svelte). */
   .icon-btn.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
   .ghost.action.danger:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     color: #ffd4d4;
@@ -3254,8 +3211,7 @@
     border-color: #e04848;
   }
 
-  /* The "new page from template" grid: cards with a page thumbnail; the
-     picked card decides what + Create page starts from. */
+  /* The template grid for a new page: cards with a page thumbnail, the picked one what «+ Create page» starts from. */
   .page-template-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3328,8 +3284,7 @@
     border-color: #9a3a42;
   }
 
-  /* The section theme picker: live samples in the site's actual theme
-     colors - a background with a text line, card chip and accent dot. */
+  /* The section theme picker: live samples in the site's theme colours, a background with a line of text, a card chip and an accent dot. */
   .rs-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3395,7 +3350,7 @@
     text-overflow: ellipsis;
   }
 
-  /* A section's order on the phone (section/PhoneSectionRows.svelte): each rule a card of the section's own blocks in its order, a picture as a tall block, a heading as a thick line, text as a thin one and a button as a short pill */
+  /* A section's phone order (section/PhoneSectionRows.svelte): each rule a card of its blocks, a picture tall, a heading thick, text thin, a button a pill. */
   .po-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3464,7 +3419,7 @@
     background: var(--urd-color-accent, #7c5cff);
   }
 
-  /* A phone layout preset drawn small (section/PhoneSectionRows.svelte): a phone's screen, its eight cell columns, each cell with its blocks' marks as the rule's cards draw them, from its top and cut where it ends */
+  /* A phone layout preset drawn small (section/PhoneSectionRows.svelte): a screen of eight cell columns, each cell's blocks drawn as the cards draw them. */
   .po-card:has(> .pl-sketch) {
     grid-template-rows: auto 1fr;
     padding: 0.35rem;
@@ -3760,7 +3715,7 @@
     color: var(--urd-color-accent, #7c5cff);
   }
 
-  /* The phone order's list (panels/phone/PhoneOrder.svelte): one line per block in its phone order, a stack's head over its blocks set in a step, the stack drawn as one tinted card */
+  /* The phone order's list (panels/phone/PhoneOrder.svelte): one line per block, a stack's head over its blocks in a step, the stack one tinted card. */
   .pp-list {
     display: grid;
     gap: 4px;
@@ -3771,7 +3726,7 @@
     padding-bottom: 1rem;
   }
 
-  /* A row wraps its chips under its name where both do not fit on one line, so the name keeps some of its words and no chip runs past the row; a row of one line and the room between rows are whole pixels in steps of four, so the rows are drawn alike at the common screen scalings */
+  /* A row wraps its chips under its name where both do not fit; its line and the gaps between rows are whole pixels in steps of four. */
   .pp-row {
     display: flex;
     flex-wrap: wrap;
@@ -3951,7 +3906,7 @@
     display: none;
   }
 
-  /* A way the row differs, drawn as the canvas marks the block: a place or words of its own in amber, the owner's stack in the accent; under the pointer or the keyboard's focus it shows the way back */
+  /* A way the row differs, marked as on the canvas: a place or words of its own in amber, the owner's stack in the accent, its way back on hover or focus. */
   .pp-way:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     position: relative;
     display: inline-grid;
@@ -4113,8 +4068,7 @@
     font-size: 0.76rem;
   }
 
-  /* The Update panel: version card, folded groups and file rows in the
-     panel idiom. */
+  /* The Update panel: the version card, folded groups and file rows. */
   .update-versions { display: flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; }
   .update-from { opacity: 0.7; }
   .update-arrow { display: inline-flex; opacity: 0.55; }
@@ -4311,7 +4265,7 @@
   /* The hover samples draw the menu word with the style itself. */
   .hover-sample { display: inline-block; font: 13px Georgia, serif; color: var(--urd-color-accent); height: 22px; line-height: 22px; }
   .hover-sample.hover-underline { text-decoration: underline; text-underline-offset: 3px; }
-  .hover-sample.hover-pill { color: var(--urd-color-bg); background: var(--urd-color-accent); padding: 0 8px; border-radius: 999px; }
+  .hover-sample.hover-pill { color: var(--urd-color-accent-text); background: var(--urd-color-accent); padding: 0 8px; border-radius: 999px; }
   .hover-sample.hover-lift-plain { translate: 0 -2px; }
   .hover-sample.hover-lift { text-shadow: 0 3px 10px color-mix(in srgb, var(--urd-color-accent) 70%, transparent); }
   /* The logo's thumbnail beside its picker, and three sizes on one row. */
@@ -4326,8 +4280,7 @@
   .logo-file { font-size: 11px; opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ctl-triple { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; }
 
-  /* A text field with its label above in capitals (the announcement's text and
-     address): filled, without a frame, an accent underline while it has focus. */
+  /* A text field with its label in capitals above it: filled, without a frame, an accent underline while it has focus. */
   .panel-body label.field-stack:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
     flex-direction: column;
     align-items: stretch;
@@ -4383,8 +4336,7 @@
     width: 100%;
   }
 
-  /* A dropdown beside its label: bounded, never the whole remaining width, so
-     the row reads label then control; the label text wraps if it must. */
+  /* A dropdown beside its label is bounded, so the row reads label then control; the label wraps if it must. */
   .panel-body label > .dd {
     flex: 0 1 11rem;
     min-width: 8rem;
@@ -4414,8 +4366,7 @@
     width: 4.2rem;
   }
 
-  /* Groups in the panel (Text, Shapes): look like the block buttons, but
-     with an arrow - open into a vertical list of blocks below */
+  /* A group in a panel looks like a block button with an arrow, and opens into a list of blocks below. */
   .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
     list-style: none;
     justify-content: space-between;
@@ -4425,9 +4376,7 @@
     border-radius: 6px;
   }
 
-  /* The fold marker: a drawn chevron that points along the row while the
-     group is closed and turns down when it opens. Child combinators keep a
-     closed group inside an open one at its own state. */
+  /* The fold marker: a drawn chevron along the row while closed, turned down when open; child combinators keep a nested group to its own state. */
   .group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *))::after{
     content: '';
     flex-shrink: 0;
@@ -4454,8 +4403,7 @@
     border-color: var(--urd-color-accent, #7c5cff);
   }
 
-  /* The placement group is a SECTION fold, not a chip: drop the pill
-     frame, let it read as a simple heading row. */
+  /* The placement group is a section fold, not a chip: a plain heading row without the pill's frame. */
   .frame-group summary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
     border: 0;
     border-radius: 0;
@@ -4468,8 +4416,7 @@
     border-color: transparent;
   }
 
-  /* Groups are grid items: without min-width 0 they refuse to shrink to
-     the panel width, and the content (color pickers, toggles) is cut at the edge */
+  /* Grid items: min-width 0 lets a group shrink to the panel's width instead of cutting its content at the edge. */
   .group {
     min-width: 0;
   }
@@ -4499,9 +4446,7 @@
     padding-left: 0;
   }
 
-  /* A fold opens and closes smoothly: its content grows from nothing to its height inside ::details-content, the folds under it moving with it, and shrinks back the same way.
-     Where the browser interpolates to the content's own height (interpolate-size), the content box's height itself is what grows, so the box and what it shows are one; elsewhere its one grid row grows from 0fr to 1fr.
-     The content is clipped while it is folded or opening, and shows past its edges (a focus ring) once it stands open. Under reduced motion, or in a browser without ::details-content, a fold opens and closes at once. */
+  /* A fold opens and closes smoothly in ::details-content: its height grows by interpolate-size, else its grid row from 0fr to 1fr. */
   .group::details-content {
     display: grid;
     grid-template-rows: 0fr;
@@ -4541,8 +4486,7 @@
     .group[open] > .group-items { transition: none; }
   }
 
-  /* A pop-up in the top layer (the anchored lists and pickers) fades and slides in as it opens and out as it closes; through the fade it keeps its place in the top layer where the browser can (overlay), and leaves it at once where it cannot.
-     Its content stays drawn for the fade (lingering in lib/motion.svelte.js). */
+  /* A top-layer pop-up fades and slides in and out, keeping its top-layer place through the fade by overlay; lib/motion.svelte.js keeps its content drawn. */
   :is(.dd-anchored, .cp-anchored, .gp-anchored, .dp-anchored, .mp-anchored, .sp-anchored, .pf-pop) {
     transition: opacity 0.15s ease, transform 0.15s ease, display 0.15s allow-discrete, overlay 0.15s allow-discrete;
   }
@@ -4560,8 +4504,7 @@
     :is(.dd-anchored, .cp-anchored, .gp-anchored, .dp-anchored, .mp-anchored, .sp-anchored, .pf-pop) { transition: none; }
   }
 
-  /* An admin dialog (`dx`) fades in as it opens and out as it closes, its backdrop with it, nothing moving: a small one in 0.16s and out in 0.12s, as the menus, a large one (`dx-large`) in 0.1s and out in 0.08s.
-     The opening is drawn from @starting-style, so a browser without it opens the dialog at once; the closing is the class fadingDialog and dialogOut (lib/motion.svelte.js) set before the dialog closes or leaves. */
+  /* An admin dialog (dx) and its backdrop fade in by @starting-style and out by the dx-closing class (lib/motion.svelte.js), a dx-large one faster. */
   dialog.dx[open],
   dialog.dx[open]::backdrop {
     opacity: 1;
@@ -4587,19 +4530,13 @@
     dialog.dx.dx-closing::backdrop { transition: none; }
   }
 
-  /* The panel language (ADR-0016): shared building blocks all the panels
-     compose. The context classes further down carry only margins and
-     child styles, never their own copies of these recipes. */
+  /* The panel language (ADR-0016): shared building blocks the panels compose; the context classes below add only margins and child styles. */
   .ctl-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
   .mini-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.6; }
   .chip { border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 999px; padding: 2px 9px; font: 600 10px system-ui, sans-serif; background: transparent; color: inherit; opacity: 0.75; }
   .sample { padding: 11px 12px; background: color-mix(in srgb, currentColor 5%, transparent); border: 1px solid color-mix(in srgb, currentColor 12%, transparent); border-radius: 9px; }
 
-  /* The content-width sample (ADR-0018): one strip per common screen
-     width. The track is the screen, the fill is the content surface, so
-     the ratio between them IS the setting. A fluid strip (the width does
-     not bind there) is drawn dimmed, so it is visible where the setting
-     actually has effect. */
+  /* The content-width sample (ADR-0018): one strip per common screen width, the track the screen and the fill the content, a fluid strip dimmed. */
   .cw-sample { display: grid; gap: 5px; }
   .cw-row { display: grid; grid-template-columns: 2.6rem 1fr 2.2rem; align-items: center; gap: 8px; }
   .cw-screen { text-align: right; opacity: 0.55; }
@@ -4640,9 +4577,9 @@
   /* Colors: the segments and the palette rows (Light and Dark) */
   .seg { display: inline-flex; isolation: isolate; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 999px; overflow: hidden; }
   .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){ border: 0; background: transparent; color: inherit; font: 600 11px system-ui, sans-serif; padding: 3px 11px; cursor: pointer; }
-  /* The chosen button's pill is a layer under every button's words (the segment isolates them), so a new choice can slide the pill across from the old one (lib/seg-slide.js) while the words stay put */
+  /* The chosen button's pill is a layer under every button's words, so lib/seg-slide.js can slide it from the old choice to the new. */
   .seg button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){ position: relative; transition: color 0.18s ease, background 0.12s ease; }
-  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){ color: var(--urd-color-bg); }
+  .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){ color: var(--urd-color-accent-text); }
   .seg button.on:hover:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){ background: transparent; }
   .seg button.on:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *))::before{ content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--urd-color-accent); }
   .palcells { display: flex; gap: 6px; }
@@ -4669,11 +4606,10 @@
   .typo-sample .ts-h { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .typo-sample .ts-b { font-size: 12.5px; opacity: 0.7; line-height: 1.5; }
   .form-prev { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-  .form-prev .fp-btn { background: var(--urd-color-accent); color: var(--urd-color-bg); font: 600 12px system-ui, sans-serif; padding: 8px 15px; border-radius: var(--r-sm); }
+  .form-prev .fp-btn { background: var(--urd-color-accent); color: var(--urd-color-accent-text); font: 600 12px system-ui, sans-serif; padding: 8px 15px; border-radius: var(--r-sm); }
   .form-prev .fp-card { flex: 1; height: 42px; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); border-radius: var(--r-md); display: grid; place-items: center; font-size: 11px; opacity: 0.7; }
 
-  /* Toggle rows as modern settings: text on the left, the toggle at the
-     far right (the markup has the input first; row-reverse flips it) */
+  /* Toggle rows: the words at the left and the toggle at the far right, row-reverse flipping the markup's input-first order. */
   .gridmenu-snap {
     flex-direction: row-reverse;
     justify-content: space-between;
@@ -4783,8 +4719,7 @@
     text-decoration: none;
   }
 
-  /* Buttons must LOOK like buttons: a filled surface, clear hover and a
-     small press on click. Fields (input) stay flat. */
+  /* Buttons look like buttons: a filled surface, a clear hover and a small press; fields stay flat. */
   button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
   .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
     display: inline-flex;
@@ -4801,8 +4736,7 @@
     border-color: rgb(255 255 255 / 38%);
   }
 
-  /* The press feel (Urd settings «Button press», lib/press-feel.js): every button and ghost control answers a press the way data-press on the root says, Ripple by default.
-     Movement uses translate and scale, which add to a control's own transform instead of replacing it, so a control placed by a transform keeps its place; under reduced motion only the colour changes. */
+  /* The press feel (Urd settings «Button press», lib/press-feel.js): each button answers a press as data-press on the root says, Ripple by default. */
   :root button:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
   :root .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
     transition: color 0.18s ease, background-color 0.12s ease, border-color 0.12s ease, translate 0.14s ease-out, scale 0.16s ease-out, filter 0.12s ease, box-shadow 0.22s ease-out;
@@ -4885,7 +4819,7 @@
     }
   }
 
-  /* The canvas's width handle shows itself by its pill alone (.stage-handle): the full-height strip it is pressed on takes no button fill, press feel or focus ring of its own, its pill turning to the accent instead */
+  /* The canvas's width handle shows only its pill: its full-height strip takes no button fill, press feel or focus ring, the pill turning to the accent. */
   .frame-wrap .stage .stage-handle:is(:hover, :active, :focus-visible):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     background: transparent;
     border-color: transparent;
@@ -4900,8 +4834,7 @@
   }
   /* End of the press feel */
 
-  /* Controls must not inherit the page's airy line-height (1.6 from
-     base.css via font: inherit): a tight line box gives even centering */
+  /* Controls take a tight line-height, not the page's airy 1.6, so their content centres evenly. */
   button:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
   .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
   input:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
@@ -4916,7 +4849,7 @@
   .primary:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
     background: var(--urd-color-accent, #7c5cff);
     border-color: transparent;
-    color: #fff;
+    color: var(--urd-color-accent-text);
   }
 
 
@@ -4940,14 +4873,10 @@
   .frame-wrap {
     flex: 1;
     min-height: 0;
-    /* No scrollbar around the canvas: the page scrolls inside the iframe
-       with its OWN scrollbar, so one here would be the second. Only
-       manual zoom past the surface enables panning (.pan). */
+    /* No scrollbar around the canvas: the page scrolls inside the iframe by its own; manual zoom past the surface pans (.pan). */
     overflow: hidden;
     display: flex;
-    /* 'safe' keeps the top/left from being clipped when the canvas is
-       larger than the surface (100% mode): it is then anchored instead of
-       centered away. */
+    /* 'safe' anchors the top and left of a canvas larger than the surface, instead of centring them out of view. */
     justify-content: safe center;
     align-items: safe center;
     /* The ground around the canvas, in both views: the admin's own surface, deeper, with a faint grid of dots, so the page is the brightest thing on it */
@@ -4964,22 +4893,17 @@
     overflow: auto;
   }
 
-  /* A pinned viewport height (an editing size with a height set): the stage
-     sits at the top, its bottom edge is the fold, and the surface below it
-     is the letterbox that reads as "below the fold". */
+  /* A viewport of a set height: the stage sits at the top, its bottom edge the fold, and the surface below it the letterbox. */
   .frame-wrap.fold {
     align-items: safe flex-start;
   }
 
-  /* The stage box has the SCALED size; the iframe inside stands in the
-     full target viewport and is scaled with transform (see markup), so
-     the render is identical to the published page - only the display
-     size changes. */
+  /* The stage box has the scaled size; the iframe inside stands at the full target viewport, scaled by transform, so it renders as the published page. */
   .stage {
     flex: 0 0 auto;
     position: relative;
   }
-  /* The width handle: a bar beside the canvas's right edge where the stage has room for it, else along that edge inside the canvas, so no fit clips it; the readout and the phone breakpoint's mark stand while a drag runs. */
+  /* The width handle: a bar beside the canvas's right edge, or inside it where the stage lacks room; its readout and the phone breakpoint's mark show in a drag. */
   .stage-handle:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     position: absolute;
     top: 0;
@@ -5161,13 +5085,12 @@
     display: block;
   }
 
-  /* Mobile view: the iframe stands at 390px (the engine's matchMedia is
-     driven by urd-viewport, not the width) and is scaled to fit. The phone stands framed on the ground with room around it for its bezel, more above and below, which the frame's measure leaves out (preview.svelte.js), so the fit scale keeps the frame in sight. */
+  /* Mobile view: the iframe at 390px, scaled to fit and framed on the ground, with room for its bezel, which the frame's measure (preview.svelte.js) leaves out. */
   .frame-wrap.mobile {
     padding: 20px 8px;
   }
 
-  /* The frame: corners round all round, a thin bezel in the admin's surface with a faint edge, and a soft shadow, drawn on the stage, which has the canvas's scaled size, so it keeps its thickness at any zoom; the radius follows the zoom (--stage-scale) */
+  /* The phone frame: round corners, a thin bezel with a faint edge and a soft shadow on the stage, so it keeps its thickness at any zoom; the radius scales. */
   .frame-wrap.mobile .stage {
     --phone-bezel: color-mix(in srgb, var(--urd-color-surface, #151a23) 85%, black);
     border-radius: calc(28px * var(--stage-scale, 1));
@@ -5181,8 +5104,7 @@
     border-radius: calc(28px * var(--stage-scale, 1));
   }
 
-  /* The phone's rounded corners are the canvas's own, so the stage clips nothing and the width handle can stand beside it; the radius is the canvas's own px, scaled with it.
-     The canvas's own ground is the bezel's colour, so where the scaled page leaves a fraction of a pixel at its edge (a zoom like 75 %) no hairline of white shows against the frame */
+  /* The canvas holds the phone's round corners (28px, scaled with it), so the stage clips nothing; its ground is the bezel's colour, so no white hairline shows. */
   .frame-wrap.mobile .stage iframe {
     border-radius: 28px;
     background: var(--phone-bezel);
@@ -5195,9 +5117,7 @@
     align-items: center;
   }
 
-  /* The tool clusters: a light frame around each group, with an
-     uppercase label in front. The buttons inside lose their own border,
-     so the group reads as one unit instead of three or four loose buttons. */
+  /* The tool clusters: a light frame around each group with an uppercase label in front, its buttons frameless, so it reads as one unit. */
   .toolgrp {
     display: inline-flex;
     align-items: center;
@@ -5209,7 +5129,7 @@
 
   .toolgrp .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){ border-color: transparent; }
 
-  /* A tool group's icon buttons (zoom, fit, the grid and the guides) at one even size, so each drawing stands on whole pixels in the middle of its button and every group is as tall as the next (32 px) */
+  /* A tool group's icon buttons at one even size, each drawing on whole pixels in its middle, and every group 32 px tall. */
   .toolgrp > .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
     justify-content: center;
     box-sizing: border-box;
@@ -5319,33 +5239,23 @@
     padding: 4px 8px 2px;
   }
 
-  /* ---- Foldetrinnene (the fold steps; tests/topbar-fold.test.mjs anchors
-     on this heading) ---------------------------------------------------------
-     The top bar keeps one height and folds in fixed steps, in this order:
-     the button texts on the right, and then the clusters ONE AT A TIME. The thresholds are calibrated
-     for the LONGEST language (Turkish), not Bokmål, so a step never kicks
-     in too late and forces the bar to wrap. The last three each have a
-     twin in FOLD_MQ. The short forms are hidden here, before the steps
-     that turn them on: equal specificity means source order decides. */
+  /* ---- The fold steps: the top bar keeps one height and folds in fixed steps, its button texts first, then the clusters one at a time. */
   .badge-mini { display: none; }
 
-  /* Step 1: the buttons on the right become pure icons, and the GitHub
-     user yields. Publish always keeps its word: it is the bar's only
-     dangerous action. */
+  /* Step 1: the buttons on the right become icons and the GitHub user is hidden; Publish keeps its word. */
   @media (max-width: 1179px) {
     .btn-label { display: none; }
     .badge-mini { display: inline; }
     .who { display: none; }
   }
 
-  /* The page-tabs layout's Site menu takes room in the bar, so its three steps come FOLD_OFFSET (80 px) earlier: each of the queries below has a twin under `.editor[data-layout="page-tabs"]`, one step up. */
+  /* The page-tabs layout's Site menu takes room, so its steps come FOLD_OFFSET (80 px) earlier: each query below has a twin under its data-layout. */
   @media (max-width: 1159px) {
     .editor[data-layout="page-tabs"] .topbar { gap: 0.5rem; }
     .editor[data-layout="page-tabs"] .topbar-group { gap: 0.5rem; }
   }
 
-  /* Step 2: the View cluster becomes a menu (FOLD_MQ.view). Grid and
-     guides are toggled rarely, so it yields first of the three. */
+  /* Step 2: the View cluster becomes a menu (FOLD_MQ.view), the first of the three to yield. */
   @media (max-width: 1079px) {
     .topbar { gap: 0.5rem; }
     .topbar-group { gap: 0.5rem; }
@@ -5357,10 +5267,7 @@
     .editor[data-layout="page-tabs"] .topbar-group { gap: 0.4rem; }
   }
 
-  /* Step 4: the Zoom cluster becomes a menu (FOLD_MQ.zoom). Zoom is
-     adjusted most often of the three and therefore keeps plus and minus
-     the longest. Gaps and edge margins are tightened fully at the same
-     time: now they are the last thing left to take. */
+  /* Step 4: the Zoom cluster becomes a menu (FOLD_MQ.zoom), the last of the three, and the gaps and edge margins tighten fully. */
   @media (max-width: 919px) {
     .topbar {
       gap: 0.4rem;
@@ -5369,13 +5276,10 @@
     .topbar-group { gap: 0.4rem; }
   }
 
-  /* The shell around the clusters exists only as ONE node for the
-     outside-click test; it must not create a box, so the children sit
-     directly in the top bar's flex. */
+  /* The clusters' shell is one node for the outside-click check and draws no box, so its children stand in the top bar's flex. */
   .toolset { display: contents; }
 
-  /* The folded clusters: a button carrying the current value, and a
-     popover below. Only one is open at a time. */
+  /* The folded clusters: a button showing the current value over a popover, one open at a time. */
   .toolmenu {
     position: relative;
     display: inline-flex;
@@ -5386,16 +5290,14 @@
     padding: 0.35em 0.55em;
   }
 
-  /* The zoom number alternates between two and three digits. A fixed
-     width with tabular figures keeps the button equally wide across the
-     whole scale and fills the surface. */
+  /* The zoom number keeps one width at two and three digits: a fixed minimum width and tabular figures. */
   .zoom-cap {
     min-width: 2.6em;
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
 
-  /* The rows of a menu that pops up (the top bar's, the panel tabs', a collection's, the «+» list) answer the pointer at once, as a menu's items do; the buttons' own fade (below) is for a button that stands alone, the tab that opens a menu included. The root in the selector puts it over that fade wherever it stands. */
+  /* A pop-up menu's rows (the top bar's, the panel tabs', a collection's, the «+» list) answer the pointer at once, the root lifting it over the buttons' fade. */
   :root :is(.tool-pop, .tab-menu-list, .cm-card, .cm-sub, .cap-pop) :is(button, a):not(:disabled) {
     transition: none;
   }
@@ -5416,8 +5318,7 @@
     box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
   }
 
-  /* Vertical menu: icon and text start at the left edge, not centered
-     as the global button style does. */
+  /* A vertical menu: icon and words start at the left edge, not centred as buttons are. */
   .tool-pop .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
     justify-content: flex-start;
     width: 100%;
@@ -5429,8 +5330,7 @@
     background: color-mix(in srgb, var(--urd-color-accent, #7c5cff) 15%, transparent);
   }
 
-  /* The Screen setting inside a tool menu: the mode segment and the size
-     fields on one compact row. */
+  /* The Screen setting in a tool menu: the mode segment and the size fields on one compact row. */
   .tool-pop .seg {
     align-self: flex-start;
     margin: 2px 4px 4px;
@@ -5485,7 +5385,7 @@
     text-align: center;
   }
 
-  /* The Legal panel (0.7.31): the state on each fold's heading, the marks on the fields it asks for, and the amber dot on its tab. */
+  /* The Legal panel: the state on each fold's heading, the marks on the fields it asks for, and the amber dot on its tab. */
   .legal-chip {
     display: inline-flex;
     align-items: center;
@@ -5564,7 +5464,7 @@
   }
   .rail-icon.active .legal-dot { box-shadow: 0 0 0 2px var(--urd-color-accent, #7c5cff); }
 
-  /* A panel's tab with a menu of its folds (shell/PanelTab.svelte): one button with the name, the Legal dot on the name's corner taking no room, and the arrow close after it */
+  /* A panel's tab with a menu of its folds (shell/PanelTab.svelte): the name, the Legal dot on its corner taking no room, and the arrow after it. */
   .tab-menu {
     position: relative;
     display: inline-flex;
@@ -5621,7 +5521,7 @@
   @media (prefers-reduced-motion: reduce) {
     .tab-menu-caret { transition: none; }
   }
-  /* The menu: in the top layer where the browser has it, else fixed above the page; placed under the tab by its own top and left, flush, so a mouse moving down keeps it open */
+  /* The menu: in the top layer where the browser has it, else fixed over the page, flush under the tab, so a mouse moving down keeps it open. */
   .tab-menu-list {
     position: fixed;
     inset: auto;

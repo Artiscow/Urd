@@ -1,6 +1,5 @@
 <script>
-  /* The Footer panel: where it shows, its presets, its look and background, the brand, the columns with their links, the site's links and contact details, the call to action and the bottom row, each a fold of the row kit its tab's menu reaches (lib/panel-folds.js).
-     A fold says its value while closed, and a fold of settings carries its reset (lib/site-groups.js). The state it reads and the functions it writes through come from the editor handle. */
+  /* The Footer panel: each part of the footer a fold of the row kit, reached from its tab's menu (lib/panel-folds.js). */
   import { getContext } from 'svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import Setting from '../lib/rows/Setting.svelte';
@@ -36,8 +35,7 @@
     });
   }
 
-  /* Footer logo (text/logo/both, mirrors the nav logo): uploaded to webp,
-     materialized to media/ on publish. */
+  /* The footer logo: text, logo or both, as the nav logo has it; uploaded as webp and written to media/ on publish. */
   function setFooterBrandMode(value) {
     footerMutate('footer', (f) => {
       f.brand ??= {};
@@ -79,9 +77,7 @@
     });
   }
 
-  /* Generic link-list handlers for the bottom-line links (baseline) and
-     the doormat row (linkRow) - same shape as the column links, but on a
-     flat list. */
+  /* Link handlers for the flat lists of the bottom line (baseline) and the doormat row (linkRow). */
   function addFooterListLink(field) {
     footerMutate('footer', (f) => {
       f[field] ??= [];
@@ -181,7 +177,7 @@
     footerMutate('footer', (f) => setLinkOn(f.columns[ci].links[li], link));
   }
 
-  /** The groups of settings with a value of their own to go back from: the pages it is kept off, the alignment, the columns' alignment, the brand's form and logo, and the parts the site's links and contact details show. */
+  /** The groups of settings with a value of their own to go back from. */
   const writeFooter = (name, change) => footerMutate(name, () => change());
   /** The alignment the engine draws without one of its own: a footer of plain lines centred, one with columns or a brand at the left (footer.js). */
   const alignDefault = () => (hasRichFooter(siteDraft) ? 'left' : 'center');
@@ -190,7 +186,7 @@
   const lookGroup = () => siteGroup(() => siteDraft.footer, writeFooter, 'footer-look', siteDraft.footer?.cta?.big === true ? {} : { align: alignDefault() });
   const brandGroup = () => siteGroup(() => siteDraft.footer?.brand, writeFooter, 'footer-brand', { mode: 'text', logoHeight: 40 });
   const columnsGroup = () => siteGroup(() => siteDraft.footer, writeFooter, 'footer-columns', { columnsAlign: 'left' });
-  /** The parts the footer can show from the site's links and contact details: the links, and the legal line and the contact details where there is something to show; a switch and its reset stand only for these. */
+  /** The parts the footer can show from the site's links and contact details, each only where there is something to show. */
   const sharedParts = () => {
     const contact = siteContact(siteDraft);
     return ['links', legalParts(contact).length > 0 && 'legal', Boolean(contactParts(contact)) && 'contact'].filter(Boolean);
@@ -209,7 +205,7 @@
   const bottomValue = () => siteDraft.footer?.copyright || `${(siteDraft.footer?.linkRow?.length ?? 0) + (siteDraft.footer?.baseline?.length ?? 0)}`;
   const F = 'footer';
 
-  /** The column whose card stands open, one at a time: the column itself, so the card goes with it as the columns move, and none stands open once an undo or a preset brings other columns. */
+  /** The column whose card stands open, held as the column itself so the card moves with it; none once an undo or a preset swaps the columns. */
   let openColumn = $state(null);
   const columnAt = (ci) => siteDraft.footer?.columns?.[ci];
 </script>
@@ -229,7 +225,7 @@
     {/if}
   </Fold>
 
-  <!-- The footer's presets, chosen as Urd settings «Choosing a design» asks, in the shared design picker or by their pictures in place: each sets the footer's look and the parts it shows, keeping the footer's own content in each part it shows (footer-presets.js) -->
+  <!-- The footer's presets, in the design picker or by their pictures in place: each sets the look and the parts shown, keeping the footer's content -->
   <Fold id="presets" surface={F} title={ta('group.footerPresets')} value="">
     <LookChoice label={ta('group.footerPresets')} value="" title={ta('tip.footer.presets')} current={null} heading={false}
       designs={() => pictureList(footerPresetSource({}))}
@@ -263,7 +259,7 @@
     </Setting>
     {#if (siteDraft.footer?.brand?.mode ?? 'text') !== 'text'}
       {@const logo = siteDraft.footer?.brand?.logo ?? ''}
-      <!-- The image as a thumbnail as tall as its picker and the file's row beside it, as the menu's logo has it, with its file's name, the way into the image editor and the bin -->
+      <!-- The logo's thumbnail beside its file's row: the name, the way into the image editor and the bin -->
       <div class="logo-pick">
         <span class="logo-thumb" {@attach squareBeside}>{#if logo}<img src={logo} alt="" />{/if}</span>
         <span class="logo-pick-col">
@@ -318,7 +314,7 @@
     </Setting>
   </Fold>
 
-  <!-- The site's links (site.links, edited in the Site panel) and its legal line and contact details (set in the Legal panel), each shown here or left out; a switch shows only where there is something to leave out -->
+  <!-- The site's links, legal line and contact details, each shown here or left out where there is something to leave out -->
   <Fold id="shared" surface={F} title={ta('group.footerShared')} tip={ta('tip.footer.shared')} value={sharedValue()} group={sharedGroup()}>
     <Setting key="links">
       <SwitchRow label={ta('ui.footerLinks')} title={ta('tip.footer.links')} checked={siteDraft.footer?.links !== false}

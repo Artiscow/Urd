@@ -1,7 +1,5 @@
 <script>
-  /* The selected block's actions in the element menu's head, as on its bar and in its right-click menu: duplicate, the layer order and delete, each at the size of the head's buttons.
-     In the phone view the layer order is the phone's own, among the blocks pinned there, so it is greyed for a block that flows there, which overlaps none.
-     Delete acts at the first press, in the dark red of a removal and with a bin, so it never reads as a way to close the menu; an undo takes it back. */
+  /* The selected block's actions in the element menu's head: duplicate, the layer order, greyed on the phone for a block that flows, and delete. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import IconButton from '../lib/rows/IconButton.svelte';

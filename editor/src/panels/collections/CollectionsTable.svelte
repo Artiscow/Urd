@@ -1,8 +1,5 @@
 <script>
-  /* The open collection as a table over the page («Table over the page» under Collections editor): the entries as rows with a column per field the kind has (lib/collection-layout.js), and the chosen entry's fields in a drawer at the right.
-     It stands over the stage while the Collections panel lists the collections, so the preview stays as it is underneath; the close button and Escape go back to the page.
-     A tick column with «select all» in its head ticks entries for the bar under the head (SelectionBar.svelte); Shift takes a run, Ctrl+A ticks every row shown, and Escape clears the ticks before it closes the table.
-     An entry that moves is dragged by its row, the row kit's drag (lib/rows/row-drag.svelte.js), or stepped with Alt and the arrow keys on its title, as in the list; a dated entry stands by its date, and nothing moves while a search narrows the rows. */
+  /* The open collection as a table over the page: a row per entry, a column per field, and the chosen entry's fields in a drawer at the right. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
@@ -86,7 +83,7 @@
     ed.panelEntry = next;
   }
 
-  /** Ctrl+A ticks every row shown; Escape clears the ticks, else goes back to the page, except from a field, an open list or a picker inside, which answer it themselves. */
+  /** Ctrl+A ticks every row shown; Escape clears the ticks, else goes back to the page, unless a field or a picker inside answers it. */
   function onKey(e) {
     const inField = e.target instanceof Element && e.target.closest('input:not([type="checkbox"]), textarea, [popover], .dd, .dp-overlay, .cp');
     if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'a' && !inField) {
@@ -169,7 +166,7 @@
             {#each rows as en (en.id)}
               {@const canMove = !searching && movable(view.kind, en)}
               {#if drag.at(en.id, 'before')}{@render slot()}{/if}
-              <!-- The whole row chooses the entry under the pointer and is the drag handle of an entry that moves; the title is the row's button for the keys, Alt and the arrows moving it -->
+              <!-- The row chooses its entry and drags a movable one; the title is its button for the keys, Alt and the arrows moving it -->
               <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
               <tr class:selected={entry?.id === en.id} class:ticked={ticks.includes(en.id)} data-entry-id={en.id} data-drag-id={canMove ? en.id : undefined}
                 title={canMove ? ta('tip.collections.dragEntry') : undefined} {@attach drag.handle(en.id, canMove)} onclick={() => (ed.panelEntry = en.id)}>

@@ -1,8 +1,5 @@
 <script>
-  /* One area of the element menu (Content, Style or Placement): its heading and the groups under it.
-     Wide, the areas pour through two columns with the heading where its area starts; narrow, the three areas stand under each other and the heading sticks to the top while the area scrolls, saying how many groups it holds (the groups report in through the menu-area context).
-     A block's own menu (`adds`) ends each area with the way to add what the area can take, where Urd settings put it at the areas' feet (chips, an add button or a column of names, menu/CapabilityAdd.svelte), or draws it in the area's heading (icons); an area holding only that stands, so what it can take is in reach.
-     The cards the owner added from the add list are drawn after the area's own groups, in the order added (lib/rows/Capability.svelte `place`), then the area's own closing controls (menu/AreaFoot.svelte), then the add list; where the cards fold, the area's closing controls come first and the column of names after them draws each added card in its name's place (menu/CapabilityAdd.svelte `cards`). The order on screen is the order of the markup, so the Tab key and a screen reader meet them as the eye does. */
+  /* One area of the element menu (Content, Style or Placement): its heading, its groups, the cards added to it, its closing controls and its add list. */
   import { setContext } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { ta } from '$engine/i18n.js';
@@ -18,7 +15,7 @@
   const placed = new SvelteMap();
   /** The area's own closing controls, each a snippet. */
   const feet = new SvelteMap();
-  /** The name this area's folds share while they open one at a time: one of its own, so another copy of the menu standing at the same time (the Settings panel beside the floating menu) is never in the same group. */
+  /** The name this area's folds share while they open one at a time, its own to each copy of the menu. */
   const uid = Math.random().toString(36).slice(2, 8);
   setContext('menu-area', {
     get area() { return area; },

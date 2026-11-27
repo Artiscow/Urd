@@ -1,5 +1,5 @@
 <script>
-  /* The background editor: the layers of a section, the nav or the footer (colour, gradient, glow, image, slideshow, video, pattern, grain), with the focal point, the sizes, the gradient stops and the shared folder. `bg` is the target (mutate, keyPrefix, keyId) and `layers` its layers. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The background editor: the layers of a section, the nav or the footer, each with its settings; `bg` is the target (mutate, keyPrefix, keyId). */
   import { getContext } from 'svelte';
   import ColorPicker from '../lib/ColorPicker.svelte';
   import Dropdown from '../lib/Dropdown.svelte';
@@ -47,7 +47,7 @@
     video: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor"/></svg>',
   };
 
-  /** A layer's card, on its head and under the pointer while it is dragged: its colour, its gradient or its picture (or its kind's icon), its kind, and its colour or strength. */
+  /** A layer's card on its head and while dragged: its swatch, picture or icon, its kind, and its colour or strength. */
   function layerCard(layer) {
     const def = BG_DEFS[layer.type];
     const name = def?.labelKey ? ta(def.labelKey) : (def?.label ?? layer.type);
@@ -84,9 +84,7 @@
   function removeBgLayer(bg, i) {
     bg.mutate(bg.keyPrefix, (t) => {
       t.background.layers.splice(i, 1);
-      // An empty layer list cleans background away entirely, so targets
-      // without a background do not carry an empty {version,layers} object
-      // (and nav/footer fall back to flat).
+      // An empty layer list removes the background, so the nav and the footer fall back to flat.
       if (!t.background.layers.length) delete t.background;
     });
     opened[bg.keyId]?.splice(i, 1);
@@ -115,16 +113,11 @@
     });
   }
 
-  /* Focal-point drag on the image background layer: a small preview box
-     where dragging a point sets x/y (0..1) at once. Same focus idea as the
-     image editor. */
+  /* The focal-point drag on an image layer: dragging in a small preview box sets x and y (0 to 1) at once. */
   function startFocalDrag(event, bg, i, axes = 'xy') {
     event.preventDefault();
     const pad = event.currentTarget;
-    // Pointer capture on the pad element: it then gets ALL pointer events
-    // until the button is released, also when the mouse drags across the
-    // preview iframe (which otherwise eats them, so the drag "sticks"
-    // after releasing outside).
+    // Pointer capture keeps the drag on the pad until release, also across the preview iframe.
     pad.setPointerCapture?.(event.pointerId);
     const move = (e) => {
       const r = pad.getBoundingClientRect();
@@ -148,8 +141,7 @@
     pad.addEventListener('pointercancel', up);
   }
 
-  /* Size (custom size mode): the stepper/number field writes `size` as a
-     fraction, clamped to 10-400 %. */
+  /* The custom size: the stepper writes `size` as a fraction, clamped to 10-400 %. */
   const clampBgSize = (v) => Math.min(4, Math.max(0.1, v));
 
   function stepBgSize(bg, i, cur, delta) {
@@ -161,10 +153,7 @@
     if (Number.isFinite(n)) setBgProp(bg, i, 'size', clampBgSize(n / 100));
   }
 
-  /* "Cover"/"Show all": compute the scale from the image and section sizes
-     and set it, so Fill/Show-all become presets that can be fine-tuned
-     further (not separate modes). r = the height/width ratio between
-     section and image at 100 % width. */
+  /* «Cover» and «Show all» set the size from the section's and the image's ratios, as a preset to fine-tune. */
   function setBgFillSize(bg, i, layer, mode) {
     const nat = imgNat[layer.props.src];
     if (!nat?.w || !nat?.h || !secBox?.w || !secBox?.h) return;
@@ -174,7 +163,7 @@
     setBgProp(bg, i, 'size', clampBgSize(Math.round(size * 100) / 100));
   }
 
-  /** A stored gradient layer as the current version reads it: a layer stored at an older version is shown lifted, and lifted in place at its first edit (mutateGradient), so the editor and the engine read one shape. */
+  /** A gradient layer as the current version reads it: an older one is shown lifted, and lifted in place at its first edit (mutateGradient). */
   function gradientProps(layer) {
     // The lift clones its input, so it reads a snapshot, never the state proxy.
     const lifted = lift($state.snapshot(layer), gradientLayer);
@@ -295,7 +284,7 @@
     window.addEventListener('pointerup', up);
   }
 
-  /** The arrow keys move a focused handle one step, ten with Shift; the rows sort when the handle loses focus, so a move past a neighbour never pulls the handle out from under the keys. */
+  /** The arrow keys move a focused handle one step, ten with Shift; the stops sort when it loses focus, so the handle stays under the keys. */
   function handleKey(bg, event, layerI, si, at) {
     const step = event.shiftKey ? 10 : 1;
     const delta = event.key === 'ArrowRight' || event.key === 'ArrowUp' ? step : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -step : 0;
@@ -344,10 +333,7 @@
     }
   }
 
-  /* The shared folder: the panel reads the folder through the site's own
-     proxy, the same call the layer in the preview makes for itself. The
-     button always goes out again, so a share the owner has just opened is
-     seen at once. One readout per layer, keyed like the history entries. */
+  /* The shared folder, read through the site's own proxy as the preview's layer reads it; the button always fetches anew, one readout per layer. */
   let folderStatus = $state({});
 
   const folderKey = (bg, i) => `${bg.keyPrefix}-${bg.keyId}-${i}`;
@@ -408,8 +394,7 @@
     ed.openPicture({ kind: j === null ? 'layer' : 'slide', place: { read, mutate } });
   }
 
-  /** A gallery layer's props as the engine draws them: the editor keeps a layer at the version
-      it was stored with, so one from before the styles is read through the layer's own lift. */
+  /** A gallery layer's props as the engine draws them, an older layer read through its own migration. */
   const galleryView = (layer) => ((layer.version ?? 1) < slideshowLayer.version
     ? slideshowLayer.migrations[1](layer.props ?? {}) : (layer.props ?? {}));
 </script>
@@ -481,7 +466,7 @@
   {/if}
 {/snippet}
 
-<!-- The layers in their stack (the first drawn at the back), as cards like the Nav tab's items: a press on a card's head opens its settings, and the head is pressed, held and dragged, or moved with Alt and the arrows, to change the order -->
+<!-- The layers as cards, the first drawn at the back: a card's head opens its settings and drags, or moves with Alt and the arrows -->
 <CardList items={layers} label={ta('lbl.background')} key={(layer, i) => i} card={layerCard} {isOpen} ontoggle={toggleLayer}
   onmove={(from, to) => moveBgLayer(bg, from, to)} onremove={(i) => removeBgLayer(bg, i)}>
   {#snippet body(layer, i)}

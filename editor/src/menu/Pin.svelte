@@ -1,5 +1,5 @@
 <script>
-  /* The pin beside a setting that can stand in Pinned: filled while it does (0.7.20.3). */
+  /* The pin beside a setting that can stand in Pinned: filled while it does. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { isInRow } from '../lib/quick-row.js';
@@ -13,7 +13,7 @@
   const type = $derived(ed.selectedBlock.type);
   const on = $derived(isInRow(type, quickChoice(type), id));
 
-  /** A setting taken out of Pinned goes back to its area; one in a capability the block does not use goes back as the capability's card, so it does not vanish (ADR-0031). */
+  /** A setting taken out of Pinned goes back to its area, or as its capability's card where the block does not use the capability. */
   function toggle() {
     const cap = capabilityOfPin(id);
     if (on && cap && !cap.inUse(ed.selectedBlock, ed)) keepCapability(ed.selectedBlock.blockId, cap.id);

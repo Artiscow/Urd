@@ -213,3 +213,28 @@ test('a rule for a panel\'s own colour picker stops at a picker\'s card, so it n
   assert.match(picker, /if \(!inCard\) namePane\(rootEl, true\);/, 'a picker in a card leaves the pane\'s name to the card\'s own picker');
   assert.match(picker, /class:cp-beside=\{inCard\}/);
 });
+
+test('the colour picker\'s card is as wide as the number it is placed by: its border-box width, openPicker\'s W and the anchored placement\'s clamp', () => {
+  const picker = readFileSync(new URL('../editor/src/lib/ColorPicker.svelte', import.meta.url), 'utf8');
+  const style = picker.slice(picker.indexOf('<style>'));
+  const card = style.match(/\n {2}\.cp-pop \{\n([\s\S]*?)\n {2}\}/);
+  assert.ok(card, 'the card\'s rule');
+  assert.match(card[1], /^\s*box-sizing: border-box;$/m, 'its width is the width it is seen at, padding and border inside');
+  const width = Number(card[1].match(/^\s*width: (\d+)px;$/m)?.[1]);
+  assert.ok(width > 0, 'the card\'s width');
+  // The measured branch: placed by W, inside the panel's right edge with the same margin as from the window's left.
+  const open = picker.slice(picker.indexOf('function openPicker() {'), picker.indexOf('\n  }\n', picker.indexOf('function openPicker() {')));
+  assert.equal(Number(open.match(/const W = (\d+);/)?.[1]), width, 'openPicker places it by the card\'s width');
+  const left = open.match(/const left = Math\.max\((\d+), Math\.min\(r\.right - W, rightEdge - W - (\d+)\)\);/);
+  assert.ok(left, 'openPicker keeps it inside the panel');
+  const margin = Number(left[1]);
+  assert.equal(Number(left[2]), margin, 'the same margin at either edge');
+  assert.doesNotMatch(open.replace(/const W = \d+;/, ''), new RegExp(`\\b${width}\\b`), 'openPicker names the width only through W');
+  // The anchored branch: right edges aligned with the swatch, and kept inside the pane by the same width and margin.
+  const clamp = style.match(/left: clamp\(calc\(anchor\(--urd-pane left, 0px\) \+ (\d+)px\), calc\(anchor\(right\) - (\d+)px\), calc\(anchor\(--urd-pane right, 100vw\) - (\d+)px\)\);/);
+  assert.ok(clamp, 'the anchored placement clamps the card inside its pane');
+  const [, edge, aligned, far] = clamp.map(Number);
+  assert.equal(edge, margin, 'the margin from the pane\'s left');
+  assert.equal(aligned, width, 'the card\'s right edge on the swatch\'s');
+  assert.equal(far, width + margin, 'the card\'s right edge the margin inside the pane\'s');
+});

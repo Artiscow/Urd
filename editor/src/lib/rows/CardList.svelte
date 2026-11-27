@@ -1,9 +1,6 @@
 <script>
-  /* A list of cards in the row kit, drawn as the Nav tab draws its items: closed, a card is one line with its grip, its sign, its name and its detail; open, it holds its own settings, with the cross that removes it at its foot.
-     A card is moved by pressing, holding and dragging its head (the row kit's drag, row-drag.svelte.js) or by Alt and the arrow keys on its head, and a press on the head opens or closes it.
-     `card(item, i)` gives the head's sign (`src` for a picture, `swatch` for a colour, `icon` for an icon), name and detail, and the dragged card the same, with `warn` as the words of a warning mark on the head; `body(item, i)` draws an open card's settings.
-     `isOpen(i)` and `ontoggle(i)` keep which cards stand open with the list's owner; `onmove(from, to)` gets a card's index before and after a move.
-     A card whose key is a word carries it as `data-part`, where a fold asked for with a part finds the card to open (showFold in state/shell.svelte.js). */
+  /* A list of cards in the row kit: closed, a card is one line; open, it holds its settings.
+     A card moves by a drag of its head, or by Alt and the arrow keys on it. */
   import { tick } from 'svelte';
   import { cardFold } from '../motion.svelte.js';
   import { ta } from '$engine/i18n.js';

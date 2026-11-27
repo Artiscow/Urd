@@ -1,7 +1,5 @@
 <script>
-  /* The links block (type id share) in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The links block's (type id share) Content and Style areas in the element menu. */
   import { getContext } from 'svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
   import NumberRow from '../../lib/rows/NumberRow.svelte';

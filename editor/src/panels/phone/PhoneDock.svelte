@@ -1,7 +1,5 @@
 <script>
-  /* The page's blocks in their phone order in a column of their own at the stage's right edge (Urd settings «Phone panel» on «Order on the right», lib/phone-panel.js), standing through the phone view and, on the desktop, while the Phone panel stands, as an image editor keeps its layers beside the picture: every section of the page with its blocks (PhoneOutline.svelte).
-     The phone centres in the rest of the stage, and the bars and the menus beside it keep to that rest, since they measure the stage.
-     The column folds to a slim tab at the edge and opens again from it, sliding both ways (lib/motion.svelte.js dockMotion); the last fold is kept. */
+  /* The page's blocks in phone order in a column at the stage's right edge («Order on the right»), folding to a slim tab; the last fold is kept. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';

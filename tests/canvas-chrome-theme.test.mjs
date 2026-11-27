@@ -5,8 +5,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { ENGINE_DIR, readStyles } from './_engine.mjs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { ENGINE_DIR, engineClosure, readStyles } from './_engine.mjs';
 
 const BASE = readStyles();
 const CHROME = /urd-multi-toolbar|urd-multi-count|urd-multi-drag|\.urd-cp\b|urd-cp-|urd-dd-|urd-hidden-list|urd-hidden-chip|\.urd-ctx/;
@@ -48,4 +48,46 @@ test('the canvas dropdown takes the admin theme in its own styles', () => {
   const css = src.slice(start, src.indexOf('`;', start));
   assert.ok(css.includes('.urd-dd-menu'), 'the dropdown\'s styles are read');
   assert.deepEqual(fixedColours(css), []);
+});
+
+test('every --urd-admin-* variable the engine reads is one the admin sets, by the same name, in the preview from the theme the editor sends and in the admin from app.css', () => {
+  /** The --urd-admin-* names a text reads through var(). */
+  const readsIn = (text) => new Set([...text.matchAll(/var\(\s*--urd-admin-([\w-]+)/g)].map((m) => m[1]));
+  const engineReads = new Map();
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const url = new URL(entry.isDirectory() ? `${entry.name}/` : entry.name, dir);
+      if (entry.isDirectory()) walk(url);
+      else if (/\.(?:js|css)$/.test(entry.name)) engineReads.set(url.href.slice(ENGINE_DIR.href.length), readsIn(readFileSync(url, 'utf8')));
+    }
+  };
+  walk(ENGINE_DIR);
+  const read = new Set([...engineReads.values()].flatMap((names) => [...names]));
+  assert.ok(['accent', 'surface', 'text'].every((name) => read.has(name)), `the engine's reads are found: ${[...read].join(', ')}`);
+
+  // The preview sets each key of the editor's message as a variable (urd.js), and the editor sends the same keys (state/shell.svelte.js sendAdminTheme).
+  const urd = readFileSync(new URL('urd.js', ENGINE_DIR), 'utf8');
+  const setter = urd.match(/msg\?\.type === 'urd-admin-theme' && msg\.colors\) \{[^{}]*for \(const key of \[([^\]]*)\]\) \{\s*if \(typeof msg\.colors\[key\] === 'string'\) \{\s*document\.documentElement\.style\.setProperty\(`--urd-admin-\$\{key\}`, msg\.colors\[key\]\);/);
+  assert.ok(setter, 'urd.js sets the variables from the message');
+  const setInPreview = [...setter[1].matchAll(/'([\w-]+)'/g)].map((m) => m[1]);
+  const shell = readFileSync(new URL('../editor/src/state/shell.svelte.js', import.meta.url), 'utf8');
+  const message = shell.match(/previewState\.bridge\?\.sendAdminTheme\(\{\n([\s\S]*?)\n {2}\}\);/);
+  assert.ok(message, 'the editor sends the theme as one object');
+  const sent = [...message[1].matchAll(/^\s*(?:'([\w-]+)'|([A-Za-z]\w*))\s*(?::|,\s*$)/gm)].map((m) => m[1] ?? m[2]);
+  assert.deepEqual([...sent].sort(), [...setInPreview].sort(), 'the editor sends the keys the preview sets');
+  assert.deepEqual([...read].filter((name) => !setInPreview.includes(name)), [], 'every name the engine reads is set in the preview');
+
+  // In the admin document app.css sets them, for the engine modules the editor bundles and the ones they import.
+  const css = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const setInAdmin = new Set([...css.matchAll(/(?<![\w(-])--urd-admin-([\w-]+)\s*:/g)].map((m) => m[1]));
+  const editorDir = new URL('../editor/src/', import.meta.url);
+  const bundled = new Set();
+  for (const name of readdirSync(editorDir, { recursive: true }).filter((n) => /\.(?:js|svelte)$/.test(n))) {
+    for (const [, spec] of readFileSync(new URL(name, editorDir), 'utf8').matchAll(/['"]\$engine\/([\w/.-]+\.js)['"]/g)) {
+      for (const module of engineClosure(spec)) bundled.add(module);
+    }
+  }
+  assert.ok(bundled.has('hint.js'), 'the help card the admin draws is among them');
+  const unset = [...bundled].flatMap((module) => [...(engineReads.get(module) ?? [])].filter((name) => !setInAdmin.has(name)).map((name) => `${module}: --urd-admin-${name}`));
+  assert.deepEqual(unset, [], 'every name a module the admin runs reads is set in app.css');
 });

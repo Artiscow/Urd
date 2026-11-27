@@ -1,7 +1,5 @@
 <script>
-  /* A number to type or step: the value in its own unit in a small field, with an up and a down arrow beside it.
-     The keyboard's up and down arrows step it too (Shift ten steps at once), a held arrow button repeats, and a typed number is taken on Enter or when the field is left, held within its bounds.
-     `scale` shows a value in another unit (a brightness of 1.08 as 108 %); every change goes out through `onchange` in the value's own unit. */
+  /* A number to type or step, with an up and a down arrow beside it; `scale` shows it in another unit, and `onchange` gets the value's own. */
   import { ta } from '$engine/i18n.js';
   import { ICONS } from './icons.js';
 

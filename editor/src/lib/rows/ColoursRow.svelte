@@ -1,7 +1,5 @@
 <script>
-  /* Several colours of one thing in one row, in the row kit: the label on the left and the swatches side by side on the right, each named under its swatch, wrapping where the row has no room.
-     Each item is `{ key, caption, name, value, onchange }`: the caption is the short word under the swatch, the name the colour's full name for its picker and a screen reader.
-     Each colour is taken away by the bin on its own swatch's corner, so the row draws no reset beside it (Setting.svelte). */
+  /* Several colours of one thing in one row: the label left, the swatches right, each captioned under it and named in full for its picker. */
   import { getContext } from 'svelte';
   import ColorPicker from '../ColorPicker.svelte';
   let { label, title = undefined, items, tokens = [] } = $props();

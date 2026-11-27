@@ -1,7 +1,5 @@
 <script>
-  /* One Urd setting's control (lib/settings-model.js): a picture per option when the setting has a look and the pictures are on (lib/settings-pictures.js), each with the option's own tooltip where it has one, else a themed dropdown; a few words side by side in the row kit's segment for a two-way choice; the row kit's slider for a number in a range, its value in its unit beside it; and a text field.
-     `c` is the settings' context the row reads and writes through (state/admin-design.svelte.js settingsContext), `label` the setting's name for a screen reader on the segment.
-     `compact` is the panel's narrow column: the tiles wrap into fewer columns and carry their names as tooltips only. */
+  /* One Urd setting's control: pictures, a dropdown, a segment, a slider or a text field; `c` is the context it writes through, `compact` the narrow column. */
   import { ta } from '$engine/i18n.js';
   import Dropdown from '../lib/Dropdown.svelte';
   import Choice from '../lib/Choice.svelte';
@@ -46,7 +44,7 @@
     width: 100%;
   }
 
-  /* A tile is a button, which centres what it holds in the height the row stretches it to; its picture starts at the top, so the pictures of a row stand level whatever the length of the names under them */
+  /* The tile's picture starts at the top, so the pictures of a row stand level whatever the length of the names under them */
   .st-tile {
     display: flex;
     flex-direction: column;

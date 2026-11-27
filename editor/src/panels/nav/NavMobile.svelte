@@ -1,6 +1,5 @@
 <script>
-  /* The Nav panel's Mobile fold, in three parts, which the Phone panel draws as three folds (`part`): the bar on a phone, where every choice starts on «same as on the desktop» and only then writes a value of its own; the logo on a phone (NavPhoneLogo.svelte), while the bar shows one; and the menu the burger opens, with how its links answer a touch, the burger's drawing and word and the full-screen menu's own contents and surface.
-     The floating and column fields have no counterpart here: the phone is a bar with a burger, where they do nothing. */
+  /* The Nav panel's Mobile fold in three parts (`part`): the bar on a phone, the logo on a phone, and the menu the burger opens. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import Setting from '../../lib/rows/Setting.svelte';

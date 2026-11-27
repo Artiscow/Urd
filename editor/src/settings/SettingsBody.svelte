@@ -1,10 +1,5 @@
 <script>
-  /* The Urd settings' rows (lib/settings-model.js) in the form the window asks for, every section open in one scroll, with no folds.
-     The sections stand in their groups (Admin layout, Local settings, This site), a group named over its first section where that section's heading does not already say it, and not on the sheet's plain side, where the first group holds parts alone; a section is its heading, whose tooltip says what its settings act on, and its rows.
-     `place` dialog or sheet draws each setting as a row with its name at the left and its control at the right, a pictured choice and a text field under the name at the full width, and a few words side by side at their own width beside the name, never narrower than the control's column;
-     the panel stacks every name over its control, shows the chosen picture's name beside the setting's name since the tiles carry none, and keeps each section's heading at the top while its section scrolls.
-     The admin design stands first, its tiles under the line that names the design that stands and what differs from it (AdminDesignRow.svelte), and a part whose value differs from that design names the design's value beside its name, with the way back to it (state/admin-design.svelte.js).
-     A shared section (the site's own values) carries its mark in the heading. `only` keeps one side of the sheet, `query` is the search, `idPrefix` keeps the ids apart when two bodies stand in one window, and `empty` says whether a search that finds nothing says so here. */
+  /* The Urd settings' rows in the form `place` asks for, every section open in one scroll; `only` keeps one side, and `query` searches. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { searchLangs } from '../lib/search-langs.svelte.js';
@@ -98,7 +93,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* A row the list's settings jump to stands a little below the content's top, and lights in the accent for a moment when one jumps to it (SettingsDialog.svelte jumpTo), the light a layer under the row reaching a little past its edges, fading out; with reduced motion it stands lit and goes out at once */
+  /* A row jumped to stands a little below the top and lights in the accent for a moment; with reduced motion it lights and goes out at once */
   .st-row {
     position: relative;
     isolation: isolate;

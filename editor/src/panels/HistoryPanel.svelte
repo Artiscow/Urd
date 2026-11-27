@@ -1,5 +1,5 @@
 <script>
-  /* The History panel: what waits to be published («Not published yet», with «Discard drafts»), then the published commits and the revert of the last one. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The History panel: what waits to be published («Not published yet», with «Discard drafts»), the published commits and the revert of the last. */
   import { getContext } from 'svelte';
   import { ta, taApiError, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -19,9 +19,7 @@
 
   let historyBusy = $state(false);
 
-  // The history dates follow the admin language (Intl has all the
-  // built-ins). A language-pack language can be a code Intl rejects: then
-  // we fall back to the browser's own format instead of taking down the panel.
+  // The dates follow the admin language, falling back to the browser's format for a code Intl rejects.
   const historyDate = (() => {
     const opts = { dateStyle: 'short', timeStyle: 'short' };
     try {
@@ -75,12 +73,7 @@
   }
 
   /**
-   * After a revert: poll the served content files until the deploy is
-   * actually out, discard the drafts (the server is now the source of
-   * truth) and reload the admin automatically - instead of asking the
-   * owner to reload. If none of the files change within the deadline
-   * (slow rollout, or a publish that only touched files we do not poll),
-   * the current block and message are kept.
+   * After a revert: polls the content files until the deploy is out, then discards the drafts and reloads; past the deadline it reports an error.
    */
   async function awaitRevertDeploy() {
     const paths = ['/content/site.json', ...siteDraft.pages.map((p) => `/${p.file}`)];
@@ -101,8 +94,7 @@
       const now = await snap();
       if (paths.some((path) => now[path] !== null && before[path] !== null && now[path] !== before[path])) {
         setStatus(ta('status.revertDeployed'), 'ok');
-        // The drafts describe the state from BEFORE the revert; the server
-        // is the source of truth now. The saved drafts go with them (ADR-0032).
+        // The drafts describe the state before the revert, so they go, the saved ones too (ADR-0032).
         await ed.discardSaved();
         cancelWaitingDrafts();
         for (const key of Object.keys(localStorage).filter((k) => k.startsWith('urd-draft-'))) {
@@ -118,7 +110,7 @@
 </script>
 
 <div class="panel-body">
-  <!-- What a publish will write, above what has been published: the same rows as the Publish menu's, each leading to its change, and the discard as red words at the foot -->
+  <!-- What a publish will write, as the Publish menu's rows, and the discard at the foot -->
   {#if ed.savedRows.length}
     <Fold id="unpublished" surface="history" title={ta('history.unpublished')} tip={ta('tip.history.unpublished')} value={String(ed.savedRows.length)} defaultOpen>
       <UnpublishedRows parts={ed.savedRows} steps={ed.steps.undo} publishedAt={ed.publishedAtOf} onpick={(part) => ed.goToUnpublished(part)}

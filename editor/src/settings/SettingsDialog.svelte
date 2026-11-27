@@ -1,10 +1,7 @@
 <script>
   /**
-   * Urd's own settings over the admin, in the form «Settings window» asks for: the dialog with the sections down the left in their three groups (Admin layout, Local settings, This site), a search above them and every section's rows at the right, in one scroll a section button jumps in and the list follows;
-   * each section's entry folds out to its settings at a press and back at the next press, and at nothing else, so several can stand open; its settings jump to their rows, the setting in view marked;
-   * or the sheet, with the look choices at the left and the rest as rows at the right. Both end in the way to the shortcut sheet and the version.
-   * It opens where it was left while the tab is open: each scroll at the row it stood at, and the entries the list holds open (keep-place.js).
-   * A native modal dialog (ADR-0011) like the shortcut sheet: Escape is its own cancel, and a press outside the card closes it.
+   * Urd's own settings in a modal dialog, as «Settings window» asks: the sections beside their rows, or the sheet.
+   * It opens where it was left (keep-place.js).
    */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -39,7 +36,7 @@
   /** Whether the shortcut sheet opens once the dialog has closed. */
   let toKeys = false;
 
-  /** Every way of closing ends here: the focus goes back to what had it, or to the gear when that is gone (a tile in the settings panel the dialog took over from), and the shortcut sheet opens where it was asked for. */
+  /** Every way of closing ends here: the focus goes back to what had it, or to the gear when that is gone, and the shortcut sheet opens if asked for. */
   function onClosed() {
     const back = opener instanceof HTMLElement && opener.isConnected && opener !== document.body ? opener : document.querySelector('.rail-gear');
     back?.focus({ preventScroll: true });
@@ -51,7 +48,7 @@
     if (dialogEl && !dialogEl.open) dialogEl.showModal();
   });
 
-  /** A section button scrolls its section to the top of the content and opens its entry (`folds`, where it lists its settings); pressed while open, it folds the entry back and leaves the scroll where it is. */
+  /** A section button scrolls its section to the top and opens its entry; pressed while open, it folds the entry back and leaves the scroll where it is. */
   function jump(id, folds = true) {
     if (folds && opened.includes(id)) {
       opened = opened.filter((open) => open !== id);
@@ -64,7 +61,7 @@
     contentEl?.querySelector(`#st-sec-${id}`)?.scrollIntoView({ block: 'start', behavior: ed.reducedMotion ? 'auto' : 'smooth' });
   }
 
-  /** A setting under an entry scrolls its row to the middle of the content and lights it for a moment; a setting without a row of its own (the presets) brings its section to the top. */
+  /** A setting under an entry scrolls its row to the middle and lights it for a moment; a setting without a row of its own brings its section to the top. */
   let flashTimer = 0;
   function jumpTo(groupId, settingId) {
     current = groupId;
@@ -94,17 +91,17 @@
   /** Whether an entry lists its settings: not a section whose one setting bears its own name (the presets). */
   const listsSettings = (group) => !(group.settings.length === 1 && group.settings[0].labelKey === group.labelKey);
 
-  /** Whether the content is scrolled by hand (the wheel, a finger, the keys or the scrollbar), which ends the mark of a row a press brought into view; a jump from the list scrolls by itself. */
+  /** Whether the content is scrolled by hand, which ends the mark of a row a press brought into view. */
   let byHand = false;
   const scrollingByHand = () => { byHand = true; };
 
-  /** The setting in view, marked under its section's entry: the row a press on its entry brings into view, from the press while the content scrolls to it and for as long as it then stays wholly in view, else the last row whose top has passed the content's top, or the section's first while none has. */
+  /** The setting marked under its section's entry: the row a press brought into view while it stays in view, else the last row whose top has passed the top. */
   let currentRow = $state(null);
   let jumpedRow = null;
   /** Whether the row a press brought into view has stood wholly in view since. */
   let jumpedSeen = false;
 
-  /** The section in view: the section of a row a press brought into view while it holds its mark, else the last section whose top has passed the content's top, the first while none has, and the last section of all once the content is scrolled to its end, since a short last section never reaches the top. */
+  /** The section in view: a pressed row's section while it holds its mark, else the last section whose top has passed the top, and the last once scrolled to the end. */
   function track() {
     if (!contentEl) return;
     const sections = [...contentEl.querySelectorAll('.st-section')];

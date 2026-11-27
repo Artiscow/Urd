@@ -1,5 +1,5 @@
 <script>
-  /* The Pages panel: the site's pages with their names and slugs, each page's settings and actions behind its row's gear (pages/PageSettingsStep.svelte here when «In the panel» is chosen, else the dialog or the table the shell mounts), and a new page from a template. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The Pages panel: the site's pages with their names and slugs, each page's settings behind its row's gear, and a new page from a template. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { pageThumb } from '$engine/preset-thumb.js';
@@ -15,7 +15,7 @@
   const templateIds = $derived(ed.templateIds);
   const { addPage, handleDeleteTemplate, selectPage, templateStores } = ed;
 
-  /** The new page's name turned down: the field keeps it in dark red with the reason as its tooltip, until the next keystroke. The rows' names and addresses are shared with the page settings (site.svelte.js typedPageFields). */
+  /** The new page's name turned down: the field keeps it in dark red with the reason as its tooltip, until the next keystroke. */
   let newPageError = $state(null);
 
   async function createPage() {
@@ -25,7 +25,7 @@
   // The panel closed: a name or an address left turned down refills with what stands.
   $effect(() => () => ed.dropTypedPageFields());
 
-  /* The parts of a template each page still has to fill in (lib/fill-in.js): the open page's after every change (its data is not reactive, the count of changes is), the others' read from their drafts as the panel opens and as pages come and go. */
+  /* The parts of a template each page still has to fill in: the open page's after every change, the others' read from their drafts. */
   const openHere = $derived.by(() => {
     void ed.edits;
     void pageId;
@@ -45,16 +45,12 @@
     return open ? open.own + open.contact : 0;
   };
 
-  /* The starter-pack thumbnails are built once (create() per section is
-     cheap, but the grid rerenders on every keystroke in the name field). */
+  /* The starter-pack thumbnails, built once. */
   const builtinPageThumbs = Object.fromEntries(PAGE_PRESETS.map((p) => [
     p.id, pageThumb(buildPagePreset(p.id, { pageId: 'preview', title: '' })),
   ]));
 
-  /** The site's color tokens as inline vars on the template thumbnail
-   *  grids: the thumbnails draw with var(--urd-color-*) and must show the
-   *  SITE's palette, not the admin's (the admin never loads
-   *  content/theme.css). Invalid values are dropped. */
+  /** The site's colour tokens as inline vars on the template thumbnails, so they show the site's palette; invalid values are dropped. */
   const thumbThemeStyle = $derived(themeStyleOf(siteDraft));
 </script>
 

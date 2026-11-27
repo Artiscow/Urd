@@ -1,9 +1,5 @@
 <script>
-  /* A capability's card in the element menu (ADR-0031, menu/capabilities.js): drawn while the block uses the capability, while it was added to the block this session, or where the menu draws every capability (menu/CapScope.svelte); otherwise it takes no room, and the add list offers it.
-     Its head names it, with the way back, which takes every setting in it to the standard in one undo step and the capability back to the add list; its settings stand under the head as a group's rows, reading the group's standards where they ask by key (`group`).
-     A capability that is one switch (`single` in the catalogue) is a card of one line: its drawing, its name, an On/Off chip for the switch, its pin where Pinned can hold it, and the way back.
-     The card carries its id as a fold does, so a tool of the block's bar opens it in a small panel (lib/only-group.js).
-     Where Urd settings «Adding extras» asks for folded cards, its name is a button that folds it to one line saying its value (the catalogue's `summary`, else that it is on) and opens it again, kept for the session; a copy that draws every capability (the search, a small panel) never folds, so its settings are always there. */
+  /* A capability's card in the element menu (ADR-0031): drawn while the block uses it, while it was added this session, or where the menu draws every capability. */
   import { getContext, setContext, tick, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS, CAP_ICONS } from '../icons.js';
@@ -20,14 +16,14 @@
   const scope = getContext('menu-capabilities');
   const area = getContext('menu-area');
   const pinned = pinnedNow();
-  /** `id` names the capability in the catalogue; `group` holds the standards of the settings in it that ask by key (menu/groups.js); `atFoot` marks the card its area draws at its foot. */
+  /** `id` names the capability; `group` holds the standards of its settings that ask by key (menu/groups.js); `atFoot` marks the card drawn at its area's foot. */
   let { id, group = null, atFoot = false, children = undefined } = $props();
   const cap = capability(id);
   const block = $derived(ed.selectedBlock);
   const inUse = $derived(Boolean(block) && cap.inUse(block, ed));
   const kept = $derived(Boolean(block) && isAdded(block.blockId, id));
   const shown = $derived(carries(cap, block, ed) && !(cap.pins.length > 0 && pinned.all(...cap.pins)) && (inUse || kept || Boolean(scope?.forced(id))));
-  /** A card the owner added from the add list is drawn at the foot of its area, in the order added (MenuArea.svelte), and draws nothing where the family writes it; a copy that draws every capability keeps the catalogue's order, and a card not shown stands nowhere. */
+  /** A card added from the add list is drawn at its area's foot, in the order added; a copy that draws every capability keeps the catalogue's order. */
   const placedAt = $derived(block && !scope?.forced(id) ? addedAt(block.blockId, id) : -1);
   /** A small window of one group (ElementMenu.svelte `only`) draws the card where it stands. */
   const onlyPanel = getContext('menu-only');
@@ -80,7 +76,7 @@
     return () => clearTimeout(timer);
   });
 
-  /* A small window that holds this card alone has its head where the card's is (menu/FloatingMenu.svelte): the way back stands there while the block uses the capability. */
+  /* A small window holding this card alone has its head where the card's is (menu/FloatingMenu.svelte), the way back there while the block uses it. */
   const head = getContext('menu-head');
   const headOwner = Symbol('capability');
   $effect(() => {
@@ -94,7 +90,7 @@
   async function takeAway() {
     if (!removable) return;
     const taken = block;
-    // Where it is added from, in the copy of the menu the card stands in (the floating menu or the Settings panel), in the form «Adding extras» chooses: its own chip, else its area's add button, else the head's «+».
+    // Where it is added from in this copy of the menu, as «Adding extras» chooses: its own chip, else its area's add button, else the head's «+».
     const home = cardEl?.closest('.block-menu, aside.panel') ?? document;
     const area = cardEl?.closest('.emenu-area')?.dataset.area;
     historyState.asOwnStep(() => cap.clear(ed, taken));

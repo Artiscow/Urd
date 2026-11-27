@@ -1,7 +1,7 @@
 # ADR-0037: Short comments
 
 Date: 26 November 2026
-Status: Accepted. Decided on 26 November 2026 for the URGENT item on comments; it widens to all code a site runs the limit [ADR-0002](0002-svelte-for-editor-readable-js-for-engine.md)'s addendum of 23 November 2026 set for the modules a visitor's page loads, whose notes it keeps.
+Status: Accepted. Decided on 26 November 2026 for the URGENT item on comments; it widens to all code a site runs the limit [ADR-0002](0002-svelte-for-editor-readable-js-for-engine.md)'s addendum of 23 November 2026 set for the modules a visitor's page loads, whose notes it keeps. Decision 6 amended 27 November 2026 (the test holds every file the rule covers), earlier text in [amended/](amended/0037-short-comments-until-2026-11-27.md).
 
 ## Context
 
@@ -25,7 +25,7 @@ A long comment explains why the code came to be so, often as the story of a fix.
 3. **A comment says what the code does, not why it came to be so.** A constraint a change must keep is held by a test, where breaking it fails. A lasting decision is held by an ADR.
 4. **No history in a comment:** no commit or release number, no account of where the code came from, and none of the words that tell what was before («no longer», «previously», «used to», «would otherwise»). The sequence of events is CHANGELOG's.
 5. **The code a visitor's page loads keeps its longer reasoning outside the code**, as ADR-0002's addendum decided: an engine module's in `docs/engine-notes/<module>.md`, a stylesheet's in `docs/STYLES.md`. Elsewhere the reasoning that does not fit is not kept.
-6. **`tests/comments.test.mjs` holds the rule** for the files it names in its scope, which grows by area as the code is brought within the limit, until it holds every file the rule covers. `tests/engine-notes.test.mjs` and `tests/stylesheets.test.mjs` hold the visitor code.
+6. **`tests/comments.test.mjs` holds the rule** for every file it covers: the engine and its stylesheets, the HTML shells, the editor's source and the Pages Functions. `tests/engine-notes.test.mjs` and `tests/stylesheets.test.mjs` hold the visitor code's notes and labels.
 
 ## Consequences
 

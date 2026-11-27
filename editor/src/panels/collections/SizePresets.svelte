@@ -1,7 +1,5 @@
 <script>
-  /* The Sizes label with «Presets» beside it, and the card of plain buttons and fields it opens, which adds a set of sizes in one press (lib/size-presets.js), each size once and in one undo step.
-     The sets other products of the shop use, named by the product they come from; the common sets; and a numbered set whose wording the owner writes, where «#» stands for each number, with the sizes it gives shown before they are added.
-     The card floats against the button, below it or above it where the window has no room below, so the panel's scroll never clips it (ADR-0011): a popover placed by CSS anchoring where the browser has it, else measured and placed fixed, as the dropdowns are (anchored.js). */
+  /* The Sizes label with «Presets» beside it, and the card it opens, which adds a set of sizes in one press and one undo step, each size once (lib/size-presets.js). */
   import { lingering, menuMotion } from '../../lib/motion.svelte.js';
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -309,7 +307,7 @@
     font: inherit;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--urd-color-bg, #0f1218);
+    color: var(--urd-color-accent-text);
     cursor: pointer;
     background: var(--urd-color-accent, #7c5cff);
     border: 0;

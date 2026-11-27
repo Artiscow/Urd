@@ -1,15 +1,10 @@
 <script module>
-  /* The calendar block's Style area (calendar-designs.js): the design, its
-     colour slots, the edge stripe and a style per event field. Every setting
-     is additive, and an emptied object is removed from the props. The field
-     picked for styling is kept across blocks and copies of the menu. */
+  /* The event field picked for styling, kept across blocks and copies of the menu. */
   let calField = $state('title');
 </script>
 
 <script>
-  /* The calendar block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The calendar block in the element menu: its Content and Style areas, and the settings it writes through the editor handle. */
   import Setting from '../../lib/rows/Setting.svelte';
   import AreaFoot from '../AreaFoot.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
@@ -120,8 +115,7 @@
   }
 
   /* The calendar block (Content): one source per line. */
-  /** A calendar source as the panel edits it: a reference to one of the site's calendars (`{ calendar: id }`, read-only here),
-      a bare address that stays a string in the file, or an address with a name or a colour as an object (the engine's resolveSources reads all three). */
+  /** A calendar source as the panel edits it: a site calendar's reference, read-only here, a bare address string, or an address with a name or colour. */
   const calSource = (src) => {
     if (src && typeof src === 'object' && 'calendar' in src) return { ref: String(src.calendar ?? ''), url: '', name: '', color: '' };
     if (src && typeof src === 'object') return { ref: '', url: src.url ?? '', name: src.name ?? '', color: src.color ?? '' };
@@ -135,8 +129,7 @@
     const rest = $state.snapshot(selectedBlock.props.sources ?? []).filter((src) => calSource(src).ref !== id);
     setBlockProp('sources', on ? [...rest, { calendar: id }] : rest);
   }
-  /** An own address moved into the site's calendars: the registry gets the row's address, name and colour, and the row becomes a reference.
-      Two history entries, the site's and the page's, since the registry and the block are kept apart. */
+  /** An own address moved into the site's calendars: the registry gets the row's address, name and colour, and the row becomes a reference. */
   function saveCalendarToSite(i) {
     const list = $state.snapshot(selectedBlock.props.sources ?? []);
     const { url, name, color } = calSource(list[i]);
@@ -163,10 +156,7 @@
     setBlockProp('sources', list);
   }
 
-  /**
-   * The calendar's groups in the element menu: what each shows while closed,
-   * and its reset when it differs from the defaults (null when it does not).
-   */
+  /** The calendar's groups in the element menu: what each shows while closed, and its reset when it differs from the defaults (null when it does not). */
   function calMenu() {
     const p = selectedBlock.props;
     const reset = (name, patch) => () => setBlockProps(name, patch);
@@ -174,7 +164,7 @@
     const view = calView(p);
     const limit0 = calLimitStart(p);
     const count0 = view === 'next' ? 3 : undefined;
-    // The view switcher, the time and week, the buttons, the filter and search, the sign-up, the announcement and the colours are capabilities of their own, with their own ways back (menu/capabilities.js).
+    // What is a capability of its own (menu/capabilities.js) has its own way back, outside this group's reset.
     const viewChanged = p.toolsSize != null || p.description != null || p.showMore === false || (p.limit ?? 6) !== limit0 || p.nextCount !== count0 || p.laterCount !== count0 || p.showCancelled === false || p.structuredData === false;
     const emptyChanged = Boolean(p.emptyText) || (p.emptyIcon != null && p.emptyIcon !== 'calendar');
     const optCount = calOptionDefs(p.design).filter((d) => p.options?.[d.key] != null).length;
@@ -194,8 +184,8 @@
   <!-- The calendar's content as groups, each showing its value while closed and a reset when it differs from the defaults -->
   {@const cm = calMenu()}
   {#snippet calSources()}
-  <!-- One row per calendar: one of the site's calendars (read-only here, edited in the Site panel), or an address of
-       its own with a name and a colour. A named calendar is a category in the filter, whatever its events' titles say -->
+  <!-- One row per calendar: a site calendar, edited in the Site panel, or an own address with a name and a colour.
+       A named calendar is a category in the filter. -->
   <ListEditor items={selectedBlock.props.sources ?? []} label={ta('calendar.sources')} key={(src, i) => i}
     onmove={moveCalendarSource} onremove={removeCalendarSource} onadd={addCalendarRow} addLabel={ta('ui.addCalendar')}>
     {#snippet row(src, i)}
@@ -494,7 +484,7 @@
   </Setting>
   {/snippet}
   {#snippet calFields()}
-  <!-- A style per event field: pick the field, then its font, size, weight, italic, underline and colour; the picker chooses what the rows under it style, so it is no setting of its own -->
+  <!-- A style per event field: pick the field, then its font, size, weight, italic, underline and colour; the field picker is no setting of its own -->
   <label title={ta('tip.calendar.fieldStyle')}>{ta('calendar.whichField')}
     <Dropdown value={calField} options={CAL_FIELDS.map((f) => [f, ta(`calendar.field.${f}`)])} onchange={(v) => (calField = v)} /></label>
   <Setting own={calFieldStyleOf().font != null} reset={() => setCalField({ font: undefined })}>

@@ -1,5 +1,5 @@
 <script>
-  /* The Plugins panel: the installed plugins, the ones found in the repo, their CSP needs against the live headers, and adding one by id. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The Plugins panel: the installed plugins, the ones found in the repo, their CSP needs against the live headers, and adding one by id. */
   import { getContext } from 'svelte';
   import { ta, adminLang as currentAdminLang } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -21,8 +21,7 @@
 
   let pluginError = $state('');
 
-  /** Manifest CSP needs NOT already in the live CSP: only those are shown
-   *  in the instructions (settings are shown only when relevant). */
+  /** The manifest's CSP needs missing from the live CSP, the only ones the instructions show. */
   function cspMissing(csp) {
     const need = [
       ...(csp.scriptSrc ?? []).map((host) => ['script-src', host]),

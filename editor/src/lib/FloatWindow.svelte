@@ -1,7 +1,5 @@
 <script>
-  /* A window over the canvas, beside the work (the Drafts window): it opens under or beside the tab it was opened from (lib/menu-place.js placeByTab), or where it was dragged to (`place`), kept inside the editor's window as that changes size.
-     Its head (`head`) drags it, a press on a button, a field or a label in the head excepted, and `onmove` is told each place it is dragged to. It slides and fades in and out (lib/motion.svelte.js menuMotion), at once with reduced motion.
-     `onenter` and `onleave` are told of the pointer coming onto the window and leaving it. */
+  /* A window over the canvas: it opens by the tab it came from or where it was dragged, kept inside the editor's window, and its head drags it. */
   import { clampPlace, placeByTab } from './menu-place.js';
   import { menuMotion } from './motion.svelte.js';
   let { label, place = null, anchor = null, width = 380, onmove, onenter = undefined, onleave = undefined, head, children, class: own = '', el = $bindable(null) } = $props();

@@ -1,7 +1,5 @@
 <script>
-  /* A list of links with icons (0.7.0.52): the site's links in the Site panel and a links block's own, edited as rows of the kit's list editor (lib/rows/ListEditor.svelte).
-     Each row has the icon (the whole icon library through the picker, or an own uploaded image), the label and the address set through the link editor (one address, LinkField's `address` shape).
-     The list itself is owned by whoever renders it: every change goes out through the callbacks. */
+  /* A list of links with icons, each row an icon or an image, a label and an address; every change goes out through the callbacks. */
   import GlyphPicker from './GlyphPicker.svelte';
   import LinkField from './LinkField.svelte';
   import { ta } from '$engine/i18n.js';
@@ -9,7 +7,7 @@
   import { ICONS } from './icons.js';
   import ListEditor from './rows/ListEditor.svelte';
   import IconButton from './rows/IconButton.svelte';
-  /** scope: where the list stands, as LinkField takes it ('site' for the site's links, 'page' for a links block's own); `onmove(from, to)` gets a row's index before and after a move. */
+  /** scope: 'site' for the site's links, 'page' for a links block's own; `onmove(from, to)` gets a row's index before and after a move. */
   let { links = [], scope = 'page', label = '', onchange, onadd, onremove, onmove } = $props();
 </script>
 

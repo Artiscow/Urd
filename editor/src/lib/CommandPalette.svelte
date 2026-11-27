@@ -1,7 +1,6 @@
 <script>
   /**
-   * The command palette (comparison/ELEMENTS.md E1): one field, and under it every command the editor offers, the ones run last first, narrowed to the matches while the owner types (lib/command-palette.js). The arrows walk the list, Enter runs the marked command, Escape closes.
-   * Opened by Ctrl/⌘+K in the panels and on the page; in a text Ctrl+K stays the link key. A native modal dialog (ADR-0011), closed by a press outside its card as the shortcut sheet is.
+   * The command palette: a field over every command, the last run first, narrowed as the owner types; a modal dialog opened by Ctrl/⌘+K.
    */
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';
@@ -11,7 +10,7 @@
   import { searchLangs } from './search-langs.svelte.js';
   import { arrangeCommands, canPin, flatItems, readRecent, rememberCommand, RECENT_KEY } from './command-palette.js';
 
-  /** `pinned` is the site's shared shortcuts (site.shortcuts), command ids pinned first for everyone who edits the site; `onpin` toggles one, and without it the rows carry no pin. */
+  /** `pinned` holds the site's shared shortcut ids (site.shortcuts), shown first for everyone; `onpin` toggles one, and without it the rows carry no pin. */
   let { commands = [], pinned = [], onpin = null, onclose } = $props();
   let dialogEl = $state(null);
   let query = $state('');
@@ -46,7 +45,7 @@
     marked = 0;
   });
 
-  /** Runs a command: remembered as recent, then the palette closes, and the command does its work once it has, with the focus back where it was; a second press while it closes runs nothing. */
+  /** Remembers the command, closes the palette, then runs it with the focus restored; a second press while it closes runs nothing. */
   function run(item) {
     if (pending) return;
     try {

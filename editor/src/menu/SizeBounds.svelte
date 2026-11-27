@@ -1,6 +1,5 @@
 <script>
-  /* The bounds the owner may give a block's base text, where the size slider then ends (ADR-0025 decision 6), shown only while a size is set, on the desktop or the phone's own, side by side so the menu keeps its height; empty, each shows the base text's size now.
-     It stands under the size it belongs to: in Placement, or in Pinned while the size is pinned (ElementMenu.svelte). */
+  /* The bounds of a block's base text size, where the size slider ends (ADR-0025), shown while a size is set; empty, each shows the size now. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { SIZE_TEXT, baseTextPx, blockSize, sizeBounds } from '$engine/push-model.js';

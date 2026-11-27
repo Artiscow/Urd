@@ -100,8 +100,11 @@ export function fadingDialog(node) {
  */
 export function dialogOut(node) {
   if (!node.open) return { duration: 0 };
-  const ms = fadeMs(node);
-  if (!ms) return { duration: 0 };
   node.classList.add('dx-closing');
+  const ms = fadeMs(node);
+  if (!ms) {
+    node.classList.remove('dx-closing');
+    return { duration: 0 };
+  }
   return { duration: ms + 40, tick: (t) => node.classList.toggle('dx-closing', t < 1) };
 }

@@ -1,5 +1,5 @@
 <script>
-  /* The Nav panel's Logo fold: whether the bar shows the logo, then the logo as words, a picture or both, the words' font, size and weight, the picture with its heights and rounding, and which of the two comes first. */
+  /* The Nav panel's «Logo» fold: whether the bar shows the logo, as words, a picture or both, with the words' font and the picture's heights. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import Dropdown from '../../lib/Dropdown.svelte';

@@ -1,7 +1,5 @@
 <script>
-  /* The video block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The video block in the element menu: its Content and Style areas, and the settings it writes through the editor handle. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
@@ -34,10 +32,7 @@
   const aspectOptions = $derived([['free', ta('opt.videoAspect.free')], ...VIDEO_ASPECTS.map((a) => [a, ta(`opt.videoAspect.${a.replace(':', 'x')}`)])]);
   const aspectValue = $derived(VIDEO_ASPECTS.includes(selectedBlock.props.aspect) ? selectedBlock.props.aspect : 'free');
 
-  /**
-   * A shape for the video (keepsShape in push-model.js): the frame keeps its height and takes the width the shape gives it, moving left where the room to its right is too small, and the height then follows that width.
-   * Only a shape wider than the whole section is narrowed to it, and loses height with it. «Fill the frame» leaves the frame as it is. One undo step.
-   */
+  /** A shape for the video (keepsShape in push-model.js): the frame keeps its height and takes the shape's width, moving left where the room is too small. */
   function setAspect(value) {
     ed.mutateBlock(`edit:${selectedBlock.blockId}:aspect`, (b) => {
       if (value === 'free') {

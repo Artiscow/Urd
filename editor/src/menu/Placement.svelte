@@ -1,7 +1,5 @@
 <script>
-  /* Placement (0.7.26.2): how the block sits on the page and behaves there, and its name for links.
-     The height, the size and the narrow-screen fit stand open, and the frame is a group that shows its value while closed; hiding on phones, the pinning, the name for links and the decor are capabilities (ADR-0031), each a card while the block uses it or was given it this session, after the frame. The block's motion stands in Style (MotionFold.svelte).
-     The height, the size, the fit and the pinning's settings are setting rows that tell whether the block holds a value of its own, with the way back to the standard (lib/rows/Setting.svelte), and what belongs to each stands in its row; the pinning's switch is its own way back, and hiding on phones and the decor are switches on their cards; the frame's numbers and the name for links are plain rows, since every block has a place of its own and the name's card takes it away only while no link reaches the block by it. */
+  /* Placement: how the block sits on the page, its frame, its size and fit, and its name for links; the pinning and the decor are capabilities (ADR-0031). */
   import { getContext } from 'svelte';
   import Capability from '../lib/rows/Capability.svelte';
   import Dropdown from '../lib/Dropdown.svelte';
@@ -38,7 +36,7 @@
     });
   }
 
-  /** The selected block's section, read again after every change and every undo, since the page's data is no state of its own: a new copy each time, so its phone order (phone-order.js) follows. */
+  /** The selected block's section, read again after every change and every undo, so its phone order follows. */
   const blockSection = $derived.by(() => {
     void ed.edits;
     void ed.restores;
@@ -85,9 +83,7 @@
     return cols >= 8 ? null : phoneSideCells(cols, side);
   }
 
-  /** The "let go" options for sticky: only the sections AFTER the block's
-   *  own (pinning backwards makes no sense; settings are shown only when
-   *  relevant). */
+  /** The pinning's «Release» options: the block's own section and the sections after it. */
   function stickyUntilOptions() {
     const idx = sections.findIndex((s) => s.id === selectedBlock?.sectionId);
     // A block whose section is not found offers its own section only.
@@ -100,14 +96,14 @@
 </script>
 
 {#snippet menuSize()}
-  <!-- The block's size (ADR-0025 decision 6): the whole block, text included, drawn smaller or larger; no drag changes it, and the slider ends where the base text meets a bound the owner set -->
+  <!-- The block's size (ADR-0025): the whole block drawn smaller or larger, the slider ending where the base text meets a bound the owner set -->
   <Setting pin="size" own={blockSize(selectedBlock) !== 1} reset={() => { setBlockSize(1); ed.endSizeGesture(); }}>
     <SliderRow label={ta('lbl.scale')} title={ta('tip.scale')} min={Math.round(sizeRange(selectedBlock).min * 100)} max={Math.round(sizeRange(selectedBlock).max * 100)} step={Math.round(SIZE.step * 100)}
       value={Math.round(blockSize(selectedBlock) * 100)} shown={`${Math.round(blockSize(selectedBlock) * 100)} %`}
       oninput={(v) => setBlockSize(v / 100)} onchange={ed.endSizeGesture} />
     {#snippet more()}<SizeBounds />{/snippet}
   </Setting>
-  <!-- Its own size on the phone (ADR-0019 decision 1): as on the desktop, or a size of the phone's own in the same steps and bounds; it starts at the desktop's size, so choosing it changes nothing until the slider moves -->
+  <!-- Its own size on the phone (ADR-0019): as on the desktop, or its own, starting at the desktop's size -->
   <Setting own={selectedBlock.phoneSize !== undefined} reset={() => setBlockPhoneSize(undefined)}>
     <Choice label={ta('lbl.phoneSize')} title={ta('tip.phoneSize')} value={selectedBlock.phoneSize === undefined ? 'desktop' : 'own'}
       options={[['desktop', ta('opt.phoneSize.desktop')], ['own', ta('opt.phoneSize.own')]]}
@@ -120,7 +116,7 @@
   </Setting>
 {/snippet}
 {#snippet menuFit()}
-  <!-- Below the design width: block-level on every block (ADR-0024); the content wraps, shrinks in proportion, or shrinks as little as it can and wraps, or the frame keeps a floor -->
+  <!-- Below the design width (ADR-0024): the content wraps, shrinks in proportion, or shrinks as little as it can and wraps, or the frame keeps a floor -->
   <!-- What belongs to the narrow-screen choice stands under it in its row; in Pinned the row brings it along as its `more` (ElementMenu.svelte) -->
   <Setting pin="fit" own={selectedBlock.fit === 'shrink' || selectedBlock.fit === 'both'} reset={() => setBlockFit('wrap')}>
     <Choice stack label={ta('lbl.fit')} title={ta('tip.fit')} value={selectedBlock.fit === 'shrink' || selectedBlock.fit === 'both' ? selectedBlock.fit : 'wrap'}
@@ -133,7 +129,7 @@
 {/snippet}
 {#snippet menuSticky()}
   <Capability id="sticky">
-    <!-- The pinning and what belongs to it, one setting row: the switch is its own way back, and each of its settings is a row of its own with its way back to the standard -->
+    <!-- The pinning and its settings, one setting row whose switch is its own way back -->
     <Setting own={Boolean(selectedBlock.sticky)} reset={() => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => { b.sticky = null; })}>
       <SwitchRow label={ta('lbl.sticky')} title={ta('tip.sticky')} checked={Boolean(selectedBlock.sticky)}
         onchange={(on) => mutateBlock(`edit:${selectedBlock.blockId}`, (b) => {
@@ -220,7 +216,7 @@
       {/if}
     </div>
   {/if}
-  <!-- Its width on the phone: the whole row, or cells beside the blocks before it in the phone's order (migrate.js phoneCells), with where in the row it stands under it; a block in a stack sets its whole stack. A block placed on rows of its own takes its width from its handles -->
+  <!-- Its width on the phone: the whole row, or cells beside the blocks before it (migrate.js phoneCells), and where in the row it stands -->
   {#if !selectedBlock.hideMobile && selectedBlock.mobileRow === null}
     <Setting own={Boolean(selectedBlock.phoneCells)} reset={() => setBlockPhoneCells(null)}>
       <Choice label={ta('lbl.phoneWidth')} title={ta('tip.phoneWidth')} value={String(selectedBlock.phoneCells?.cols ?? 8)}
@@ -232,7 +228,7 @@
           onchange={(v) => setBlockPhoneCells(phoneCellsFor(selectedBlock.phoneCells.cols, v))} />
       {/if}
     </Setting>
-    <!-- Its own height on the phone: its words' or its desktop height, or one of its own that words still grow past; the handles in the phone view set the same -->
+    <!-- Its own height on the phone: its words' or its desktop height, or one of its own that words still grow past -->
     <Setting own={selectedBlock.phoneHeight !== null} reset={() => setBlockPhoneHeight(null)}>
       <Choice label={ta('lbl.phoneHeight')} title={ta('tip.phoneHeight')} value={selectedBlock.phoneHeight === null ? 'auto' : 'own'}
         options={[['auto', ta('opt.phoneHeight.auto')], ['own', ta('opt.phoneHeight.own')]]}
@@ -243,7 +239,7 @@
       {/if}
     </Setting>
   {/if}
-  <!-- Its place in the phone's order: as the section's rule puts it, or directly before or after a block it names; a block hidden on phones, a block placed by hand, the only flowing block, a block inside a stack, and every block of a custom order have none -->
+  <!-- Its place in the phone's order: as the section's rule puts it, or directly before or after a block it names -->
   {#if !selectedBlock.hideMobile && selectedBlock.mobileRow === null && phonePlaceCounts && phoneNeighbours.length}
     <Setting own={Boolean(phoneSide)} reset={() => setBlockPhonePlace(null)}>
       <Choice stack label={ta('lbl.phoneOrder')} title={ta('tip.phonePlace')} value={phoneSide}

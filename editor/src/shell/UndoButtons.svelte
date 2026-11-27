@@ -1,8 +1,5 @@
 <script>
-  /* Undo, redo and the session's steps, right after the page switcher: the arrows greyed when there is nothing to take back or bring back, their tooltips naming the step, and the caret opening the steps newest first, the undone ones greyed above «now», and at the foot «Discard drafts» with «Redo everything» beside it while there is something to bring back.
-     A step's row goes back to just after it, or forward to an undone one, in one go (historyState.goSteps); the steps are kept in this browser over a reload (lib/history-store.js).
-     A tool menu as the top bar's others (ed.toolMenu 'steps'), which stays open through a jump between steps and through the discard's question, and closes on a press outside it or Escape.
-     As the top bar's other menus, the caret opens the steps on a mouse's rest on it, and a list a rest opened closes a moment after the mouse leaves the caret and the list, unless the focus has gone into it; a touch is no hover (AGENTS.md, hybrid devices). As a menu that opens on hover, the caret has its name for a screen reader and no tooltip. */
+  /* Undo, redo and the session's steps: the arrows naming the step in their tooltips, and the caret listing the steps newest first, each row a jump to it. */
   import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';

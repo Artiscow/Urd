@@ -1,6 +1,5 @@
 <script>
-  /* The logo on the phone, in the fold of the menu on the phone: where it stands in the phone's bar, what of a logo with a picture and words shows there, and the picture's height and the words' size there, each empty for the desktop's.
-     Drawn while the bar shows a logo; what shows and the sizes only while the logo stands somewhere on the phone, in its bar or in the full-screen menu's head. */
+  /* The logo on the phone: where it stands in the phone's bar, what of it shows there, and its sizes there, each empty for the desktop's. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import Setting from '../../lib/rows/Setting.svelte';

@@ -1,7 +1,5 @@
 <script>
-  /* The FAQ block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The FAQ block in the element menu: its Content and Style areas, and the settings it writes through the editor handle. */
   import { getContext } from 'svelte';
   import BoxStyle from '../BoxStyle.svelte';
   import Fold from '../../lib/rows/Fold.svelte';

@@ -1,8 +1,5 @@
 <script>
-  /* The site's «Back to top» button (0.7.13.14, the engine's totop.js), in the Site panel's fold of the same name: shown or not, and under four subheadings
-     its look (the design from the shared design picker, the owner's words on the worded designs, the shape on the shaped ones, set in the shape window, the mark in place of the arrow with its size, a mark over a picture that fills the whole button, how the words alone answer the mouse and a touch and the line under them, and the colours of the parts the design shows, side by side),
-     its size on the desktop and on phones, its placement and side, and its showing (how far a visitor scrolls before it shows, and whether phones show it).
-     Each choice is written into `site.layout.toTop` as one undo step, a value at its standard taken away, so a site that sets nothing stores nothing; a slider's run and a typing session are one step each (`edit:`). */
+  /* The site's «Back to top» button in the Site panel: its look, size, placement and showing, each choice one undo step in `site.layout.toTop`. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { toTopOf, toTopShapeOf, toTopOutline, TOTOP_SHAPED, TOTOP_WORDED, TOTOP_AFTER, TOTOP_TEXT_MAX, TOTOP_SIZES, TOTOP_HOVERS, TOTOP_PRESSES, TOTOP_LINES, TOTOP_LINE_WIDTH, TOTOP_ICON_SIZE, TOTOP_FILLS, toTopFillsWhole } from '$engine/totop.js';
@@ -45,7 +42,7 @@
     });
   }
 
-  /** The button's own mark in place of the arrow, one undo step: a character, a drawn icon or a picture, each taking the others' place; none takes it back to the arrow. */
+  /** The button's own mark in place of the arrow: a character, a drawn icon or a picture, each taking the others' place; none takes it back to the arrow. */
   function writeMark(mark) {
     ed.siteMutate('site-totop', () => {
       const layout = (ed.siteDraft.layout ??= {});
@@ -69,7 +66,7 @@
   const over = $derived(whole ? set.over : null);
   /** The mark the size and the colour act on: the one over a whole picture, else the button's own. */
   const markOwn = $derived(whole ? Boolean(over?.icon || over?.glyph) : ownMark);
-  /** The mark takes a colour: the arrow, a drawn icon, or a character drawn as text; a picture and emoji keep their own colours, and a whole picture with nothing over it has none. */
+  /** The mark takes a colour: the arrow, a drawn icon, or a character drawn as text; a picture and emoji keep their own colours. */
   const markColoured = $derived(whole
     ? Boolean(over) && (Boolean(over.icon) || !over.glyph || glyphTakesColour(over.glyph))
     : !set.image && (Boolean(set.icon) || !set.glyph || glyphTakesColour(set.glyph)));
@@ -103,7 +100,7 @@
             : set.hover === 'lift' ? ta('toTopColour.glow')
               : ta('toTopColour.hover'));
 
-  /** The colours of the parts the design shows, each the design's own while none is set: the background and the ring (none under a picture that fills the whole button), the arrow or the own mark (a picture and emoji keep their own), the words, and the words alone's line and effect. */
+  /** The colours of the parts the design shows, each the design's own while none is set. */
   const colourItems = $derived([
     set.design !== 'words' && !toTopFillsWhole(set) && { key: 'bg', caption: ta('lbl.toTopBg'), name: ta('lbl.toTopBg') },
     set.design === 'ring' && !toTopFillsWhole(set) && { key: 'ring', caption: ta('toTopColour.ring'), name: ta('lbl.toTopRingColour') },
@@ -113,7 +110,7 @@
     wordsAlone && effectColoured && { key: 'effect', caption: effectCaption, name: effectLabel },
   ].filter(Boolean).map((item) => ({ ...item, value: set.colors[item.key] ?? '', onchange: (v) => writeColour(item.key, v) })));
 
-  /** A shaped design's shape (shape-model.js): the owner's own, or the design's own as the shape window starts from it; its name is the shipped shape's, «Custom» for values of the owner's own, or the drawing's. */
+  /** A shaped design's shape: the owner's own, or the design's own as the shape window starts from it; named by the shipped shape, «Custom» or the drawing. */
   const shapeNow = $derived(toTopShapeOf(set, shapeModel));
   const shapeName = $derived.by(() => {
     if (shapeNow.points) return ta('shapeWin.drawnName');
@@ -123,7 +120,7 @@
   /** The outline as the button draws it, as a small picture for the row. */
   const shapePicture = $derived(`data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28 -6 156 112"><path d="${toTopOutline(set, false, shapeModel).d}" fill="#2ba58d"/></svg>`)}`);
   let shapeOpen = $state(false);
-  /** Writes the shape as the window hands it over: only what differs from the circle, with the waves and amount the shape replaces taken away. A circle is stored only where the design would draw something else without it. */
+  /** Writes the shape as the window hands it over: only what differs from the circle, the waves and their count taken away. */
   function writeShape(next, name) {
     ed.siteMutate(name, () => {
       const layout = (ed.siteDraft.layout ??= {});
@@ -150,7 +147,7 @@
 </Setting>
 {#if set.show}
   <SubHeading text={ta('group.toTopLook')} />
-  <!-- The design first, chosen as Urd settings «Choosing a design» asks, in the shared design picker or by its pictures in place; what belongs to it stands directly under it -->
+  <!-- The design first, chosen as «Choosing a design» asks; what belongs to it stands directly under it -->
   <Setting key="design">
     <LookChoice label={ta('lbl.design')} value={ta(`toTopDesign.${set.design}`)} picture={`/admin/designs/totop-${set.design}.webp`} current={set.design}
       designs={() => pictureList(toTopDesignSource({}))}
@@ -194,12 +191,12 @@
     {/if}
   {/if}
   {#if shaped}
-    <!-- The shape: its picture and its name, opening the shape window (lib/ShapeWindow.svelte), where a shipped shape is picked, shaped with Custom's sliders or drawn by hand -->
+    <!-- The shape: its picture and its name, opening the shape window -->
     <Setting key="shape">
       <PictureRow label={ta('lbl.shape')} value={shapeName} picture={shapePicture} onclick={() => (shapeOpen = true)} />
     </Setting>
   {/if}
-  <!-- The mark in place of the arrow and its size in one row: a character, a drawn icon from Urd's set, or a picture uploaded and edited (GlyphPicker opens the image editor on it), the bin on its corner taking it back to the arrow; the row's reset takes the size back -->
+  <!-- The mark in place of the arrow and its size in one row: a character, a drawn icon or a picture, the bin taking it back to the arrow -->
   <Setting key={sizeShown ? 'iconSize' : null}>
     <div class="ctl-row totop-mark">
       <span class="row-label" title={ta('tip.toTopIcon')}>{ta('lbl.toTopIcon')}</span>

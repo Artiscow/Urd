@@ -1,12 +1,5 @@
 <script>
-  /* The live phone (0.7.36.1): the page as a phone draws it beside the desktop canvas, following every change after a short pause.
-     It stands in one of two forms, switched from its own bar and kept in this browser: a column at the stage's right edge, whose edge is dragged to make it wider, or a phone floating over the canvas wherever it is dragged to, in three sizes.
-     With «Scroll together» on, scrolling the canvas scrolls the phone and scrolling the phone scrolls the canvas, each section reaching the top of both together.
-     The frame stays the same through the switch, so the page in it is not loaded again.
-     It is for looking: a press on a block opens it in the phone view, selected.
-     It stands under the canvas's cover (lib/CanvasCover.svelte) until its frame has drawn the first feed.
-     The frame is the real page (`/?preview=1`) in the mobile viewport and Clean view, fed the drafts the canvas is drawn from, as the hidden phone frame of lib/phone-fit.js is; its own listener hears its own frame alone.
-     The frame scrolls as a page does. The editor listens in the frame's own document, as it reads the canvas's: a press there acts on nothing on the page and opens the block under it, and the pointer over a block rings it. */
+  /* The live phone: the page as a phone draws it beside the desktop canvas, as a column or a floating phone, following each change after a short pause. */
   import { getContext, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { PHONE_FILL_WIDTH } from '../lib/preview-width.js';
@@ -37,7 +30,7 @@
     return {
       form: raw.form === 'float' ? 'float' : 'column',
       width: Number.isFinite(raw.width) ? Math.min(COLUMN.max, Math.max(COLUMN.min, raw.width)) : COLUMN.width,
-      // The floating phone's place: the corner of the stage it stands nearest, and its distance from that corner's two edges, so it keeps its place as the window changes.
+      // The floating phone's place: its nearest stage corner and its distance from that corner's two edges.
       corner: CORNERS.includes(raw.corner) ? raw.corner : 'bottom-right',
       dx: Number.isFinite(raw.dx) && raw.dx >= 0 ? raw.dx : EDGE,
       dy: Number.isFinite(raw.dy) && raw.dy >= 0 ? raw.dy : EDGE,
@@ -117,7 +110,7 @@
 
   const phoneBox = $derived({ width: Math.round(phone.width * scale), height: Math.round(phone.height * scale) });
 
-  /** The phone sizes the bar offers: the ones drawn as a phone (a tablet stands above the breakpoint and draws the desktop), each its width with its name under it in the list, so the narrow bar shows it whole; a size of the owner's own chosen in the top bar stands first, as the width it draws. */
+  /** The phone sizes the bar offers, those under the breakpoint, each its width with its name under it; the owner's own size stands first. */
   const sizes = $derived.by(() => {
     const presets = ed.PHONE_SIZES.filter((p) => p.width <= (ed.siteDraft?.breakpoints?.mobile ?? 640)).map((p) => [p.id, `${p.width} px`, ta(`lbl.phoneSize.${p.id}`)]);
     return presets.some(([id]) => id === ed.phonePref.size) ? presets : [[ed.phonePref.size, `${phone.width} px`], ...presets];
@@ -251,8 +244,7 @@
     hoverBox = hovered?.isConnected ? boxOf(hovered) : null;
   }
 
-  // A block selected on the canvas is brought into the phone's view, at once and as no scroll of the owner's, and ringed.
-  // Only a new selection (or a new frame) scrolls: the phone's look and scale are read untracked, so a change of them leaves the phone where the owner scrolled it.
+  // A block selected on the canvas is scrolled into the phone's view at once and ringed; only a new selection or frame scrolls.
   $effect(() => {
     const id = selectedId;
     const win = frame?.contentWindow;
@@ -278,9 +270,7 @@
   });
 
   /**
-   * The editor's listeners in the frame's document, in its window's capture phase, so they come before the page's own.
-   * A press acts on nothing on the page (no link followed, no picture opened, no focus taken) and opens the block under it in the phone view, selected; the selection is sent after the view has changed, in the order the preview hears it.
-   * The wheel and the scrolling are the frame's own.
+   * The editor's listeners in the frame, capturing before the page's: a press acts on nothing there and opens the block under it in the phone view.
    */
   function listenInFrame() {
     frameListeners?.abort();
@@ -406,16 +396,13 @@
     return { [h]: `${x}px`, [v]: `${y}px` };
   });
 
-  /* Scrolling together (look.follow): the window the owner scrolls hands its place to the other in the same scroll event, so both move in the same frame.
-     The place is read off a map of where each section starts in both pages (lib/scroll-map.js), measured once and again when either page's height changes or a page is drawn anew, so a scroll measures nothing.
-     The other window's own scroll that follows is not handed back. */
+  /* Scrolling together: the scrolled window hands its place to the other, read off the sections' map (lib/scroll-map.js); a handed scroll is not handed back. */
   const handed = new WeakMap();
   let phoneQuietUntil = 0;
   let map = null;
   let mapStale = true;
 
-  // A page drawn anew, on the canvas or in the phone, is measured again before the next handover.
-  // The canvas's redraw moves its scroll for a frame or two, which is not the owner's: the canvas is quiet a moment, and hands its place over once after.
+  // A page drawn anew is measured again before the next handover; the canvas stays quiet a moment after its redraw, then hands its place over once.
   let canvasQuietUntil = 0;
   let canvasSettle = null;
   $effect(() => {

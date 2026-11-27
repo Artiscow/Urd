@@ -3,6 +3,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { engineImport } from './_engine.mjs';
 
 const { anchorError, takenAnchors, uniqueAnchor, suggestAnchor, blockWords, sectionWords, claimAnchors, duplicateAnchors, pageSpots, spotLinks, ANCHOR_MAX } = await engineImport('anchor-model.js');
@@ -175,4 +176,31 @@ test('spotLinks: a link to the spot in a block\'s own words on the phone counts 
     { id: 'blk-p', type: 'text', props: { html: '<p>Plain</p>' }, phoneProps: { html: '<p><a href="#priser" data-urd-target="priser">Priser</a></p>' } },
   ] }] };
   assert.deepEqual(spotLinks({ id: 'sec-9', name: 'priser' }, { page, pageId: 'kaker', path: '/kaker' }).map((u) => u.blockId), ['blk-p']);
+});
+
+test('the name field refuses typed words with no letter or digit, so the name a spot has is never lost to them', async () => {
+  const { slugText } = await engineImport('imageTools.js');
+  const field = readFileSync(new URL('../editor/src/lib/AnchorField.svelte', import.meta.url), 'utf8');
+  const wanted = field.match(/\n {2}const wanted = \$derived\((.*)\);\n/);
+  const error = field.match(/\n {2}const error = \$derived\.by\(\(\) => \{\n([\s\S]*?)\n {2}\}\);\n/);
+  const start = field.indexOf('\n  function commit(') + 1;
+  assert.ok(wanted && error && start > 0, 'the name as typed, its check and the commit');
+  const commit = field.slice(start, field.indexOf('\n  }\n', start) + 4);
+  /** The field's commit as the owner leaves it with words typed over the stored name. */
+  const leave = (words, value = 'priser') => {
+    const changes = [];
+    const left = new Function('slugText', 'ANCHOR_MAX', 'anchorError', 'taken', 'onchange', 'value', 'start',
+      `let typed = start;\nconst wanted = ${wanted[1]};\nconst error = (() => {\n${error[1]}\n})();\n${commit}\ncommit();\nreturn { typed, error };`)(
+      slugText, ANCHOR_MAX, anchorError, () => new Set(['kontakt']), (name) => changes.push(name), value, words);
+    return { changes, ...left };
+  };
+  for (const words of ['!!!', ' ?! ', '***', '---']) {
+    const { changes, error: why, typed } = leave(words);
+    assert.deepEqual(changes, [], `${JSON.stringify(words)}: the stored name stands`);
+    assert.equal(why, 'form', 'refused with a note');
+    assert.equal(typed, words, 'the words stay in the field');
+  }
+  assert.deepEqual(leave('Priser og pakker').changes, ['priser-og-pakker'], 'words with letters are written as a name');
+  assert.deepEqual(leave('Kontakt').changes, [], 'a name another spot holds is refused');
+  assert.deepEqual(leave('').changes, [''], 'an emptied field removes the name');
 });

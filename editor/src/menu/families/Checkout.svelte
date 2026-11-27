@@ -1,8 +1,6 @@
 <script>
-  /* The checkout block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. The payment settings (block version 2, ADR-0028) are one
-     object, written whole through paymentsOf so every field keeps its shape. */
+  /* The checkout block in the element menu: its Content and Style areas.
+     The payment settings (ADR-0028) are one object, written whole through paymentsOf. */
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
@@ -67,7 +65,7 @@
     <ShopLinks from="checkout" />
   {/snippet}
   {#snippet checkoutPayment()}
-    <!-- Each provider is a setting row of its own inside the one payments prop, its way back turning that provider off; when to take the money stands under the card provider it belongs to -->
+    <!-- Each provider is a setting row of its own, its way back turning it off; when to take the money stands under the card provider -->
     <Setting pin="vippsButton" own={pays.vipps} reset={() => setPay({ vipps: false })}>
       <SwitchRow label={ta('lbl.vippsCheckout')} title={ta('tip.checkout.vippsCheckout')} checked={pays.vipps} onchange={(on) => setPay({ vipps: on })} />
     </Setting>

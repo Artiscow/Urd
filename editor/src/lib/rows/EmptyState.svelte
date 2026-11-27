@@ -1,6 +1,5 @@
 <script>
-  /* An empty list or panel, in the row kit (0.7.30.2): what will stand here, and the way to add the first.
-     `action` is the button's words and `onaction` what it does; `children` takes anything else the empty place offers, and `title` explains in a tooltip how the place fills. */
+  /* An empty list or panel in the row kit: what will stand here, and the button that adds the first (`action`, `onaction`). */
   let { text, title = undefined, action = undefined, onaction = undefined, children = undefined } = $props();
 </script>
 

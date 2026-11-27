@@ -1,10 +1,5 @@
 <script>
-  /* A collection's entries as rows, in the order the page shows them: each with its picture, its title and its date or price, the chosen one marked.
-     An entry that moves is dragged by its row, the row kit's drag (lib/rows/row-drag.svelte.js), or stepped with Alt and the arrow keys on its focused row; a dated entry stands by its date, as on the page.
-     While a search narrows the rows, nothing moves, since the neighbours an entry would pass are hidden.
-     With `onticks`, each row's tick box stands in the drag grip's place before its picture: under the pointer or the focus, and on every row once one is ticked.
-     Shift and a press on a tick take the run from the last one ticked, Space ticks the focused row, Ctrl+A ticks every row shown and Escape clears the ticks.
-     While any row is ticked, a press on a row ticks or unticks it as its tick does, and Enter opens it, so the ticks can always be taken away one by one. */
+  /* A collection's entries as rows in the page's order, moved by the row kit's drag or Alt and the arrows; `onticks` gives each row a tick box. */
   import { getContext, tick } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';
@@ -30,7 +25,7 @@
   const movables = $derived(shown.filter((en) => movable(view.kind, en)));
 
   let listEl = $state(null);
-  /** The drag, in one undo step: the entry leaves its place and lands before or after the target; its card shows its picture, its title and what the row says under it. */
+  /** The drag, one undo step: the entry lands before or after the target; its card shows its picture, its title and what the row says under it. */
   const drag = new RowDrag((from, to) => {
     ed.mutateCollection(id, `collection:${id}:move-entry`, (data) => {
       data.entries = reorderRows(data.entries, (en) => en.id, from, to);
@@ -100,8 +95,7 @@
     {@const ticked = ticks.includes(entry.id)}
     <div class="nav-item cl-row" class:selected={selected === entry.id} class:ticked
       data-entry-id={entry.id} data-drag-id={canMove ? entry.id : undefined} role="listitem">
-      <!-- The line is the drag handle; the head opens the entry, and the tick stands beside it, so no control sits inside another.
-           Alt and the arrow keys on the head are the keyboard's way to move an entry, so the drag itself needs no role of its own. -->
+      <!-- The line is the drag handle; the head opens the entry and the tick stands beside it, so no control sits inside another. -->
       <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div class="cl-line" {@attach drag.handle(entry.id, canMove)}>
       <span class="cl-slot">

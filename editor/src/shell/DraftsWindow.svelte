@@ -1,11 +1,5 @@
 <script>
-  /* The Drafts window (ADR-0032, state/drafts.svelte.js): opened from the Drafts tab in the System section, it stands over the canvas beside the work (lib/FloatWindow.svelte), dragged by its head.
-     Its head names it, with the striped «W.I.P.» tag while Drafts is being finished, «Move back to the drafts tab» while it stands where it was dragged, a «⋯» menu (this browser's name, «Autosave»), which opens on a mouse's rest and so keeps no tooltip, the fold to a pill, the pin that keeps it open while the owner edits, and Close.
-     Three tabs say where each change stands, the one with something new opening first:
-     This browser: each part that stands here alone, ticked to be saved and published or unticked to be kept for later; a row leads to the change, and a part saved on another device since says so under it. «Save ticked…» opens a one-line note in place, which travels with the save; Enter saves. «Publish ticked» publishes the ticked parts with the parts they cannot go without (lib/publish-pick.js), and an unticked part that goes with one says so in its line.
-     Saved: every saved draft (lib/SavedRows.svelte), with what changed, looked at in the canvas (previewState.startLook), on the phone or in a tab of its own, kept beside this browser's version, or opened here by choice.
-     Live: the last publishes, with the way to History.
-     Unpinned, a press outside it (its tab and the questions it asks excepted) or Escape closes it; opened by a rest on its tab, it closes as the mouse leaves (state/drafts.svelte.js), unless a press in it keeps it. Folded, it is a pill in the canvas's corner with the counts and the dot, which opens it again where it stood. */
+  /* The Drafts window (ADR-0032): a floating window over the canvas whose tabs show the changes in this browser, the saved drafts and the last publishes. */
   import { getContext, tick } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { pageThumb } from '$engine/preset-thumb.js';
@@ -87,7 +81,7 @@
     tick().then(() => windowEl?.querySelector(`[data-tab="${next.id}"]`)?.focus());
   }
 
-  /** «Save ticked…»: the note's field in place of the button, then the save; as the field goes, the focus goes back to «Save ticked…», or to the window's tab where nothing is left to save. */
+  /** «Save ticked…» opens the note's field in its place; as it closes, the focus returns to the button, or to the window's tab when nothing is left. */
   let noteOpen = $state(false);
   let note = $state('');
   let noteEl = $state(null);
@@ -124,7 +118,7 @@
     : ta('drafts.saveN', { n: ed.draftsTicked.length }));
   const allTicked = $derived(here.length > 0 && here.every(ticked));
 
-  /** The «⋯» menu, with this browser's name edited in place: a mouse resting on the «⋯» opens it, and it closes a moment after the mouse has left the «⋯» and the menu, unless a press or the focus keeps it. */
+  /** The «⋯» menu, with the browser's name edited in place: opened by a mouse rest, closed soon after the mouse leaves unless a press or the focus keeps it. */
   let moreOpen = $state(false);
   let moreByRest = false;
   let moreTimer = 0;
@@ -175,7 +169,7 @@
     return ta(`diff.${line.kind}`, { name });
   }
 
-  /** A line of what changed: the saved version looked at in the canvas, scrolled to where it changed once it is drawn; a part taken away has no place in the saved version, so the look stays where it is. */
+  /** A changed line: the saved version shown in the canvas, scrolled to the change once drawn; a removed part has no place, so the view stays. */
   async function lookAtLine(row, line) {
     if (ed.looking?.part !== row.part) await ed.lookAt(row.part, {});
     if (ed.looking?.part !== row.part || line.kind.endsWith('Removed')) return;
@@ -193,7 +187,7 @@
     ed.openPanel('history');
   }
 
-  /** Unpinned, a press outside the window, its tab and the questions it asks closes it, as Escape does; Escape first closes the «⋯» menu where it stands open, and leaves a menu standing elsewhere in the admin (a tool's, the element menu) to close on its own. */
+  /** Unpinned, a press outside the window, its tab or its questions closes it, as Escape does; Escape first closes an open «⋯» menu. */
   $effect(() => {
     if (!ed.draftsOpen) return;
     const onDown = (e) => {

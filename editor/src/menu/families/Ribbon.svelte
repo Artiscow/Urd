@@ -1,7 +1,5 @@
 <script>
-  /* The ribbon block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The ribbon block in the element menu: its Content and Style areas, and the settings it writes through the editor handle. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import SelectRow from '../../lib/rows/SelectRow.svelte';
@@ -26,8 +24,7 @@
   const pinned = pinnedNow();
   let { area } = $props();
 
-  /* The ribbon block: the words are edited both here and directly in the band,
-   * which stands still while the editing chrome is on. */
+  /* The ribbon block: the words are edited both here and directly in the band, which stands still while the editing chrome is on. */
 
   function setRibbonItem(i, value) {
     mutateBlock(`edit:${selectedBlock.blockId}:ribbon${i}`, (b) => { b.props.items[i] = value; });

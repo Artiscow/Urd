@@ -1,6 +1,5 @@
 <script>
-  /* How far a block may shrink below the design width, shown while it shrinks at all.
-     It stands under the narrow-screen choice it belongs to: in Placement, or in Pinned while that choice is pinned (ElementMenu.svelte). */
+  /* How far a block may shrink below the design width, shown while it shrinks at all, under the narrow-screen choice it belongs to. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import SliderRow from '../lib/rows/SliderRow.svelte';

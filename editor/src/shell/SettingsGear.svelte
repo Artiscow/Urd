@@ -1,5 +1,5 @@
 <script>
-  /* The settings gear: at the rail's foot in the rail layouts, in the top bar's right group or the strip's end in the others. It opens Urd's own settings where «Settings window» puts them: the dialog or the sheet over the admin (settings/SettingsDialog.svelte, mounted by App.svelte), or the settings panel in the panel column (panels/SettingsPanel.svelte); pressed again, it closes them. */
+  /* The settings gear: opens Urd's own settings where «Settings window» puts them, a dialog, a sheet or the settings panel; pressed again, it closes them. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';

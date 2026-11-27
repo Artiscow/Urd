@@ -419,3 +419,46 @@ test('the element menu\'s rule for a label\'s parts leaves the colour picker\'s 
   assert.equal((phone.match(/label=\{ta\('ui\.livePhoneFollow'\)\} pressed=\{look\.follow\}/g) ?? []).length, 2, 'the toggle in the column\'s bar and in the floating one');
 });
 
+
+/** A function of a component's script as its own text, from its line to the closing brace at its indent. */
+function scriptFunction(source, name) {
+  const start = source.search(new RegExp(`\\n {2}(?:async )?function ${name}\\(`)) + 1;
+  assert.ok(start > 0, `${name} is found`);
+  return source.slice(start, source.indexOf('\n  }\n', start) + 4);
+}
+
+/** A value as a $state proxy holds it, deeply: structured cloning one throws, as postMessage does. */
+const proxied = (value) => (value && typeof value === 'object' ? new Proxy(value, { get: (target, key) => proxied(Reflect.get(target, key)) }) : value);
+/** $state.snapshot as it acts: plain copies read through the proxies. */
+const snapshot = (value) => (value && typeof value === 'object'
+  ? (Array.isArray(value) ? value.map(snapshot) : Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, snapshot(inner)])))
+  : value);
+
+test('a block added from the field contract is placed as plain data, its entry and its props snapshotted before they are posted', () => {
+  assert.throws(() => structuredClone(proxied({ defaults: { centre: { lat: 1 } } })), { name: 'DataCloneError' }, 'the stand-in proxy cannot be posted');
+  const source = readFileSync(new URL('../editor/src/panels/BlocksPanel.svelte', import.meta.url), 'utf8');
+  const placed = [];
+  // requestPlacement posts the block to the preview: a structured clone, as postMessage makes.
+  const addPluginBlock = new Function('$state', 'requestPlacement', 'makeId', `${scriptFunction(source, 'addPluginBlock')}\nreturn addPluginBlock;`)(
+    { snapshot }, (block) => placed.push(structuredClone(block)), (prefix) => `${prefix}-1`);
+  const entry = proxied({ type: 'plugin-map', version: 2, defaults: { zoom: 12, centre: { lat: 63.43, lon: 10.39 }, layers: ['osm'] } });
+  addPluginBlock(entry, proxied({ title: { text: 'Kart' } }));
+  addPluginBlock(entry);
+  assert.equal(placed.length, 2);
+  assert.deepEqual(placed[0].props, { zoom: 12, centre: { lat: 63.43, lon: 10.39 }, layers: ['osm'], title: { text: 'Kart' } });
+  assert.deepEqual([placed[0].type, placed[0].version, placed[0].id], ['plugin-map', 2, 'blk-1']);
+  assert.deepEqual(placed[1].props, { zoom: 12, centre: { lat: 63.43, lon: 10.39 }, layers: ['osm'] });
+});
+
+test('taking away a background\'s last layer takes the background away, never leaving an empty list of layers', () => {
+  const source = readFileSync(new URL('../editor/src/section/BackgroundEditor.svelte', import.meta.url), 'utf8');
+  const opened = { 'sec-1': [true, false] };
+  const removeBgLayer = new Function('opened', `${scriptFunction(source, 'removeBgLayer')}\nreturn removeBgLayer;`)(opened);
+  const section = { id: 'sec-1', background: { version: 1, layers: [{ type: 'color', version: 1, props: {} }, { type: 'grain', version: 1, props: {} }] } };
+  const bg = { keyPrefix: 'bg', keyId: 'sec-1', mutate: (key, change) => change(section) };
+  removeBgLayer(bg, 1);
+  assert.deepEqual(section.background.layers.map((l) => l.type), ['color'], 'a layer goes, the rest stand');
+  assert.deepEqual(opened['sec-1'], [true], 'its open state goes with it');
+  removeBgLayer(bg, 0);
+  assert.equal('background' in section, false, 'the last layer takes the background with it');
+});

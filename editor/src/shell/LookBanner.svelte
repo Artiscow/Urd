@@ -1,6 +1,5 @@
 <script>
-  /* The banner over the canvas while a saved draft is looked at (state/preview.svelte.js, the Drafts window's Look): which draft, from which browser and when; with «Look at both», the saved version or this browser's; the screen or the phone; «New tab» for a page; «Back to mine», and «Open here» where this browser does not hold the draft as saved.
-     The canvas stands framed in amber under it (app.css `.frame-wrap.looking`), with its editing paused until the look ends. */
+  /* The banner over the canvas while a saved draft is looked at: which draft, from which browser and when, and the ways to switch, open it or go back. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';

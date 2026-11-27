@@ -1,5 +1,5 @@
 <script>
-  /* The Shop group of the shop's blocks (0.7.10.8): the way to the shop's other parts in one click each. From the product cards the checkout page and the shop currency (the catalogue has its own group); from the checkout the products, the shop page and the shop currency. */
+  /* The Shop group of the shop's blocks: the way to the shop's other parts, the catalogue, the pages and the currency, in one click each. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   const ed = getContext('urd-editor');

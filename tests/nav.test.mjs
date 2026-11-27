@@ -1203,3 +1203,61 @@ test('subsAfterRender: the submenus open before open again, and with every one o
   assert.match(nav, /new Map\(subsAfterRender\(subs\.filter\(\(entry\) => !isFixed\(entry\)\)\.map\(idOf\), was, expandedSubs\(\)\)\)/);
 });
 
+
+test('each choice for the bar on a phone starts on «Same», which writes nothing, and writes a value only once the owner sets one', async () => {
+  await import('./_svelte-loader.mjs');
+  const { readFileSync } = await import('node:fs');
+  const { parse } = await import(new URL('../editor/node_modules/svelte/src/compiler/index.js', import.meta.url).href);
+  const { navActions } = await import('../editor/src/panels/nav/nav-actions.js');
+  const { PAD_Y, TEXT_SIZE, SIZE_IDS, clampRange } = await import('../editor/src/lib/nav-size.js');
+  const source = readFileSync(new URL('../editor/src/panels/nav/NavMobile.svelte', import.meta.url), 'utf8');
+  const text = (node) => source.slice(node.start, node.end);
+  /** One of the script's helpers as its own text, a derived value as the value it derives. */
+  const helper = (name) => {
+    const start = source.search(new RegExp(`\\n {2}(?:const ${name} = |function ${name}\\()`)) + 1;
+    assert.ok(start > 0, `${name} is found`);
+    const line = source.slice(start, source.indexOf('\n', start));
+    if (line.endsWith('{')) return source.slice(start, source.indexOf(line.startsWith('  function') ? '\n  }\n' : '\n  };\n', start) + 4);
+    return line.replace(/= \$derived\((.*)\);$/, '= $1;');
+  };
+  // The controls of the bar's part, each with the expressions it is drawn and changed by.
+  const bar = parse(source, { modern: true }).fragment.nodes.find((n) => n.type === 'IfBlock' && text(n.test) === "part === 'all' || part === 'bar'");
+  assert.ok(bar, 'the bar\'s part');
+  const controls = [];
+  const walk = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) return node.forEach(walk);
+    if ((node.type === 'Component' && ['Choice', 'SelectRow'].includes(node.name)) || (node.type === 'RegularElement' && node.name === 'input')) {
+      const attrs = Object.fromEntries(node.attributes.filter((a) => a.type === 'Attribute' && a.value?.type === 'ExpressionTag').map((a) => [a.name, text(a.value.expression)]));
+      if (attrs.onchange) controls.push({ input: node.name === 'input', ...attrs });
+    }
+    for (const key of ['fragment', 'nodes', 'consequent', 'alternate']) walk(node[key]);
+  };
+  walk(bar.consequent);
+  const helpers = ['sameOnOff', 'phoneLayoutShown', 'navMobileFlag', 'setNavMobileFlag', 'setNavMobileBorder', 'onNavMobileField'].map(helper).join('\n');
+  const drawn = controls.map((c) => `{ about: ${JSON.stringify(c.onchange)}, input: ${c.input}, value: () => (${c.value}), options: () => (${c.options ?? 'null'}), placeholder: () => (${c.placeholder ?? 'null'}), change: ${c.onchange} }`);
+  const site = { nav: { items: [], style: {} } };
+  const calls = [];
+  const draw = new Function('siteDraft', 'ta', 'setNavMobile', 'SIZE_IDS', 'PAD_Y', 'TEXT_SIZE', 'clampRange', `${helpers}\nreturn [${drawn.join(',\n')}];`);
+  const SAME = 'lbl.navSameAsDesktop';
+  const same = draw(site, (key) => key, (key, value) => calls.push([key, value]), SIZE_IDS, PAD_Y, TEXT_SIZE, clampRange)
+    .filter((c) => (c.input ? c.placeholder() === SAME : c.options()?.[0]?.join() === `,${SAME}`));
+  assert.ok(same.length >= 8, `the bar's choices with «Same» are read (${same.length})`);
+  for (const c of same) {
+    assert.equal(c.value(), '', `${c.about}: starts on «Same»`);
+    calls.length = 0;
+    c.change(c.input ? { target: { value: '' } } : '');
+    assert.ok(calls.length > 0 && calls.every(([, value]) => value === undefined), `${c.about}: «Same» writes nothing`);
+    calls.length = 0;
+    c.change(c.input ? { target: { value: '20' } } : c.options()[1][0]);
+    assert.ok(calls.length > 0 && calls.every(([, value]) => value !== undefined), `${c.about}: a value set is written`);
+  }
+  // The phone's own settings leave the file once none is left.
+  const { setNavMobile } = navActions({ siteDraft: site, siteMutate: (key, change) => change() });
+  setNavMobile('size', undefined);
+  assert.equal('mobile' in site.nav.style, false);
+  setNavMobile('size', 'lg');
+  assert.deepEqual(site.nav.style.mobile, { size: 'lg' });
+  setNavMobile('size', undefined);
+  assert.equal('mobile' in site.nav.style, false, 'back to «Same», the phone stores nothing');
+});

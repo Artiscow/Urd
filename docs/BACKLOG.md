@@ -599,7 +599,7 @@ An entry inherits the number of the backlog item the work belongs under, plus on
 - [ ] Expand image editor - add images, image layering etc
  
 ## URGENT
-- [ ] Check if ADRs and/or agents.md is updated for engine-notes, and doesn't write too long comments in the engine. One example being preview-blend.js line 1-8: "/**
+- [x] Check if ADRs and/or agents.md is updated for engine-notes, and doesn't write too long comments in the engine. DELIVERED 0.7.0.105 to 0.7.0.109 (27 November 2026). One example being preview-blend.js line 1-8: "/**
  * The editor's stand-in for a blended picture (blocks/image.js `blend`).
  *
  * A blend covers everything its element draws, and a block's bar, handles and outline are drawn by the block, so a block that blends would blend its own tools.

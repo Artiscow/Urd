@@ -1,6 +1,5 @@
 <script>
-  /* The phone review's cards (ADR-0019 decision 5): for each section that needs a review in the phone view, what fell behind the desktop and when, naming the block, with «Reviewed», drawn over the stage beside the phone, level with its section, so they cover none of the page.
-     The preview reports where the sections stand (preview-edit.js reportAttention); what happened is read from the draft. Where the stage has no room beside the canvas, a card stands above its section (placeTextBar). */
+  /* The phone review's cards (ADR-0019): per section to review, what fell behind and when, with «Reviewed», beside the phone level with its section. */
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { blockWords, sectionWords } from '$engine/anchor-model.js';
@@ -52,7 +51,7 @@
     return [];
   }
 
-  /** What happened, from the section's flag: what fell behind, naming the blocks; the general words where none is left to name; a flag of another reason in its own words, and one without a translation (from a newer engine) in the general words. */
+  /** What happened, from the section's flag: the blocks that fell behind, a reason's own words, or the general words where none fits. */
   function reasonText(attention, section) {
     if (attention.reason === 'words-changed' || attention.reason === 'size-changed' || attention.reason === 'pinned-behind') {
       const names = fellBehind(attention, section).map(blockName);

@@ -1,25 +1,7 @@
 <script>
   /**
-   * Theme-driven dropdown (ADR-0009): native select popups are drawn by the
-   * browser/OS and become unreadable in dark panels, so ALL dropdowns in
-   * admin use this one. options is [[value, label], …]; values are
-   * compared as strings, so '' and null can be used as "none".
-   * An option may carry a third entry, a note drawn as a smaller line under its label in the list.
-   * With `fit` the button is as wide as the chosen option and takes no more of its row than that.
-   * With `stay` the list stays open after a choice, for a setting whose choices are tried one after another against the canvas (an image's blend); it closes at a press outside it or Escape.
-   * The list opens with the chosen option in its middle, and carries no tooltip: the one on the row around it (`title` on a setting's row) names the setting, not each choice.
-   * A fourth entry is a face `{ font, sample? }`: the label is drawn in that font, or with `sample` in the UI's font with the sample beside it in that font, in the list and in the closed field alike (fontChoices in the engine's fonts.js); a fourth entry without a font name is no face.
-   *
-   * Two branches (ADR-0011 addendum, anchored.js decides): with the Popover
-   * API and anchor positioning the list opens in the top layer, placed
-   * under its button by CSS with the browser flipping it away from the
-   * viewport edge, and light dismiss handles the outside click and Escape.
-   * Otherwise the list is position: fixed (the panels clip absolute
-   * content), placed by measuring, and closes on a click outside or Escape;
-   * on a scroll outside it FOLLOWS the anchor instead of closing: clicking a
-   * button at the bottom of the panel triggers a focus scroll in the same
-   * instant, and a close-on-scroll rule would slam the popup shut before
-   * anything could be picked.
+   * A themed dropdown (ADR-0009) of [value, label, note?, face?] options, compared as strings.
+   * It opens as an anchored popover, else as a fixed, measured list.
    */
   import { untrack } from 'svelte';
   import { lingering, menuMotion } from './motion.svelte.js';
@@ -64,8 +46,7 @@
     open = true;
   }
 
-  /** Scrolls the list so the chosen option stands in its middle as it opens; a list that shows all its options does not move.
-      Every option carries it and the choice is read as the option is drawn, so a choice made in a list that stays open moves nothing. */
+  /** Scrolls the opening list so the chosen option stands in its middle; the choice is read untracked, so a pick in a list that stays open moves nothing. */
   function centred(node) {
     if (node.dataset.value !== untrack(() => `${value ?? ''}`)) return;
     const list = node.parentElement;
@@ -80,9 +61,7 @@
     onchange?.(v);
   }
 
-  // A click in the preview iframe never reaches this document (light
-  // dismiss does not see it either); the focus moving there is a window
-  // blur, which closes the list in both branches.
+  // A click in the preview iframe never reaches this document; the focus moving there blurs the window, which closes the list.
   $effect(() => {
     if (!open) return;
     const onBlur = () => { if (native) popEl?.hidePopover(); else open = false; };
@@ -94,6 +73,7 @@
     const onKey = (e) => {
       if (e.key === 'Escape') open = false;
     };
+    // A scroll outside moves the list with its button; it never closes the list.
     const onScroll = (e) => {
       if (rootEl && e.target instanceof Node && !rootEl.contains(e.target)) place();
     };
@@ -114,8 +94,7 @@
   {#if typeof face?.font === 'string' && face.sample}{label}<span class="dd-sample" style:font-family={face.font} aria-hidden="true">{face.sample}</span>{:else if typeof face?.font === 'string'}<span style:font-family={face.font}>{label}</span>{:else}{label}{/if}
 {/snippet}
 
-<!-- The caret is drawn, never a character (chrome is icons only), and turns
-     over while the menu is open. Sized in em so it follows the button's text. -->
+<!-- The caret is drawn, never a character, and turns over while the menu is open; sized in em to follow the button's text. -->
 {#snippet caret()}
   <span class="dd-caret" class:dd-caret-open={open} aria-hidden="true">
     <svg viewBox="0 0 16 16" width="1em" height="1em" fill="none" stroke="currentColor"
@@ -253,8 +232,7 @@
     box-shadow: 0 12px 36px rgb(0 0 0 / 55%);
   }
 
-  /* The anchored branch: the popover box is placed against the button by
-     CSS (top layer, no z-index), as wide as the button at least. */
+  /* The anchored branch: the popover is placed against the button by CSS, at least as wide as the button. */
   @supports (anchor-name: --a) {
     .dd-anchored {
       inset: auto;

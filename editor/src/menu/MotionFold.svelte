@@ -1,7 +1,5 @@
 <script>
-  /* The block's motion, at the foot of Style in the element menu: how it comes in as the page scrolls to it, with its duration and delay, and what it does under the pointer, its rows from the row kit as a section's motion has them.
-     A capability (ADR-0031): a card while the block has an entrance or an effect, or was given motion this session, and nothing until then.
-     The entrance and the pointer's effect are setting rows that tell whether the block has one, with the way back to none; the way to play it, the duration, the delay and whether it plays on phones stand in the entrance's row. */
+  /* The block's motion at the foot of Style: its entrance, with duration and delay, and its pointer effect; a capability card (ADR-0031). */
   import { getContext } from 'svelte';
   import Capability from '../lib/rows/Capability.svelte';
   import Setting from '../lib/rows/Setting.svelte';
@@ -23,14 +21,13 @@
     <SelectRow label={ta('lbl.animIn')} title={ta('tip.props.blockAnim')} value={isEntrance(selectedBlock.animation) ? selectedBlock.animation.type : ''}
       options={blockEntranceOptions()} onchange={(v) => setBlockAnimation(v || null)} />
     {#if isEntrance(selectedBlock.animation)}
-      <!-- Plays the entrance once on the canvas, as a visitor sees it on this screen: a block this screen does not draw, or a phone with the entrance switched off, has none to play -->
+      <!-- Plays the entrance once on the canvas as this screen shows it; greyed out where this screen draws no entrance -->
       <button type="button" class="ghost action" disabled={ed.viewMode === 'mobile' ? !selectedBlock.entranceMobile || selectedBlock.hideMobile : selectedBlock.hideDesktop}
         onclick={() => ed.bridge?.sendDemoAnim(selectedBlock.sectionId, selectedBlock.blockId)}>{ta('ui.playEntrance')}</button>
       <NumberRow label={ta('lbl.durationMs')} title={ta('tip.anim.duration')} value={selectedBlock.animation.props.duration} min={100} max={4000} step={100}
         onchange={(v) => setBlockAnimProp('duration', Number(v))} />
       <NumberRow label={ta('lbl.delayMs')} title={ta('tip.anim.delay')} value={selectedBlock.animation.props.delay ?? 0} min={0} max={4000} step={100}
         onchange={(v) => setBlockAnimProp('delay', Number(v))} />
-      <!-- Whether it plays on phones -->
       <SwitchRow label={ta('lbl.entranceMobile')} checked={selectedBlock.entranceMobile} onchange={(on) => setBlockEntranceMobile(on)} />
     {/if}
   </Setting>

@@ -1,12 +1,6 @@
 <script>
   /**
-   * Glyph/emoji picker: a button showing the current glyph that opens a broad, categorized menu with recent glyphs at the top.
-   * The glyph set and the recent-glyph logic live in the engine's glyphs.js (shared with the text editor bar's glyph menu, same localStorage key).
-   * With onicon set, the engine's icon library (drawn SVGs) is shown at the top as well; with onimage set, a custom icon image can be uploaded (webp-compressed) from the button at the very top, over the search;
-   * with iconsOnly the glyphs are left out, so the picker offers the library and an own image alone (the links' icons).
-   * `blank` is a drawing (SVG markup) the button shows while nothing is chosen, such as the arrow a mark of the owner's own replaces; no glyph is then marked as chosen.
-   * With onremove set, the bin on the button's top right corner takes the chosen mark away (`removeLabel` names what it goes back to), as a colour's bin does on its swatch.
-   * Two branches (ADR-0011 addendum, anchored.js decides): in the top layer, anchored under the button's right edge with the browser flipping it away from the viewport edge and light dismiss; otherwise position: fixed (the panels clip absolute content), placed by measuring, closing on a click outside, Escape or a scroll outside. The same pattern as ColorPicker.
+   * Glyph and emoji picker: a button showing the chosen glyph that opens a menu of categories, recent glyphs first (the engine's glyphs.js).
    */
   import { lingering, menuMotion } from './motion.svelte.js';
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
@@ -116,9 +110,8 @@
     closePicker();
   }
 
-  // Close on a window blur in both branches (a click in the preview iframe
-  // never reaches this document); the JS branch also closes on a click
-  // outside or Escape.
+  // Both branches close on a window blur, since a click in the preview never reaches this document.
+  // The JS branch also closes on a click outside or Escape.
   $effect(() => {
     if (!open) return;
     const onBlur = () => closePicker();
@@ -257,7 +250,7 @@
     cursor: pointer;
   }
 
-  /* The mark's removal: the bin on the dark red every removal draws (app.css .icon-btn.danger), small on the button's top right corner, as on a colour's swatch (ColorPicker.svelte) */
+  /* The mark's removal: the bin on the dark red every removal draws (app.css .icon-btn.danger), small on the button's top right corner */
   .gp-remove {
     position: absolute;
     top: -6px;
@@ -302,15 +295,13 @@
     padding: 8px;
   }
 
-  /* The anchored branch: under the button, right edges aligned (the grid
-     extends left over the panel), flipped by the browser when it does not fit. */
+  /* The anchored branch: under the button, right edges aligned, flipped by the browser when it does not fit. */
   @supports (anchor-name: --a) {
     .gp-anchored {
       inset: auto;
       margin: 6px 0 0;
       top: anchor(bottom);
-      /* Right edges aligned with the swatch, kept inside the pane the
-         swatch stands in (--urd-pane, named by namePane while open) */
+      /* Right edges aligned with the swatch, kept inside the pane it stands in (--urd-pane, named by namePane while open). */
       left: clamp(calc(anchor(--urd-pane left, 0px) + 8px), calc(anchor(right) - 292px), calc(anchor(--urd-pane right, 100vw) - 300px));
     }
 
@@ -361,8 +352,7 @@
     padding: 5px 0;
     cursor: pointer;
     text-align: center;
-    /* Buttons do not inherit the text color: without this, glyphs and SVG
-       icons come out black in the dark menu */
+    /* Buttons do not inherit the text colour; this keeps glyphs and SVG icons light in the dark menu. */
     color: #e8eaf0;
   }
 

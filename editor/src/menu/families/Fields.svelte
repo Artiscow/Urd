@@ -1,16 +1,12 @@
 <script module>
-  /* The field contract (plugin blocks, `fields` in urd-plugin-blocks):
-     drafts and search status for place fields, keyed per block+field so a
-     block switch shows the selected block's own values. Module state, so
-     every copy of the menu shows the same. */
+  /* The place fields' drafts and search status, keyed per block and field, shared by every copy of the menu. */
   let placeDrafts = $state({});
   let placeStatus = $state({});
   let placeBusy = $state(false);
 </script>
 
 <script>
-  /* The field contract (0.7.26.2): the settings of a core block listed in CORE_FIELDS and of a plugin block with `fields`, and the button that opens a plugin block's own config panel in the preview.
-     A plugin block with `designs` (the design contract) has its design row drawn first in Style by the menu itself (ElementMenu.svelte). */
+  /* The field contract: the settings of a core block in CORE_FIELDS and of a plugin block with `fields`, or the button to a plugin block's own config panel. */
   import Setting from '../../lib/rows/Setting.svelte';
   import { getContext } from 'svelte';
   import SelectRow from '../../lib/rows/SelectRow.svelte';
@@ -33,10 +29,7 @@
     return v;
   };
 
-  /** The place field writes the text to the field's key and coordinates to
-   *  lat/lon: "lat, lon" is parsed locally, links are written untouched
-   *  (the plugin interprets them at render), everything else is geocoded
-   *  via /api/geocode. */
+  /** The place field writes its text to the field's key and its coordinates to lat and lon: «lat, lon» and links as typed, the rest geocoded. */
   async function searchPlace(f) {
     const blockId = selectedBlock.blockId;
     const k = `${blockId}:${f.key}`;
@@ -52,9 +45,7 @@
     try {
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(raw)}`);
       const data = await res.json().catch(() => null);
-      // The selection may have switched block while the search was in
-      // flight: then the reply must be discarded, otherwise the coordinates
-      // are written to the wrong block's props.
+      // A reply that comes after another block was selected is dropped.
       if (selectedBlock?.blockId !== blockId) return;
       if (res.ok && Number.isFinite(data?.lat)) {
         setBlockProps(f.key, { [f.key]: raw, lat: data.lat, lon: data.lon });
@@ -69,7 +60,7 @@
     }
   }
 
-  /** A field's standard: the value a new block of its type starts with, from the core block's seed or the plugin block's `defaults` where each of its variants (laid over the defaults in Blocks) starts it the same; undefined where none is given or they differ. */
+  /** A field's standard: the value a new block of its type starts with, from the core seed or the plugin's `defaults` where every variant agrees. */
   const standardOf = (f) => {
     if (CORE_FIELDS[selectedBlock.type]) return ed.propStarts(selectedBlock.type, f.key);
     const plugin = pluginBlocks.find((b) => b.type === selectedBlock.type);
@@ -94,10 +85,7 @@
 </script>
 
 {#if area === 'content'}
-  <!-- The field contract: core blocks listed in CORE_FIELDS and plugin
-       defs with `fields` get their settings rendered here; a plugin
-       block without fields gets the button that opens its own config
-       panel in the preview (a plugin copy of the former calendar or form). -->
+  <!-- The fields' settings, or the button to a plugin block's own config panel in the preview. -->
   {@const pluginFields = CORE_FIELDS[selectedBlock.type] ?? pluginBlocks.find((b) => b.type === selectedBlock.type)?.fields ?? []}
   {#snippet fieldList()}
     {#each pluginFields as f (f.key)}

@@ -1,7 +1,5 @@
 <script>
-  /* A look, in the row kit (0.7.30.2): a button that opens the design picker, with the design's picture where it has one, the setting's name, and under it the design chosen.
-     Filled as the admin's buttons are, so it never reads as a fold; buttons that stand together sit side by side in an even grid (`.look-rows` in app.css).
-     A pin stands inside its border and the setting's reset on its corner, both through the setting row it is drawn in (Setting.svelte). */
+  /* A look in the row kit: a button that opens the design picker, with the design's picture, the setting's name and the design chosen. */
   let { label, value, picture = '', title = undefined, onclick } = $props();
 </script>
 

@@ -52,7 +52,7 @@ for (const selector of ['.topbar', '.topbar-group']) {
 
 /* The fold steps are delimited by their own heading, so an unrelated media
    query elsewhere in the file does not count as a step. */
-const FOLD = CSS.slice(CSS.indexOf('---- Foldetrinnene'));
+const FOLD = CSS.slice(CSS.indexOf('---- The fold steps'));
 
 const cssSteps = () => [...FOLD.matchAll(/@media \(max-width:\s*(\d+)px\)/g)].map((m) => Number(m[1]));
 

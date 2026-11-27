@@ -1,12 +1,10 @@
 <script>
-  /* The search field of the row kit: in the element menu's head and over the menu in the Properties panel, where it narrows the menu to the settings whose label or tooltip holds the words, and over a panel's list (the Blocks panel's palette).
-     Escape empties a field with words in it; in an empty field it goes on and closes the menu. The dimmed / at the field's end is the key that brings the focus to the menu's field (ElementMenu's keys), shown while the field is empty.
-     `menu={false}` is a panel's field: it names itself with `label`, and has neither the / mark nor the area keys. */
+  /* The row kit's search field, narrowing a menu or a panel's list to what holds the words; `menu={false}` is a panel's field, named by `label`. */
   import { ta } from '$engine/i18n.js';
   import { chooseArea, MENU_AREAS } from '../../menu/state.svelte.js';
   let { get, set, menu = true, label = undefined, title = undefined } = $props();
 
-  /** Escape empties a field with words; Enter in a field with words moves the focus to the first setting the words left standing; 1, 2 and 3 in an empty field choose the area, so the keys work the moment a menu opens with the focus here. */
+  /** Escape empties the field; Enter goes to the first setting the words leave; 1, 2 and 3 in an empty field choose the area. */
   function keys(e) {
     if (e.key === 'Escape' && get()) { e.stopPropagation(); set(''); return; }
     if (e.key === 'Enter' && get()) {

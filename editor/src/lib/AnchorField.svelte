@@ -1,9 +1,5 @@
 <script>
-  /* The name a section or block carries for links (anchor-model.js): typed, or taken from a suggestion drawn from its own words, and checked against the page as it is typed.
-     The typed words are written as a name (Priser becomes priser), and a name another spot holds or words with no letters or digits are refused with a note.
-     An emptied field removes the name; the spot's own id still takes links.
-     «Copy link» copies the address within the site that lands on the spot (/kaker#priser), by its name, or else by its id.
-     Under the field stand the links that point at the spot from this page, the menu and the footer (spotLinks); pressing one selects its block or opens its panel. */
+  /* The name a section or block carries for links: typed or suggested, checked against the page as it is typed, with the links that point at it under it. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ANCHOR_MAX, anchorError, suggestAnchor, spotLinks } from '$engine/anchor-model.js';
@@ -12,7 +8,7 @@
   import IconButton from './rows/IconButton.svelte';
   import ErrorLine from './rows/ErrorLine.svelte';
   const ed = getContext('urd-editor');
-  /** value: the stored name ('' = none); own: the spot's id; taken: () => the ids in use on the page apart from this spot; words: what the suggestion is made from; path: the page's address. */
+  /** value: the stored name; own: the spot's id; taken: () => the other ids in use on the page; words: the suggestion's source; path: the page's address. */
   let { value = '', own, taken, words = '', path = '/', onchange } = $props();
   const uid = Math.random().toString(36).slice(2, 8);
   /** What each reason anchorError gives says to the owner. */

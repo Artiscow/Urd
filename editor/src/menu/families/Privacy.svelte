@@ -1,6 +1,5 @@
 <script>
-  /* The privacy block in the element menu: whether it opens with the page's heading, and its design with the look beside it (doc-look.js).
-     What the page says comes from the site's settings, so nothing else is set here. */
+  /* The privacy block in the element menu: whether it opens with the page's heading, and its design and look; its words come from the site. */
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import DocLook from '../DocLook.svelte';

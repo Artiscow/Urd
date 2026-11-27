@@ -1,11 +1,5 @@
 <script>
-  /* The link editor (0.7.27.4): one editor for every link the editor stores, opened through state/link.svelte.js.
-     The kind of link is a choice of five, Page, Web address, Email, Phone and File, or pages alone for a host that takes nothing else.
-     File lists the files in media/ the site's content uses (siteFiles), and takes a PDF from the computer, held in the draft until it is published (file-links.js); a host whose link cannot hold one (words in a text) is offered the listed files only.
-     A page is found by searching the register, and a spot on it can then be chosen: the top, each section by its number and first words, and each named block (pageSpots in anchor-model.js); another page's spots are read from its draft or its published file.
-     A link to a page, the web or a file can open in a new tab, a link to the web can carry the rel words, and a link to a file can be saved rather than opened; a host that keeps one address gets none of these, and a host that takes pages only gets no new tab.
-     A spot on the host's own page (`here`) is written without the page (writeLink), so a copy of the host follows the spot's copy.
-     Two forms, chosen in the admin settings (linkEditorPref): a native modal dialog (ADR-0011: Escape, Cancel and a press on the backdrop close it, and focus goes back to the field that opened it) with the pages and the spots side by side and the actions in its header; or, for a request that names the field it came from, a small non-modal dialog placed beside that field, with one search over pages and spots and the chosen page's spots unfolding under the results, closed by a click outside, Escape, or the focus leaving for the preview. */
+  /* The link editor for every link the editor stores, as a modal dialog or a small one beside its field (linkEditorPref). */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';
@@ -21,7 +15,7 @@
   import { siteFiles, heldPdf, heldName, fileLabel } from './file-links.js';
   import { ICONS } from './icons.js';
   const ed = getContext('urd-editor');
-  /** request: the value to start from, `shape`, `pagesOnly`, `here`, `anchor` (the field, for the editor beside it) and `apply` (state/link.svelte.js); onclose: leaves. */
+  /** request: the value, `shape`, `pagesOnly`, `here`, `anchor` (the field to stand beside) and `apply`; onclose: leaves. */
   let { request, onclose } = $props();
 
   // The editor is drawn anew for every request (App.svelte keys it), so the request is read once.
@@ -35,7 +29,7 @@
   const offerUpload = request.upload !== false;
   // svelte-ignore state_referenced_locally
   const removable = request.removable !== false && hasLink(request.value);
-  // Beside the field only when the setting says so and the request came from a field; the text toolbar and the block menu have no field to stand beside.
+  // Beside the field only when the setting says so and the request came from a field.
   // svelte-ignore state_referenced_locally
   const anchor = request.anchor instanceof HTMLElement ? request.anchor : null;
   const beside = ed.linkEditorPref === 'popover' && !!anchor;
@@ -64,7 +58,7 @@
 
   const KIND_KEYS = { page: 'link.kind.page', web: 'link.kind.web', email: 'link.kind.email', phone: 'link.kind.phone', file: 'link.kind.file' };
   const REL_KEYS = { nofollow: ['link.nofollow', 'tip.link.nofollow'], sponsored: ['link.sponsored', 'tip.link.sponsored'] };
-  // A page's name and address are the owner's words, matched as typed; a spot's words hold the admin's own («Section 2»), found in any language once the other languages are in (search-langs.js), which a typed query loads.
+  // A page's name and address match as typed; a spot's words are the admin's own, found in any language once the others are in.
   $effect(() => searchLangs.need(query));
   const spotMatch = $derived(searchLangs.ready ? matchAny : matchWords);
   const shownPages = $derived(pages.filter((p) => matchWords(`${p.title} ${p.path}`, query)));
@@ -112,7 +106,7 @@
     };
   }
 
-  // Beside the field the dialog is not modal, so the ways out are its own: a press outside, Escape, the focus leaving for the preview; a scroll elsewhere moves it along with its field.
+  // Beside the field the dialog is not modal: a press outside, Escape or the focus leaving closes it, and a scroll moves it with its field.
   $effect(() => {
     if (!beside || !dialogEl) return;
     const onDown = (e) => {
@@ -183,7 +177,7 @@
     };
   });
 
-  // The site's files, read once the File kind is chosen: from the site, the page being edited, every other page's draft or published file, the collections and the templates.
+  // The site's files, read once the File kind is chosen: from the site, every page, the collections and the templates.
   $effect(() => {
     if (link.kind !== 'file' || files !== null) return;
     let live = true;
@@ -196,7 +190,7 @@
     };
   });
 
-  /** A PDF from the computer: read into the draft with its name, refused when it is too large or not a PDF, with the reason said in the editor (a toast lies under the modal). */
+  /** A PDF from the computer, read into the draft with its name; one too large or not a PDF is refused with the reason in the dialog. */
   function takePdf(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -503,9 +497,8 @@
     box-shadow: 0 16px 48px rgb(0 0 0 / 55%);
   }
 
-  /* The dialog with the rail: the kinds on the left on a darker ground, the
-     picked row in the surface's own colour so it runs into the fields;
-     the box is as tall as the picked kind's fields. */
+  /* The dialog with the rail: the kinds on the left on a darker ground, the picked row in the surface's own colour.
+     The box is as tall as the picked kind's fields. */
   .ld-railed {
     display: grid;
     grid-template-columns: 9.5rem minmax(0, 1fr);

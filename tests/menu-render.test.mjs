@@ -26,7 +26,7 @@ const { keepCapability, dropCapability } = await import('../editor/src/menu/capa
 const { default: CapabilityAdd } = await import('../editor/src/menu/CapabilityAdd.svelte');
 const { default: ElementMenu } = await import('../editor/src/menu/ElementMenu.svelte');
 const { default: FloatingMenu } = await import('../editor/src/menu/FloatingMenu.svelte');
-const { setQuickChoice, setCapAddPref, setShortcutsPref, setFoldsPref, menu: menuState } = await import('../editor/src/menu/state.svelte.js');
+const { setQuickChoice, setCapAddPref, setShortcutsPref, setFoldsPref, menu: menuState, MENU_SMALL_W, MENU_WIDE_W } = await import('../editor/src/menu/state.svelte.js');
 const { CAP_ADD_FORMS, SHORTCUTS_MODES } = await import('../editor/src/menu/forms.js');
 // With nothing stored the menu opens on its search field and adds a capability from the quiet line of names (Minimal); these tests draw Pinned and the head's «+», so they choose those two, as an owner would.
 assert.equal(menuState.shortcutsPref, 'search', 'the search field is the default');
@@ -799,4 +799,86 @@ test('a fold opens once for what asked, stays as the owner leaves it, and opens 
   setFoldsPref(pref);
   // The folds are kept for the tab's life, so a reload opens the same folds.
   assert.match(readFileSync(new URL('../editor/src/lib/folds.svelte.js', import.meta.url), 'utf8'), /sessionStorage\.setItem\(KEY, JSON\.stringify\(\{ open: \[\.\.\.open\], seen: \[\.\.\.seen\] \}\)\)/);
+});
+
+const editorSource = (path) => readFileSync(new URL(`../editor/src/${path}`, import.meta.url), 'utf8');
+
+/** A function of a component's script as its own text, from its line to the closing brace at its indent. */
+function scriptFunction(source, name) {
+  const start = source.search(new RegExp(`\\n {2}(?:async )?function ${name}\\(`)) + 1;
+  assert.ok(start > 0, `${name} is found`);
+  return source.slice(start, source.indexOf('\n  }\n', start) + 4);
+}
+
+test('a small panel stands as wide as the menu places it until it is measured, and the wide menu as wide as its two columns', () => {
+  const css = editorSource('app.css');
+  const small = css.match(/\n\s*\.block-menu\.small \{\s*--menu-w: min\(var\(--menu-fit-w, (\d+)px\), /);
+  assert.ok(small, 'the small panel\'s width falls back to a number until it is measured');
+  assert.equal(Number(small[1]), MENU_SMALL_W);
+  const wide = css.match(/\n\s*\.block-menu\.wide \{\s*--menu-w: min\((\d+)px, /);
+  assert.ok(wide, 'the wide menu\'s width');
+  assert.equal(Number(wide[1]), MENU_WIDE_W);
+  // The menu is placed by the same numbers.
+  const page = editorSource('state/page.svelte.js');
+  assert.match(page, /small \? \(smallMenuSize\?\.w \?\? MENU_SMALL_W\) : menuIsWide\(\) \? MENU_WIDE_W : /);
+});
+
+test('a place found after the selection moved to another block is dropped, never written to the block selected now', async () => {
+  const fields = editorSource('menu/families/Fields.svelte');
+  let selected = { blockId: 'b1', props: {} };
+  // The selection as the family reads it: whatever block is selected at the moment it is read.
+  const selection = new Proxy({}, { get: (_, key) => selected[key] });
+  const written = [];
+  let answer = null;
+  const geocode = () => new Promise((resolve) => { answer = resolve; });
+  const searchPlace = new Function('selectedBlock', 'placeDrafts', 'placeStatus', 'placeBusy', 'setBlockProps', 'fetch', 'ta', 'taApiError', `${scriptFunction(fields, 'searchPlace')}\nreturn searchPlace;`)(
+    selection, { 'b1:place': 'Trondheim torg' }, {}, false, (key, patch) => written.push([selected.blockId, patch]), geocode, (key) => key, () => null);
+  let run = searchPlace({ key: 'place' });
+  answer(Response.json({ lat: 63.43, lon: 10.39 }));
+  await run;
+  assert.deepEqual(written, [['b1', { place: 'Trondheim torg', lat: 63.43, lon: 10.39 }]], 'a reply for the block still selected is written to it');
+  written.length = 0;
+  run = searchPlace({ key: 'place' });
+  selected = { blockId: 'b2', props: { place: 'Bergen' } };
+  answer(Response.json({ lat: 63.43, lon: 10.39 }));
+  await run;
+  assert.deepEqual(written, [], 'the block selected now is left as it is');
+});
+
+test('the fold\'s watch on its rows never watches an attribute its own pass sets, so the pass never calls itself', () => {
+  const fold = editorSource('lib/rows/Fold.svelte');
+  const names = Object.fromEntries([...fold.matchAll(/const (\w+) = '([\w-]+)';/g)].map((m) => [m[1], m[2]]));
+  const attribute = (arg) => (arg.startsWith("'") ? arg.slice(1, -1) : names[arg]);
+  const set = [
+    ...[...fold.matchAll(/\.(?:toggleAttribute|setAttribute|removeAttribute)\(([\w]+|'[\w-]+')/g)].map((m) => attribute(m[1])),
+    ...[...fold.matchAll(/\.dataset\.(\w+) =(?!=)/g)].map((m) => `data-${m[1].replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`),
+  ];
+  assert.ok(set.length > 0 && set.every(Boolean), `the attributes the pass sets are read: ${set.join(', ')}`);
+  const watches = [...fold.matchAll(/new MutationObserver\((\w+)\);\s*\w+\.observe\(\w+, (\{[^}]*\})\);/g)];
+  assert.ok(watches.length > 0, 'the fold watches its rows');
+  assert.equal(watches.length, (fold.match(/new MutationObserver\(/g) ?? []).length, 'every watch is read');
+  for (const [, pass, options] of watches) {
+    if (!/\battributes: true\b/.test(options)) continue;
+    const filter = options.match(/attributeFilter: \[([^\]]*)\]/);
+    assert.ok(filter, `${pass}: a watch on attributes names the ones it watches`);
+    const watched = filter[1].split(',').map((entry) => entry.trim()).filter(Boolean).map(attribute);
+    assert.ok(watched.length > 0 && watched.every(Boolean), `${pass}: every watched name is read`);
+    assert.deepEqual(watched.filter((name) => set.includes(name)), [], `${pass} watches none it sets`);
+  }
+});
+
+test('a setting\'s way back is an undo step of its own wherever it is pressed, never joined to the change before it', () => {
+  const setting = editorSource('lib/rows/Setting.svelte');
+  assert.match(setting, /const goBack = \(\) => \(reset \? reset\(\) : group\.resetKey\(key\)\);/, 'the way back is one function');
+  const uses = [...setting.matchAll(/[^\n]*\bgoBack\b[^\n]*/g)].map((m) => m[0].trim()).filter((line) => !line.startsWith('const goBack ='));
+  assert.ok(uses.length >= 4, 'the reset, the fold\'s ask, the row kit\'s and the small window\'s head');
+  for (const line of uses) {
+    // Run as a step of its own, or offered to the small window's head, which runs it so.
+    const rest = line.replaceAll('historyState.asOwnStep(goBack)', '').replace('head.offer(headOwner, own ? goBack : null)', '');
+    assert.doesNotMatch(rest, /\bgoBack\b/, line);
+  }
+  const floating = editorSource('menu/FloatingMenu.svelte');
+  assert.match(floating, /onclick=\{\(\) => historyState\.asOwnStep\(headReset\)\}/);
+  const rest = floating.replace(/const headReset = \$derived\([^\n]*\);/, '').replaceAll('historyState.asOwnStep(headReset)', '').replaceAll('{#if only && headReset}', '');
+  assert.doesNotMatch(rest, /\bheadReset\b/, 'the head runs the way it is offered only as a step of its own');
 });

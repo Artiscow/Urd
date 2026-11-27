@@ -1,6 +1,5 @@
 <script>
-  /* The Nav panel's Tools fold: where the buttons beside the burger stand (the end or the start of the bar; in the column the bottom or the top, with its own alignment), then each tool in the cluster's order: the theme button, the site's links, the cart and the launcher, each switched on beside its own settings.
-     The tools are cards in the row kit's card list, in the cluster's order, and a card dragged to a new place moves its tool in the menu. */
+  /* The Nav panel's Tools fold: where the buttons beside the burger stand, then each tool as a card in the cluster's order, dragged to move it in the menu. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import LinkField from '../../lib/LinkField.svelte';
@@ -46,7 +45,7 @@
     });
   }
 
-  /** The cluster's order (nav.style.tools.order) is stored whole, and only where it differs from the default: a card moves among the tools with a card, and a tool without one keeps its place. */
+  /** The cluster's order (nav.style.tools.order) is stored whole, only where it differs from the default; a tool without a card keeps its place. */
   function moveTool(from, to) {
     const order = toolOrder(siteDraft.nav.style ?? {});
     const shown = order.filter(toolShown);

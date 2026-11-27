@@ -1,6 +1,5 @@
 <script>
-  /* An address field with the site's places to pick from (the Redirects dialog's old address and target): the field takes a typed address, and the arrow at its right end opens the places, grouped, narrowed to what the field holds, a pick written into the field.
-     The list is a popover in the top layer (above the dialog), placed under the field when it opens; Escape and a press outside close it. */
+  /* An address field with the site's places to pick from: the arrow at its end opens them in a popover, grouped and narrowed to what the field holds. */
   import { lingering } from '../lib/motion.svelte.js';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -93,7 +92,7 @@
     border-color: color-mix(in srgb, #d9b44a 70%, transparent);
   }
 
-  /* The arrow inside the field's frame at its right end, centred by its box, on a faint fill of its own; the shell's button hover does not reach it, and a press (translate and scale, the press feel) keeps it in the field */
+  /* The arrow inside the field's frame at its right end, on a faint fill of its own, kept in the field under the shell's hover and press */
   .pf .pf-caret {
     position: absolute;
     top: 0;

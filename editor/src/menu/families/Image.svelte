@@ -1,8 +1,5 @@
 <script>
-  /* The image block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle.
-     What a press on the picture does is a capability (ADR-0031): a card while the picture links somewhere or opens in the lightbox, or was given one this session. */
+  /* The image block in the element menu: its Content and Style areas, and the settings it writes through the editor handle. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import SelectRow from '../../lib/rows/SelectRow.svelte';
@@ -82,7 +79,7 @@
   <Fold id="img-image" title={ta('blocks.image')} value={selectedBlock.props.alt || ta('menu.noAlt')}>{@render imgImage()}</Fold>
   <Capability id="img-link" group={groupOf('img-link', { href: null, page: undefined, target: undefined, newTab: undefined, rel: undefined, download: undefined, lightbox: false })}>{@render imgLink()}</Capability>
 {:else if area === 'style'}
-  <!-- The two one-press choices beside the editor, each with its pin for Pinned, and how the block blends with what lies behind it; the rest of the picture's settings are the editor's -->
+  <!-- The two one-press choices, each with its pin, and how the block blends with what lies behind it; the rest are the image editor's -->
   {#snippet imgLook()}
     <Setting key="fit" pin="imgFit">
       <Choice stack label={ta('lbl.imageFit')} title={ta('tip.image.fit')} value={selectedBlock.props.fit ?? 'cover'}

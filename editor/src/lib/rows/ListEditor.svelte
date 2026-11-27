@@ -1,6 +1,5 @@
 <script>
-  /* A list whose rows are moved, removed and added, in the row kit (0.7.30.2): a row is pressed, held and dragged anywhere outside its fields (the row kit's drag, row-drag.svelte.js, the grip its sign), Alt and the arrow keys move the row the focus is in, a cross removes it, and the add button stands at the list's foot.
-     `row` draws a row's own fields; `card(item, i)` gives the dragged row's card (its name, detail and sign), read from the row's first field without it; `key` gives each row a lasting key, so a row keeps the focus while it moves; `onmove(from, to)` gets the row's index before and after the move; `removeLabel` names the cross for what it removes. */
+  /* A list in the row kit whose rows are dragged, moved with Alt and the arrows, removed and added; `key` keeps a row's focus while it moves. */
   import { tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../icons.js';

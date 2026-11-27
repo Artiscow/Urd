@@ -72,7 +72,7 @@ function sendAdminTheme() {
 function readableOn(bg) {
   const l = relativeLuminance(bg);
   if (l == null) return '#ffffff';
-  return (contrastRatio(bg, '#ffffff') ?? 0) >= (contrastRatio(bg, '#0b0e14') ?? 0) ? '#ffffff' : '#0b0e14';
+  return (contrastRatio(bg, '#ffffff') ?? 0) >= (contrastRatio(bg, '#000000') ?? 0) ? '#ffffff' : '#000000';
 }
 
 let status = $state('');

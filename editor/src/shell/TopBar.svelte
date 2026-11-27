@@ -1,5 +1,5 @@
 <script>
-  /* The top bar: the page name, the view, device and zoom clusters with their fold steps, and on the right the tools and Publish with its menu: the publishing acts, what waits to be published, and the last publish. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle. */
+  /* The top bar: the page name, the device, zoom and view clusters with their fold steps, and on the right the tools and Publish with its menu. */
   import PanelTab from './PanelTab.svelte';
   import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext } from 'svelte';
@@ -53,7 +53,7 @@
   }
   /** The Site menu stands in the top bar in the layout whose panel holds the page's tabs alone. */
   const siteMenu = $derived(ed.adminLayout === 'page-tabs');
-  /** A tool menu (the Site menu, a device's sizes) opened on a mouse's rest on its button and closed a moment after the mouse leaves it, as the tabs' menus are, each menu with its own wait; a pass on the way elsewhere opens nothing, and a menu the focus has gone into (a size typed) stays until a press outside or Escape. */
+  /** A tool menu opens on a mouse's rest on its button and closes a moment after the mouse leaves; one holding the focus stays until a press outside or Escape. */
   const restTimers = {};
   /** The menu a rest opened, which the press that often follows the rest keeps open rather than closing. */
   let restOpened = null;
@@ -112,7 +112,7 @@
 </script>
 
 {#snippet screenSizes()}
-  <!-- The screen's sizes, each with its ratio: your own window, the common sizes with their heights, the common ratios at the width the Screen stands at, and an own size whose height may stay empty; the pick sets the Screen device -->
+  <!-- The screen's sizes, each with its ratio: your own window, the common sizes, the common ratios and an own size; the pick sets the Screen device -->
   <button type="button" class="ghost device-size" class:active={ed.deviceId === 'desktop' && !ed.freeWidth && ed.screenPref.size === 'window'}
     onclick={() => pickScreen({ size: 'window' })}><span>{ta('lbl.screen.own')}</span><span class="device-size-px">{ed.ownWidth}</span><span class="device-ratio"></span></button>
   {#each ed.SCREEN_SIZES as s (s.id)}
@@ -152,7 +152,7 @@
 {/snippet}
 
 {#snippet phoneSizes()}
-  <!-- The phone's sizes, each with its ratio: the presets with their heights, the width alone, the common ratios at the width the Phone stands at, and an own size; the pick sets the Phone device -->
+  <!-- The phone's sizes, each with its ratio: the presets, the width alone, the common ratios and an own size; the pick sets the Phone device -->
   {#each ed.PHONE_SIZES as p (p.id)}
     <button type="button" class="ghost device-size" class:active={ed.deviceId === 'mobile' && !ed.freeWidth && ed.phonePref.size === p.id}
       onclick={() => pickPhone({ size: p.id })}><span>{ta(`lbl.phoneSize.${p.id}`)}</span><span class="device-size-px">{p.width} × {p.height}</span><span class="device-ratio">{ratioOf(p.width, p.height)}</span></button>
@@ -178,18 +178,8 @@
 <header class="topbar" class:hidden={!ed.chromeVisible}>
   <span class="topbar-group">
     {#if ed.site}
-      <!-- Current page: a click opens the Pages panel; the page you are
-           on must stay visible -->
-      <!-- The clusters fold one at a time (FOLD_MQ), not all at the same
-           threshold: a single step swapping eleven controls for three
-           menu buttons would be too big a jump. A folded cluster carries
-           its own current value on the button (device icon, zoom
-           percent), so the state can be read without opening the menu.
-
-           `display: contents` on the shell: it exists only so the
-           outside-click test has ONE node to ask, and must not create
-           its own box in the bar. The Site menu of the page-tabs layout
-           stands inside it for the same reason. -->
+      <!-- Current page: a click opens the Pages panel -->
+      <!-- The clusters fold one at a time (FOLD_MQ); the shell (`display: contents`) is the one node the outside-click test asks. -->
       <span class="toolset" bind:this={ed.toolMenuEl}>
         {#if siteMenu}
           <nav class="topnav" aria-label={ta('rail.panels')}>
@@ -239,12 +229,12 @@
             {/if}
           </span>
         {:else}
-          <!-- The device, zoom and view controls stand as three framed clusters without captions, so eleven buttons never read as one strip; each folded form keeps its cluster's name for a screen reader -->
+          <!-- The device, zoom and view controls stand as three framed clusters; each folded form keeps its cluster's name for a screen reader -->
           <span class="viewswitch toolgrp">
             {#each ed.devices as d (d.id)}
               {@const split = SPLITS[d.id]}
               {@const on = ed.deviceId === d.id && !ed.freeWidth}
-              <!-- Each device is one button with its icon and an arrow, as the page switcher: a press on the device not shown switches to it, a press on the one shown opens its sizes, and a mouse's rest on either opens its sizes, a size picked switching to it -->
+              <!-- One button per device: a press on another device switches to it; a press on the one shown, or a mouse's rest, opens its sizes -->
               <!-- svelte-ignore a11y_no_static_element_interactions -->
               <span class="toolmenu device-one" class:active={on} onpointerenter={(e) => menuRest(split.menu, true, e)} onpointerleave={(e) => menuRest(split.menu, false, e)}>
                 <button class="ghost device-btn" class:active={on} class:open={ed.toolMenu === split.menu}
@@ -272,9 +262,7 @@
               onclick={() => (ed.toolMenu = ed.toolMenu === 'zoom' ? null : 'zoom')}
               ><span class="zoom-cap">{Math.round(ed.scale * 100)}%</span>{@html ICONS.caret}</button>
             {#if ed.toolMenu === 'zoom'}
-              <!-- The menu stays open while stepping: zoom is adjusted in
-                   several clicks, and a menu that closed on every click
-                   would have to be reopened for each step. -->
+              <!-- The menu stays open while the zoom is stepped. -->
               <div class="tool-pop" transition:menuMotion>
                 <div class="tool-pop-row">
                   <button class="ghost" onclick={() => ed.stepZoom(-1)} title={ta('tip.zoomOut')}>{@html ICONS.minus}</button>
@@ -358,12 +346,10 @@
       </span>
       <button type="button" class="ghost topbar-tall sign-out" title={ta('ui.signOut')} aria-label={ta('ui.signOut')} onclick={ed.signOut}>{@html ICONS.signOut}</button>
     {:else if ed.auth}
-      <!-- Login keeps its text at all widths: without an icon the button
-           would be empty, and it is the entry point to publishing at all. -->
+      <!-- Login keeps its text at all widths. -->
       <a class="ghost" href="/api/github/login">{ta('ui.loginGitHub')}</a>
     {/if}
-    <!-- Publish with its menu: the button carries the count of what waits, and opens on a press or a mouse's rest as the bar's other menus do (no tooltip on a button that opens on rest).
-         The menu holds the acts first (Publish now, the published site, Discard drafts), then what waits to be published as rows that lead to the change, and at its foot the last publish, which opens History. -->
+    <!-- Publish with its count, opening on a press or a mouse's rest: its acts, the rows waiting, and the last publish, which opens History. -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <span class="toolmenu publish-wrap" onpointerenter={(e) => menuRest('publish', true, e)} onpointerleave={(e) => menuRest('publish', false, e)}>
       <button type="button" class="primary publish-btn topbar-tall" aria-expanded={ed.toolMenu === 'publish'} aria-haspopup="true" aria-describedby={ed.dirty ? 'publish-waiting' : undefined}

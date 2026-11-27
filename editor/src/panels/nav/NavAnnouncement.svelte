@@ -1,5 +1,5 @@
 <script>
-  /* The Nav panel's Announcement fold: the strip above the menu, off by default, with its words, its link, how it stays and goes away, its colours and the pages it shows on once it is on. */
+  /* The Nav panel's «Announcement» fold: the strip above the menu, with its words, its link, how it goes away, its colours and its pages. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import LinkField from '../../lib/LinkField.svelte';

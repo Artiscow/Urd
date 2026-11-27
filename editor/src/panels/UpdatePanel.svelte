@@ -1,5 +1,5 @@
 <script>
-  /* The Update panel: the engine version against the template's tag, the changes an update brings, the update itself, and the tidy that moves the media files at the root of media/ into their folders. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The Update panel: the engine version against the template's tag, the changes an update brings, the update itself, and the tidy of media/. */
   import { getContext } from 'svelte';
   import { ta, taApiError } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -15,7 +15,7 @@
   const updateError = $derived(ed.updateError);
   const updateInfo = $derived(ed.updateInfo);
   const { askConfirm, loadUpdateCheck, setStatus } = ed;
-  /** While changes wait to be published, the tidy acts at its second press: the first says why in the status line and names what the second does, which publishes them and then tidies; a mouse or the focus leaving the button disarms it and clears the line. */
+  /** While changes wait to be published, the tidy acts at its second press, which publishes them and then tidies; a mouse or the focus leaving disarms it. */
   let tidyArmed = $state(false);
   function disarmTidy() {
     if (!tidyArmed) return;
@@ -74,9 +74,7 @@
     ed.updateBusy = true;
     setStatus(ta('update.running', { target: updateInfo.target }));
     try {
-      // The update copies the template's binary files in batches, one call each, and commits in the call that finds few enough of them left (ADR-0014 decision 6).
-      // A call that copies nothing new stops the loop, and its words ask for a new start.
-      // A sign-in falling due is renewed first, so its planned renewal does not end it in the middle of the update's calls.
+      // A due sign-in is renewed first; then binary files are copied in batches, one call each, until a call commits or copies nothing.
       await ed.renewIfDue();
       let res;
       let data;
@@ -109,10 +107,7 @@
   }
 
   /**
-   * After the update commit: poll /urd.json until the engine field reports
-   * the target version (the deploy is out), and reload the admin so the
-   * new bundle and engine take effect. The drafts are kept: the updater
-   * never touches user-owned files, so they are just as valid afterwards.
+   * After the update commit: polls /urd.json until the engine field reports the target version, then reloads the admin, the drafts kept.
    */
   async function awaitUpdateDeploy(version) {
     for (let attempt = 0; attempt < 18; attempt++) {
@@ -173,9 +168,7 @@
           <pre class="update-headers">{updateInfo.headers.upstream}</pre>
         </Fold>
       {/if}
-      <!-- Hand-edited engine files must be seen without a click;
-           the rest of the atom group is one combined swap and
-           is folded away. -->
+      <!-- Hand-edited engine files stand in view; the rest of the atom group is one swap, folded away. -->
       {#each updateInfo.changes.filter((c) => c.atom && c.conflict) as c (c.path)}
         <div class="update-row">
           <span class="update-path" title={c.path}>{c.path}</span>
@@ -218,7 +211,7 @@
       </button>
     {/if}
   {/if}
-  <!-- The site's media files: how many still stand at the root of media/, and the tidy that moves them into the folders of their kind (lib/media-tidy.js), for the sites made before the folders; the group stands only while there is something to tidy -->
+  <!-- The media files at the root of media/, and the tidy that moves them into the folders of their kind, while there is something to tidy -->
   {#if ed.mediaRootCount}
   <Fold id="media" surface="update" title={ta('group.siteMedia')} tip={ta('tip.site.media')} value={ta('site.mediaRootShort', { n: ed.mediaRootCount })}>
     <div class="ctl-row" title={ta('tip.site.mediaRoot')}>

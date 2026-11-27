@@ -1,7 +1,5 @@
 <script>
-  /* The bar for the selected entries, under the search: the cross that clears the selection, how many are selected and how many the search hides, Duplicate, and Delete apart at the right.
-     What else acts on the selection (set a field, move, copy, export) stands in the collection's ⋮ menu (CollectionMenu.svelte), greyed there while none is selected.
-     Each change is one undo step, offered again as «Undo» in the status line (state/collections.svelte.js). */
+  /* The bar for the selected entries: the cross that clears them, their count, Duplicate and Delete, each change one undo step. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';

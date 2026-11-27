@@ -250,3 +250,31 @@ test('orderRecord: the total is the amount the provider confirms where it is giv
   assert.equal(orderRecord(items, {}, { total: 'x' }).total, 600);
   assert.equal(orderRecord(items, {}, { total: -1 }).total, 600);
 });
+
+test('the checkout\'s payment settings are written whole, through paymentsOf, wherever the editor writes them', async () => {
+  const { readFileSync, readdirSync } = await import('node:fs');
+  const root = new URL('../editor/src/', import.meta.url);
+  const family = readFileSync(new URL('menu/families/Checkout.svelte', root), 'utf8');
+  assert.match(family, /\n {2}const pays = \$derived\(paymentsOf\(selectedBlock\.props\)\);\n/, 'the family reads them through paymentsOf');
+  const setPay = family.match(/\n {2}const setPay = (\(patch\) => [^\n]*);\n/);
+  assert.ok(setPay, 'and writes them through setPay');
+  const written = [];
+  new Function('setBlockProp', 'pays', `return ${setPay[1]};`)((key, value) => written.push([key, value]), paymentsOf({ payments: { vipps: true } }))({ paypal: true });
+  assert.deepEqual(written, [['payments', { vipps: true, card: 'none', paypal: true, capture: 'ship', manual: [] }]], 'a change keeps every field');
+  const sources = readdirSync(root, { recursive: true }).filter((name) => /\.(?:js|svelte)$/.test(name)).map((name) => [name, readFileSync(new URL(name, root), 'utf8')]);
+  let writes = 0;
+  let whole = 0;
+  for (const [name, source] of sources) {
+    for (const m of source.matchAll(/setBlockProp\('payments', ([^\n]*)/g)) {
+      writes += 1;
+      assert.match(m[1], /^\{ \.\.\.(?:pays|paymentsOf\(\w+\)), /, `${name}: a write starts from paymentsOf`);
+    }
+    // A whole object written at once, a new block's seed or a group's way back, holds every field at its standard.
+    for (const m of source.matchAll(/\bpayments: (\{[^{}]*\})/g)) {
+      whole += 1;
+      assert.deepEqual(new Function(`return ${m[1]};`)(), paymentsOf({}), `${name}: ${m[1]}`);
+    }
+  }
+  assert.ok(writes >= 5 && whole >= 2, `the writes are read (${writes}, ${whole})`);
+  assert.doesNotMatch(sources.map(([, s]) => s).join('\n'), /\.payments\s*=[^=]/, 'never set field by field');
+});

@@ -1,6 +1,6 @@
 <script>
-  /* The button block in the element menu (0.7.26.2): its Content and Style areas, drawn where the menu asks for one, and the settings it writes through the editor handle.
-     Style holds the button's colours under its design as a capability (ADR-0031), a card while the button uses them or they were added: the fill, the words, the outline and the fill under the pointer, each empty while it follows the design and the theme. */
+  /* The button block in the element menu: its Content and Style areas.
+     Its colours are a capability (ADR-0031), each empty while it follows the design. */
   import { getContext } from 'svelte';
   import LinkField from '../../lib/LinkField.svelte';
   import Fold from '../../lib/rows/Fold.svelte';

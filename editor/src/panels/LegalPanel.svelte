@@ -1,6 +1,5 @@
 <script>
-  /* The Legal panel: what an association must get right, in three folds (BACKLOG 0.7.31): who it is (the contact details, site.contact), its privacy page (footer.privacyPage) and its terms of sale (site.commerce.termsPage, while the site sells, the shop is on or a page is set).
-     Each fold's heading carries its state (lib/legal-model.js); a link from another panel or the tab's menu opens the panel at a fold by its `data-fold` (lib/panel-folds.js). */
+  /* The Legal panel: who runs the site (site.contact), the privacy page and the terms of sale, a fold each with its state. */
   import { getContext, tick } from 'svelte';
   import Dropdown from '../lib/Dropdown.svelte';
   import Fold from '../lib/rows/Fold.svelte';
@@ -40,7 +39,7 @@
     newsletter: [['unsubscribe', 'opt.keep.unsubscribe'], ['period', 'opt.keep.period'], ['', 'opt.keep.undecided']],
   };
 
-  /** A kind's choices: orders take the duties researched for the owner's country (privacy-model.js orderKeepChoices), a duty stored under another country kept in the list while it stands, so the panel shows what the page says; the other kinds their own. */
+  /** A kind's choices: orders take the duties for the owner's country (privacy-model.js orderKeepChoices), a stored duty of another country kept while it stands. */
   function keepOptions(kind) {
     if (kind !== 'orders') return KEEP_OPTIONS[kind];
     const stored = retentionOf(siteDraft, 'orders')?.until;
@@ -59,7 +58,7 @@
     toggleHintCard(anchor, { title: ta('hint.orders.title'), lines: [1, 2, 3, 4, 5].map((n) => ta(`hint.orders.${n}`)) });
   }
 
-  /** A set time chosen before its number is typed, by kind, with the unit picked: it stands in the panel and nothing is stored, so the privacy page never names a period the owner did not type. */
+  /** A set time chosen before its number is typed, by kind: it stands in the panel only, so the privacy page never names a period the owner did not type. */
   let pending = $state({});
 
   /** A kind's choice as the panel shows it: the stored one, else a set time waiting for its number. */
@@ -89,7 +88,7 @@
     storeKeep(kind, choice ? { until: choice } : null);
   }
 
-  /** A set time's number (a whole number from 1 to RETENTION_MAX) or unit: a number stores the period; an empty or unreadable entry keeps what stands. Returns the number the field shows. */
+  /** A set time's number (1 to RETENTION_MAX) or unit: a number stores the period, an empty or unreadable entry keeps what stands. Returns the number shown. */
   function setKeepPeriod(kind, patch) {
     const shown = keepShown(kind);
     if (shown?.until !== 'period') return null;

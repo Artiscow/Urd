@@ -1,7 +1,5 @@
 <script>
-  /* The set maker (BACKLOG 0.7.9.3), standing in the colour picker's Palette tab while «+ New set» has it open: the way chosen by name beside the way back, the ten ways as tiles in two rows (each a drawing over a short word, its full name and what it does in its tooltip), the way's controls under them, a preview of the set and «Make the set»; it opens on the shades of the colour in use.
-     From a colour: its shades, the colours that match it, the steps to a second colour, and the colours readable as text on it. From pictures: a picture of one's own, read here and never sent, or one the site's pages already hold. From elsewhere: the codes in a pasted text or palette link, one of Urd's ready-made sets with its colours named in the admin's language, or the colours the pages use now. And a shuffle of five colours that keeps the ones locked.
-     The colours are worked out by lib/colour-ways.js; the colour a way starts from is chosen in a colour picker of its own, which picks from the sets but makes none; the picker makes the set and opens it (ColorPicker.svelte). What a control does that its words do not say stands in its tooltip; only what the way has nothing to show for stands as a line. */
+  /* The set maker in the colour picker's Palette tab: the ten ways to make a set as tiles, the chosen way's controls, a preview and «Make the set». */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS, CAP_ICONS } from './icons.js';
@@ -19,7 +17,7 @@
   const LOCK = svg('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>');
   const UNLOCK = svg('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 017.5-2"/>');
   const BACK = svg('<path d="M15 6l-6 6 6 6"/>');
-  /** Each way's drawing on its tile: the steps of a colour, two colours across a wheel, two colours overlapping, letters, a picture, a picture on a page, a code's #, a ready-made star, the site's palette and the shuffle. */
+  /** Each way's drawing on its tile. */
   const WAY_ICONS = {
     shades: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 5v14" /><path d="M9 5h6v14H9z" fill="currentColor" fill-opacity="0.4" stroke="none"/><path d="M15 5h4a2 2 0 012 2v10a2 2 0 01-2 2h-4z" fill="currentColor" stroke="none"/>'),
     match: svg('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="4" r="2.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="2.4" fill="currentColor" stroke="none"/>'),

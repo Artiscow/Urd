@@ -1,6 +1,5 @@
 <script>
-  /* A release's notes in the Update panel: the Markdown of the release read into blocks by lib/release-notes.js and drawn with the panel's own elements, never put into the page as HTML.
-     A fold in the notes (GitHub's <details>) is the row kit's Fold, its summary its title («Details» without one, as GitHub has it), named by its place in the notes so it stays as it was left, and open at first where the notes say so; a quote is set off, GitHub's alerts named in the admin's language; a link opens its page in a tab of its own. */
+  /* A release's notes in the Updates panel: Markdown read into blocks (release-notes.js) and drawn with the panel's own elements, never as HTML. */
   import { ta } from '$engine/i18n.js';
   import { parseNotes, plainText } from './release-notes.js';
   import Fold from './rows/Fold.svelte';

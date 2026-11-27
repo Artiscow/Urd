@@ -1,6 +1,5 @@
 <script>
-  /* The Theme panel: the ready-made themes, the colour tokens in light and dark, the fonts and the corner radius, each a fold of the row kit its tab's menu reaches (lib/panel-folds.js), saying its value while closed.
-     The theme's values always come from a ready-made theme or the owner, so its folds have no defaults to go back to. The state it reads and the functions it writes through come from the editor handle. */
+  /* The Theme panel: the ready-made themes, the colour tokens in light and dark, the fonts and the corner radius, each a fold saying its value. */
   import { getContext } from 'svelte';
   import ColorPicker from '../lib/ColorPicker.svelte';
   import Choice from '../lib/Choice.svelte';
@@ -37,9 +36,7 @@
     });
   }
 
-  /** The value a palette cell shows when the token is absent: the text on
-      accent is what the browser chooses (black or white against the accent,
-      contrast-color() in theme.js), everything else the background. */
+  /** The value a palette cell shows when the token is absent: black or white against the accent for the text on it, else the background. */
   function paletteFallback(key, pal) {
     if (key === 'accent-text') return readableOn(themeHex(pal.accent ?? '#000000', pal));
     return pal.bg;

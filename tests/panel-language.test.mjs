@@ -244,3 +244,28 @@ test('a fold the owner opens, a «+ Add a setting» list and a card just added a
   const card = readFileSync(join(ROOT, 'lib/rows/Capability.svelte'), 'utf8');
   assert.match(card, /followOpen\(cardEl\);/, 'a card just added');
 });
+
+test('the guard that keeps a control\'s rule out of the lib components stands inside :not(:where()) wherever it stands, so it adds no specificity', () => {
+  /** Each place a lib component's descendants are named, and the two functions it stands in. */
+  const LIB = /\.(?:dd|cp|gp|mp|dp-overlay|choice|step-field|tab-menu-list) \*/g;
+  const wrong = [];
+  let guards = 0;
+  for (const path of [join(ROOT, 'app.css'), ...svelteFiles(ROOT)]) {
+    const text = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const m of text.matchAll(LIB)) {
+      guards += 1;
+      let depth = 0;
+      let open = m.index;
+      for (; open >= 0; open--) {
+        if (text[open] === ')') depth += 1;
+        else if (text[open] === '(' && depth-- === 0) break;
+      }
+      if (text.slice(open - 11, open) !== ':not(:where') {
+        const line = text.slice(text.lastIndexOf('\n', m.index) + 1, text.indexOf('\n', m.index));
+        wrong.push(`${path.slice(ROOT.length)}: ${line.trim()}`);
+      }
+    }
+  }
+  assert.ok(guards > 1000, `the guard is found (${guards})`);
+  assert.deepEqual([...new Set(wrong)], []);
+});

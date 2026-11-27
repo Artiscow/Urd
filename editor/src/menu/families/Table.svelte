@@ -1,7 +1,5 @@
 <script>
-  /* The table block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The table block's Content and Style areas in the element menu. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
@@ -27,8 +25,7 @@
   });
   const lineOptions = () => [['rows', ta('opt.table.rows')], ['grid', ta('opt.table.grid')], ['none', ta('common.none')]];
 
-  /** The table's shape: rows/columns are added and removed at the end;
-   *  the row set is rectangularized first, so hand-edited data is tolerated. */
+  /** The table's shape: rows and columns are added and removed at the end, the rows made rectangular first. */
   function tableResize(dRows, dCols) {
     mutateBlock(`edit:${selectedBlock.blockId}:table-form`, (b) => {
       let rows = (Array.isArray(b.props.rows) && b.props.rows.length ? b.props.rows : [['']])

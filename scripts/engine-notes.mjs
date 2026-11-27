@@ -10,7 +10,7 @@
  *     node scripts/engine-notes.mjs same <file>...           proves the code unchanged against the committed version, its comments free to move
  *
  * `--base <rev>` names the committed version (HEAD), and `--all` stands for every module a visitor's page loads (visitorModules).
- * `same` also takes a script's, a stylesheet's or an HTML file's path from the repository's root (`template/functions/...`), a sheet or a page compared without its comments.
+ * `same` also takes a path from the repository's root (`template/functions/...`, `editor/src/...`): a sheet, a page, or a Svelte file's tags, style and markup without comments.
  * The parser is acorn, a dev dependency of the editor (editor/package.json), read from editor/node_modules.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, realpathSync } from 'node:fs';
@@ -427,6 +427,17 @@ export function checkModule(module, base, now, md) {
 const fromRoot = (module) => /^(template|editor)\//.test(module);
 const enginePath = (module) => (fromRoot(module) ? module : `template/assets/engine/${ENGINE_VERSION}/${module}`);
 const readNow = (module) => readFileSync(fromRoot(module) ? new URL(module, ROOT) : new URL(module, ENGINE_DIR), 'utf8');
+/** A Svelte file's scripts, its styles, their opening tags, and its markup. */
+const svelteParts = (src) => {
+  const part = (tag) => [...src.matchAll(new RegExp(`(<${tag}\\b[^>]*>)([\\s\\S]*?)</${tag}>`, 'g'))];
+  const scripts = part('script');
+  const styles = part('style');
+  let markup = src;
+  for (const m of [...scripts, ...styles]) markup = markup.replace(m[0], ' ');
+  return { scripts: scripts.map((m) => m[2]), styles: styles.map((m) => m[2]), tags: [...scripts, ...styles].map((m) => m[1]).join(' '), markup };
+};
+/** Markup without its HTML comments, its whitespace collapsed; text such as `image/*` stays. */
+const markupOf = (src) => src.replace(/<!--[\s\S]*?-->/g, ' ').replace(/\s+/g, ' ').trim();
 /** A stylesheet's or an HTML file's text without its comments, its whitespace collapsed. */
 const uncommented = (src) => src.replace(/\/\*[\s\S]*?\*\/|<!--[\s\S]*?-->/g, ' ').replace(/\s*([;{},])\s*/g, '$1').replace(/\s+/g, ' ').trim();
 const readBase = (module, rev) => execFileSync('git', ['show', `${rev}:${enginePath(module)}`], { cwd: fileURLToPath(ROOT), encoding: 'utf8', maxBuffer: 64 << 20 });
@@ -486,7 +497,14 @@ function run(args) {
     for (const module of modules) {
       const base = readBase(module, rev);
       const now = readNow(module);
-      const same = /\.(css|html)$/.test(module) ? uncommented(base) === uncommented(now) : bare(base) === bare(now) && tokensOf(base).join('\n') === tokensOf(now).join('\n');
+      const sameScript = (a, b) => bare(a) === bare(b) && tokensOf(a).join('\n') === tokensOf(b).join('\n');
+      let same;
+      if (/\.(css|html)$/.test(module)) same = uncommented(base) === uncommented(now);
+      else if (module.endsWith('.svelte')) {
+        const [a, b] = [svelteParts(base), svelteParts(now)];
+        same = a.scripts.length === b.scripts.length && a.scripts.every((text, i) => sameScript(text, b.scripts[i]))
+          && a.tags === b.tags && uncommented(a.styles.join('\n')) === uncommented(b.styles.join('\n')) && markupOf(a.markup) === markupOf(b.markup);
+      } else same = sameScript(base, now);
       const directives = (src) => (src.match(/\/\* @vite-ignore \*\//g) ?? []).length;
       const kept = directives(base) === directives(now);
       console.log(`${same && kept ? 'OK  ' : 'FAIL'}  ${module}: ${same ? 'the code is unchanged' : 'the code differs'}${kept ? '' : ', a @vite-ignore directive is gone'}`);

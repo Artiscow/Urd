@@ -1,5 +1,5 @@
 <script>
-  /* The space between a section's blocks on the phone, for every section without its own: in the Site panel's Content width fold, and in the Phone panel's fold of the whole site on the phone (0.7.3.24), the same row in both. */
+  /* The space between a section's blocks on the phone, for every section without its own: the same row in the Site panel and the Phone panel. */
   import { getContext } from 'svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import SliderRow from '../../lib/rows/SliderRow.svelte';

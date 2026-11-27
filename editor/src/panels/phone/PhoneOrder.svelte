@@ -1,9 +1,5 @@
 <script>
-  /* A section's blocks in the order they read on the phone (0.7.3.13): a block alone, or a stack of blocks that read as one, the owner's own or a column the rule reads whole (phone-moves.js phoneTree). In the Phone panel the section is the one at work on the canvas, which the panel keeps; in the column at the stage's right edge (PhoneOutline.svelte) each section of the page has a list of its own (`sectionId`).
-     The rows move by the row kit's drag in its tree form, one level deep (lib/nav-drop.js): before or after a row, into a stack, or onto a block alone, which makes a stack of the two; a stack's block leads out of it from the room left of it, and the room under the last row lands a row last. Alt and the arrow keys move the row the focus is in, as the drag would. A row under the pointer lights its blocks on the canvas, and a press selects its block there.
-     A block placed by its own exception carries a chip that gives it back to the section's order, and the owner's stack one that takes it apart. A block under the mouse on the canvas lights its row, and a stack's.
-     A right click on a row, or the menu key, opens the row's menu: a block taken out of its group, or the group undone (phone-moves.js phoneUngroup), greyed where the row stands in no group; and the block pinned where it stands, which the phone view alone measures.
-     The row of the block selected on the canvas is ringed, or filled where the column's look draws it so. After the order stand the blocks pinned to rows of their own, each with the crossed pin that unpins it back into the order (phone-moves.js unpinned), also from its right click, and, dimmed, the blocks hidden on phones, each with its way back. */
+  /* A section's blocks in the order they read on the phone, as rows moved by the row kit's drag, then the pinned blocks and, dimmed, the hidden ones. */
   import { getContext, onDestroy, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { blockWords } from '$engine/anchor-model.js';
@@ -32,7 +28,7 @@
   /** The levels the list holds: a stack's blocks, never a stack inside a stack. */
   const DEPTH = 1;
 
-  /** The section at work, read again after every change, every undo and every page loaded, since the page's data is no state of its own: a new copy each time, so what is reckoned from it follows. */
+  /** The section at work, a new copy after every change, undo and page loaded, so what is reckoned from it follows. */
   const section = $derived.by(() => {
     void ed.pageId;
     void ed.edits;
@@ -92,7 +88,7 @@
     return undefined;
   }
 
-  /** The landing place of a dragged row, reckoned on the rows as seen, as the Nav panel's tree reckons it: over a row its thirds decide, and the room left of a stack's block is the way out of the stack, its grip column being where a drag usually starts; between rows or below the last the nearest row by its midpoint; each place has one name. */
+  /** The landing place of a dragged row, reckoned on the rows as seen: over a row its thirds decide, left of a stack's block leads out, else the nearest row. */
   function reckon(list, e, dragKey) {
     const hit = list.find((r) => e.clientY >= r.rect.top && e.clientY <= r.rect.bottom);
     let drop = null;
@@ -129,7 +125,7 @@
 
   const drag = new RowDrag(land, card, { reckon });
 
-  /** Alt and an arrow: the row moves one place among its neighbours, as the drag would land it, and keeps the focus; a stack's first or last block steps out of it. Enter selects the row's block on the canvas, as a press does. */
+  /** Alt and an arrow move the row one place as the drag would, keeping the focus; Enter selects the row's block on the canvas. */
   async function moveKeys(e, row) {
     if (e.key === 'Enter' && e.target === e.currentTarget) {
       ed.bridge?.sendSelect(row.ids[0], true);
@@ -247,7 +243,7 @@
 <!-- The slot where a dragged row lands, set in to the level it would stand at -->
 {#snippet slot(level)}<div class="row-drag-slot" style:margin-left="{level * 1.3}rem" {@attach drag.slot} out:slotOut></div>{/snippet}
 
-<!-- A way the row differs from what the section and the desktop give it, as the canvas marks it: a round mark that turns into the way back under the pointer or the keyboard's focus (at once on a screen without a pointer that hovers), and takes the difference back at a press; its name is its tooltip, which says both -->
+<!-- A way the row differs from the section and the desktop: a round mark that turns into the way back under the pointer or the focus, and takes it back at a press -->
 {#snippet way(kind, tip, icon, onclick)}
   <button type="button" class="pp-way pp-way-{kind}" title={ta(tip)} aria-label={ta(tip)} {onclick}>
     <span class="pp-way-is" aria-hidden="true">{@html icon}</span>

@@ -1,6 +1,5 @@
 <script>
-  /* The contact block in the element menu: which of the Legal panel's contact details it shows, its design, and the save button and the phone bar.
-     The details themselves are typed once in the Legal panel, so the menu points there. */
+  /* The contact block in the element menu: which of the Legal panel's contact details it shows, its design, the save button and the phone bar. */
   import { getContext } from 'svelte';
   import Fold from '../../lib/rows/Fold.svelte';
   import Setting from '../../lib/rows/Setting.svelte';

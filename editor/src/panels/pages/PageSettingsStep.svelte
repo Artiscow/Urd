@@ -1,6 +1,5 @@
 <script>
-  /* A page's settings as a step in the Pages panel («In the panel» under Page settings): the way back to the list, the page's name and address, and the fields in fold-out groups (PageSettingsFields.svelte).
-     Escape inside the step goes back to the list. */
+  /* A page's settings as a step in the Pages panel: the name, the address and the fields in folds; Escape goes back to the list. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';

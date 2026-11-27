@@ -1,6 +1,6 @@
 <script>
-  /* Every page's settings as a table over the canvas («Table over the page» under Page settings): a row per page with the quick settings as cells, the front page as a radio in its column, and the chosen page's every field in a drawer at the right (PageSettingsFields.svelte).
-     A cell writes as it is left; Escape closes the table. */
+  /* Every page's settings as a table over the canvas: a row per page, the chosen page's every field in a drawer at the right.
+     A cell writes as it is left. */
   import { getContext, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';

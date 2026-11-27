@@ -1,8 +1,7 @@
 <script>
   /**
-   * The shortcut sheet (comparison/ELEMENTS.md E21): every key the editor answers to, in groups by where it works (shortcuts.js).
-   * Opened by «?» on the page and in the panels, from the Urd settings and from the setup wizard.
-   * A native modal dialog (ADR-0011): Escape is its own cancel, and a press outside its card closes it as it does the design picker.
+   * The shortcut sheet: every key the editor answers to, in groups by where it works (shortcuts.js).
+   * A modal dialog that Escape or a press outside its card closes.
    */
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';

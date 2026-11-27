@@ -1,5 +1,5 @@
 <script>
-  /* A part inside a fold, in the row kit (0.7.30.2): a small heading over the rows that belong to it. */
+  /* A part inside a fold, in the row kit: a small heading over the rows that belong to it. */
   let { text, title = undefined } = $props();
 </script>
 

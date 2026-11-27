@@ -1,6 +1,5 @@
 <script>
-  /* «Show all» under the calendar's max count: a list folds the events beyond the count behind it, and the regular-event design folds its own dates, so it shows for a list in any other design.
-     It stands in the max count's row: in the calendar's Content, or in Pinned while the max count is pinned (ElementMenu.svelte). */
+  /* Folds a calendar list's events beyond the max count under «Show all»; hidden in the regular-event design, which folds its own dates. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import Setting from '../../lib/rows/Setting.svelte';

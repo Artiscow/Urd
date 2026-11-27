@@ -1,6 +1,5 @@
 <script>
-  /* The panel's heading in the two columns («Collections editor»: two columns) while a collection is open: «Collections › name ▾» with the collection's ⋮ beside its name.
-     «Collections» goes back to the list of collections, the name opens the picker of the site's collections, and the ⋮ is the collection's own menu (CollectionMenu.svelte): it renames the collection, changes its kind, exports and imports it, and acts on the selected entries, so it stands with the collection's name, never over the chosen entry. */
+  /* The panel's heading in two columns while a collection is open: «Collections › name ▾», with the collection's ⋮ beside its name, never over the chosen entry. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sortEntries } from '$engine/collections.js';

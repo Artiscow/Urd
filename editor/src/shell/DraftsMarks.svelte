@@ -1,5 +1,5 @@
 <script>
-  /* The Drafts tab's marks, the same in every layout (PanelTab, Rail): «saving» while a save runs, «saved» with a check for a few seconds after, and otherwise the amber count of the parts that stand in this browser alone; the amber dot while a saved draft is new here. On a tab they stand in the line of its word, the count's circle centred on the word's capitals; on a menu's row or a sidebar's word after the name, at the row's edge as the other rows' marks stand; on the rail's icon (`corner`) at its corner, the count as a small badge. */
+  /* The Drafts tab's marks: «saving», «saved» with a check, else the amber count of what stands in this browser alone; a dot while a saved draft is new. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';
@@ -17,8 +17,7 @@
 {#if ed.draftsFresh}<span class="update-dot legal-dot" class:update-dot-inline={!corner} aria-hidden="true"></span>{/if}
 
 <style>
-  /* The count of what stands in this browser alone, in the amber of the This browser tab: a circle of one fixed height in the word's own font size, so `cap` is the word's capital height.
-     The number, at 0.8 of it and trimmed to its digits where the browser can (text-box), stands centred in the circle, and the circle's baseline is the number's; raised by half the difference of the two capital heights (0.1cap), the circle centres on the word's capitals in any font. Without the cap unit it sits on the word's baseline. */
+  /* The count in the amber of the This browser tab: a circle of one height in the word's font size, raised by 0.1cap to centre on the word's capitals. */
   .drafts-count {
     display: inline-grid;
     place-items: center;

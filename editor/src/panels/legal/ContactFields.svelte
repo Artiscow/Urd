@@ -1,5 +1,5 @@
 <script>
-  /* The contact details of the site (site.contact), the Legal panel's «Who you are» group: the country, the legal name, the numbers its country's profile asks for, the VAT status, the representative, the address with its point on the map, the phone, the email and the contact points by role. */
+  /* The site's contact details (site.contact), the Legal panel's «Who you are»: the country, the names and numbers, the address and its point, and the contacts. */
   import { getContext } from 'svelte';
   import Dropdown from '../../lib/Dropdown.svelte';
   import SwitchRow from '../../lib/rows/SwitchRow.svelte';
@@ -15,7 +15,7 @@
   const siteDraft = $derived(ed.siteDraft);
   const { siteMutate } = ed;
 
-  /** The details the law asks for that are still empty (lib/legal-model.js whoMissing): each is marked at its field, so the count on the group's heading points somewhere. */
+  /** The details the law asks for that are still empty (lib/legal-model.js whoMissing), each marked at its field. */
   let { missing = [] } = $props();
   const need = $derived(Object.fromEntries(['legalName', 'email', 'street', 'city'].map((key) => [key, missing.includes(key)])));
 
@@ -71,7 +71,7 @@
   /** The outcome of each number's check as typed: a failed check shows under the field, and a refused number is not stored. */
   let idState = $state({});
 
-  /** Writes the contact details (site.contact) through fn; the country shown is stored with the first field, so a later language change never rereads the numbers under another country, and from then on the group keeps its country when the other fields are emptied. */
+  /** Writes the contact details through fn, storing the country shown with the first field, so the group keeps its country from then on. */
   function contactMutate(key, fn) {
     siteMutate(key, () => {
       const contact = { country: contactCountry, ...(siteDraft.site.contact ?? {}) };
@@ -120,7 +120,7 @@
     });
   }
 
-  /** One line of the address; a point found on the map for the old address no longer marks the place, so it goes with the change. */
+  /** One line of the address, which drops the point found on the map for the address as it stood. */
   function setContactAddress(key, value) {
     contactMutate(`edit:legal-contact-address-${key}`, (contact) => {
       const next = { ...(contact.address ?? {}) };
@@ -137,7 +137,7 @@
   let geoStatus = $state(null);
   let geoBusy = $state(false);
 
-  /** Finds the address on the map through /api/geocode (the published site's function, which needs a signed-in session) and stores the point the contact block's map design shows. */
+  /** Finds the address through /api/geocode, which needs a signed-in session, and stores the point the contact block's map design shows. */
   async function findContactOnMap() {
     const query = contactAddressText;
     if (!query) return;

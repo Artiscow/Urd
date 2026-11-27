@@ -1,5 +1,5 @@
 <script>
-  /* The panel's own navigation at its top, in the two tab layouts: a segment for the three groups with the chosen group's panels as a tab row under it («panel-tabs»), or the page's panels alone as tabs, the site's and the system's standing in the top bar's Site menu («page-tabs»). The group the segment shows follows the open panel; while none is open it is the one last picked here, the page's at first and again after the column has been folded. */
+  /* The panel's own tabs in the two tab layouts: a group segment over the group's panel tabs, or the page's panels alone; the segment follows the open panel. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../lib/icons.js';

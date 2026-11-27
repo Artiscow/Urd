@@ -1,9 +1,6 @@
 <script>
-  /* The section's own settings for the phone, in the section menu's «Size and grid» and the Phone panel alike: the space between its blocks, the room above and below them, «Force readable text» on the phone, its rule for their order, its custom order, and the presets that suggest its layout in the phone's cells.
-     Each rule is drawn as the section's own blocks in its order (phone-order.js), with its stacks and exceptions; the rule and the custom order stand for every section, whatever its blocks, and while a custom order holds, the rule places a block the list does not hold yet.
-     `part` draws one part alone, in a fold of the Phone panel that carries its name: the space and the text, the order, or the presets.
-     The site's own layouts follow Urd's presets, each with the bin that takes it away from the site, and «New layout» opens a composer under them: rows of the phone's two columns added, shaped and taken away, the section's own blocks drawn in them as they go, used on the section at once («Use») or saved for the site and used («Save and use», site.phoneLayouts, phone-layouts.js PHONE_ROWS), both greyed on a section of one unit, where no own layout fits.
-     Under the presets stand «Same height» and «Same width», which make the blocks side by side on each line alike at a press; a preset makes them the same height too, in the phone view, where their heights are measured. */
+  /* The section's own settings for the phone: the space around its blocks, readable text, their order, and the layouts of its cells.
+     `part` draws one part alone. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { MOBILE_GAP_MAX, mobileGapOf, MOBILE_ROOM_REACH, phoneRoomOf } from '$engine/migrate.js';
@@ -25,7 +22,7 @@
   const phoneGap = $derived(mobileGapOf({ size: { mobileGap: ed.sectionMobileGap ?? undefined } }, ed.siteDraft));
   /** The room above the section's first block and below its last on the phone: its own, else the standard. */
   const phoneRoom = $derived(phoneRoomOf({ size: { mobilePadTop: ed.sectionPhoneRoom.top ?? undefined, mobilePadBottom: ed.sectionPhoneRoom.bottom ?? undefined } }));
-  /** The section at work, read again after every change, every undo and every page loaded, since the page's data is no state of its own: a new copy each time, so what is reckoned from it follows. */
+  /** The section at work, read again as a new copy after every change, every undo and every page loaded. */
   const section = $derived.by(() => {
     void ed.pageId;
     void ed.edits;
@@ -39,7 +36,7 @@
     const setup = phoneSetupOf(section);
     return PHONE_ORDERS.map((rule) => [rule, stackOrder(blocks, { ...setup, rule, list: null }).slice(0, 8).map(phoneMark)]);
   });
-  /** The presets (phone-layouts.js), the ones that fit first, each drawn small with the section's own blocks in the eight cell columns; a press fills the cells as a starting point, one undo step. */
+  /** The presets, the ones that fit first, each drawn small with the section's own blocks in the eight cell columns. */
   const presets = $derived(section ? phoneLayouts(blocks, phoneSetupOf(section), ed.siteDraft?.phoneLayouts).map(({ id, fits, own }) => ({ id, fits, own, sketch: phoneLayoutSketch(section, own ?? id) })) : []);
   const PRESET_KEYS = { 'two-per-line': 'twoPerLine', pairs: 'pairs', alternate: 'alternate', 'wide-two': 'wideTwo', 'big-two': 'bigTwo', 'one-column': 'oneColumn' };
   /** A preset's or an own layout's cells written into the section, as one undo step. */
@@ -64,7 +61,7 @@
   /** The layout being composed, as the model takes it. */
   const draft = $derived(composing ? { id: 'draft', name: composing.name, rows: composing.rows } : null);
   const draftSketch = $derived(section && draft ? phoneLayoutSketch(section, draft, 12) : []);
-  /** Whether a layout of the site's own fits this section, as its cards say: «New layout» and the composer's two buttons are greyed where it does not, the open composer still closing. */
+  /** Whether a layout of the site's own fits this section; «New layout» and the composer's two buttons are greyed where none does. */
   const ownFits = $derived(section ? ownLayoutFits(blocks, phoneSetupOf(section)) : false);
   function compose() {
     composing = composing ? null : { rows: ['full', 'two'], name: '' };

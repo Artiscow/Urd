@@ -1,7 +1,5 @@
 <script>
-  /* The shape block in the element menu (0.7.26.2): its Content and Style areas,
-     drawn where the menu asks for one, and the settings it writes through the
-     editor handle. */
+  /* The shape block in the element menu: its Content and Style areas, drawn where the menu asks for one. */
   import { getContext } from 'svelte';
   import SelectRow from '../../lib/rows/SelectRow.svelte';
   import NumberRow from '../../lib/rows/NumberRow.svelte';
@@ -50,8 +48,7 @@
   {/snippet}
   {#snippet shapeSize()}
     {#if (selectedBlock.props.kind === 'line' || selectedBlock.props.kind === 'arrow') && designWidth()}
-      <!-- A line's length is its frame width, shown in px at the design
-           width, so it can be set without reaching the resize corner. -->
+      <!-- A line's length is its frame width, shown in px at the design width. -->
       <label title={ta('tip.shapeSize')}>{ta('lbl.length')}
         <input type="number" min="4" max={shapePx(100 - selectedBlock.frame.x)} step="1" value={shapePx(selectedBlock.frame.w)}
           onchange={(e) => setShapeSizePx(Number(e.target.value), false)} /></label>

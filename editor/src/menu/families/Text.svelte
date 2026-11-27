@@ -1,6 +1,5 @@
 <script>
-  /* The text block in the element menu (0.7.26.2): its Style area, the alignment and the whole text's font and size open at its top and the text box as a capability's card (ADR-0031), and the settings it writes through the editor handle; the words are written on the page.
-     A text block is plain text; the document designs are the terms of sale's (Terms.svelte), which draws the whole text's font and size as this one does (WholeText.svelte). */
+  /* The text block in the element menu: its Style area, with the alignment, font and size open at its top and the text box as a capability's card. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import WholeText from '../WholeText.svelte';
@@ -44,6 +43,6 @@
   {/snippet}
   <!-- The alignment, the font and the size stand open first in Style, not in a group -->
   {@render textType()}
-  <!-- The box a capability (ADR-0031): a card while the text stands in one, or was given one this session; with its switch in Pinned the box's own style goes there with it -->
+  <!-- The box, a capability's card; with its switch in Pinned the box's own style goes there with it -->
   <Capability id="text-box" group={groupOf('text-box', { box: false, boxStyle: null })}>{@render textBox()}</Capability>
 {/if}

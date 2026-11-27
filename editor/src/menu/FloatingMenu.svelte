@@ -1,8 +1,6 @@
 <script>
-  /* The floating menu: a block's settings next to the block, from the gear on its bar, or a section's beside the section (`pos.section`, section/SectionMenu.svelte).
-     The same menus as the Settings panel draws, so the two never diverge; the Urd settings' «Where the menu opens» chooses the form a menu opens in (menu/state.svelte.js menuLayout), and «Top of the menu» set to the search puts the field over the menu's body instead of in its head.
-     A tool of the bar opens it small, with one group alone (`pos.only`, lib/only-group.js) under the tool's drawing and name (`pos.icon`, `pos.title`), with no search and no width to switch.
-     The small window's head holds the group's way back while the group holds a value of its own, offered by the group itself (Fold.svelte, Setting.svelte, lib/rows/Capability.svelte), and the way to the full menu, open at the same group. */
+  /* The floating menu: a block's or a section's settings beside it, as the Settings panel draws them.
+     A tool of the bar opens it small, with one group (`pos.only`). */
   import { menuMotion } from '../lib/motion.svelte.js';
   import { getContext, setContext, onMount } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -24,7 +22,7 @@
   const { moveBlockMenu, menuBackToBlock } = ed;
   const layout = $derived(menuLayout());
   const only = $derived(pos.only ?? null);
-  /** Where the floating menu was left, for its block or section; a small panel keeps none (lib/scroll-place.js). A string, so an edit of the block or a move of the menu does not count as another place. */
+  /** Where the floating menu was left, for its block or section, as a string (lib/scroll-place.js); a small panel keeps none. */
   const menuPlace = $derived(only ? null : pos.section ? (ed.activeSectionId ? `menu:float:section:${ed.activeSectionId}` : null) : selectedBlock ? `menu:float:${selectedBlock.blockId}` : null);
   const searchFirst = $derived(!only && menu.shortcutsPref === 'search');
   /** The block's actions step down to a line of their own under the head where the search field stands in a narrow head with them. */
@@ -32,7 +30,7 @@
   /** The small panel's name and drawing: the tool's own, as the bar sent them (the drawing by its name in the bar's own list). */
   const onlyTitle = $derived(pos.title ?? '');
   const onlyIcon = $derived(only && pos.icon ? (BAR_ICONS[pos.icon] ?? '') : '');
-  /** The way back of the group the small window holds, while it holds a value of its own, kept with the group that offered it, which alone takes it back. */
+  /** The way back of the small window's group while it holds a value of its own, kept with the group that offered it. */
   let headOffer = $state.raw(null);
   const headReset = $derived(headOffer?.fn ?? null);
   setContext('menu-head', {
@@ -46,13 +44,12 @@
     },
   });
 
-  /* The head is the handle (0.7.20.6, proposal K): a press held on it and moved moves the whole menu, the place is kept for the session, and the button in the head puts the menu back beside the block.
-     A press on a control in the head, or in the add list that opens from it, is that control's, never a drag. */
+  /* The head is the handle: a press held on it and moved moves the menu for the session; a press on a control in the head is never a drag. */
   let dragging = $state(false);
   /** The menu opens ready to type in: the focus goes to the search field, where 1, 2 and 3 still choose the areas. */
   let rootEl;
   onMount(() => rootEl?.querySelector('.menu-search')?.focus());
-  /* A small panel is placed by its own size, not the full menu's: measured as each panel opens (`opened`, a number that changes only then) and as it grows or shrinks (fitSmallMenu in state/page.svelte.js). */
+  /* A small panel is placed by its own size, measured as it opens (`opened`) and as it grows or shrinks (fitSmallMenu in state/page.svelte.js). */
   const opened = $derived(pos.opened);
   $effect(() => {
     if (!only || !rootEl) return;
@@ -105,7 +102,7 @@
     {#if menu.place}
       <IconButton icon={BACK_ICON} label={ta(pos.section ? 'menu.backToSection' : 'menu.backToBlock')} onclick={menuBackToBlock} />
     {/if}
-    <!-- The head button follows the form drawn: from wide to the chosen form, and back to wide, also where the wide menu gave way to one column beside its block; where the window has no room for the wide form, it has nothing to switch and is not drawn -->
+    <!-- The head button switches between wide and the chosen form, drawn only where the window has room for the wide form -->
     {#if !only && menu.room >= MENU_WIDE_W}<IconButton class="menu-width" icon={layout === 'wide' ? MENU_NARROW_ICON : MENU_WIDE_ICON} label={layout === 'wide' ? ta(menu.formPref === 'tabs' ? 'menu.toTabs' : 'menu.toNarrow') : ta('menu.toWide')}
       onclick={() => { if (layout === 'wide') menu.wide = false; else if (menu.cramped) menu.cramped = false; else menu.wide = true; ed.placeMenuAgain(); }} />{/if}
   </header>

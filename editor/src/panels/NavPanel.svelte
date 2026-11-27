@@ -1,7 +1,5 @@
 <script>
-  /* The Nav panel: the menu items, then the logo, the bar's layout and size, its colours and frame, the phone, scrolling and the pages the menu shows on, the tools and the announcement strip.
-     Each is a fold of the row kit its tab's menu reaches (lib/panel-folds.js), with its controls in a part of its own under panels/nav/, saying its value while closed and carrying its reset (panels/nav/nav-actions.js).
-     The state the parts read and the functions they write through come from the editor handle. */
+  /* The Nav panel: a fold per part of the menu (lib/panel-folds.js), each with its controls in a part of its own under panels/nav/. */
   import { getContext } from 'svelte';
   import Fold from '../lib/rows/Fold.svelte';
   import NavItems from './nav/NavItems.svelte';
@@ -22,8 +20,7 @@
 </script>
 
 <div class="panel-body">
-  <!-- Eight groups by what the owner sets together, in the order a menu is set up: the items, the logo, the bar's layout and size, its colours and frame,
-       the phone, scrolling and the pages the menu shows on, the tools beside the burger and the announcement bar. -->
+  <!-- Eight groups in the order a menu is set up, from the items to the announcement bar. -->
   <Fold id="items" surface={N} title={ta('group.menuItems')} tip={ta('hint.nav.submenu')} value={fold.itemsValue()} group={fold.itemsGroup()}>
     <NavItems />
   </Fold>

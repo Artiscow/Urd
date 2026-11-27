@@ -1,8 +1,5 @@
 <script>
-  /* The preview stage: the iframe with the real page, scaled to the device and the zoom, inside the frame that pans when the page is larger than it. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle.
-     A press on the stage around the canvas deselects what is selected on it (ed.clearSelection), and the wheel there scrolls the page in the canvas, as it does over the canvas, while the stage itself has nothing to pan.
-     The canvas stands under its cover (lib/CanvasCover.svelte) from the moment it is asked for a page until that page has drawn the editor's start, so its blocks are never seen coming in one by one.
-     The bar at the canvas's right edge is dragged to set any width (ed.setFreeWidth): the width follows the pointer in canvas px with its number beside it and snaps to the devices' widths and the site's phone breakpoint, which a dashed mark shows on the canvas while the drag runs; the arrow keys step it. */
+  /* The preview stage: the iframe with the real page, scaled to the device and the zoom, in a frame that pans when the page is larger, with its width handle. */
   import { getContext, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import LookBanner from './LookBanner.svelte';
@@ -19,7 +16,7 @@
   let grab = 0;
   let stageEl = $state(null);
   const breakpoint = $derived(ed.siteDraft?.breakpoints?.mobile ?? 640);
-  /** The width handle stands beside the canvas, clear of the page, where the stage leaves room for it at the canvas's right; a canvas as wide as the stage keeps it on its own edge. */
+  /** The width handle stands beside the canvas where the stage leaves room for it, else on the canvas's own edge. */
   const handleOut = $derived((ed.frameW - ed.stageW) / 2 >= 18);
   function onDown(e) {
     if (e.button !== 0) return;
@@ -27,10 +24,7 @@
     dragging = true;
     grab = stageEl.getBoundingClientRect().right - e.clientX;
   }
-  /**
-   * The width that puts the canvas's right edge under the pointer, worked out at every move from where the canvas stands and the scale it has then: from its middle while it stands centred in its frame, whose right edge moves half as far as the width grows, else from its left edge.
-   * A fit scale follows the width, so the next move reads the scale the last one gave, and the edge settles under the pointer.
-   */
+  /** The width that puts the canvas's right edge under the pointer: from its middle while it stands centred in its frame, else from its left edge. */
   function onMove(e) {
     if (!dragging) return;
     const stage = stageEl.getBoundingClientRect();
@@ -54,7 +48,7 @@
     if (e.clientX >= box.left + wrap.clientLeft + wrap.clientWidth || e.clientY >= box.top + wrap.clientTop + wrap.clientHeight) return;
     ed.clearSelection();
   }
-  /** The wheel over the stage around the canvas scrolls the page in it, by as much as over the canvas; a stage that pans (a zoom past the surface) keeps the wheel for itself, and Ctrl or Cmd with the wheel is the browser's zoom. */
+  /** The wheel over the stage scrolls the page in the canvas, unless the stage pans or Ctrl or Cmd asks for the browser's zoom. */
   function onStageWheel(e) {
     if (ed.canPan || e.ctrlKey || e.metaKey) return;
     const win = ed.iframeEl?.contentWindow;
@@ -74,8 +68,7 @@
 <div class="frame-wrap" class:mobile={ed.viewMode === 'mobile'} class:pan={ed.canPan} class:fold={ed.targetH > 0} class:looking={Boolean(ed.looking)} bind:this={ed.frameWrapEl} onpointerdown={onStagePress} onwheel={onStageWheel}>
   <!-- A saved draft looked at: its banner over the canvas, the canvas framed in amber -->
   <LookBanner />
-  <!-- .stage has the SCALED size, so scrolling/centering gets a real
-       box (a transformed iframe alone does not expand its parent's scroll). -->
+  <!-- .stage has the scaled size, so the frame scrolls and centres a real box. -->
   <div class="stage" class:dragging style="width:{ed.stageW}px; height:{ed.stageH}px; --stage-scale:{ed.scale}" bind:this={stageEl}>
     <iframe
       bind:this={ed.iframeEl}

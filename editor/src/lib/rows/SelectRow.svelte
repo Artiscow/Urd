@@ -1,8 +1,5 @@
 <script>
-  /* More than three choices, or long ones, in the row kit (0.7.30.2): the label above and the themed dropdown under it (ADR-0009).
-     `inline` puts the dropdown beside the label, as wide as the chosen option; the label breaks onto a second line first, and the dropdown goes under it only where the row has no room for both, so a choice is never cut.
-     `stay` keeps the list open after a choice (Dropdown.svelte), for choices tried one after another against the canvas.
-     Two or three short choices take a segment instead (lib/Choice.svelte). */
+  /* More than three choices, or long ones: the label and the themed dropdown under it, or beside it with `inline`; `stay` keeps the list open. */
   import Dropdown from '../Dropdown.svelte';
   let { label, title = undefined, value, options, onchange, disabled = false, inline = false, stay = false } = $props();
   const id = $props.id();

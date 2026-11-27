@@ -1,22 +1,6 @@
 <script>
   /**
-   * The mark picker for a launcher shortcut: one menu that holds both the
-   * drawn icons and the owner's own images, so an image is a choice in the
-   * icon menu rather than a button of its own. Two tabs: Icons (searchable
-   * over the whole library) and Images (an upload tile plus the marks
-   * already in use on the site, reusable across shortcuts). The tab that
-   * opens is the one the mark is from, so an image mark lands in Images.
-   *
-   * Two branches (ADR-0011 addendum, anchored.js decides): in the top layer,
-   * anchored under the trigger with the browser flipping it away from the
-   * viewport edge and light dismiss; otherwise position: fixed (the panels
-   * clip absolute content), placed by measuring and closed on a click
-   * outside, Escape or a scroll outside. The same pattern as GlyphPicker.
-   *
-   * The trigger is whatever the caller puts inside, so the same picker can
-   * be a tile preview and a text button on the same row. A choice does not
-   * close the menu: the mark is applied at once and the menu stays for the
-   * next try, until Escape, a click outside or the trigger closes it.
+   * The mark picker for a launcher shortcut: the drawn icons and the owner's own images in one menu, which stays open after a choice.
    */
   import { lingering, menuMotion } from './motion.svelte.js';
   import { nativeAnchoring, anchorName, namePane } from '$engine/anchored.js';
@@ -53,7 +37,7 @@
   /** Every icon with its translated name, for the search. */
   const allIcons = ICON_CATEGORIES.flatMap(([cat, ids]) => ids.map((id) => ({ id, cat })));
 
-  // An icon is found by its id and its name in any language (search-langs.js); a typed query loads the other languages once, and the list runs again when they are in.
+  // An icon is found by its id and its name in any language; a typed query loads the other languages once.
   const hits = $derived.by(() => {
     if (!query.trim()) return allIcons;
     searchLangs.need(query);
@@ -100,9 +84,7 @@
     open = true;
   }
 
-  // Choosing a mark leaves the menu open: the tile and the preview show the
-  // choice at once, so several marks can be tried in a row. It closes the
-  // way every other menu does - Escape, a click outside, or the trigger.
+  // Choosing a mark leaves the menu open, so several marks can be tried in a row.
   function pickIcon(id) {
     onpick?.({ icon: id, image: '' });
   }
@@ -115,9 +97,7 @@
     onpick?.({ icon: '', image: '' });
   }
 
-  // The OS file chooser takes the window's focus while it is open, and the
-  // picker must outlive it: the input lives outside the menu, and the blur
-  // that the chooser causes is not the one that closes the picker.
+  // The file chooser's blur leaves the picker open, its input standing outside the menu.
   let choosing = $state(false);
   function chooseFile(event) {
     choosing = false;
@@ -131,8 +111,7 @@
     fileEl.click();
   }
 
-  // A click in the preview iframe never reaches this document, so a window
-  // blur closes the picker in both branches.
+  // A click in the preview iframe never reaches this document, so a window blur closes the picker.
   $effect(() => {
     if (!open) return;
     const onBlur = () => { if (!choosing) closePicker(); };
@@ -230,9 +209,7 @@
     min-width: 0;
   }
 
-  /* The trigger carries no look of its own: the caller's content decides,
-     so the same picker is a tile preview on one row and a text button on
-     the next. */
+  /* The trigger carries no look of its own: the caller's content decides. */
   .mp-trigger {
     display: inline-flex;
     align-items: center;
@@ -268,8 +245,7 @@
     box-shadow: 0 16px 40px rgb(0 0 0 / 55%);
   }
 
-  /* The anchored branch: the top layer needs no coordinates, CSS places the
-     card under the trigger and flips it away from the viewport edge. */
+  /* The anchored branch: CSS places the card under the trigger and flips it away from the viewport edge. */
   .mp-pop.mp-anchored {
     position: absolute;
     inset: auto;

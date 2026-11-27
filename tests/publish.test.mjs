@@ -306,6 +306,39 @@ test('a page or site draft from a newer engine is thrown away for the published 
   }
 });
 
+test('once a revert is live, the drafts here and the saved drafts are discarded before the admin reloads, and past the deadline nothing is', async () => {
+  const panel = editorFile('panels/HistoryPanel.svelte');
+  const start = panel.indexOf('\n  async function awaitRevertDeploy(') + 1;
+  assert.ok(start > 0, 'awaitRevertDeploy is found');
+  const source = panel.slice(start, panel.indexOf('\n  }\n', start) + 4);
+  const run = async ({ live }) => {
+    const done = [];
+    let served = 'before';
+    const storage = { 'urd-draft-hjem': '{}', 'urd-draft-site': '{}', 'urd-admin-theme': 'dark' };
+    Object.defineProperty(storage, 'removeItem', { value: (key) => { done.push(`remove ${key}`); delete storage[key]; } });
+    // Each poll's wait: the deploy goes live during the first where the test says so.
+    const wait = (resolve, ms) => {
+      if (ms === 10_000 && live) served = 'after';
+      resolve();
+    };
+    const awaitRevertDeploy = new Function('siteDraft', 'fetch', 'setTimeout', 'setStatus', 'ta', 'ed', 'cancelWaitingDrafts', 'localStorage', 'location', `${source}\nreturn awaitRevertDeploy;`)(
+      { pages: [{ file: 'content/pages/hjem.json' }] }, async () => new Response(served), wait, (text, kind) => done.push(`status ${kind}`), (key) => key,
+      { discardSaved: async () => { await null; done.push('discard saved'); } }, () => done.push('cancel waiting'), storage, { reload: () => done.push('reload') });
+    await awaitRevertDeploy();
+    return { done, kept: Object.keys(storage) };
+  };
+  const live = await run({ live: true });
+  assert.deepEqual(live.done.filter((step) => step === 'reload'), ['reload'], 'the admin reloads once');
+  assert.equal(live.done.at(-1), 'reload', 'and last');
+  for (const step of ['discard saved', 'cancel waiting', 'remove urd-draft-hjem', 'remove urd-draft-site']) {
+    assert.ok(live.done.includes(step), step);
+  }
+  assert.deepEqual(live.kept, ['urd-admin-theme'], 'only the drafts go');
+  const late = await run({ live: false });
+  assert.deepEqual(late.done, ['status error'], 'past the deadline the drafts stay and nothing reloads');
+  assert.equal(late.kept.length, 3);
+});
+
 // Last: once the index could not be read, the collections stay out of editing and publishing until a reload.
 test('while the collections\' index cannot be read, a publish writes and deletes nothing of them', async () => {
   editing();

@@ -1,10 +1,7 @@
 <script>
   /**
-   * The editor shell (0.7.26.5): the layout, the choice of panel and the
-   * startup. The state lives in the modules under state/, each with a
-   * handle; the shell merges them into the editor handle every part reads
-   * and writes through (setContext 'urd-editor'), runs each module's
-   * effects once, and starts the editor when it is mounted.
+   * The editor shell: its layout, the choice of panel and the startup.
+   * It merges the modules under state/ into one handle, the context 'urd-editor'.
    */
   import { setContext, onMount } from 'svelte';
   import { ta } from '$engine/i18n.js';
@@ -61,7 +58,7 @@
   const parts = [mediaState, historyState, previewState, shellState, siteState, pageState, collectionsState, templatesState, pluginsState, updaterState, blocksState, bridgeState, publishState, linkState, pageSettingsState, redirectsState, pictureEditorState, legalPanelState, savedState, draftsState];
   const ed = {};
   for (const part of parts) Object.defineProperties(ed, Object.getOwnPropertyDescriptors(part));
-  /** The side panel's place: the docked menu's per block or section, the Collections panel's per open collection, a page's settings per page where the Pages panel steps into them, every other panel's its own; none until the panel is drawn (ed.panelDrawn), so the way back starts as its content stands. */
+  /** The side panel's place: per block or section in the docked menu, per open collection, per page in stepped page settings, else the panel; none until drawn. */
   const panelPlace = $derived(!ed.panelDrawn ? null : ed.activePanel === 'properties' ? (ed.selectedBlock ? `menu:dock:${ed.selectedBlock.blockId}` : ed.activeSectionId ? `menu:dock:section:${ed.activeSectionId}` : null)
     : ed.activePanel === 'collections' ? `panel:collections:${ed.panelCollection ?? ''}`
     : ed.activePanel === 'pages' && ed.pageSettingsPref === 'step' && ed.pageSettingsFor ? `page-settings:step:${ed.pageSettingsFor}`
@@ -133,9 +130,7 @@
   {#if ed.site}
     {#if ed.adminLayout === 'top-tabs'}<PanelStrip />{/if}
     <div class="workspace">
-      <!-- Clean view hides the rail and the panel rather than unmounting them:
-           the folds keep their own open state in the DOM, which lives only
-           as long as the subtree does. -->
+      <!-- Clean view hides the rail and the panel rather than unmounting them, so the folds keep their open state. -->
       <Rail />
 
       <!-- The tab layouts keep the panel's column standing with its tabs while no panel is open, or folded to a handle at the edge -->
@@ -206,14 +201,14 @@
         </aside>
       {/if}
 
-      <!-- The stage, with the collections table standing over it while a collection is open in that layout, and a CSV import's table over both while it waits; the preview stays mounted underneath -->
+      <!-- The stage: the preview stays mounted under a collections table or a CSV import's table standing over it -->
       <div class="stage-area">
         <PreviewStage />
-        <!-- The live phone beside the desktop canvas (0.7.36.1): in the desktop view alone, not in Clean view, not while a saved draft is looked at, which the canvas shows in the drafts' place, and not under a table that stands over the stage -->
+        <!-- The live phone beside the desktop canvas, in the desktop view only; not in Clean view, while a saved draft is looked at, or under a stage table -->
         {#if ed.livePhoneOn && ed.viewMode === 'desktop' && ed.chromeVisible && !ed.looking && !stageTable}
           <LazyPart name="LivePhone" />
         {/if}
-        <!-- The page's blocks in their phone order in a column of their own at the stage's right edge (Urd settings «Phone panel»): through the phone view, whatever panel stands, and on the desktop while the Phone panel stands; not under a table that stands over the stage -->
+        <!-- The blocks in phone order at the stage's right edge («Phone panel» in Urd settings): in the phone view, and on the desktop with the Phone panel open -->
         {#if ed.phonePanelPref === 'dock' && ed.chromeVisible && !stageTable && (ed.viewMode === 'mobile' || (ed.activePanel === 'phone' && !((ed.adminLayout === 'panel-tabs' || ed.adminLayout === 'page-tabs') && ed.panelFolded)))}
           <PhoneDock />
         {/if}
@@ -232,7 +227,7 @@
   {/if}
 
   {#if ed.designPicker?.kind === 'block'}
-    <!-- A block's designs, a core block's or a plugin block's: the picked one is written to the prop the block keeps its design in; a block that is gone takes the picker with it -->
+    <!-- A block's designs, core or plugin: the pick is written to the block's design prop, and the picker closes when the block is gone -->
     {@const storedSection = ed.selectedBlock && ed.store?.data.sections.find((sec) => sec.id === ed.selectedBlock.sectionId)}
     {@const stored = storedSection?.blocks.find((blk) => blk.id === ed.selectedBlock.blockId)}
     {@const designs = ed.selectedBlock ? blockDesigns(ed.selectedBlock.type, ed.pluginBlocks) : null}

@@ -1,5 +1,5 @@
 <script>
-  /* A page's «Hide» button in the heads of its settings: «Hide» while visitors see the page, «Hidden» pressed in amber with a crossed eye while they do not (ed.setPageHidden asks where a published page's visitors go). The front page cannot be hidden. */
+  /* A page's «Hide» button in its settings' heads: «Hide» while visitors see the page, «Hidden» pressed while they do not; the front page cannot be hidden. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';

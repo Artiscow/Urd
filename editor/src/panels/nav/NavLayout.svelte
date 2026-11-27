@@ -1,5 +1,5 @@
 <script>
-  /* The Nav panel's Layout and size fold: the menu's form as drawn tiles, the floating form's width, rounding, glow and air above it, where the items stand, the bar over the top section and inside the content width, the column's alignment and width, and the size: a step for the padding and the text, then the values that replace the step's parts. */
+  /* The Nav panel's Layout and size fold: the menu's form, the floating form's look, where the items stand, the column, and the size step with its own values. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
@@ -63,7 +63,7 @@
     siteMutate('nav', () => { siteDraft.nav.layout = value; });
   }
 
-  /** Variant (additive): the default (bar) is not stored in the file. The three floating forms are presets of the corner rounding, so a switch clears a rounding value entered for the previous form. */
+  /** Variant: the default (bar) is not stored. The floating forms are presets of the corner rounding, so a switch clears a rounding entered for the last form. */
   function setNavVariant(value) {
     if ((siteDraft.nav.variant ?? 'bar') === value) return;
     siteMutate('nav', () => {
@@ -177,8 +177,8 @@
       }} />
   </Setting>
 {/if}
-<!-- The four steps, then the free values that replace the step's parts: the sliders start where the bar renders, and the number beside each is typed.
-     The column has its own padding, so it shows no thickness, side padding or item spacing. The phone's own values stand in the Mobile fold. -->
+<!-- The four steps, then the free values that replace the step's parts, each slider starting where the bar renders.
+     The phone's own values stand in the Mobile fold. -->
 <Setting key="size">
   <Choice stack label={ta('lbl.size')} title={ta('tip.nav.sizePreset')} value={navSizePreset}
     options={SIZE_IDS.map((id) => [id, ta(`opt.size.${id}`)])}

@@ -1,6 +1,5 @@
 <script>
-  /* The waiting import's two choices and its way out, shared by the three previews: what rows that match an entry do, shown while some row matches one with a change, and what becomes of the entries the file does not name, shown while there are any; then Cancel and Import.
-     Import stores the plan as one undo step (state/collections.svelte.js applyCsvImport) and stands greyed while it would store nothing. */
+  /* The waiting import's choices for matching rows and for unnamed entries, each shown only where it applies, then Cancel and Import. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import Choice from '../../lib/Choice.svelte';
@@ -67,7 +66,7 @@
 
   .ic-primary {
     font-weight: 600;
-    color: var(--urd-color-bg, #0f1218);
+    color: var(--urd-color-accent-text);
     background: var(--urd-color-accent, #7c5cff);
     border-color: transparent;
   }

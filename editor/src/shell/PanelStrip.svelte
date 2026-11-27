@@ -1,5 +1,5 @@
 <script>
-  /* The strip of every panel under the top bar («top-tabs» in the Urd settings): the three groups with a small label each, parted by a line, the open panel underlined; a panel with folds has a menu of them under its tab (PanelTab). */
+  /* The strip of every panel under the top bar: the three groups with a small label each, parted by a line, the open panel underlined. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import SettingsGear from './SettingsGear.svelte';

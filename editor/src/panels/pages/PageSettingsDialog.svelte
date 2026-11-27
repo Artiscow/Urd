@@ -1,6 +1,5 @@
 <script>
-  /* A page's settings as a dialog over the admin (the default «Page settings»): the pages down the left with the front page, the hidden pages and the ones hidden from search marked, the chosen page's name, address and «Hide» at the top with a hidden page's row under them (HideButton, HiddenRow), and its fields at the right (PageSettingsFields.svelte).
-     A native modal dialog (ADR-0011), as the Urd settings: Escape and a press on the backdrop close it, and every change is written as it is made. */
+  /* A page's settings as a modal dialog: the pages down the left, the chosen page's name, address and «Hide» at the top, and its fields at the right. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from '../../lib/motion.svelte.js';

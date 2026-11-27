@@ -1,16 +1,12 @@
 <script>
-  /* A link field (0.7.27.4): shows where a link goes and opens the link editor (LinkDialog.svelte) to change it, so every link in the editor is set the same way.
-     `value` is the host's link: a link object, or for a host of the `address` shape (one address) the address itself.
-     `scope` says where the host stands: on the page being edited ('page', a block), or on every page ('site': the menu, the footer, the site's links, collection entries), which never reads a spot without a page as this page's (link-edit.js).
-     A link to a spot names the spot by its section's number and first words, or its name, read from the page it is on.
-     A link whose page or spot is gone, or an address within the site that names no page, shows a warning in place of where it goes (linkProblem). */
+  /* A link field: shows where a link goes, or a warning where its target is missing, and opens the link editor to change it. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { pageSpots, takenAnchors } from '$engine/anchor-model.js';
   import { readLink, linkSummary, linkProblem } from './link-edit.js';
   import { ICONS } from './icons.js';
   const ed = getContext('urd-editor');
-  /** label: the field's name ('' draws none, for a field in a row); title: its tooltip; shape, pagesOnly and removable (false for a host that must have a link) as the link editor takes them; onchange(value) with the link written back, or null when it is removed. */
+  /** label: the field's name ('' for none); shape, pagesOnly and removable as the link editor takes them; onchange(value) gets the link, or null on removal. */
   let { value = null, label = '', title = '', placeholder = '', shape = 'link', scope = 'page', pagesOnly = false, removable = true, onchange } = $props();
   const uid = Math.random().toString(36).slice(2, 8);
 
@@ -44,7 +40,7 @@
 
   const summary = $derived(linkSummary(link, { pages, spotLabel }));
   const problem = $derived(linkProblem(link, { pages, taken: spotsTaken, reserved: ed.RESERVED_SLUGS }));
-  /** What the field says when its link no longer lands. */
+  /** What the field says when its link's page, spot or address is missing. */
   const problemText = $derived(problem === 'page' ? ta('link.missingPage')
     : problem === 'spot' ? ta('link.missingSpot', { page: pages.find((p) => p.id === link.page)?.title ?? link.page })
       : problem === 'address' ? ta('link.missingAddress', { url: link.url }) : '');

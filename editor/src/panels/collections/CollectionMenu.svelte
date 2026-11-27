@@ -1,10 +1,5 @@
 <script>
-  /* A collection's one menu, the ⋮ in its head: rename it, give it another kind where there is one to choose (kindChoices in lib/collection-bulk.js: never for products, else only the kinds its entries fit), and select every entry shown (Ctrl+A).
-     Then what acts on the selected entries, greyed while none is selected: set a field on all of them (the fields with what the entries hold now, then one field's value, with the badges the collection already uses to press), move or copy them to another collection (the ones they fit, the others greyed with their reason, or a new one), and export them as CSV.
-     Then the collection's CSV out and in, and the removal of the selected entries and of the whole collection, both in red.
-     The menu is a card under the ⋮, opened by a press or a mouse's rest on it and closed a moment after the mouse leaves it (unless the focus has gone into it, a name typed), standing to whichever side of the ⋮ the window has room for; the new name takes the card's place, and an item with a submenu (the kind, the fields, the collections to move or copy to) opens it beside the card when the mouse rests on it, or on a press, Enter or the right arrow; a field in the list of fields opens its value beside the list the same way.
-     A submenu stays while the pointer crosses to it or a field in it has the focus, and Escape or the left arrow steps back a level; it stands in the top layer, so the panel's scroll never clips it (ADR-0011): a popover placed by CSS anchoring where the browser has it, else measured and placed fixed (anchored.js).
-     Every change is one undo step, offered again as «Undo» in the status line (state/collections.svelte.js). */
+  /* A collection's ⋮ menu: rename, change kind, act on the selected entries, CSV out and in, and removals, each change one undo step. */
   import { menuMotion } from '../../lib/motion.svelte.js';
   import { getContext, tick } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
@@ -210,7 +205,7 @@
   /** Whether a rest opened the card: the press that often follows keeps it open. */
   let restOpened = false;
 
-  /** A mouse's rest on the ⋮ opens the card after a moment, and the mouse leaving the ⋮ and its card closes it a moment later, as the tabs' menus do; a card the focus has gone into stays until a press outside or Escape. */
+  /** A mouse's rest on the ⋮ opens the card after a moment, and leaving the ⋮ and its card closes it a moment later; a card holding the focus stays. */
   let restTimer = 0;
   function rest(on, event) {
     if (event.pointerType !== 'mouse') return;
@@ -299,8 +294,7 @@
     openSub(which);
   }
 
-  /** Escape, or the left arrow outside a field, steps back from the submenu to its item.
-   *  The listener stands on the submenu itself, so it runs before the card's own Escape (lib/dismiss.js), which would close the whole menu: Svelte's event attributes are handled at the root, after the card. */
+  /** Escape, or the left arrow outside a field, steps back to the submenu's item; set on the submenu, not as onkeydown, it runs before the card's Escape. */
   function subKey(event) {
     const inField = event.target instanceof HTMLInputElement;
     if (event.key !== 'Escape' && !(event.key === 'ArrowLeft' && !inField)) return;
@@ -522,7 +516,7 @@
     z-index: 100003;
   }
 
-  /* The anchored branch: the submenu flush against the card at the right of its item, the two borders on one line and its first row level with the item, turned to the left or upward by the browser where the window has no room */
+  /* The anchored branch: the submenu flush against the card at its item's right, turned left or upward by the browser where the window has no room */
   @supports (anchor-name: --a) {
     .cm-sub-anchored {
       inset: auto;
@@ -599,7 +593,7 @@
     background: rgb(255 255 255 / 10%);
   }
 
-  /* The deletions: the bin and their words on the dark red every deletion stands on (app.css .icon-btn.danger), lighter under the pointer; what needs a selection greyed while none is selected */
+  /* The deletions on the dark red of a removal (app.css .icon-btn.danger), lighter under the pointer; what needs a selection is greyed without one */
   .cm-card > .cm-danger {
     color: #ffd4d4;
     background: #5e1c22;
@@ -793,7 +787,7 @@
   .cm-card .cm-primary {
     justify-content: center;
     font-weight: 600;
-    color: var(--urd-color-bg, #0f1218);
+    color: var(--urd-color-accent-text);
     background: var(--urd-color-accent, #7c5cff);
     border-color: transparent;
   }

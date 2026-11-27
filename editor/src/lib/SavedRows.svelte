@@ -1,9 +1,5 @@
 <script>
-  /* The Drafts window's Saved tab (ADR-0032): every saved draft, the newest first (lib/saved-model.js savedList), each with a picture of a page drawn as «My templates» are (preset-thumb.js pageThumb) or the part's sign, its name, «New» where this browser has not seen it, the browser it was saved from, who saved it and when, and the owner's note on the save in italics.
-     A press on a row opens it (`opened` names the part whose row stands open). A page's row lists what changed against this browser's version (`changesOf`, lib/page-diff.js, worded by `lineText`), each line looking at the saved version in the canvas at its place (`online`).
-     Then its acts: «Look» and «Look on the phone» draw the saved version of a page or the site settings in the canvas (`onlook`), «New tab» opens a page's in a tab of its own (`ontab`), and «Open here» takes the saved draft into this browser (`onopen`), or a check says this browser holds it as saved.
-     Where this browser has changed the part too (not where it only holds an older saved copy, unchanged since), a box says so with «Look at both» (`onlook` with both), «Keep both» for a page (`onkeep`) and «Use …'s» in Open here's place.
-     The bin takes the saved copy away (`onremove`) at its second press, as a removal does, bright red in between, and a mouse or the focus leaving the row disarms it. */
+  /* The Drafts window's Saved tab: every saved draft, the newest first, each row opening to what changed and its acts; the bin removes at its second press. */
   import { untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { pageThumb } from '$engine/preset-thumb.js';

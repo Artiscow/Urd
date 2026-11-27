@@ -1,6 +1,5 @@
 <script>
-  /* The confirmation and prompt dialog the editor asks with before a step that cannot be undone, and where a deleted or hidden page's visitors go. Split out of App.svelte in 0.7.26.5; everything it reads and writes comes through the editor handle.
-     A modal <dialog> in the browser's top layer, so a question asked from another modal dialog (the page settings) stands above it; Escape cancels. */
+  /* The confirmation and prompt dialog asked before a step that cannot be undone, a modal that stands above another modal; Escape cancels. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from '../lib/motion.svelte.js';
@@ -22,11 +21,8 @@
 
 {#if ed.confirmBox}
   {@const box = ed.confirmBox}
-  <!-- A click on the backdrop cancels (same as the lightbox ::backdrop).
-       Closing happens on click, not pointerdown, so the click finishes
-       before the dialog disappears and never hits the panel below. -->
-  <!-- The backdrop is a mouse shortcut: Escape is the keyboard path and
-       the Cancel button the focusable one. -->
+  <!-- A click on the backdrop cancels, at click rather than pointerdown, so the click never reaches the panel below. -->
+  <!-- The backdrop is a mouse shortcut; Escape and the Cancel button are the keyboard paths. -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
   <dialog class="confirm-dialog dx" bind:this={dialogEl} use:fadingDialog out:dialogOut|global aria-labelledby="confirm-title" oncancel={onCancel}
     onpointerdown={(e) => (ed.confirmDownOnOverlay = e.target === e.currentTarget)}

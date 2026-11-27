@@ -1,23 +1,7 @@
 <script>
   /**
-   * The colour picker: three tabs over the saved and recent colours.
-   * Theme holds the theme's colours as named tiles; Custom a saturation and brightness field, hue and opacity, with the numbers in the format chosen (Hex, RGB or HSL, kept per browser) and the eyedropper; Palette twelve hues and a grey in eight rows of even lightness, in six strengths (lib/colour-grid.js).
-   * The tab last chosen and the strength last pressed or picked from are kept per browser: the picker opens on that tab, on the tab its colour comes from before one is kept, a palette colour in the strength that holds it (pickerStart).
-   * Under the palette stand the site's colour sets (theme.colorSets, lib/colour-sets.js), the same in every picker and for everyone who edits the site: «On this site» first, the colours the pages use, gathered at each opening and never changed here; then the site's own sets, each renamed, given the colour in use, a colour taken out, or deleted, each change one undo step.
-   * «+ New set» opens the set maker in the palette's place (lib/ColourSetMaker.svelte), and a set made there opens under the row.
-   *
-   * The value is EITHER #rrggbb OR a theme color NAME (e.g. 'accent'):
-   * picking a theme dot stores the name, so the content is recolored when
-   * the theme changes (the engine's resolveColor understands both). The
-   * field/hex give a detached hex value.
-   *
-   * Two branches (ADR-0011 addendum, anchored.js decides): in the top
-   * layer, anchored under the swatch's right edge (the card extends left
-   * over the panel, never out over the preview) with the browser flipping
-   * it away from the viewport edge and light dismiss; otherwise position:
-   * fixed (the panels clip absolute content), placed by measuring, closing
-   * on a click outside or Escape. Both close when the focus moves into a
-   * frame (a click in the preview iframe never reaches this document).
+   * The colour picker: Theme, Custom and Palette tabs, the site's colour sets under them.
+   * Its value is a hex code or a theme colour's name, which follows the theme.
    */
   import { getContext, tick } from 'svelte';
   import { lingering, menuMotion, rowMotion } from './motion.svelte.js';
@@ -32,7 +16,7 @@
   let { value = '#000000', tokens = [], label = ta('cp.pickColor'), onchange, allowClear = false, onremove = undefined, newSets = true } = $props();
   const ed = getContext('urd-editor');
 
-  /** The site's sets (theme.colorSets), the live set gathered at each opening, the set pressed open under the grid (LIVE for the live set, a key no set's id can be), and whether the open set is being changed. */
+  /** The site's sets, the live set gathered at each opening, the set open under the grid (LIVE, a key no set's id can be), and whether it is being changed. */
   const LIVE = ':live';
   const sets = $derived(ed?.siteDraft ? setsOf(ed.siteDraft.theme) : []);
   let onSite = $state([]);
@@ -93,7 +77,7 @@
     await tick();
     pencil?.focus();
   }
-  /** The colour's removal, the bin on the swatch's corner: the caller's (a setting row taking its own colour back to the standard), else emptying a colour that may be empty. */
+  /** The bin on the swatch's corner: the caller's removal, else emptying a colour that may be empty. */
   const remove = $derived(onremove ?? (allowClear && value ? () => onchange?.('') : null));
 
   const RECENT_KEY = 'urd-recent-colors';
@@ -287,10 +271,7 @@
     const r = rootEl.getBoundingClientRect();
     const W = 236;
     const H = 380;
-    // The popover stays inside the panel's RIGHT EDGE, so it never hangs out
-    // over the preview. The panel is narrower than the popover, so the excess
-    // width goes to the left (over the tool rail), which is still the
-    // editor's own surface.
+    // Inside the panel's right edge, so it never hangs over the preview; the width the panel lacks goes left, over the tool rail.
     const panel = rootEl.closest('.panel-body')?.getBoundingClientRect();
     const rightEdge = panel ? panel.right : window.innerWidth;
     const left = Math.max(8, Math.min(r.right - W, rightEdge - W - 8));
@@ -384,7 +365,7 @@
     return [hue, val ? 2 * (1 - light / val) : 0, val];
   }
 
-  /** The HSL numbers, held apart from the colour while they are typed, so a hue or a saturation typed on a grey, black or white is kept; any other control sets them anew (commit). */
+  /** The HSL numbers, held apart from the colour while typed, so a hue typed on a grey, black or white is kept; any other control sets them anew. */
   let hsl = $state([0, 0, 0]);
   function seedHsl() {
     const [hue, sat, light] = rgbToHsl(...hsvToRgb(h, s, v));
@@ -510,9 +491,7 @@
     keep(SAVED_KEY, $state.snapshot(saved));
   }
 
-  // Close ONLY on a click outside or Escape (like most menus), and not on scroll: a field or button pressed inside the floating card takes the focus, and the browser then scrolls the panel slightly to show it.
-  // A click in the preview iframe never reaches the document's pointerdown, so the focus moving into a frame closes the picker too, read once the window's blur has settled.
-  // A blur that leaves the focus in this document (the file dialog the set maker opens, another window) keeps it open.
+  // Closes on a click outside, on Escape, and when the focus moves into a frame such as the preview, never on scroll.
   $effect(() => {
     if (!open) return;
     const onBlur = () => setTimeout(() => {
@@ -546,8 +525,7 @@
     <button type="button" class="cp-remove danger" title={ta('cp.clearTitle')}
       aria-label={ta('cp.clear')} onclick={() => remove()}>{@html ICONS.bin}</button>
   {/if}
-  <!-- The picker often sits inside a <label>: the browser forwards a click on a surface that is no control (the colour field, empty space) to the label's control, the swatch, which would close the picker, so such a click is cancelled (keepClick).
-       A click on a control of the card's own is left alone, so a dropdown's button opens its list and a file field its dialog. -->
+  <!-- keepClick cancels a click on the card outside its controls, which a surrounding <label> would pass on to the swatch. -->
   {#if native}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="cp-pop cp-anchored" class:cp-beside={inCard} id={popId} popover="auto" bind:this={popEl}
@@ -787,16 +765,11 @@
   .cp-pop {
     position: fixed;
     z-index: 500;
-    /* border-box: the width here IS the visible width, the same number the
-       placement math in openPicker uses (otherwise the box hangs 20px
-       further out than the math thinks) */
+    /* The visible width, the number openPicker places it by */
     box-sizing: border-box;
     width: 236px;
     display: grid;
-    /* minmax(0, 1fr): an implicit grid column is max-content sized, and the
-       widest row (the hex field's natural width) would make the column wider
-       than the box, so the content would spill out of it. The column must
-       never exceed the box width. */
+    /* One column never wider than the box */
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
     padding: 10px;
@@ -811,16 +784,13 @@
     overscroll-behavior: contain;
   }
 
-  /* The anchored branch: under the swatch, right edges aligned (the card
-     extends left over the panel); where it does not fit under the swatch it is moved up to the window's foot (--cp-fit, app.css), and only a window too short for that turns it above the swatch. */
+  /* The anchored branch: under the swatch, right edges aligned, moved up to the window's foot where it does not fit (--cp-fit, app.css), else above the swatch */
   @supports (anchor-name: --a) {
     .cp-anchored {
       inset: auto;
       margin: 6px 0 0;
       top: anchor(bottom);
-      /* Right edges aligned with the swatch, kept inside the pane the
-         swatch stands in (--urd-pane, named by namePane while open), so
-         the card never hangs out over the preview or the tool rail */
+      /* Right edges aligned with the swatch, kept inside its pane (--urd-pane, named by namePane while open) */
       left: clamp(calc(anchor(--urd-pane left, 0px) + 8px), calc(anchor(right) - 236px), calc(anchor(--urd-pane right, 100vw) - 244px));
     }
 
@@ -828,7 +798,7 @@
       display: none;
     }
 
-    /* A picker inside another's card: beside that card, its top at the swatch, turned to the card's other side where the window ends (--cp-beside-fit, app.css, keeps it inside the window's foot) */
+    /* A picker inside another's card: beside that card, its top at the swatch, kept inside the window (--cp-beside-fit, app.css) */
     .cp-anchored.cp-beside {
       margin: 0 0 0 8px;
       top: anchor(top);

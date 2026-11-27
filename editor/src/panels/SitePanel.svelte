@@ -1,6 +1,5 @@
 <script>
-  /* The Site panel: the site itself (its name, title, description and icon), its language and place, the content width, the calendars, the links and the shop, each a fold of the row kit its tab's menu reaches (lib/panel-folds.js); the contact details stand in the Legal panel.
-     A fold of settings says its value while closed and carries its reset (lib/site-groups.js); a fold of a list says how many it holds; the media's tidy stands in the Updates panel. The state it reads and the functions it writes through come from the editor handle. */
+  /* The Site panel: the site's name, icon, language and place, the content width, the calendars, the links and the shop, each a fold (lib/panel-folds.js). */
   import { getContext } from 'svelte';
   import { WIDTH_MIN, WIDTH_MAX, WIDTH_STEP, WIDTH_DEFAULT, GUTTER_MIN, GUTTER_MAX, GUTTER_STEP, GUTTER_DEFAULT, WIDTH_PRESETS, GUTTER_PRESETS, REF_SCREENS, clampWidth, clampGutter, contentBand, presetOf } from '../lib/content-width.js';
   import { MOBILE_GAP, mobileGapOf } from '$engine/migrate.js';
@@ -37,7 +36,7 @@
   const { addSiteCalendar, setStatus, siteCalendars, siteLangOptions, siteLangValue, siteMutate, themeSwatches, siteLinks, addSiteLink, removeSiteLink, moveSiteLink, setSiteLink } = ed;
   const S = 'site';
 
-  /* The site icon chosen: the picture is kept as the original (an SVG trimmed to its mark, so the icon is filled by it), and the image editor opens on it; «Done» bakes the icon, which stays raster, since Safari does not use an SVG favicon. */
+  /* The site icon chosen: the picture is kept as the original, an SVG trimmed to its mark, and the image editor opens on it to bake a raster icon. */
   async function uploadSiteIcon(event) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -56,9 +55,7 @@
     ed.openPicture({ kind: 'icon', source: kept?.src ? kept : { src: siteDraft.site.icon } });
   }
 
-  /** The site name (site.title): half the tab title (`<page> - <name>`)
-   *  and the default text in the menu logo. edit: key so a typing session
-   *  becomes one undo step. */
+  /** The site name: half the tab title (`<page> - <name>`) and the menu logo's default text, a typing session one undo step. */
   function setSiteName(value) {
     siteMutate('edit:site-title', () => { siteDraft.site.title = value; });
   }
@@ -212,7 +209,7 @@
 </script>
 
 <div class="panel-body">
-  <!-- The site itself: its name, how a tab's title is formed, the description search engines and shares show, and its icon; the contact details are set in the Legal panel -->
+  <!-- The site itself: its name, how a tab's title is formed, the description search engines and shares show, and its icon -->
   <Fold id="identity" surface={S} title={ta('group.siteIdentity')} value={siteDraft.site.title || ta('common.none')} group={identityGroup()}>
     <label class="field-stack" title={ta('tip.site.name')}>{ta('lbl.name')}
       <input value={siteDraft.site.title ?? ''} placeholder={ta('ph.site.name')}
@@ -274,7 +271,7 @@
     </Setting>
   </Fold>
 
-  <!-- The width the content keeps on a wide screen, and the margin at its sides; the sample shows, for three common screens, where the width binds and where the content runs fluid -->
+  <!-- The content's width on a wide screen and its side margin; the sample shows where the width binds on three common screens -->
   <Fold id="width" surface={S} title={ta('lbl.contentWidth')} tip={ta('tip.site.contentWidth')} value={widthValue()} group={widthGroup()}>
     <div class="sample cw-sample">
       {#each widthBands as band (band.screen)}
@@ -319,8 +316,7 @@
     <SiteToTop />
   </Fold>
 
-  <!-- The site's calendars (site.calendars): registered once with their settings, picked by the calendar blocks as references.
-       Cards like the Nav tab's items, one open at a time; the new calendar opens with the caret in its name -->
+  <!-- The site's calendars, registered once and picked by the calendar blocks; one card open at a time, a new one with the caret in its name -->
   <Fold id="calendars" surface={S} title={ta('group.siteCalendars')} tip={ta('tip.site.calendars')} value={siteCalendars().length ? `${siteCalendars().length}` : ta('common.none')}>
     <button type="button" class="ghost action" onclick={() => addSiteCalendar()}>{@html ICONS.plus}{ta('ui.addSiteCalendar')}</button>
     {#if siteCalendars().length}
@@ -376,7 +372,7 @@
 
   <!-- The shop's settings for the whole site -->
   <Fold id="shop" surface={S} title={ta('group.siteShop')} tip={ta('tip.site.shop')} value={`${ed.shopBlocksOn() ? ta('opt.shopBlocks.shown') : ta('opt.shopBlocks.hidden')} · ${siteDraft.site.commerce?.currency || 'NOK'}`} group={shopGroup()}>
-    <!-- The shop's blocks in the block lists (block-palette.js shopOn): the site's own choice, else shown while a product catalogue exists. A choice of Shown or Hidden, never a switch, so it cannot read as the shop itself going off -->
+    <!-- The shop's blocks in the block lists (block-palette.js shopOn): Shown or Hidden, else shown while a product catalogue exists -->
     <Setting key="shop">
       <Choice label={ta('settings.shopOn')} title={ta('tip.settings.shopOn')} value={ed.shopBlocksOn() ? 'shown' : 'hidden'}
         options={[['shown', ta('opt.shopBlocks.shown')], ['hidden', ta('opt.shopBlocks.hidden')]]}
@@ -388,7 +384,7 @@
         <input value={siteDraft.site.commerce?.currency ?? ''} placeholder="NOK" maxlength="3" spellcheck="false" class:place-error={ed.siteCurrencyBad} data-field="shop-currency"
           onchange={(e) => setSiteCurrency(e.target.value)} /></label>
     </Setting>
-    <!-- The terms of sale the checkout links are chosen in the Legal panel: the page chosen shows here while the panel shows its Terms of sale, and the row opens the panel there -->
+    <!-- The terms of sale the checkout links to, shown while the Legal panel shows them; the row opens that panel there -->
     {#if ed.legal?.terms.shown}
       <PanelLinkRow label={ta('settings.termsPage')} to={ta('panel.legal')} title={ta('tip.legal.goto')} onclick={() => ed.openPanel('legal', { fold: 'terms' })}>
         {#snippet value()}<span>{(siteDraft.pages ?? []).find((p) => p.id === siteDraft.site.commerce?.termsPage)?.title ?? ta('common.none')}</span>{/snippet}

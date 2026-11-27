@@ -1,5 +1,5 @@
 <script>
-  /* The launcher's settings for the phone: the design the menu on the phone gives it, and how many shortcuts it shows there; in the Nav panel's Tools fold under the launcher's sizes, and in the Phone panel's fold of the menu on the phone (0.7.3.24), the same rows in both. */
+  /* The launcher's settings for the phone: its design and how many shortcuts it shows; the same rows in the Nav panel's Tools fold and in the Phone panel. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import Setting from '../../lib/rows/Setting.svelte';

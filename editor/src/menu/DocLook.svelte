@@ -1,6 +1,5 @@
 <script>
-  /* A document's look (doc-look.js): the side the contents stand on, the accent, the headings' and the cards' colours, the lines between the parts, the corners and the fonts, for the privacy page and the terms of sale.
-     Only the settings the chosen design draws are shown (docLookSettings); each falls back to the theme until the owner chooses. */
+  /* A document's look (doc-look.js), for the privacy page and the terms of sale: only the settings its design draws, each following the theme until chosen. */
   import { getContext } from 'svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import ColourRow from '../lib/rows/ColourRow.svelte';
@@ -28,7 +27,7 @@
   </Setting>
 {/if}
 {#if shows.align}
-  <!-- Where the document stands in its block, centred unless set otherwise: with contents, the text centred with the list at the block's outer edge or beside the list; otherwise centred or at the block's left edge -->
+  <!-- Where the document stands in its block, centred unless set otherwise; the choices follow the design -->
   <Setting key="placement">
     {#if design === 'contents'}
       <Choice label={ta('lbl.docAlign')} title={ta('tip.doc.align')} value={p.placement === 'start' ? 'start' : 'center'}

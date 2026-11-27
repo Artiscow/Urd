@@ -1,9 +1,6 @@
 <script>
-  /* The shape window (ADR-0035): a shape of the engine's shape-model.js, set over the admin in a native modal dialog (ADR-0011).
-     Two views, one at a time. «Shape» holds the shipped shapes and «Custom» on one screen: a shape is a set of Custom's values, so picking one fills the sliders, each shown only where it changes something, and «Shape manually» hands the shape over as points.
-     «Draw» is the shape by its points: each is dragged or moved with the arrow keys and has a corner of its own, «Mirror» keeps the two halves alike, «Shuffle» gives a soft shape to go on from, and the bin takes the drawing away, back to the shape's values.
-     In both, the mark on the shape stands at the shape's own middle, and is dragged or moved with the arrow keys to a place of its own; «Centre the icon» takes it back.
-     The window holds no shape itself: `shape` is the shape as it applies (shapeOf), and every change is handed to `onchange` with the undo step it belongs to: a slider's run, a press's drag, or a run of arrow keys on one point is one step. */
+  /* The shape window (ADR-0035): the shipped shapes, the «Custom» sliders and the drawn points.
+     Each change goes to `onchange` with its undo step. */
   import { ta } from '$engine/i18n.js';
   import { shapeOf, shapeOutline, outlinePath, outlineMiddle, shapeToPoints, shapeLimits, shapeId, SHAPES, SHAPE_BLANK, SHAPE_SIDES, SHAPE_CORNERS, SHAPE_WAVES, SHAPE_RANGES, SHAPE_POINTS } from '$engine/shape-model.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';
@@ -535,7 +532,7 @@
     }
   }
 
-  /* Custom's groups in two columns, each a stack; every row has its name in a column of one width (--row-name, as the kit's one-line slider), so every control starts on one line down the window */
+  /* Custom's groups in two columns; each row's name has one width (--row-name), so every control starts on one line */
   .sw-groups {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));

@@ -1,12 +1,7 @@
 <script>
   /**
-   * The design picker (0.7.19.22): every design of a choice with its picture, grouped by family, over the editor.
-   * What it shows comes from a source (design-sources.js): the calendar's designs, its phone and card designs, or another block's designs (block-designs.js).
-   * The pictures are the engine's own drawings of each design (template/admin/designs/, made by scripts/design-pictures.mjs), each the design's own box, shown whole and centred on the tile's dark surface; a design without one shows its schematic thumbnail where the source has one.
-   * The marked design is drawn live in a preview iframe of its own, in the site's theme and language, so the owner sees it before it is applied; under the preview it is described, with what the owner can change on it where the source says.
- * A design the mouse rests on is shown there in its place until the pointer leaves the list, and the arrow keys move the mark from tile to tile as they stand (the rows by where the tiles are drawn), so the preview follows the eye and the keys alike; Enter on the marked tile applies it.
-   * The preview frame is told the site, the enabled plugins and the draft collections, as the editor's own preview is, so a plugin block and a collection block draw there too.
-   * `onpick(id)` applies, `onclose` leaves; `place` names the kind of design, under which the list keeps where it was left.
+   * The design picker: every design of a choice with its picture by family, the marked one drawn live in a preview.
+   * `onpick(id)` applies and `onclose` leaves.
    */
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';
@@ -33,7 +28,7 @@
   let previewH = $state(600);
   let searchEl = $state(null);
   let dialogEl = $state(null);
-  // The dialog fills the window around its card, so a press outside the card lands on the dialog itself: it leaves the picker when it both starts and ends there, and a drag out of the card never does.
+  // A press that both starts and ends on the dialog outside its card leaves the picker; a drag out of the card does not.
   let downOnBackdrop = false;
 
   // A design is found by its words in any language (search-langs.js); a typed query loads the other languages once, and the list runs again when they are in.
@@ -48,7 +43,7 @@
   const shownDef = $derived(source.def(shown));
   const scale = $derived(paneW ? Math.min(1, paneW / source.previewWidth) : 0.4);
 
-  // A native modal dialog (ADR-0011): the top layer places it over the whole editor whatever the panel it was opened from is transformed by, and Escape is its own cancel.
+  // A native modal dialog over the whole editor, with Escape as its cancel.
   $effect(() => {
     if (dialogEl && !dialogEl.open) dialogEl.showModal();
     searchEl?.focus();
@@ -56,7 +51,7 @@
 
   const post = (msg) => iframeEl?.contentWindow?.postMessage(msg, location.origin);
 
-  /** The preview's height follows the drawn block: its bottom (or what the source draws below it, an open card), read whenever the block changes size (sample data arrives after the first draw and the block grows with it). */
+  /** The preview's height follows the drawn block's bottom, read whenever the block changes size. */
   /** The element the preview is measured by and watched for: the drawn block, or what the source points at (the footer). */
   const drawn = (doc) => (doc ? (source.findEl ? source.findEl(doc) : doc.querySelector(`.urd-block[data-block-id="${source.blockId}"]`)) : null);
 
@@ -72,7 +67,7 @@
 
   let watcher = null;
   let watched = null;
-  /** The block drawn for the choice is watched for its size by the preview window's own observer; each draw makes a new block, found as soon as it stands, past the one the last draw made, while an element that stands through the draws (a source that `stays`, the footer) is watched afresh at each. */
+  /** Watches the drawn block's size with the preview window's own observer: each draw's new block, or a lasting element (`stays`) afresh at each draw. */
   function watchPreview() {
     watcher?.disconnect();
     watcher = null;
@@ -109,8 +104,7 @@
   function onMessage(event) {
     if (event.origin !== location.origin || event.source !== iframeEl?.contentWindow) return;
     if (event.data?.type !== 'urd-ready') return;
-    // The preview shows the design alone: the site's header, announcement strip, footer and scroll-top button stay out of it, unless the footer or the button is what the source shows.
-    // The frame is as tall as the drawn block (measure) and as wide as the view it shows, so the page in it never scrolls, and keeps no room for a scrollbar it never shows.
+    // The preview shows the design alone, without the site's bars unless the source shows them, and the page in it never scrolls.
     const doc = iframeEl?.contentDocument;
     if (doc && !doc.getElementById('design-picker-style')) {
       const style = doc.createElement('style');
@@ -135,7 +129,7 @@
   /** The design the mouse is on its way to show. */
   let hoverNext = null;
 
-  /** The mouse moving over a design shows it, after a moment so a pointer crossing the tiles does not draw each one; only a moving mouse counts, so a picker that opens under a still pointer shows the marked design, and a touch or a pen leaves the preview to the press (a tap would hover and press at once). */
+  /** A mouse moving over a design shows it after a moment; a touch or a pen leaves the preview to the press. */
   function hoverSoon(id, event) {
     if (event && event.pointerType !== 'mouse') return;
     if (id === hoverNext) return;
@@ -153,10 +147,7 @@
     hovered = null;
   }
 
-  /**
-   * The arrow keys on a tile move the mark to the next tile in the direction pressed: left and right in the tiles' order, up and down to the tile in the row above or below whose middle is nearest, so the families' rows read as one grid; Home and End go to the first and the last.
-   * The mark follows the focus, so the preview shows the tile the keys stand on; Enter on the marked tile applies it.
-   */
+  /** The arrow keys move the mark and the focus between tiles as they stand on screen, Home and End to the ends; Enter on the marked tile applies it. */
   function tileKeys(event, id) {
     if (event.key === 'Enter' && id === chosen) {
       event.preventDefault();
@@ -615,7 +606,7 @@
     opacity: 0.7;
   }
 
-  /* The preview scrolls down when it is taller than its room, never sideways: the stage is scaled to the pane's width, and the scrollbar's room is kept, so its coming never narrows the pane under the stage. */
+  /* The preview scrolls down when taller than its room, never sideways, and keeps the scrollbar's room so the pane never narrows. */
   .dp-preview {
     align-self: start;
     min-height: 0;

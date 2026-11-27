@@ -1,6 +1,5 @@
 <script>
-  /* The launcher's row in the Nav panel's Tools fold: the switch that shows its button, then its design, its sizes, the phone's view and how many shortcuts the phone shows, its title, the button's own mark, and the shortcuts.
-     A shortcut is a card in the row kit's card list: closed, its mark, its name and a warning where its target goes nowhere; open, its tile drawn as the menu draws it, which is itself the mark picker, beside its fields. */
+  /* The launcher's row in the Nav panel's Tools fold: its switch, design, sizes, title and mark, and its shortcuts as cards in the row kit's card list. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import MarkPicker from '../../lib/MarkPicker.svelte';

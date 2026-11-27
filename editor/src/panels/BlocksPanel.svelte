@@ -1,5 +1,5 @@
 <script>
-  /* The Blocks panel: the palette of block types, the calendar designs, the images and galleries added with pictures, the plugin blocks and the saved templates. Split out of App.svelte in 0.7.26.3; the state it reads and the functions it writes through come from the editor handle. */
+  /* The Blocks panel: the palette of block types, the calendar designs, the images and galleries added with pictures, the plugin blocks and the saved templates. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { makeId } from '$engine/sections/presets.js';
@@ -25,12 +25,9 @@
     requestPlacement(buildBlock(kind));
   }
 
-  /** Core blocks whose Content panel is the field contract (the same
-   *  renderer as plugin fields): place search, numbers, toggles, selects. */
+  /** Adds a block whose Content panel is the field contract, a plugin's or a core block's, with its defaults. */
   function addPluginBlock(entry, extraProps = {}) {
-    // pluginBlocks is $state: structuredClone on a reactive proxy throws
-    // DataCloneError (same trap as postMessage). Snapshot yields plain
-    // objects; it also works on non-reactive values.
+    // Plain objects, which can be cloned and posted.
     const raw = $state.snapshot(entry);
     requestPlacement({
       id: makeId('blk'),
@@ -43,9 +40,7 @@
     });
   }
 
-  /* The block search in the panel (a flat hit list). The index is built
-     from the VISIBLE labels the panel already shows: core blocks, shapes,
-     block-group templates and plugin blocks (variants flattened). */
+  /* The block search in the panel, a flat hit list over the labels the panel shows. */
   let blockSearch = $state('');
   // The hits in every language: a typed query loads the other languages once, and the list runs again when they are in.
   const blockHits = $derived.by(() => {
@@ -55,7 +50,7 @@
   });
 
   function panelBlockItems() {
-    // The palette's kinds in its order, the image and the gallery from pictures as the panel adds them, then the calendar's views and designs, which the hit list reaches by name.
+    // The palette's kinds in its order, the image and the gallery from pictures, then the calendar's views and designs.
     const items = [];
     for (const group of paletteGroupsFor(ed.shopBlocksOn())) {
       for (const kind of group.kinds) {
@@ -109,8 +104,7 @@
     const img = await imageForBlock(file);
     if (!img) return;
 
-    // Start width 30 % of the section; the height follows the image's
-    // aspect ratio with an assumed section width (freely adjusted afterwards anyway).
+    // 30 % of the section wide, as tall as the image's aspect ratio makes it at the preview's width.
     const height = Math.round((img.height / img.width) * 0.3 * (iframeEl?.clientWidth ?? 1280));
     requestPlacement({
       id: makeId('blk'),
@@ -145,8 +139,7 @@
   title={viewMode === 'mobile' ? ta('tip.blocks.mobileLocked') : undefined}>
   <SearchField get={() => blockSearch} set={(v) => (blockSearch = v)} menu={false} label={ta('canvas.searchBlocks')} />
   {#if blockSearch.trim()}
-    <!-- An active search shows a flat, ranked hit list instead
-         of the groups. -->
+    <!-- An active search shows a flat, ranked hit list instead of the groups. -->
     {#each blockHits as item (item.label)}
       {#if item.act === 'image'}
         <label class="ghost filepick" title={ta('tip.webpAuto')}>

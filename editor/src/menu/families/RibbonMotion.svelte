@@ -1,6 +1,5 @@
 <script>
-  /* A ribbon's motion settings, shown while the band moves: the way to play it in the editor, its direction, its pace, and how a visitor pauses it.
-     They stand under the motion they belong to: in the Motion fold, or in Pinned while the motion is pinned (ElementMenu.svelte), and tell their own values against the motion group's standards in both. */
+  /* A ribbon's motion settings, shown while the band moves: playing it in the editor, its direction, its pace, and how a visitor pauses it. */
   import { getContext, setContext } from 'svelte';
   import { makeGroupHelpers } from '../groups.js';
   import { RIBBON_MOTION_STANDARD } from '../options.js';

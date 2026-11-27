@@ -1,7 +1,5 @@
 <script>
-  /* The phone view's bars and menus: drawn over the stage, free of the page's edges and clear of the page; the selected block's bar beside the phone level with the block (0.7.3.19.2), the section's level with the section's top (0.7.3.23), placed by placeTextBar in menu-place.js, and a menu at the point it was opened at or under a bar's ⋮.
-     The tools and the rows are the page's own (state/canvas-bar.svelte.js): a press here is pressed there, so each acts as it does on the page. The block keeps its handles and its drag on the page, and a press on a bar leaves the keyboard's focus there.
-     The site's menu has a bar of its own there (0.7.3.25), level with the menu while the mouse was last over it or it was last pressed: the bar's thickness, the logo's size and the menu's text size, each stepped down and up from what the phone draws now (nav-size.js phoneSizes, phoneStep) and written as the phone's own value, and a gear to the menu's settings for the phone. */
+  /* The phone view's bars and menus: beside the phone, level with the section, block or site menu they act on, using the page's own tools. */
   import { getContext, tick } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sectionWords, blockWords } from '$engine/anchor-model.js';
@@ -62,7 +60,7 @@
     return { stage, canvas: { left: Math.max(ir.left, stage.left), right: Math.min(ir.right, stage.right), top: Math.max(ir.top, stage.top), bottom: Math.min(ir.bottom, stage.bottom) } };
   }
 
-  /** With the bars in both places (Urd settings «Bars in the phone view»), the page shows its own over the canvas, so the editor's is shown only beside the phone; one placed elsewhere stays drawn but unseen, so it is measured again as its tools change. */
+  /** With «Bars in the phone view» set to both places, the page draws its own bars over the canvas and the editor's stand only beside the phone. */
   const besideOnly = $derived(ed.toolbarPhonePlacePref === 'both');
   const beside = (place) => (place && besideOnly && place.side !== 'left' && place.side !== 'right' ? null : place);
 
@@ -84,7 +82,7 @@
     return words ? `${ed.blockLabel(block.type)}: ${words}` : ed.blockLabel(block.type);
   });
 
-  /** The section's bar: beside the phone, level with the section's top, or with the top of the canvas where the section begins above it; none while the section stands out of sight. */
+  /** The section's bar beside the phone, level with the section's top or the canvas top; none while out of sight. */
   const sectionAt = $derived.by(() => {
     const f = frameOf();
     if (!f || !shown || !cb.section.id || !cb.section.rect || !cb.section.tools.length) return null;
@@ -95,7 +93,7 @@
   /** The section's bar where it is shown. */
   const sectionPlace = $derived(beside(sectionAt));
 
-  /** The block's bar: beside the phone, level with the block, where the stage has room, else above the block or below it, clear of the section's bar where the two would meet (placeClearOf); none while the block stands out of sight. */
+  /** The block's bar beside the phone level with the block, else above or below it clear of the section's bar; none while out of sight. */
   const blockAt = $derived.by(() => {
     const f = frameOf();
     if (!f || !shown || !cb.block.id || !cb.block.rect || !cb.block.tools.length) return null;
@@ -116,7 +114,7 @@
     { what: 'textSize', value: navSizes.textSize, icon: ICONS.navText, name: ta('canvas.navTextSize') },
   ].filter(Boolean) : []);
 
-  /** The menu's bar: beside the phone, level with the menu, clear of the section's bar and the block's where it would meet them; none while the menu stands out of sight. */
+  /** The site menu's bar beside the phone level with the menu, clear of the other bars; none while out of sight. */
   const navPlace = $derived.by(() => {
     const f = frameOf();
     if (!f || !shown || !cb.nav?.rect || !navSizes) return null;
@@ -156,7 +154,7 @@
     cb.sectionPlaced = sectionPlace ? { sectionId: cb.section.id, left: sectionPlace.left, top: sectionPlace.top, w: sw, h: sh, side: sectionPlace.side } : null;
   });
 
-  /** The menu's place: under the ⋮ of the bar that opened it, reaching away from the phone, else at the point it was opened at on the page; inside the window, short of a column docked at the stage's right edge (panels/phone/PhoneDock.svelte). */
+  /** The menu's place: under the ⋮ that opened it, away from the phone, else where it was opened; inside the window, left of a docked phone column. */
   const menuPlace = $derived.by(() => {
     void resized;
     const m = cb.menu;
@@ -188,7 +186,7 @@
   });
 
   // A menu held open takes the focus on its first row; one a rest opened leaves it where it is.
-  // A menu taken away under the mouse tells no leave, so the mouse counts as off a menu as another stands.
+  // A new menu starts with the mouse counted off it.
   $effect(() => {
     const m = cb.menu;
     armed = null;
@@ -230,7 +228,7 @@
 
   let restTimer = 0;
 
-  /** The mouse resting on a bar's ⋮ opens its menu without the focus, as on the page's bars, in place of a menu the other bar's ⋮ opened by a rest; a touch opens it at its press. */
+  /** A mouse resting on a bar's ⋮ opens its menu without taking the focus, replacing one the other ⋮ opened; a touch opens it at its press. */
   function moreEnter(event, kind, index) {
     if (event.pointerType !== 'mouse' || event.buttons) return;
     overMore = kind;
@@ -428,7 +426,7 @@
     opacity: 0.6;
   }
 
-  /* The section's and the block's bars open with what they act on, the section's name or the block's kind and words, on a line of their own above the tools, so the bar stays as narrow as its tools and keeps to the room beside the phone; one line, cut short with an ellipsis */
+  /* The section's and the block's bars name what they act on in one line above the tools, cut short with an ellipsis */
   .canvas-bar > .cb-name {
     flex: 1 0 100%;
     box-sizing: border-box;

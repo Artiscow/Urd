@@ -1,10 +1,5 @@
 <script>
-  /* The element menu (ADR-0016 decision 3): Content is what the block says and shows, Style is how it looks, Placement is where it sits and how it behaves there.
-     Before them stands Pinned: the settings used most, a block type's own first and then the two every block has (how it fits a narrower screen, and whether it shows on a phone).
-     A pinned setting stands there instead of in its area, so no setting is drawn twice (PinScope.svelte), and an area left with nothing in it is not drawn.
-     Wide, Pinned and the areas share two columns, each whole, cut where they come out most even (`balanceAreas`); narrow, they stand under each other with a heading each; with tabs, one area stands at a time behind Content, Style and Placement (`layout`, menu/state.svelte.js menuLayout).
-     What stands first follows the Urd settings' «Top of the menu»: the Pinned rows, the same rows as tiles, nothing but the search (drawn by the menu's frame), or chips that jump to each area.
-     A block with designs has its design, and its phone design, as the first rows of Style, and every block its motion as the last group there. */
+  /* The element menu (ADR-0016): Pinned, Content, Style and Placement in two columns, stacked or as tabs; a pinned setting stands in Pinned alone. */
   import { getContext, setContext } from 'svelte';
   import Choice from '../lib/Choice.svelte';
   import Setting from '../lib/rows/Setting.svelte';
@@ -76,7 +71,7 @@
   const Family = $derived(FAMILIES[selectedBlock.type] ?? Fields);
   /** `layout` is 'wide', 'narrow' or 'tabs'; `only` draws one group alone, for a tool of the bar (lib/only-group.js): a group, an area's loose rows or an area. */
   let { layout = 'narrow', query = '', only = null } = $props();
-  // What a small panel keeps (lib/only-group.js), for the rows that draw otherwise there: the design's pictures stand in its own panel whatever «Choosing a design» says (lib/rows/LookChoice.svelte).
+  // What a small panel keeps (lib/only-group.js): the design's pictures stand in its own panel whatever «Choosing a design» says.
   setContext('menu-only', { get only() { return only; } });
   const wide = $derived(layout === 'wide');
   const shortcuts = $derived(menu.shortcutsPref);
@@ -207,8 +202,7 @@
     return items;
   }
 
-  /* Wide, Pinned and the three areas stand in two columns, in their order and each whole, cut once between the columns where they come out most even.
-     The cut is chosen as a block's menu opens, from the parts' heights then, and kept while the owner works in it, so a fold that opens grows its own column and moves nothing across. */
+  /* Wide, Pinned and the three areas stand whole in two columns, cut where they come out most even, as the menu opens. */
   const PARTS = ['pinned', 'content', 'style', 'placement'];
   /** How many of the parts stand in the left column. */
   let cut = $state(2);
@@ -236,8 +230,7 @@
     return () => cancelAnimationFrame(frame);
   }
 
-  /** The areas with nothing in them for this block, read from what is drawn (an area's heading alone), so their tabs are left out; the view moves off an empty area, also when a key chose one.
-      Read again for another block, when a setting is pinned or taken out of Pinned, when the tab changes, and when «Adding extras» moves the way to add into the areas or out of them. */
+  /** The areas with nothing in them for this block, read from what is drawn, so their tabs are left out; the view moves off an empty area. */
   let emptyAreas = $state(new Set());
   function tabsIn(node) {
     const measuredFor = blockId;
@@ -256,7 +249,7 @@
     return () => cancelAnimationFrame(frame);
   }
 
-  /** With the chips, the area in view marks its chip: the first area whose top has come within the upper part of the menu's scroll, watched by the scroll's own observer. */
+  /** With the chips, the area in view marks its chip: the first area whose top is within the upper part of the menu's scroll. */
   function areaInView(node) {
     if (shortcuts !== 'chips' || layout === 'tabs') return;
     const root = node.closest('.block-menu-body') ?? node.closest('.panel');
@@ -270,8 +263,7 @@
     return () => observer.disconnect();
   }
 
-  /* The keys of the menu's areas (0.7.20.9, proposal O on the Design canvas): with the focus in the menu and not in a field, 1, 2 and 3 choose Content, Style and Placement (scrolling to where the area starts), and / goes to the search field of the menu the focus is in.
-     No key caps are drawn; the keys are listed in the shortcut sheet and the user guide. */
+  /* With the focus in the menu and not in a field, 1, 2 and 3 choose Content, Style and Placement, and / goes to the menu's search field. */
   function menuKeys(event) {
     const t = event.target;
     if (t instanceof HTMLElement && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return;
@@ -300,7 +292,7 @@
 {/snippet}
 {#snippet menuStyle()}
   {#if designs}
-    <!-- The block's looks, side by side as the buttons that open their pickers: a design other than the block's first is its own, with the way back to the first; a phone design chosen is its own too -->
+    <!-- The block's looks side by side, each a button that opens its picker; a design other than the block's first, or a phone design, is its own -->
     <LookRows pins={designs.phone ? ['design', 'phoneDesign'] : ['design']}>
       <Setting pin="design" own={designs.read(selectedBlock.props) !== designs.read({})} reset={() => setBlockProp(designs.prop, undefined)}><DesignRow /></Setting>
       {#if designs.phone}<Setting pin="phoneDesign" own={selectedBlock.props.phoneDesign !== undefined} reset={() => setBlockProp('phoneDesign', undefined)}><DesignRow phone /></Setting>{/if}
@@ -333,7 +325,7 @@
                 <LookChoice label={item.label} title={item.tip} value={item.value} picture={item.picture ?? ''} current={item.current ?? null}
                   designs={shortcuts === 'tiles' ? null : (item.designs ?? null)} onpick={item.pick ?? null} onopen={item.run} />
               {:else if item.kind === 'number' && item.zero}
-                <!-- A number whose zero means «all» or «automatic» shows that word in an empty field; the set returns the stored value, written back, so a clamped or zero entry shows what the block holds -->
+                <!-- A number whose zero means «all» or «automatic» shows that word in an empty field; the field shows the stored value the set returns -->
                 <label title={item.tip}>{item.label}
                   <input type="number" min={item.min} max={item.max} step={item.step ?? 1} value={item.value || ''} placeholder={item.zero}
                     onchange={(e) => { const stored = item.set(e.target.value); if (stored !== undefined) e.target.value = stored || ''; }} /></label>
@@ -379,8 +371,7 @@
     </CapScope>
   </PinScope>
 {:else if query.trim()}
-  <!-- The search: a copy of the three areas of its own, narrowed to what matches (menu-search.js),
-       Content and Style beside Placement when wide and under each other when narrow, each area saying when nothing in it matches -->
+  <!-- The search: a copy of the three areas narrowed to what matches (menu-search.js), each saying when nothing in it matches -->
   {#snippet foundContent()}<section class="emenu-col" data-area="content"><p class="emenu-title">{ta('props.tabContent')}</p>{@render menuContent()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
   {#snippet foundStyle()}<section class="emenu-col" data-area="style"><p class="emenu-title">{ta('props.tabStyle')}</p>{@render menuStyle()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
   {#snippet foundPlacement()}<section class="emenu-col" data-area="placement"><p class="emenu-title">{ta('props.tabPlacement')}</p>{@render menuPlacement()}<p class="emenu-none">{ta('menu.noMatch')}</p></section>{/snippet}
@@ -398,7 +389,7 @@
     </PinScope>
   </div>
 {:else}
-  <!-- Wide: Pinned and the areas in two columns, cut once where they come out most even (`balanceAreas`); narrow: Pinned, then the areas under each other, each heading sticking to the top of its area and counting its groups.
+  <!-- Wide: two columns; narrow: Pinned, then the areas under each other.
        Pinned stands outside the scope that takes its settings out of the areas. -->
   {#snippet areaContent()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="content" title={ta('props.tabContent')} counts={layout === 'narrow'} adds>{@render menuContent()}</MenuArea></PinScope>{/snippet}
   {#snippet areaStyle()}<PinScope away={() => areaAway} pins={pinnedShown}><MenuArea area="style" title={ta('props.tabStyle')} counts={layout === 'narrow'} adds>{@render menuStyle()}</MenuArea></PinScope>{/snippet}
@@ -421,7 +412,7 @@
       <div class="emenu-column">{#each PARTS.slice(cut) as part (part)}{@render parts[part]()}{/each}</div>
     </div>
   {:else if layout === 'tabs'}
-    <!-- With tabs: Pinned, then the three areas as tabs with one in view, every area drawn so a tab whose area holds nothing for this block can be left out (`tabsIn`); 1, 2 and 3 choose them too (chooseArea) -->
+    <!-- With tabs: Pinned, then the areas as tabs, each drawn so a tab whose area holds nothing for this block can be left out (`tabsIn`) -->
     {@render pinnedPart()}
     <div class="emenu-tabs"><Choice fill label={ta('menu.areas')} value={menu.tab} options={AREA_TABS.filter(([area]) => !emptyAreas.has(area))} onchange={(v) => (menu.tab = v)} /></div>
     <div class="emenu-cols emenu-stack emenu-tabbed" data-tab={menu.tab} {@attach tabsIn}>

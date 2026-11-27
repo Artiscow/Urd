@@ -1,8 +1,5 @@
 <script>
-  /* The Nav panel's menu items: one row per item at every level, closed one line with its name, its link, small marks for what is set and the arrows, open a card with every field; one row is open at a time.
-     The rows move by the row kit's drag in its tree form (lib/rows/row-drag.svelte.js): a row is pressed, held and dragged by its head, the top or bottom third of another row places it before or after that row, the middle third takes it in as a child where the menu's depth holds it, and a row's grip column leads it one level out (lib/nav-drop.js).
-     Alt and the arrow keys on a row move it among its neighbours, as its arrows do.
-     Under the items stand the new item, the new page as an item, and once an item has a submenu, the submenus' look and behaviour. */
+  /* The Nav panel's menu items: a row per item at every level, one open at a time, moved by the row kit's tree drag (lib/nav-drop.js) or Alt and the arrows. */
   import { getContext } from 'svelte';
   import { cardFold } from '../../lib/motion.svelte.js';
   import { RowDrag, slotOut } from '../../lib/rows/row-drag.svelte.js';
@@ -31,7 +28,7 @@
   /** The item whose card stands open, by its key; one at a time. */
   let navSel = $state('');
 
-  /** The landing place of a dragged row, reckoned on the rows as seen: over a row its thirds decide, between rows or below the last the nearest row by its midpoint, and below everything the end of the top level; each place has one name. */
+  /** The landing place of a dragged row, reckoned on the rows as seen: a row's thirds over it, the nearest midpoint between rows; each place has one name. */
   function reckon(rows, e, dragKey) {
     const items = siteDraft.nav.items;
     const hit = rows.find((r) => e.clientY >= r.rect.top && e.clientY <= r.rect.bottom);
@@ -48,7 +45,7 @@
     return drop ? { id: drop.key, pos: drop.pos } : null;
   }
 
-  /** The drop: the dragged row leaves its list and lands before or after the target, or as the target's last child; an emptied submenu leaves the file, and the landed row's new key is given back for its flash. */
+  /** The drop: the row lands before or after the target or as its last child; an emptied submenu is removed, and the landed row's key is returned. */
   function land(from, at) {
     const src = navRowAt(from);
     const tgt = navRowAt(at.id);
@@ -255,7 +252,7 @@
   </div>
 {/snippet}
 
-<!-- The rows of one list and, under each, the rows of its submenu; one slot per place: before the first row, or after a row and its submenu, set in a level while the row takes the dragged row in -->
+<!-- The rows of one list, each with its submenu's rows under it, and one slot per place -->
 {#snippet navRows(items, above, level)}
   {#each items as node, index (node)}
     {@const key = above === null ? `${index}` : `${above}.${index}`}
@@ -277,7 +274,7 @@
     onkeydown={(e) => { if (e.key === 'Enter') addPageAsNavItem(); }} />
   <button class="ghost action" disabled={!navNewPageTitle.trim()} onclick={addPageAsNavItem}>{ta('ui.newPageAsItem')}</button>
 </span>
-<!-- The submenus' look and behaviour, once an item has a submenu; in the side variant the submenus are accordions in the column, so the card frame, flat surface and flyout make no sense there -->
+<!-- The submenus' look and behaviour, once an item has a submenu; the side variant offers no card frame, flat surface or flyout -->
 {#if siteDraft.nav.items?.some((item) => item.children?.length)}
   <SubHeading text={ta('group.submenu')} />
   <!-- The designs as small drawings of the submenu hanging under its item -->

@@ -1,7 +1,5 @@
 <script>
-  /* A section's settings in the element menu's form (0.7.30.6): Style (its theme, its background, its edges and its motion) and Placement (its size and grid, its name for links and its actions).
-     The floating menu draws them beside the section, from the gear on its bar or «Settings» in its right-click menu, and the Settings panel draws the same.
-     Wide, the two areas stand side by side; narrow, under each other with a heading each. With words in the search field, a copy of the areas narrowed to what matches (menu-search.js). */
+  /* A section's settings in the element menu's form: Style (its theme, background, edges and motion) and Placement (its size and grid, name and actions). */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { DIVIDER_SHAPES, DIVIDER_HEIGHT } from '$engine/divider-model.js';
@@ -65,10 +63,9 @@
     });
   }
 
-  /** The role-set samples: the page's actual theme colours put into the role recipes, so each sample is live (ADR-0016).
-   *  The recipes reference only the --urd-base-* copies, so a plain text substitution yields valid CSS colours (color-mix survives). */
+  /** A role set's sample: the page's theme colours put into the role's recipe, which names only --urd-base-* copies (ADR-0016). */
   function sectionThemeSample(role) {
-    // The samples follow the preview's active mode (previewPalette merges alt tokens via the engine's activeTokens, so scheme: 'dark' resolves correctly).
+    // The colours of the preview's active mode.
     const pal = ed.previewPalette;
     const subst = (v) => v
       .replaceAll('var(--urd-base-bg)', pal.bg)
@@ -237,11 +234,11 @@
       <SliderRow label={ta('lbl.widthFree')} title={ta('tip.props.sectionWidthPx')} value={sectionWidth.px} min={SECTION_WIDTH_MIN} max={SECTION_WIDTH_MAX} step={SECTION_WIDTH_STEP}
         shown={sectionWidth.shown} oninput={(v) => ed.setSectionWidth(sectionWidthValue('own', v))} />
     {/if}
-    <!-- «Force readable text» on the desktop (ADR-0034): a text's lines wrap at a measure, and its width stops before its lines get too narrow -->
+    <!-- «Force readable text on the desktop» (ADR-0034): a text's lines wrap at a measure, and its width stops before its lines get too narrow -->
     <Setting own={!ed.sectionReadable.desktop} reset={() => ed.setSectionReadable('desktop', true)}>
       <SwitchRow label={ta('lbl.readableDesktop')} title={ta('tip.readableDesktop')} checked={ed.sectionReadable.desktop} onchange={(on) => ed.setSectionReadable('desktop', on)} />
     </Setting>
-    <!-- The section's own settings for the phone: the space between its blocks, the room above and below them, «Force readable text» on the phone, its rule for their order, and its custom order (PhoneSectionRows, as the Phone panel draws them) -->
+    <!-- The section's own settings for the phone, as the Phone panel draws them -->
     <PhoneSectionRows />
     <label title={ta('hint.props.minHeight')}>{ta('lbl.minHeight')}
       <input class="token-input" value={sectionMinHeight} placeholder={ta('ph.minHeight')}

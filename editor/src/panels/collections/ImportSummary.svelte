@@ -1,6 +1,5 @@
 <script>
-  /* What a waiting CSV import will do, as a list (the dialog and the panel's step): chips that narrow it to one kind of row, then the rows grouped by what becomes of them, the ones that need the owner first (lib/csv-preview.js).
-     A row that is not stored says why; a changed row names its changed fields with the old value struck before the new; in the dialog the unchanged rows stand as one line. */
+  /* What a waiting CSV import will do: the rows grouped by what becomes of them, the ones that need the owner first, with chips that narrow the list. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { groupsOf, chipsOf, changeOf, summaryOf } from '../../lib/csv-preview.js';

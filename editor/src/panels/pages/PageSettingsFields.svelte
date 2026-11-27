@@ -1,7 +1,5 @@
 <script>
-  /* The settings of one page, shared by the three layouts (PageSettingsStep, PageSettingsDialog and PageSettingsTable): the page's name and address, the menu and the footer on the page, its title in search with the title the site's format gives, the description, the sharing fields, and the page's own actions.
-     The meta fields come from the page-settings state, which writes the open page's store or another page's draft, so any page is edited without switching the canvas; the switches and the flag live in the site draft.
-     In the dialog's width (wide) the fields that belong together stand in pairs: the name beside the address, the two switches, the search title beside the title it gives, the sharing title beside the image; in a panel's width they stand under each other. */
+  /* The settings of one page, shared by the three layouts: its name and address, the menu and footer, its title in search, the description, sharing and its actions. */
   import { getContext, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { ICONS } from '../../lib/icons.js';
@@ -11,7 +9,7 @@
   import IconButton from '../../lib/rows/IconButton.svelte';
 
   const ed = getContext('urd-editor');
-  /** id: the page; grouped: each part as a fold-out group (the step) instead of a heading; wide: the pairs side by side (the dialog); actions: the page's own actions at the end. */
+  /** id: the page; grouped: each part a fold-out group, not a heading; wide: the pairs side by side; actions: the page's own actions at the end. */
   let { id, grouped = false, wide = false, actions = true } = $props();
 
   const siteDraft = $derived(ed.siteDraft);
@@ -45,10 +43,10 @@
     ed.savePageAsTemplate(page);
   }
 
-  /* The name and the address are the Pages panel's row's own fields (site.svelte.js typedPageFields): the same text in both, turned down in dark red with the reason as the tooltip until the next keystroke. */
+  /* The name and address are the Pages panel row's own fields (typedPageFields): a refused entry is dark red with its reason as the tooltip. */
   const nameError = $derived(ed.pageFieldError(id, 'title'));
   const addressError = $derived(ed.pageFieldError(id, 'slug'));
-  /** The address the published site knows for the page, where it differs from the one it now has: the switch under the address keeps it working. Never / (an old front page's), since a rule from / would hide the front page. */
+  /** The page's published address where it differs from the current one, kept working by the switch under it; never /, as a rule from / would hide the front page. */
   const oldAddress = $derived.by(() => {
     const published = ed.publishedPathOf(id);
     return published && published !== '/' && published !== entry?.path ? published : null;

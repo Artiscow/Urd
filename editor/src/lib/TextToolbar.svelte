@@ -1,7 +1,5 @@
 <script>
-  /* The text bar (0.7.3.19): the tools of a text written on the canvas, drawn over the stage instead of in the page, so it is never cut off at the canvas's edge and stands beside the phone, clear of the page, where the stage has room (placeTextBar in menu-place.js).
-     The preview keeps the writing (preview-edit.js textCommand): the bar shows what the selection holds as the preview tells it (state/text-bar.svelte.js) and sends each tool back as a command on that selection.
-     A press keeps the focus where it is (mousedown is held, but in fields), so the text keeps its caret; the fields and the colour picker take the focus, and the commands work on the selection the preview kept. */
+  /* The text bar over the stage: each tool is sent to the preview as a command on its selection, and a press keeps the focus in the text. */
   import { getContext } from 'svelte';
   import { ta, adminLang } from '$engine/i18n.js';
   import { fontChoices } from '$engine/fonts.js';
@@ -64,6 +62,8 @@
   const sel = $derived(bar.selection);
   const open = $derived(Boolean(bar.blockId && bar.rect && sel && ed.chromeVisible && !ed.looking));
   const swatch = (name) => ed.themeSwatches().find(([token]) => token === name)?.[1] ?? 'transparent';
+  /** The site's own text on its accent, or black or white by the accent's contrast where the theme sets none. */
+  const accentInk = () => ed.themeSwatches().find(([token]) => token === 'accent-text')?.[1] ?? ed.readableOn(swatch('accent'));
 
   /** The bar's place in the window: the block's box from the canvas's px through the canvas's place and zoom, beside the canvas or above the block. */
   const place = $derived.by(() => {
@@ -81,8 +81,9 @@
     return placeClearOf(block, { w: w || 440, h: h || 120 }, canvas, stage, [canvasBarState.placed, canvasBarState.sectionPlaced, canvasBarState.navPlaced]);
   });
 
-  /** The widest the bar may stand, in px: the room beside the canvas where it stands beside the phone, else the stage's width; within it the bar stands at two lines' width (twoLines). */
+  /** The least room beside the phone the bar stands in. */
   const BESIDE_MIN = 300;
+  /** The widest the bar may stand: the room beside the canvas when it stands beside the phone, else the stage's width. */
   const roomFor = $derived.by(() => {
     void resized;
     const frame = ed.iframeEl;
@@ -102,8 +103,7 @@
   const BAR_EDGES = 15;
 
   /**
-   * The tools' groups flow in two even lines, or more where the room is narrower, wrapping where the width ends: the narrowest width at which they stand in two lines is found from the groups' own widths (each with its divider's room), the split where the longer line is shortest.
-   * A group that opens a line shows no divider before it, its room kept, so the lines never shift back and forth.
+   * The tools' groups flow in even lines, split where the longer of two lines is shortest; a group that opens a line hides its divider, keeping its room.
    */
   function markLineStarts(node) {
     const mark = () => {
@@ -256,7 +256,7 @@
         <button type="button" class="tb-swatch" style="background: {swatch('accent')}" title={ta('tt.accentColorTheme')} onclick={() => bar.run('colour', 'accent', true)}></button>
         <ColorPicker value={sel.colour || ownColour} tokens={ed.themeSwatches()} label={ta('tt.customTextColor')} onchange={(v) => { ownColour = v; bar.run('colour', v); }} />
         <span class="tb-sep" aria-hidden="true"></span>
-        <button type="button" title={ta('tt.hlAccent')} onclick={() => bar.run('highlight', 'accent', true)}><span class="tb-hl" style="background: {swatch('accent')}">{@html HL_A}</span></button>
+        <button type="button" title={ta('tt.hlAccent')} onclick={() => bar.run('highlight', 'accent', true)}><span class="tb-hl" style="background: {swatch('accent')}; color: {accentInk()}">{@html HL_A}</span></button>
         <ColorPicker value={sel.highlight || ownHighlight} tokens={ed.themeSwatches()} label={ta('tt.hlCustom')} onchange={(v) => { ownHighlight = v; bar.run('highlight', v); }} />
         <button type="button" title={ta('tt.hlNone')} onclick={() => bar.run('highlight', '', true)}><span class="tb-hl tb-hl-none">{@html HL_A}</span></button>
       </div>
@@ -326,7 +326,7 @@
     margin-top: 4px;
   }
 
-  /* Groups wrap as a whole, never a lone button on its own line, with a divider between; the first group stands at the bar's edge, and one that opens a line keeps its divider's room without the line */
+  /* Groups wrap whole with a divider between; one that opens a line keeps its divider's room without the line */
   .tb-group {
     display: inline-flex;
     align-items: center;

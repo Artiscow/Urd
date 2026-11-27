@@ -1,9 +1,5 @@
 <script>
-  /* How a look is chosen, in the row kit (0.7.33.8), as Urd settings «Choosing a design» asks (menu.designsPref): a picture row naming the design in use that opens the design picker (PictureRow.svelte), or the designs' pictures in place under a small heading, the one in use ringed, a press choosing one at once.
-     A choice of a few designs shows them all; a larger one a run around the one in use (lib/look-choice.js); the last tile opens the design picker with its live previews, named «All designs» beside a run and «Full window» where every design stands.
-     In the design's own small panel (the bar's design button in its small window, `look:design` in lib/only-group.js) the pictures stand whatever «Choosing a design» says, every design of the choice, scrolling in a box with the one in use brought into view.
-     `designs` lists the choice's designs (pictureList in design-sources.js) and is read only for the pictures; without it, or without `onpick`, the row stands in either mode.
-     `heading` leaves the small heading out where the fold around the pictures already bears the name. */
+  /* How a look is chosen, as «Choosing a design» asks: a picture row that opens the design picker, or the designs' pictures in place, the one in use ringed. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { menu } from '../../menu/state.svelte.js';
@@ -26,7 +22,7 @@
     return { all, more: run.more, inRun: new Set(run.items.map((d) => d.id)) };
   });
 
-  /** Where the pictures scroll in a box of their own (the design's small panel, Pinned), the design in use is brought to the middle of the box, once it is laid out, where it stands out of view: as the box opens, and when it shows another block's design; the box alone scrolls. */
+  /** Where the pictures scroll in a box of their own, the design in use is brought to its middle once laid out, when out of view; the box alone scrolls. */
   const intoView = (inUse) => (node) => {
     const frame = requestAnimationFrame(() => {
       const tile = inUse !== null && node.scrollHeight > node.clientHeight ? node.querySelector('.look-tile.on') : null;
@@ -105,7 +101,7 @@
     display: flex;
   }
 
-  /* There the pictures scroll in a box about three lines of them high, so the panel keeps the size of a run, and in Pinned one line high with the next showing, so the areas and their tabs stay in view; with room for a tile's focus ring at the box's edges */
+  /* There the pictures scroll in a box about three lines high, in Pinned one line high with the next showing, with room for a tile's focus ring at its edges */
   :global(.emenu-pinned) .look-grid {
     grid-auto-rows: max-content;
     align-content: start;

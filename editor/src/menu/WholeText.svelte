@@ -1,6 +1,5 @@
 <script>
-  /* The font and the size of a whole text at once, in both views: the text block's and the terms of sale's, in their Style.
-     The values are read from the text's first paragraph (every paragraph is given them, text-whole.js), and the text toolbar's own apply to a selection. */
+  /* The font and the size of a whole text at once, in both views, read from its first paragraph and given to every paragraph. */
   import { getContext } from 'svelte';
   import SelectRow from '../lib/rows/SelectRow.svelte';
   import Setting from '../lib/rows/Setting.svelte';

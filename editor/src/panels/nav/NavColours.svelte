@@ -1,5 +1,5 @@
 <script>
-  /* The Nav panel's Colours and frame fold: the hover style as samples of a menu word, its glow and colour, the text colours and the blur, the bar's background layers, its border and its shadow. */
+  /* The Nav panel's «Colours and frame» fold: the hover style and its colours, the text colours and blur, the bar's background, border and shadow. */
   import { getContext } from 'svelte';
   import Choice from '../../lib/Choice.svelte';
   import Setting from '../../lib/rows/Setting.svelte';

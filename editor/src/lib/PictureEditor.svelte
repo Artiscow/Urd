@@ -1,8 +1,5 @@
 <script>
-  /* The image editor (0.7.29.2, layout A): a modal dialog over the admin with the picture large at its true shape in the middle, the crop window and the focus point on it, the shapes, the fit, the zoom and the focus point's numbers under it, and the tools in a column at the right (Look, Turn, Adjust, Corners, Overlay, Text, Size), each section with its own Reset.
-     Size (0.7.29.3) weighs the file against its use's budget, with «Make smaller» over it, and says whether the picture is sharp in its frame on the page.
-     The head holds the dialog's own undo and redo, Compare (held, the picture as it was opened) and «Reset all»; the foot removes the picture, gives a gallery's other pictures this one's look («Apply to all»), takes another, or closes with «Done», as Enter does. Escape cancels.
-     Every change is written at once through state/picture-editor.svelte.js, so the canvas behind shows it, and the rules (the crop window, a pointer on the turned picture, the zoom a corner gives) are lib/picture-edit.js. */
+  /* The image editor: a modal dialog with the picture large at its true shape, its crop window and focus point, and the tools in a column at the right. */
   import { getContext } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';
@@ -29,7 +26,7 @@
   /** How long the dialog waits for its picture before it opens without it. */
   const OPEN_WAIT_MS = 400;
 
-  // The dialog opens once its picture is decoded, so the stage draws the picture at its own shape from the first frame; a picture that takes longer, or does not load, opens it anyway.
+  // The dialog opens once its picture is decoded, or anyway when that takes longer or fails.
   $effect(() => {
     if (!dialogEl || !pic || dialogEl.open) return;
     const at = pic.src;
@@ -149,9 +146,7 @@
   }
 
   /**
-   * A handle of the crop window dragged, as crop tools do it: the edges it stands on follow the pointer and the opposite ones hold (croppedWindow).
-   * On «Free» the window takes any shape, Shift at a corner keeping the one it had, and the image block takes it with the picture left where it is on the page (frameForCrop); any other shape is kept.
-   * The page takes the crop once, as it is let go, since the dialog covers it.
+   * A crop handle dragged: its edges follow the pointer and the opposite ones hold; the page takes the crop as it is let go.
    */
   function startCrop(event, handle) {
     if (event.button !== 0 || !win || !style) return;
@@ -214,8 +209,7 @@
   let pressed = false;
 
   /**
-   * Enter is «Done», heard before the control with the focus hears it.
-   * A field keeps its Enter (the description, a number taking what was typed), and so does a button reached with the keys; a button that is only focused because it was clicked does not.
+   * Enter is «Done», heard before the focused control; a field, or a button reached with the keys, keeps its Enter.
    */
   function onEnter(event) {
     if (event.key === 'Tab') pressed = false;
@@ -331,7 +325,7 @@
       </header>
 
       <!-- The picture at its true shape, turned as the page draws it, with the frame's crop window and the focus point -->
-      <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (the stage is a canvas the pointer and the arrow keys work on, named by its tooltip) -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (a canvas the pointer and the keys work on) -->
       <div class="pe-stage" bind:this={stageEl} tabindex="0" role="application" aria-label={ta('tip.pic.stage')} title={ta('tip.pic.stage')}
         onpointerdown={startMove} onwheel={onWheel} onkeydown={onStageKey}>
         {#if shown.src && box.w > 0}

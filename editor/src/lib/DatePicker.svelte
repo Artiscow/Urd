@@ -1,9 +1,7 @@
 <script>
   /**
-   * The themed date picker (ADR-0009): a date, or a date with a time, chosen on a drawn calendar instead of the browser's own popup, which follows the OS theme and is unreadable in the dark panels.
-   * The field is a button that shows the date in the admin's language; it opens a month grid with the week in the language's order (date-grid.js), a Today row, and the hour and minute as fields when the value takes a time. The arrows walk the days, Enter picks, Escape closes.
-   * Two branches, as the dropdown has them (ADR-0011 addendum, anchored.js decides): the popover anchored under the field in the top layer with light dismiss, else a fixed box placed by measuring that closes on a click outside or Escape.
-   * `value` is kept as the fields keep it: `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM` with `time`.
+   * The themed date picker: a date, or a date and a time with `time`, chosen on a drawn calendar.
+   * `value` is `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM` with `time`.
    */
   import { lingering, menuMotion } from './motion.svelte.js';
   import { ta, adminLang } from '$engine/i18n.js';
@@ -340,7 +338,7 @@
   }
 
   .dp-day.selected {
-    color: var(--urd-color-bg);
+    color: var(--urd-color-accent-text);
     background: var(--urd-color-accent);
   }
 

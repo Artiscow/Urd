@@ -1,9 +1,5 @@
 <script>
-  /* The page as it reads on the phone, in the Phone panel's column at the stage's right edge (PhoneDock.svelte): every section under a heading of its own, with its blocks in their order (PhoneOrder.svelte), as an image editor lists its layers in their groups.
-     Every section stands open at first, its arrow saying so; a fold is kept for the session (lib/folds.svelte.js), and the button in the column's head folds or opens them all.
-     A press on a heading folds or opens its section, and the mouse on a heading lights its section on the canvas. The heading of the section at work, picked on the canvas or in the panel, is marked, ringed in boxes and filled in the two other looks, and carries the gear that opens the section's settings, which the other headings show under the pointer, and always on a screen without one. A section flagged for a look on the phone carries the mark the top bar counts, also while folded.
-     Urd settings «Column look» (lib/phone-panel.js) draws it as a table, the standard, flat, or in boxes; the looks differ in how the headings and the rows are drawn, never in what they do.
-     The column follows what is selected, never the page's scroll: a block selected on the canvas opens its section and brings its row into view, and a section picked there brings its heading into view. The heading of the section in sight stays at the column's top while its rows scroll. */
+  /* The page as it reads on the phone, in the Phone panel's column: every section under a heading of its own, with its blocks in their order (PhoneOrder.svelte). */
   import { getContext, onDestroy, tick, untrack } from 'svelte';
   import { ta } from '$engine/i18n.js';
   import { sectionWords } from '$engine/anchor-model.js';
@@ -19,7 +15,7 @@
   /** The folds' surface in the store of what stands open. */
   const SURFACE = 'phone-outline';
 
-  /** The open page's sections, read again after every change, every undo and every page loaded, since the page's data is no state of its own: each with its place on the page, its first words, its count of blocks and whether it waits for a look on the phone. */
+  /** The open page's sections, read again after every change, undo and page loaded: each with its place, first words, count of blocks and review flag. */
   const sections = $derived.by(() => {
     void ed.pageId;
     void ed.edits;
@@ -180,8 +176,7 @@
     scrollbar-width: thin;
   }
 
-  /* A section's heading: its fold, its name, and what it carries; on the column's own surface, so the rows scroll under it. As written here it is the look in boxes, which the two other looks draw over below.
-     The headings and the room between them are whole pixels in steps of four, so every heading and every gap is drawn alike at the common screen scalings. */
+  /* A section's heading: its fold, its name, and what it carries, sticky so the rows scroll under it; written as the look in boxes, which the other looks draw over. */
   .pc-sec {
     position: sticky;
     top: 0;
@@ -235,7 +230,7 @@
     border-radius: 5px;
   }
 
-  /* The name draws no box of its own, nor the admin's button fill under the pointer: the pointer and the keyboard's focus light the whole heading, evenly from edge to edge (the ::before below) */
+  /* The name draws no box of its own: the pointer and the keyboard's focus light the whole heading (the ::before below). */
   .pc-sec > .pc-name:not(:disabled),
   .pc-sec > .pc-name:hover:not(:disabled) {
     align-self: stretch;
@@ -324,8 +319,7 @@
     padding: 4px 0 0 8px;
   }
 
-  /* The table: each heading a band from the column's one edge to its other, a hairline between two of them, and the rows lines with a fainter hairline over each; nothing is rounded and nothing has room around it.
-     The scrollbar takes its room only while the list scrolls, so the bands reach the edge. */
+  /* The table: each heading a band from edge to edge with a hairline between, and the rows lines with a fainter hairline; nothing is rounded. */
   .pc-scroll.pc-table {
     padding: 0 0 0.9rem;
     scrollbar-gutter: auto;
@@ -395,7 +389,7 @@
     background: color-mix(in srgb, var(--urd-color-accent) 26%, transparent);
   }
 
-  /* Flat: a heading is a line of bold words and a row a plain line, as the layers of an image editor, with one hairline between two sections; the section at work and the selected block are fills in the accent. */
+  /* Flat: a heading is a line of bold words and a row a plain line, a hairline between sections; the section at work and the selected block are accent fills. */
   .pc-flat .pc-group + .pc-group {
     margin-top: 4px;
     padding-top: 4px;

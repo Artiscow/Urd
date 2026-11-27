@@ -1,8 +1,5 @@
 <script>
-  /* A number with a range, in the row kit (0.7.30.2): the label above, and the slider with its value beside it.
-     `oninput` follows the drag and `onchange` comes when it settles, each with the number; `shown` writes the value in its unit («24 px»).
-     `compact` leaves the words' line out, for a slider whose row already says what it is (a gradient's stop); the label still names it to a screen reader.
-     `inline` is the slider on one line: its name in a column of one width (`--row-name`), so the sliders of a group start on one line, then the slider and its value. Its track is drawn here, filled from its left end to the thumb, or from its middle outward, with a tick at the middle, where it goes both ways from zero. */
+  /* A number with a range in the row kit: the label, the slider and its value, on one line when `inline`; `compact` keeps the label for a screen reader alone. */
   let { label, title = undefined, value, min, max, step = 1, shown = undefined, oninput = undefined, onchange = undefined, compact = false, inline = false } = $props();
   /** The inline slider's fill, as the share of the track the value stands at. */
   const fill = $derived.by(() => {

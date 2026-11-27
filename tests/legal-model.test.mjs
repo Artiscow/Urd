@@ -3,6 +3,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { engineImport } from './_engine.mjs';
 import { LEGAL_GROUPS, whoMissing, shownPage, legalState, groupChip } from '../editor/src/lib/legal-model.js';
 
 const FULL = { legalName: 'Urd musikklag', email: 'post@urd.no', address: { street: 'Kongens gate 1', city: 'Trondheim' } };
@@ -96,4 +98,51 @@ test('the Privacy group names Cloudflare\'s own counting of visits where the pub
   assert.equal(legalState({ site: page, facts: NONE }).privacy.cloudflare, false, 'no beacon read');
   assert.equal(legalState({ site: page, facts: NONE, beacon: true }).privacy.cloudflare, true);
   assert.equal(legalState({ site: { ...page, analytics: { token: 'abc' } }, facts: NONE, beacon: true }).privacy.cloudflare, false, 'the site counts visits itself, and the page names it');
+});
+
+/**
+ * The contact details' writes (panels/legal/ContactFields.svelte) run on a site draft, the country shown derived from it as the panel derives it at each write.
+ * @param {object} siteDraft
+ */
+async function contactFields(siteDraft) {
+  const { countryForLanguage } = await engineImport('contact-profiles.js');
+  const source = readFileSync(new URL('../editor/src/panels/legal/ContactFields.svelte', import.meta.url), 'utf8');
+  const fn = (name) => {
+    const start = source.indexOf(`\n  function ${name}(`) + 1;
+    assert.ok(start > 0, `${name} is found`);
+    return source.slice(start, source.indexOf('\n  }\n', start) + 4);
+  };
+  const shown = source.match(/\n {2}const contactCountry = \$derived\((.*)\);\n/);
+  assert.ok(shown, 'the country shown');
+  const country = new Function('siteDraft', 'countryForLanguage', `return ${shown[1]};`);
+  const writes = new Function('siteDraft', 'siteMutate', 'contactCountry', 'geoStatus', `${fn('contactMutate')}\n${fn('setContact')}\n${fn('setContactAddress')}\nreturn { setContact, setContactAddress };`);
+  const now = () => writes(siteDraft, (key, change) => change(), country(siteDraft, countryForLanguage), null);
+  return { setContact: (...args) => now().setContact(...args), setContactAddress: (...args) => now().setContactAddress(...args) };
+}
+
+test('a line of the address drops the point found on the map for the address as it stood', async () => {
+  const draft = { site: { lang: 'nb', contact: { country: 'NO', legalName: 'Urd musikklag', address: { street: 'Kongens gate 1', city: 'Trondheim' }, geo: { lat: 63.43, lon: 10.39 } } } };
+  const fields = await contactFields(draft);
+  fields.setContactAddress('street', 'Munkegata 2');
+  assert.deepEqual(draft.site.contact.address, { street: 'Munkegata 2', city: 'Trondheim' });
+  assert.equal('geo' in draft.site.contact, false, 'a changed line');
+  draft.site.contact.geo = { lat: 63.43, lon: 10.39 };
+  fields.setContactAddress('city', '');
+  assert.deepEqual(draft.site.contact.address, { street: 'Munkegata 2' });
+  assert.equal('geo' in draft.site.contact, false, 'an emptied line');
+});
+
+test('the country shown is stored with the first field written, and the details keep it once the field is emptied', async () => {
+  const draft = { site: { lang: 'nb' } };
+  const fields = await contactFields(draft);
+  fields.setContact('email', ' ');
+  assert.equal('contact' in draft.site, false, 'nothing is stored before the first field');
+  fields.setContact('legalName', 'Urd musikklag');
+  assert.deepEqual(draft.site.contact, { country: 'NO', legalName: 'Urd musikklag' }, 'the language\'s country, stored with the name');
+  draft.site.lang = 'sv';
+  fields.setContact('legalName', '');
+  assert.deepEqual(draft.site.contact, { country: 'NO' }, 'a later language change never moves the details to another country');
+  const address = { site: { lang: 'en-GB' } };
+  (await contactFields(address)).setContactAddress('city', 'Leeds');
+  assert.deepEqual(address.site.contact, { country: 'GB', address: { city: 'Leeds' } }, 'the address\'s first line stores it too');
 });
