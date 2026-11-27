@@ -24,7 +24,7 @@ Install a plugin as you would install a program: from a source you trust, having
 3. Switch it on in the Plugins panel (type the folder name if the panel cannot list folders locally). The preview loads the plugin from the DRAFT, so you see your blocks live without publishing.
 4. Manifest errors, engine version requirements and `provides` mismatches are logged in the browser console and shown in the panel.
 
-Manifest requirements: `requiresEngine` (a semver range against the engine version in urd.json; a bound with more than three numbers is read by engines from 0.7.7), `provides` (what the plugin defines), and optionally `csp` (the external origins the plugin needs; see ADR-0006: `_headers` is never changed automatically, and the admin shows the owner what has to be added). `entry` and `provides` are optional for pure language packs, which have no entry module of their own (see below).
+Manifest requirements: `requiresEngine` (a semver range against the engine version in urd.json; a bound with more than three numbers is read by engines from 0.7.7), `provides` (what the plugin defines), and optionally `csp` (the external origins the plugin needs; see ADR-0006: Urd never adds a host to `_headers`, the admin shows the owner what has to be added, and the updater keeps it through later updates). `entry` and `provides` are optional for pure language packs, which have no entry module of their own (see below).
 
 **Sharing the plugin:** put it in a public GitHub repo of its own and give it the GitHub topic `urd-plugin`, so it can be found by topic search (templates shared as a repo use `urd-template`). Users install it by copying the folder into `plugins/` and switching it on in the Plugins panel.
 

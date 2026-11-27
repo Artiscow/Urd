@@ -242,9 +242,10 @@ export async function onRequestPost({ request, env }) {
       return writesHeaders(headers?.state) && headers.text === shown ? [{ path: `${prefix}_headers`, content: shown }] : [];
     };
     if (state.upToDate) {
-      // A version already installed: its _headers alone, where the site's can be brought up to it.
+      // A version already installed: its _headers alone, as the check showed it, or a refusal where the plan reads otherwise now.
+      if (typeof shown !== 'string' || skip?.includes('_headers')) return json({ current: state.engine, target: state.target, upToDate: true });
       const entries = await headersEntry();
-      if (entries.length === 0) return json({ current: state.engine, target: state.target, upToDate: true });
+      if (entries.length === 0) return json({ error: 'The security headers changed after the update check', code: 'updateRace' }, 409);
       const { sha } = await commitTree(token, config, { message: `Update the security headers to ${state.target} via admin`, entries, expect }, chunkEntries);
       await triggerDeploy(env);
       return json({ sha, current: state.engine, target: state.target, upToDate: true, written: 1, deleted: 0 });

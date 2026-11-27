@@ -108,6 +108,23 @@ test('what the browser left without effect in the site\'s file, an unread releas
   assert.equal(edited(both, TEMPLATE, [withB, withA]), 'edited', 'neither host is known for the owner\'s');
 });
 
+test('an addition is carried over only where it does in the new file what it did in the site\'s: the same policy directives, no gate source, one line', () => {
+  const policy = (value) => `/*\n  Content-Security-Policy: ${value}\n`;
+  const release = policy("default-src 'self'; script-src 'self'; style-src 'self'");
+  const site = policy("default-src 'self' https://fonts.example.org; script-src 'self'; style-src 'self'");
+  const plan = (target, mine = site, released = [release]) => planHeaders({ site: mine, target, released });
+  assert.equal(plan(policy("default-src 'self'; style-src 'self'")).state, 'edited', 'a target without script-src would let the font host run scripts');
+  assert.equal(plan(policy("default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'")).state, 'edited', 'a target with font-src would leave the font host without effect');
+  assert.equal(plan(policy("default-src 'self'; script-src 'self' https://cdn.example.org; style-src 'self'")).state, 'added', 'the same directives with a host of the target\'s own');
+  const dynamic = policy("default-src 'self'; script-src 'self' 'strict-dynamic'; style-src 'self'");
+  assert.equal(plan(release, dynamic.replace("'strict-dynamic'", "'strict-dynamic' https://cdn.example.org"), [dynamic]).state, 'edited', "a host beside 'strict-dynamic', which counts for nothing there");
+  assert.equal(plan(policy("default-src 'self'; script-src 'self' 'sha256-abc='; style-src 'self'"), policy("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self'")).state, 'edited',
+    "an 'unsafe-inline' a hash in the target would leave without effect");
+  const twice = `/*\n  Content-Security-Policy: default-src 'self'\n/*\n  Content-Security-Policy: default-src 'self'\n`;
+  const target = `${twice}/admin/*\n  X-Robots-Tag: noindex\n`;
+  assert.equal(plan(target, twice.replace(/'self'\n$/, "'self' https://cdn.example.org\n"), [twice]).state, 'edited', 'a line that stands twice, whose second the addition belongs to');
+});
+
 test('a site file that holds the target\'s words in another order, or with other line ends and trailing spaces, is current', () => {
   const reordered = edit(TEMPLATE, "img-src 'self' data: blob:", "img-src blob: 'self' data:");
   const added = edit(TEMPLATE, "connect-src 'self'", "connect-src https://script.google.com 'self'");

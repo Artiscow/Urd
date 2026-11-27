@@ -8,6 +8,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Each entry inherits the number of the backlog item the work belongs under, plus one digit for order (0.6.6.5 → 0.6.6.5.1, 0.6.6.5.2 …). The digit is added only when the milestone actually gets more than one commit: if the whole milestone lands in one commit, the number is the milestone's own (0.7.1, not 0.7.1.1), and if the milestone is reopened later, the new commits continue at 0.7.1.2, 0.7.1.3 … so the flat number reads as 0.7.1.1. Work that belongs under no milestone (workflow, code reviews, maintenance) belongs under the phase's standing «Løpende» item in the backlog and is numbered 0.6.0.1, 0.6.0.2 … (the next phase: 0.7.0.x), and is always four-part, since the item never closes. Flat phase numbers (0.6.34, 0.6.35) are no longer handed out, since they read wrongly as a milestone's place, but the historical ones stand, since commit titles in git cannot be rewritten. Releases carry the phase's minor with a running patch number (0.7.1, 0.7.2 ...), independent of the milestone numbers in the backlog; the phase release at the gate is simply the last of them (decided 15 September 2026). Push entries inherit the commit span since the previous push with a p suffix: one commit gives 0.6.0.4p, several commits (0.6.7.2 to 0.6.7.5) give 0.6.7.2-5p. The short form is used only when the numbers share a prefix; with mixed series both are written in full (0.6.6.5.11-0.6.0.1p). The span is unambiguous: all the commit entries above the previous p-entry.
 
+## [0.7.12] - 2026-11-27
+
+### 0.7.0.110p - Release 0.7.12: the security headers updated with the rest of Urd - 27 November 2026
+
+- RELEASE: 0.7.12 takes this push too, so its heading stands above it, and the tag goes on this push's last commit.
+
+The independent review of the push read the commit against AGENTS.md and the ADRs, looking for what the commit's own review could not see, and found these:
+
+1. An addition was carried over by its words, not by what it does in the policy: a host added to `default-src` would have reached scripts under a target without `script-src`, and stood without effect under one with a `font-src`; the same held for a host beside `'strict-dynamic'` and an `'unsafe-inline'` meeting a hash in the target. Additions are carried over only where they act as before: the line stands once, the policy keeps its directives, and no hash, nonce or `'strict-dynamic'` stands beside them (`withAdditions` in update-headers.js).
+2. Two rules with the same path took an addition to the second rule's policy onto the first's line. A line that stands twice is left to the owner.
+3. A headers-only run that found the plan changed, or could not read the texts, answered as done, and the panel reported the site up to date. It answers 409 `updateRace`, and the panel says so and checks again.
+4. The plugin README still said `_headers` is never changed automatically, and Known Limitations said «Keep mine» holds the file back, which it does only in a version update. Both say what holds.
+5. Left as it is, written into BACKLOG under Bugs: the panel offers «Keep mine» on a new `functions/_lib/` module that a written function imports, and kept, it stops the site's functions from deploying; every new `_lib` module has had this exposure.
+
 ### 0.7.0.110 - The security headers updated with the rest of Urd - 27 November 2026
 
 - The updater never wrote `_headers`, so a change to the template's headers, such as the HSTS line of 0.7.0.100, reached an existing site only by hand. It writes the file where the site's equals any release's own, and where the owner only added hosts, directives or words to a release's header lines it writes the new file with those additions, measured against the release closest to the site's file (`planHeaders` in functions/_lib/update-headers.js); any other edit keeps the text to copy by hand.
@@ -23,8 +37,6 @@ The independent review before the commit found these:
 4. ADR-0014 said the updater adds nothing the site's file did not hold, where the release's own text can, and the READMEs, two panel texts and the development documents named only hosts as kept. Each says what holds.
 5. The budget test asserted a constant the committing call no longer kept, and the panel's test did not hold the file's place among the optional files. A committing call with the most copied files and the headers is counted against the 50 subrequests, and the order is tested.
 6. A site file that differs from the target only in line ends, trailing spaces or the order of its words was offered a rewrite; it is current. The notice's comment still said the dot means a new version only.
-
-## [0.7.12] - 2026-11-27
 
 ### 0.7.0.97-0.7.9.5p - Release 0.7.12: short comments in all the code a site runs, blend modes and a video overlay, heading levels and text in columns, and HSTS - 27 November 2026
 

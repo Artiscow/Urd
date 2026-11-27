@@ -438,6 +438,16 @@ test('at the installed version the check offers the site\'s _headers alone, and 
   seen = updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
   await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: UPDATE_ENV });
   assert.equal(seen.commits.length, 0, 'a run that was shown no file');
+  for (const [why, headers, shown] of [
+    ['a text other than the plan gives now', { site: OLD_HEADERS, tags: HEADER_TAGS }, OLD_HEADERS],
+    ['texts that cannot be read', { site: OLD_HEADERS, tags: HEADER_TAGS, fail: true }, NEW_HEADERS],
+  ]) {
+    seen = updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers });
+    const refused = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: shown } }), env: UPDATE_ENV });
+    assert.equal(refused.status, 409, why);
+    assert.equal((await refused.json()).code, 'updateRace', `${why}: the panel says so and checks again`);
+    assert.equal(seen.commits.length, 0, why);
+  }
   seen = updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
   const race = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'older', headers: NEW_HEADERS } }), env: UPDATE_ENV });
   assert.equal(race.status, 409, 'a repository that moved since the check');

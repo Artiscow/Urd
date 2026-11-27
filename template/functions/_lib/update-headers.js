@@ -44,11 +44,14 @@ const directivesOf = (value) => value.split(';').map((part) => part.trim().split
 
 const sameName = (a, b) => a.toLowerCase() === b.toLowerCase();
 
-/** A source that leaves `'unsafe-inline'` without effect in a CSP directive: a hash or a nonce. */
-const INLINE_GATE = /^'(?:sha(?:256|384|512)-|nonce-)/i;
+/** A CSP source that changes which other sources in its directive count: a hash, a nonce or `'strict-dynamic'`. */
+const GATE = /^'(?:sha(?:256|384|512)-|nonce-|strict-dynamic')/i;
+
+/** A security policy's header, whose directives fall back on one another. */
+const POLICY = /^content-security-policy(?:-report-only)?$/i;
 
 /**
- * A site's header value's additions to a released one, or null where it takes away, names a directive twice or adds an inert `'unsafe-inline'`.
+ * A site's header value's additions to a released one, or null where it takes away, names a directive twice or adds beside a gate source.
  * @returns {Array<{name: string, words: string[], own: boolean}>|null}
  */
 function addedTo(released, site) {
@@ -63,7 +66,7 @@ function addedTo(released, site) {
   for (const directive of theirs) {
     const match = ours.find((d) => sameName(d[0], directive[0]));
     const words = [...new Set(directive.slice(1).filter((word) => !match?.slice(1).includes(word)))];
-    if (words.includes("'unsafe-inline'") && directive.some((word) => INLINE_GATE.test(word))) return null;
+    if (words.length && directive.some((word) => GATE.test(word))) return null;
     if (!match || words.length) added.push({ name: directive[0], words, own: !match });
   }
   return added;
@@ -90,16 +93,24 @@ function additionsOver(released, site) {
   return out;
 }
 
-/** The target's text with the additions written into its header lines, its other lines as they are, or null where a line or directive they belong to is gone. */
-function withAdditions(target, additions) {
+/** The names of a header value's directives, in lower case and sorted. */
+const namesOf = (value) => directivesOf(value).map((d) => d[0].toLowerCase()).sort().join(' ');
+
+/** The target's text with the additions in its lines, or null where they would act otherwise: a line twice, a policy's directives changed, a gate source. */
+function withAdditions(target, released, additions) {
   const { raw, lines } = readLines(target);
+  const before = readLines(released).lines;
   const out = [...raw];
   for (const { key, added } of additions) {
-    const line = lines.find((l) => l.key === key);
-    if (!line) return null;
+    const ours = before.filter((l) => l.key === key);
+    const theirs = lines.filter((l) => l.key === key);
+    if (ours.length !== 1 || theirs.length !== 1) return null;
+    const line = theirs[0];
+    if (POLICY.test(line.name) && namesOf(line.value) !== namesOf(ours[0].value)) return null;
     const directives = directivesOf(line.value);
     for (const { name, words, own } of added) {
       const match = directives.find((d) => sameName(d[0], name));
+      if (match && words.length && match.some((word) => GATE.test(word))) return null;
       if (match) match.push(...words.filter((word) => !match.slice(1).includes(word)));
       else if (own) directives.push([name, ...words]);
       else return null;
@@ -137,10 +148,10 @@ export function planHeaders({ site, target, released, complete = true }) {
     const size = additions.reduce((n, a) => n + a.added.reduce((m, d) => m + d.words.length + (d.own ? 1 : 0), 0), 0);
     const labels = JSON.stringify(additions.flatMap((a) => a.added.map(additionLabel)).sort());
     if (closest && size === closest.size) tied ||= labels !== closest.labels;
-    else if (!closest || size < closest.size) [closest, tied] = [{ additions, size, labels }, false];
+    else if (!closest || size < closest.size) [closest, tied] = [{ text, additions, size, labels }, false];
   }
   if (!closest || tied) return edited;
-  const merged = withAdditions(target, closest.additions);
+  const merged = withAdditions(target, closest.text, closest.additions);
   if (merged === null) return edited;
   if (additionsOver(merged, site)?.length === 0) return current;
   const added = [...new Set(closest.additions.flatMap((a) => a.added.map(additionLabel)))];
