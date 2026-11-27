@@ -94,7 +94,7 @@ The mobile row grid (ADR-0019): 8 px rows that grow with the content (minmax), a
 
 ### `.urd-cell`
 
-A cell of flowing blocks on the phone (render.js): one grid item in its cell columns, its blocks under each other in its whole width
+A cell of flowing blocks on the phone (render.js): one grid item in its cell columns, its blocks under each other in its whole width. It is a flex column, so a block's own room above it (`frames.mobile.space`) adds to the gap under the block before it, as it does between the blocks across the row, rather than collapsing into it; with no room of its own the blocks stand as in a block container.
 
 ### `.urd-flow > .urd-block, .urd-flow > .urd-stick-slot`
 
@@ -126,7 +126,7 @@ Content inside text blocks: lists, quotes and links from the formatting bar (the
 
 ### `.urd-text h4`
 
-Headings four to six in a text (the text toolbar's level list): the browser's own sizes put H5 and H6 below the body text, so H4 stands a step above the text, H5 at its size, and H6 at its size in small capitals with a little letter spacing, each in the heading font and its weight, with no margin of their own, as the other levels have none. A size per level belongs to the text styles (v0.8 DS-2).
+Headings four to six in a text (the text toolbar's level list): the browser's own sizes put H5 and H6 below the body text, so H4 stands a step above the text, H5 at its size, and H6 at its size in small capitals with a little letter spacing, each in the heading font and its weight, with no margin of their own, as the other levels have none. In a document design they take the document's heading font and colour (`.urd-doc :is(h1, h2, h3, h4, h5, h6)`) and room above as H3 has (doc-look.css). A size per level belongs to the text styles (v0.8 DS-2).
 
 ### `.urd-text[data-urd-text]`
 
@@ -262,7 +262,7 @@ The image wrapper: the frame owns shape and rounding, and clips the zoom crop
 
 ### `.urd-lines`
 
-A collection or product card's title or text kept to the lines its block sets (`titleLines`, `textLines`; `clampLines` in blocks/collection.js), its last line ending in an ellipsis. The whole text stays in the page, so a screen reader and a search read all of it, and the product's quick view shows it whole, as does the canvas while it is being written (preview.css). The prefixed form is the one every engine draws; the standard `line-clamp` stands beside it for an engine that has it.
+A collection or product card's title or text kept to the lines its block sets (`titleLines`, `textLines`; `clampLines` in blocks/collection.js), its last line ending in an ellipsis. The whole text stays in the page, so a screen reader and a search read all of it, and the product's quick view shows it whole, as does the canvas while it is being written (preview.css). A link inside takes the keyboard's focus with the whole text shown (`:focus-within`), so no focused link stands in a line clamped away. On a product card for visitors the clamp is on the title's words inside its button (`.urd-product-titlewords`), as the button lays out as one box whose lines the title cannot count. The prefixed form is the one every engine draws; the standard `line-clamp` stands beside it for an engine that has it.
 
 ### `:where(.urd-pic-turned, .urd-pic-look-vintage, .urd-pic-overlaid)`
 

@@ -4736,6 +4736,17 @@
     border-color: rgb(255 255 255 / 38%);
   }
 
+  /* A button filled with the accent keeps its fill under the pointer, a ring in its words' colour marking it */
+  :is(.primary, .emenu-chip.on, .chrome-restore, .cm-primary, .ic-primary, .sp-add, .cap-add-head):hover:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    background: var(--urd-color-accent, #7c5cff);
+    border-color: transparent;
+  }
+
+  /* Its ring stands aside while it is pressed, for the press feel's own */
+  :is(.primary, .emenu-chip.on, .chrome-restore, .cm-primary, .ic-primary, .sp-add, .cap-add-head):hover:not(:active):not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)) {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--urd-color-accent-text, #fff) 40%, transparent);
+  }
+
   /* The press feel (Urd settings «Button press», lib/press-feel.js): each button answers a press as data-press on the root says, Ripple by default. */
   :root button:not(:disabled):not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)),
   :root .ghost:not(:where(.dd *, .cp *, .gp *, .mp *, .dp-overlay *, .choice *, .step-field *)){
@@ -5168,7 +5179,7 @@
     padding: 0 0.35rem;
     box-sizing: border-box;
     border-radius: 999px;
-    background: rgb(0 0 0 / 22%);
+    box-shadow: inset 0 0 0 1.5px currentColor;
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1;

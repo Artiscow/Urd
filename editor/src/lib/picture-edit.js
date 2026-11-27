@@ -297,10 +297,26 @@ export function styleForWindow(win, point) {
 }
 
 /**
+ * A window on the picture as the page shows it: mirrored, then turned clockwise by a quarter, a half or three quarters, as the stage draws the picture.
+ * @param {{left: number, top: number, width: number, height: number}} win The window as fractions of the picture's own axes
+ * @param {{rotate?: number, flipX?: boolean, flipY?: boolean}} turn
+ * @returns {{left: number, top: number, width: number, height: number}}
+ */
+export function windowAsShown(win, { rotate = 0, flipX = false, flipY = false } = {}) {
+  const left = flipX ? 1 - win.left - win.width : win.left;
+  const top = flipY ? 1 - win.top - win.height : win.top;
+  const { width, height } = win;
+  if (rotate === 90) return { left: 1 - top - height, top: left, width: height, height: width };
+  if (rotate === 180) return { left: 1 - left - width, top: 1 - top - height, width, height };
+  if (rotate === 270) return { left: top, top: 1 - left - width, width: height, height: width };
+  return { left, top, width, height };
+}
+
+/**
  * An image block's frame after a free crop: the picture keeps its size and place, and the frame follows the window's edges, within the section's width.
  * @param {{x: number, y: number, w: number, h: number}} frame The frame where the crop began (x and w in per cent of the section, y and h in px)
- * @param {{left: number, top: number, width: number, height: number}} from The window where the crop began
- * @param {{left: number, top: number, width: number, height: number}} to The window now
+ * @param {{left: number, top: number, width: number, height: number}} from The window where the crop began, as the page shows it (windowAsShown)
+ * @param {{left: number, top: number, width: number, height: number}} to The window now, as the page shows it
  * @returns {{x: number, y: number, w: number, h: number}}
  */
 export function frameForCrop(frame, from, to) {

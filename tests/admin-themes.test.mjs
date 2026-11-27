@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { ENGINE_DIR } from './_engine.mjs';
 
 const CSS = readFileSync(new URL('../editor/src/app.css', import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const SHELL = readFileSync(new URL('../editor/src/state/shell.svelte.js', import.meta.url), 'utf8');
@@ -70,6 +71,17 @@ function adminRules() {
 const FILLS_ACCENT = /background(?:-color)?:\s*var\(--urd-(?:color|admin)-accent(?:,[^)]*)?\)/;
 const COLOUR = /(?<![-\w])color:\s*([^;]+);/;
 const ACCENT_TEXT = /^var\(--urd-(?:color|admin)-accent-text(?:,[^)]*)?\)$/;
+
+test('a button filled with the accent keeps its fill under the pointer, where the plain buttons\' hover would lay its light ground under dark words', () => {
+  const keep = adminRules().find((rule) => rule.file === 'app.css' && /^:is\([^)]*\):hover:not\(:disabled\)/.test(rule.selector));
+  assert.ok(keep, 'the rule stands in app.css');
+  for (const cls of ['.primary', '.emenu-chip.on', '.chrome-restore', '.cm-primary', '.ic-primary', '.sp-add', '.cap-add-head']) assert.ok(keep.selector.includes(cls), `${cls} keeps its fill`);
+  assert.match(keep.body, /background: var\(--urd-color-accent, #7c5cff\);/);
+  const count = adminRules().find((rule) => rule.file === 'app.css' && rule.selector === '.publish-count');
+  assert.doesNotMatch(count.body, /background/, 'the count stands on the accent itself, ringed in the words\' colour');
+  assert.match(count.body, /box-shadow: inset 0 0 0 1\.5px currentColor;/);
+  assert.match(readFileSync(new URL('preview.css', ENGINE_DIR), 'utf8'), /background: var\(--urd-admin-accent, #5f6a75\);\s*color: var\(--urd-admin-accent-text, #fff\);/, 'the canvas\'s pin badge draws its pin in the accent\'s text colour');
+});
 
 test('every admin rule that writes on the accent takes the accent\'s text colour, the pill drawn under a chosen button\'s words too', () => {
   const rules = adminRules();

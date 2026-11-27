@@ -191,7 +191,7 @@ A reload of the editor: the canvas comes back to where it was scrolled, as the s
 
 A link in the preview to a spot on a page: the editor sends it once the page the link names stands, and the preview jumps there as the published page does on arrival.
 
-## `enablePreview › handle › setCollectionsDraft`
+## `enablePreview › handle › feature('collections')?.setCollectionsDr`
 
 Collection drafts from the editor: used instead of the server files.
 Only sections with collection blocks are rerendered: a full
@@ -320,7 +320,7 @@ If the page file is missing (half-finished deploy, hand-edited
 register), an empty page is shown instead of a crash - the page never
 dies from bad data.
 
-## `boot › const presets`
+## `boot › loadCoreTypes`
 
 The preview loads as a visitor's page does: the core types its menu, its footer and the open page draw with as soon as each is known, the site's and the page's features, and, with the editing layer, its section presets.
 Every other type, design part and feature comes in the background once it has reported ready (enablePreview), so the canvas stands as soon as the open page's own code is in.
@@ -346,7 +346,7 @@ storage is closed, where no drafts are read (loadDrafts).
 
 The footer is rendered now that the page id is known (per-page hideOn visibility): in the preview at once, and for a visitor as it joins the document, so its background layers start in the page.
 
-## `boot › if (preview (2)`
+## `boot › if (preview`
 
 A visitor's footer joins once no block on the page is still fetching its content, or after FOOTER\_WAIT\_MS (whenSettled), so the page's own content never pushes it down within that time; the editor's preview shows it at once.
 

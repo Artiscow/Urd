@@ -136,7 +136,7 @@
   <!-- A colour over an uploaded film, with its strength under it once a colour is chosen; an embed's cover takes its overlay in the image editor -->
   {#snippet filmOverlayStrength()}
     {#if overlay}
-      <SliderRow label={ta('lbl.strength')} value={overlay.strength} min={0.05} max={1} step={0.01} shown={`${Math.round(overlay.strength * 100)} %`}
+      <SliderRow label={ta('lbl.strength')} value={Math.min(overlay.strength, 0.8)} min={0.05} max={0.8} step={0.01} shown={`${Math.round(Math.min(overlay.strength, 0.8) * 100)} %`}
         oninput={(v) => setBlockProp('overlay', { color: overlay.color, strength: v })} />
     {/if}
   {/snippet}

@@ -17,7 +17,7 @@ const blobSha = (text) => {
   return createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
 };
 
-// The template's _headers as the next release writes it: the file as released in v0.7.11, with a Strict-Transport-Security header.
+// The template's _headers as the release writes it, the file as released in v0.7.12.
 // A deliberate change of the template's _headers updates this SHA, and the updater then shows the owner of every site with the earlier file a «change by hand» note.
 const RELEASED_BLOB = 'cbd7d45bdc7f9100bc34bad3c0d87d7f84c7ff33';
 

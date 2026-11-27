@@ -231,6 +231,8 @@ html {
 .urd-cell {
   position: relative;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Every block, and the slot a block pinned on the phone leaves */
@@ -1150,6 +1152,11 @@ a.urd-collection-title:hover {
   -webkit-line-clamp: var(--urd-lines);
   line-clamp: var(--urd-lines);
   overflow: hidden;
+}
+
+.urd-lines:focus-within {
+  -webkit-line-clamp: none;
+  line-clamp: none;
 }
 
 .urd-collection-list {
@@ -3117,7 +3124,7 @@ body:not(.urd-mobile) :not(.urd-nav-side-host) > .urd-nav-sub-grouped:not(.urd-n
   font-style: normal;
 }
 
-.urd-doc :is(h1, h2, h3) {
+.urd-doc :is(h1, h2, h3, h4, h5, h6) {
   font-family: var(--urd-doc-heading-font, var(--urd-font-heading));
   color: var(--urd-doc-heading, inherit);
 }

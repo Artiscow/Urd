@@ -30,7 +30,7 @@ export const NOTES_DIR = new URL('docs/engine-notes/', ROOT);
 const PARSE = { ecmaVersion: 'latest', sourceType: 'module', preserveParens: true, allowHashBang: true };
 
 /** The words a short version or a note never uses, as a comment describes and never tells what was before. */
-export const HISTORY = /\b(no longer|previously|would otherwise)\b|(?<!\b(?:is|are|be|been|being|never)\s)\bused to\b/i;
+export const HISTORY = /\b(no longer|previously|formerly|would otherwise|split out of)\b|(?<!\b(?:is|are|be|been|being|never)\s)\bused to\b/i;
 
 /** The path of a module's notes in the repository, as its header names it. */
 export const notesPath = (module) => `docs/engine-notes/${module.replace(/\.js$/, '.md')}`;

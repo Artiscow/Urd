@@ -96,8 +96,10 @@ test('a dialog taken away while open waits its closing fade too, read with the c
     const out = dialogOut(node);
     assert.equal(out.duration, msOf(time) + 40, `${classes.join(' ') || 'dx'}: the closing fade and two frames`);
     assert.ok(list.has('dx-closing'), 'the fade starts');
+    out.tick(0);
+    assert.ok(list.has('dx-closing'), 'it holds to the fade\'s end, where an outro\'s time reaches 0');
     out.tick(1);
-    assert.equal(list.has('dx-closing'), false, 'the class leaves as the fade ends');
+    assert.equal(list.has('dx-closing'), false, 'a dialog brought back before the fade ends loses it');
   }
   const { node } = dialog(fades);
   node.open = false;

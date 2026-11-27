@@ -137,6 +137,7 @@ test('the image block blends on the block itself, and in the editor a stand-in u
   assert.match(engineText('blocks/image.css'), /\.urd-image-blend \{\s*mix-blend-mode: var\(--urd-blend\);\s*\}/);
   const css = engineText('preview.css');
   assert.match(css, /\.urd-preview \.urd-blend-ghost \{\s*position: absolute;\s*pointer-events: none;\s*\}/, 'the stand-in takes no presses: the block under the pointer is the block itself');
+  assert.match(engineText('preview-blend.js'), /node\.setAttribute\('aria-hidden', 'true'\);\s*\/\/[^\n]*\n\s*node\.inert = true;/, 'and a link it copies is never reached with the keys');
   assert.match(css, /\.urd-preview \.urd-block\.urd-blend-ghosted \{\s*mix-blend-mode: normal;\s*\}/);
   assert.match(css, /\.urd-preview \.urd-block\.urd-blend-ghosted > :is\(\.urd-image-frame, a\) \{\s*opacity: 0;\s*\}/, 'the block keeps its picture, unseen, for measuring and dragging');
   assert.doesNotMatch(css, /urd-image-blend:hover/, 'the blend is never set aside under the pointer');
@@ -149,8 +150,11 @@ test('the image block blends on the block itself, and in the editor a stand-in u
 
 test('a film with an overlay stands in a frame that carries it, and one without keeps its markup', () => {
   const video = engineText('blocks/video.js');
-  assert.match(video, /const overlay = pictureStyle\(\{ overlay: props\.overlay \}\)\.overlay;\s*if \(overlay\) \{\s*const film = document\.createElement\('div'\);\s*film\.className = 'urd-video-film';\s*drawOverlay\(film, overlay\);\s*film\.appendChild\(video\);\s*box\.appendChild\(film\);\s*\} else \{\s*box\.appendChild\(video\);/);
+  assert.match(video, /const overlay = pictureStyle\(\{ overlay: props\.overlay \}\)\.overlay;\s*if \(overlay\) \{\s*const film = document\.createElement\('div'\);\s*film\.className = 'urd-video-film';\s*\/\/[^\n]*\n\s*drawOverlay\(film, \{ \.\.\.overlay, strength: Math\.min\(overlay\.strength, FILM_OVERLAY_MAX\) \}\);\s*film\.appendChild\(video\);\s*box\.appendChild\(film\);\s*\} else \{\s*box\.appendChild\(video\);/);
   assert.match(engineText('blocks/video.css'), /\.urd-video-film \{\s*display: block;\s*width: 100%;\s*height: 100%;\s*\}/);
   assert.match(engineText('picture.js'), /export function drawOverlay\(frame, overlay\) \{\s*frame\.classList\.toggle\('urd-pic-overlaid', Boolean\(overlay\)\);/);
   assert.match(readStyles(), /\.urd-pic-overlaid::after \{[^}]*pointer-events: none;/, 'the film\'s controls work under the overlay');
+  assert.match(video, /export const FILM_OVERLAY_MAX = 0\.8;/, 'and stay in sight under it');
+  const menu = readFileSync(new URL('../editor/src/menu/families/Video.svelte', import.meta.url), 'utf8');
+  assert.match(menu, /value=\{Math\.min\(overlay\.strength, 0\.8\)\} min=\{0\.05\} max=\{0\.8\}/, 'the menu\'s Strength stops where the film\'s overlay does');
 });

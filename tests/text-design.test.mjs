@@ -36,6 +36,8 @@ test('in a text an H4 stands a step above the body text, and an H5 and an H6 at 
   assert.match(rule(BASE, '.urd-text :is(h5, h6)') ?? '', /font-size: 1em;/);
   assert.match(rule(BASE, '.urd-text h6') ?? '', /font-variant-caps: small-caps;/, 'an H6 is told apart by small capitals');
   assert.doesNotMatch(rule(BASE, '.urd-text h6'), /font-size/, 'and keeps the body size');
+  assert.match(rule(BASE, '.urd-doc :is(h1, h2, h3, h4, h5, h6)') ?? '', /font-family: var\(--urd-doc-heading-font/, 'in a document every level takes its heading font and colour');
+  assert.match(rule(readFileSync(new URL('doc-look.css', ENGINE_DIR), 'utf8'), '.urd-text-doc .urd-text > :is(h4, h5, h6)') ?? '', /margin: 1\.2em 0 0\.4em;/, 'and room above it');
   for (const level of ['.urd-text h4', '.urd-text :is(h5, h6)', '.urd-text h6']) {
     assert.doesNotMatch(rule(BASE, level), /margin/, `${level} sets no margin, as the other levels have none`);
   }
@@ -80,6 +82,7 @@ test('a card\'s title or text is kept to 1 to 10 lines, ending in an ellipsis; a
     clampLines([whole], lines);
     assert.equal(whole.classes.size + whole.props.size, 0, `${lines} leaves the text whole`);
   }
+  assert.match(rule(BASE, '.urd-lines:focus-within') ?? '', /-webkit-line-clamp: none;\s*line-clamp: none;/, 'a link inside takes the focus with the whole text shown');
   const lines = rule(BASE, '.urd-lines') ?? '';
   for (const declaration of ['display: -webkit-box;', '-webkit-box-orient: vertical;', '-webkit-line-clamp: var(--urd-lines);', 'overflow: hidden;']) {
     assert.ok(lines.includes(declaration), `.urd-lines holds ${declaration}`);
@@ -95,7 +98,9 @@ test('the collection clamps every view\'s titles and texts, and the product bloc
   assert.match(collection, /view\(host, entries\);\s*clampLines\(host\.querySelectorAll\('\.urd-collection-title'\), props\.titleLines\);\s*clampLines\(host\.querySelectorAll\('\.urd-collection-text'\), props\.textLines\);/);
   const product = engineSource('blocks/product.js');
   const card = product.slice(product.indexOf('function renderCard('), product.indexOf('function buyRow('));
-  assert.match(card, /clampLines\(title \? \[title\] : \[\], props\.titleLines\);\s*clampLines\(text \? \[text\] : \[\], props\.textLines\);/);
+  assert.match(card, /let titleWords = title;\s*clampLines\(text \? \[text\] : \[\], props\.textLines\);/);
+  assert.match(card, /titleWords = el2\('span', 'urd-product-titlewords'\);\s*titleWords\.append\(\.\.\.title\.childNodes\);\s*titleButton\.append\(titleWords\);/, 'for visitors the clamp counts the lines of the words inside the title\'s button, which lays out as one box');
+  assert.match(card, /clampLines\(titleWords \? \[titleWords\] : \[\], props\.titleLines\);\s*return card;/);
   const rich = product.slice(product.indexOf('function richNode('), product.indexOf('function choiceRow('));
   assert.match(rich, /const node = el2\(tag, className\);\s*node\.classList\.add\('urd-text'\);/, 'a product\'s title and text are texts on the published page, as in the editor');
   const quick = product.slice(product.indexOf('function openQuickView('), product.indexOf('function renderCard('));

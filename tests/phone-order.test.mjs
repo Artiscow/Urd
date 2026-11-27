@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { engineImport } from './_engine.mjs';
 const { stackOrder, phoneOrderOf, phoneSetupOf, PHONE_ORDERS } = await engineImport('phone-order.js');
-const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup, unpinned, phoneAdded, phoneAfterLine, phoneGroup, phoneUngroupAll, phoneSideCells, phoneHasMiddle, phoneAlignCells, phoneSetDropChange, phoneChangeBetween, phoneSpaceDragged, phoneHomeSpan } = await engineImport('phone-moves.js');
+const { phoneStep, phoneLand, phoneTree, phonePlaceKeeping, hasPhonePlace, phoneStackOf, phoneDropAt, phoneDropChange, phoneChangeApplied, phoneKeyDrops, leastWordsCols, phoneHeightSnap, phoneTooNarrow, placeAt, phoneUngroup, unpinned, phoneAdded, phoneAfterLine, phoneGroup, phoneUngroupAll, phoneSideCells, phoneHasMiddle, phoneAlignCells, phoneSetDropChange, phoneChangeBetween, phoneSpaceDragged, phoneHomeSpan, phoneSpaceFloor } = await engineImport('phone-moves.js');
 
 const blk = (id, y, x, extra = {}) => ({ id, ...extra, frames: { desktop: { x, y, w: extra.w ?? 10, h: extra.h ?? 10 }, mobile: extra.mobile ?? null } });
 const ids = (order) => order.map((b) => b.id);
@@ -826,6 +826,15 @@ test('phoneSpaceDragged: a flowing block dragged over its own place takes the mo
   assert.equal(phoneSpaceDragged({ space: 32, row: 4 }, 30, 16), 32, 'a pinned block\'s room is none, so the drag starts from none');
 });
 
+test('phoneSpaceFloor: a block\'s room may take the whole gap under a flowing block, none at the top, and under a pinned block no more than reaches it', () => {
+  assert.equal(phoneSpaceFloor({ gap: 16, above: 80, ownTop: 96, space: 0, pinned: false }), 16);
+  assert.equal(phoneSpaceFloor({ gap: 16, above: -Infinity, ownTop: 24, space: 0, pinned: false }), 0, 'none above: no gap to take');
+  assert.equal(phoneSpaceFloor({ gap: 16, above: 80, ownTop: 80, space: 0, pinned: true }), 0, 'right under a pinned block: none');
+  assert.equal(phoneSpaceFloor({ gap: 16, above: 80, ownTop: 76, space: -4, pinned: true }), 0, 'its own room counted off where it stands');
+  assert.equal(phoneSpaceFloor({ gap: 16, above: 80, ownTop: 90, space: 0, pinned: true }), 10, 'as far as the pinned block');
+  assert.equal(phoneSpaceFloor({ gap: 16, above: 40, ownTop: 90, space: 0, pinned: true }), 16, 'never more than the gap');
+});
+
 test('phoneHomeSpan: the span a block keeps its place in reaches from the block above it to the block below it in its columns, open at the section\'s ends', () => {
   const own = { left: 20, top: 100, right: 340, bottom: 134 };
   const others = [
@@ -854,11 +863,11 @@ test('a flowing block dragged over its own place on the phone keeps its place an
   const { ENGINE_DIR } = await import('./_engine.mjs');
   const edit = readFileSync(new URL('preview-edit.js', ENGINE_DIR), 'utf8');
   const flow = edit.slice(edit.indexOf('  function flowDrag('), edit.indexOf('  function moveToDrag('));
-  assert.match(flow, /home = phoneHomeSpan\(neighbours, own\);/, 'the span is read on the blocks as the drag began');
+  assert.match(flow, /home = phoneHomeSpan\(\[\.\.\.neighbours, \.\.\.pinnedBoxes\], own\);\s*underPinned = home\.top > phoneHomeSpan\(neighbours, own\)\.top;/, 'the span is read on the blocks as the drag began, the pinned ones among them');
   assert.match(flow, /const spacing = !pinning && !set\.length && x >= own\.left && x <= own\.right && y > home\.top && y < home\.bottom && !neighbours\.some\(within\);/, 'over its own place or the gaps beside it, never over another block or the room where it pins');
   assert.match(flow, /change = space === null \? null : \{ places: \{\}, spaces: \{ \[block\.id\]: space \} \};/, 'its place in the order stays as it is');
   assert.match(flow, /showSpace\(spacing && Boolean\(change\)\);/, 'the band shows the gap while it is held there');
-  assert.match(flow, /phoneSpaceDragged\(block\.frames\.mobile, blockTop - own\.top, Number\.isFinite\(home\.top\) \? mobileGapOf\(section, siteNow\) : 0\)/, 'a block with none above it takes nothing below none');
+  assert.match(flow, /const floor = phoneSpaceFloor\(\{ gap: mobileGapOf\(section, siteNow\), above: home\.top, ownTop: own\.top, space: phoneSpace\(block\.frames\.mobile\), pinned: underPinned \}\);\s*const space = phoneSpaceDragged\(block\.frames\.mobile, blockTop - own\.top, floor\);/, 'the room goes no lower than none at the top or meeting a pinned block above');
   // The room is a top margin, which a lifted or pinned block lets go of, so it is drawn where it stood and measured as it will stand.
   assert.match(edit, /width: `\$\{at\.w\}px`, height: `\$\{at\.h\}px`, gridColumn: '', marginTop: '0px', marginLeft: '0px'/, 'the lifted block');
   assert.match(edit, /gridColumn: '', gridRow: '', marginTop: '0px', marginLeft: '0px'/, 'a lifted block of a set');

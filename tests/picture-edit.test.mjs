@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import './_svelte-loader.mjs';
 const {
-  readPicture, writePicture, storedStyle, cropWindow, pointOnPicture, croppedWindow, styleForWindow, frameForCrop, turned, resetStyle, sectionChanged, ratioValue, movedFrame, NEUTRAL,
+  readPicture, writePicture, storedStyle, cropWindow, pointOnPicture, croppedWindow, styleForWindow, frameForCrop, windowAsShown, turned, resetStyle, sectionChanged, ratioValue, movedFrame, NEUTRAL,
   sharpness, dataUrlBytes, isDrawing, withShared, phoneForCrop, SHARED_KEYS, sourceOf, bakeLayout, isBaked, KIND_TOOLS, logoBakeSize, LOGO_LONGEST, FILTER_LOOKS, LAYER_KEYS, pickedColour,
 } = await import('../editor/src/lib/picture-edit.js');
 
@@ -119,6 +119,37 @@ test('styleForWindow and cropWindow agree: the zoom and the focus point a window
   assert.deepEqual(styleForWindow({ left: 0, top: 0.2, width: 1, height: 0.5 }, { x: 0.3, y: 0.5 }), { zoom: 1, x: 0.3, y: 0.4 }, 'an axis filled edge to edge keeps its point');
 });
 
+test('windowAsShown: a window on the picture as the page shows it, mirrored and then turned clockwise', () => {
+  const win = { left: 0.1, top: 0.2, width: 0.3, height: 0.4 };
+  assert.deepEqual(windowAsShown(win), win, 'unturned, the same');
+  const close = (a, b) => ['left', 'top', 'width', 'height'].every((k) => Math.abs(a[k] - b[k]) < 1e-9);
+  assert.ok(close(windowAsShown(win, { flipX: true }), { left: 0.6, top: 0.2, width: 0.3, height: 0.4 }));
+  assert.ok(close(windowAsShown(win, { flipY: true }), { left: 0.1, top: 0.4, width: 0.3, height: 0.4 }));
+  assert.ok(close(windowAsShown(win, { rotate: 90 }), { left: 0.4, top: 0.1, width: 0.4, height: 0.3 }), 'a quarter: the picture\'s top edge is the page\'s right');
+  assert.ok(close(windowAsShown(win, { rotate: 180 }), { left: 0.6, top: 0.4, width: 0.3, height: 0.4 }));
+  assert.ok(close(windowAsShown(win, { rotate: 270 }), { left: 0.2, top: 0.6, width: 0.4, height: 0.3 }), 'three quarters: the picture\'s top edge is the page\'s left');
+});
+
+test('frameForCrop on a turned or mirrored picture: the frame follows the edge the page shows, and the page draws the window cropped', () => {
+  const frame = { x: 10, y: 100, w: 40, h: 300 };
+  const from = { left: 0, top: 0.2, width: 1, height: 0.6 };
+  // A quarter turn: the picture's right edge is the page's bottom edge.
+  const turn = { rotate: 90 };
+  const shorter = frameForCrop(frame, windowAsShown(from, turn), windowAsShown({ ...from, width: 0.5 }, turn));
+  assert.deepEqual(shorter, { x: 10, y: 100, w: 40, h: 150 }, 'the bottom edge up: the frame shorter, as wide');
+  // Mirrored: the picture's left edge is the page's right edge.
+  const mirrored = frameForCrop(frame, windowAsShown(from, { flipX: true }), windowAsShown({ ...from, left: 0.5, width: 0.5 }, { flipX: true }));
+  assert.deepEqual(mirrored, { x: 10, y: 100, w: 20, h: 300 }, 'the right edge in: narrower, its left edge where it was');
+  const designPx = 1000;
+  const pictureRatio = 1.5;
+  const start = { x: 10, y: 0, w: 30, h: 400 };
+  const win0 = cropWindow({ pictureRatio, frameRatio: (designPx * start.w / 100) / start.h, x: 0.5, y: 0.5, zoom: 1, quarter: true });
+  const to = croppedWindow({ win: win0, edge: { x: 1, y: 0 }, point: { x: win0.left + win0.width * 0.6, y: 0 } });
+  const after = frameForCrop(start, windowAsShown(win0, turn), windowAsShown(to, turn));
+  const drawn = cropWindow({ pictureRatio, frameRatio: (designPx * after.w / 100) / after.h, quarter: true, ...styleForWindow(to, { x: 0.5, y: 0.5 }) });
+  for (const k of ['left', 'top', 'width', 'height']) assert.ok(Math.abs(drawn[k] - to[k]) < 0.01, `turned a quarter, the page draws the cropped ${k}`);
+});
+
 test('frameForCrop: a free crop leaves the picture where it is on the page, its frame following the window over it', () => {
   const frame = { x: 10, y: 100, w: 40, h: 300, z: 2 };
   const from = { left: 0.2, top: 0, width: 0.6, height: 1 };
@@ -169,7 +200,7 @@ test('Enter closes the image editor with «Done», heard before the focused cont
   const src = readFileSync(new URL('../editor/src/lib/PictureEditor.svelte', import.meta.url), 'utf8');
   assert.match(src, /onkeydowncapture=\{onEnter\} onpointerdowncapture=\{\(\) => \(pressed = true\)\}/, 'heard before the control, with how the focus got there');
   const enter = src.slice(src.indexOf('  function onEnter('), src.indexOf('  function onDialogKey('));
-  assert.match(enter, /if \(event\.key === 'Tab'\) pressed = false;/, 'a control reached with the keys');
+  assert.match(enter, /if \(event\.key !== 'Enter' && !MODIFIERS\.has\(event\.key\)\) pressed = false;/, 'a control reached with the keys, the arrows in a palette among them');
   assert.match(enter, /if \(at\.closest\?\.\('textarea, select, input:not\(\[type="range"\]\)'\)\) return;/, 'the description and a number field keep theirs');
   assert.match(enter, /if \(!pressed && at\.closest\?\.\('button, a\[href\], summary'\)\) return;\s*event\.preventDefault\(\);\s*event\.stopPropagation\(\);\s*ed\.donePicture\(\);/, 'a clicked button, as Compare or a look, leaves Enter to «Done»');
   assert.match(src, /dialogEl\.showModal\(\);\s*\/\/[^\n]*\n\s*stageEl\?\.focus\(\{ preventScroll: true \}\);/, 'the picture takes the focus as the dialog opens, not its first button');

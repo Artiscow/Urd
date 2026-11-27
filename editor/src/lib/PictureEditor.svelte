@@ -4,7 +4,7 @@
   import { ta } from '$engine/i18n.js';
   import { fadingDialog, dialogOut } from './motion.svelte.js';
   import { pictureFilter, pictureStyle, PICTURE_LOOKS, PICTURE_BOUNDS, LOOK_FILTERS, straightenScale, parseColor, duotoneFilterUrl } from '$engine/picture.js';
-  import { cropWindow, pointOnPicture, croppedWindow, styleForWindow, frameForCrop, turned, sectionChanged, KIND_TOOLS, ratioValue, movedFrame, sharpness, dataUrlBytes, isDrawing, isBaked, pickedColour } from './picture-edit.js';
+  import { cropWindow, pointOnPicture, croppedWindow, styleForWindow, frameForCrop, windowAsShown, turned, sectionChanged, KIND_TOOLS, ratioValue, movedFrame, sharpness, dataUrlBytes, isDrawing, isBaked, pickedColour } from './picture-edit.js';
   import { ICONS } from './icons.js';
   import StepField from './StepField.svelte';
   import ColorPicker from './ColorPicker.svelte';
@@ -157,13 +157,14 @@
     const grow = straightenScale(style.straighten);
     const free = freeCrop;
     const frame = free ? pic.frame : null;
+    const turn = { rotate: style.rotate, flipX: style.flipX, flipY: style.flipY };
     const move = (e) => {
       if (!boxEl || !style) return up();
       const keep = !free || (e.shiftKey && handle.x && handle.y) ? from.width / from.height : null;
       const to = croppedWindow({ win: from, edge: handle, point: pointAt(e), keep });
       const next = styleForWindow(baseWindow(to, grow), point);
       cropping = to;
-      ed.changePicture(frame ? { style: next, frame: frameForCrop(frame, from, to) } : { style: next }, { gesture: true, live: false });
+      ed.changePicture(frame ? { style: next, frame: frameForCrop(frame, windowAsShown(from, turn), windowAsShown(to, turn)) } : { style: next }, { gesture: true, live: false });
     };
     const up = () => {
       window.removeEventListener('pointermove', move);
@@ -207,12 +208,15 @@
 
   /** Whether the control with the focus was pressed with the pointer, rather than reached with the keys. */
   let pressed = false;
+  /** The keys that never move the focus. */
+  const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph']);
 
   /**
    * Enter is «Done», heard before the focused control; a field, or a button reached with the keys, keeps its Enter.
    */
   function onEnter(event) {
-    if (event.key === 'Tab') pressed = false;
+    // Any other key may move the focus, as the arrows do in the colour picker's palette.
+    if (event.key !== 'Enter' && !MODIFIERS.has(event.key)) pressed = false;
     if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || event.isComposing || ed.pictureBaking) return;
     const at = event.target;
     if (at.closest?.('textarea, select, input:not([type="range"])')) return;
@@ -338,7 +342,7 @@
               <span class="pe-window" class:pe-round={tools.round || pic.ratio === 'circle'} style:left="{win.left * 100}%" style:top="{win.top * 100}%" style:width="{win.width * 100}%" style:height="{win.height * 100}%">
                 {#each tools.zoom === false ? [] : CROP_HANDLES as handle (handle.id)}
                   <!-- svelte-ignore a11y_no_static_element_interactions -->
-                  <span class="pe-handle pe-{handle.id}" class:pe-edge={!handle.x || !handle.y} title={ta(freeCrop ? 'tip.pic.crop' : 'tip.pic.zoom')} onpointerdown={(e) => startCrop(e, handle)}></span>
+                  <span class="pe-handle pe-{handle.id}" class:pe-edge={!handle.x || !handle.y} title={ta(freeCrop ? 'tip.pic.crop' : 'tip.pic.cropKept')} onpointerdown={(e) => startCrop(e, handle)}></span>
                 {/each}
               </span>
             {/if}

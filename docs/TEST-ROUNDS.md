@@ -2,6 +2,21 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.97-0.7.9.5p): release 0.7.12
+
+- [ ] A product block with «Title lines» at 2: on the published page a long title shows two lines ending in an ellipsis, and Tab to the title shows its focus ring whole
+- [ ] A collection entry's text with a link in its third paragraph, «Text lines» at 2: Tab to the link, and the text shows whole while the link has the focus
+- [ ] «Terms of sale» with a heading colour and a heading font set: a Heading 4 under a Heading 3 takes the same colour and font, with room above it
+- [ ] In the image editor, turn a picture a quarter, choose «Free» and drag the frame's bottom edge up: the block gets shorter, not narrower, and the page shows the part cropped; mirrored with «Flip», a side dragged in shrinks the frame from that side
+- [ ] In the image editor the picture's tooltip no longer offers a click beside the frame, and with a fixed shape a handle's tooltip says it crops at the frame's shape
+- [ ] In the image editor, open the overlay's colour, move to a colour with the arrow keys and press Enter: the colour is picked and the editor stays open
+- [ ] On the phone, two blocks under each other in the left cells of a two-column row: drag the lower one 12 px down over its place, and it stands 12 px lower on the published page
+- [ ] On the phone, a flowing block right under a pinned one: dragged up over its place, it stops at the pinned block's edge
+- [ ] A video block playing its own file with an overlay: «Strength» stops at 80 %, and the player's controls stay in sight
+- [ ] With the admin theme on Well, Gold, Purple, Aurora or Ember: Publish under the pointer keeps its accent fill with a ring, the count on it reads clearly, and so do «Done» in the image editor and a chosen chip in the element menu
+- [ ] On Well or Gold, the pin badge on a block pinned while scrolling reads clearly on the canvas
+- [ ] After the update, a site on 0.7.11 opens and publishes as before, and its Updates panel offers 0.7.12 with the «Security headers» note showing the HSTS line
+
 ### Test batch (0.7.9.5): heading levels, text in columns and card lines
 
 - [ ] In a text, the text bar's level list offers Paragraph and Heading 1 to Heading 6; a line set to Heading 5 is an `<h5>` on the published page, and with the caret in it the list shows «Heading 5»

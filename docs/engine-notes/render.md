@@ -377,15 +377,12 @@ Pinned: explicit row tracks. Without rows the span is derived from
 the desktop height. Height is not set: the element stretches to its
 tracks (grid stretch), and when the content grows, the tracks grow too.
 
-## `mobilePlacementToCss › if (cells`
+## `mobilePlacementToCss › const gap`
 
 Flowing: auto-placed. Partial overrides apply only to the fields
 actually present in the placement. A block in cells stands in its cell's whole width (phoneCellCss places the cell).
-
-## `mobilePlacementToCss › const gap`
-
-A flowing block's own room above it on the phone (`space`, migrate.js phoneSpace) is drawn as its top margin, added to the space between blocks under the block before it.
-A negative room takes from that space and never more than all of it, so a block never overlaps the one above; the room is set by dragging the block over its own place in the phone view (preview-edit.js flowDrag).
+A flowing block's own room above it on the phone (`space`, migrate.js phoneSpace) is drawn as its top margin, added to the space between blocks under the block before it, in a cell too, as a cell is a flex column (base.css).
+A negative room takes from that space and never more than all of it, so a block never overlaps the one above; the room is set by dragging the block over its own place in the phone view (preview-edit.js flowDrag), which under a block pinned on the phone, with no space under it, goes no lower than meeting it (phoneSpaceFloor in phone-moves.js).
 
 ## `mobilePlacementToCss › const own`
 
@@ -464,7 +461,7 @@ The mobile row grid (ADR-0019): one path for all sections. Untouched
 blocks are auto-placed in reading order, pinned ones get explicit
 row tracks, and the minmax rows let the content grow without JS.
 
-## `renderSection › const leads`
+## `renderSection › const pins`
 
 The blocks pinned on the phone while the page scrolls, by their pinning group (each alone without one), the group's first block in the section's order speaking for it as on the desktop (stickyLeads).
 
@@ -537,7 +534,7 @@ independent and can be combined.
 A block with a phone design draws it while it is narrow (measured by the section's layout, which places the block first), and is drawn again when it crosses the line (watchPhoneDesign).
 On the phone the block reads its own words where it has some (phoneProps, ADR-0033), in the desktop's place, lifted by its migrations as its props are.
 
-## `renderBlock › const isPointer`
+## `renderBlock › const anim`
 
 Entrance animation and pointer effect are independent fields and
 can be combined; the pointer effect is the block's own, else the one

@@ -22,7 +22,7 @@ group).
 
 The content is structured DATA: title and text are rich text through the same
 sanitizing as the collection block, everything else renders with textContent.
-Both are texts (`.urd-text`) in the editor and on the published page alike, and a card keeps them to the block's lines (`titleLines`, `textLines`; `clampLines` in blocks/collection.js), while the quick view shows them whole.
+Both are texts (`.urd-text`) in the editor and on the published page alike, and a card keeps them to the block's lines (`titleLines`, `textLines`; `clampLines` in blocks/collection.js), while the quick view shows them whole. For visitors the title's words stand in a span inside its button (`.urd-product-titlewords`), and the clamp is on that span, as the button lays out as one box whose lines the heading cannot count.
 
 ## `choiceRow`
 

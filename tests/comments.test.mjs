@@ -126,10 +126,11 @@ test('the reader finds the comments of each kind of file', () => {
   assert.equal(midSentence('The first line runs\non into the second.'), 'The first line runs');
   assert.equal(midSentence('A sentence ends here.\nAnother one: a list follows\n- an item'), undefined);
   assert.ok(commentsOf(`${ROOT}template/assets/styles/base.css`).length > 100, 'the stylesheet labels');
-  assert.deepEqual(faults({ words: 'Split out of App.svelte in 0.7.26.5.', tags: [] }), ['a release number (0.7.26.5)']);
+  assert.deepEqual(faults({ words: 'Split out of App.svelte in 0.7.26.5.', tags: [] }), ['a release number (0.7.26.5)', '«Split out of»']);
   assert.deepEqual(faults({ words: 'The size (additive since v0.6).', tags: [] }), ['a release number (since v0.6)']);
   assert.deepEqual(faults({ words: 'A tag sorts v0.7.10 before v0.7.11.', tags: [] }), []);
   assert.deepEqual(faults({ words: 'The list, which no longer holds the old ones.', tags: [] }), ['«no longer»']);
+  assert.deepEqual(faults({ words: 'The bar, split out of App.svelte.', tags: [] }), ['«split out of»']);
   assert.equal(tagWords('@param {{a: {b: string}}} context The page and its site'), ' The page and its site');
   assert.deepEqual(faults({ words: 'Short.', tags: [tagWords(`@returns {string} ${'word '.repeat(40)}`)] }), ['a tag of 199 characters of words']);
 });
