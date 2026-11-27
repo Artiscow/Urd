@@ -9,6 +9,10 @@ with alignment. The content is the owner's own and is treated as trusted; it is
 the same trust model as the owner being able to edit the files in the repo
 directly.
 
+## `textColumns`
+
+A plain text in columns (additive from 0.7.9.5): `columns` is the most it is set in, two to four, and each column is at least 14em wide (`columns: <n> 14em`), so a narrow block and the phone draw fewer without a setting of their own. The gap is the owner's px, at most 200, and 32 px where none is set or it is stored empty. A document design keeps its own layout and draws no columns.
+
 ## `textBlock › render`
 
 `design` (additive from 0.7.24.2.4): the design the text is drawn in; a text block is plain text, and the terms block (below) a document design (doc-look.js) with its look beside it.

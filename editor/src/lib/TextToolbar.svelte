@@ -40,7 +40,7 @@
   const HL_A = `<svg width="11" height="15" viewBox="0 0 11 15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${A_PATH}"/></svg>`;
   const OL = '<svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><g fill="currentColor" stroke="none" font-size="4.6" font-family="system-ui, sans-serif" font-weight="700"><text x="0" y="3.6">1</text><text x="0" y="7.6">2</text><text x="0" y="11.6">3</text></g><path d="M5 2h8M5 6h8M5 10h8"/></svg>';
 
-  const levels = [['p', ta('tt.paragraph')], ['h1', ta('tt.headingN', { n: 1 })], ['h2', ta('tt.headingN', { n: 2 })], ['h3', ta('tt.headingN', { n: 3 })]];
+  const levels = [['p', ta('tt.paragraph')], ...[1, 2, 3, 4, 5, 6].map((n) => [`h${n}`, ta('tt.headingN', { n })])];
   const fonts = fontChoices(ta, [['', ta('tt.inheritFont')]]);
   const lhFormat = new Intl.NumberFormat(adminLang(), { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 

@@ -4,7 +4,7 @@
  * Notes: docs/engine-notes/blocks/product.md (Urd repository).
  */
 import { getCollection } from '../collections.js';
-import { applyEntryImageStyle } from './collection.js';
+import { applyEntryImageStyle, clampLines } from './collection.js';
 import { renderCardAnimations } from '../render.js';
 import { setRichHtml, plainText } from '../sanitize.js';
 import { iconSvg } from '../icons.js';
@@ -29,6 +29,7 @@ function richNode(tag, className, entry, field, collection, editable) {
   const value = entry[field];
   if (!value && !editable) return null;
   const node = el2(tag, className);
+  node.classList.add('urd-text');
   if (value) {
     setRichHtml(node, value, pagesNow);
   } else {
@@ -37,7 +38,7 @@ function richNode(tag, className, entry, field, collection, editable) {
   }
   if (editable) {
     node.contentEditable = 'true';
-    node.classList.add('urd-collection-editable', 'urd-text');
+    node.classList.add('urd-collection-editable');
     node.addEventListener('input', () => {
       post({ type: 'urd-collection-edit', collection, entryId: entry.id, field, value: node.innerHTML });
     });
@@ -344,6 +345,9 @@ function renderCard(entry, props, editable, preview) {
   if (title) card.appendChild(title);
   const text = richNode('div', 'urd-product-text', entry, 'text', props.collection, editable);
   if (text) card.appendChild(text);
+  // The card keeps its title and text to the block's lines; the quick view shows them whole.
+  clampLines(title ? [title] : [], props.titleLines);
+  clampLines(text ? [text] : [], props.textLines);
   const price = priceRow(entry, props.currency);
   if (price) card.appendChild(price);
 

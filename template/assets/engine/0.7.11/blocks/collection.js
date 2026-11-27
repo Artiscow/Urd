@@ -98,6 +98,20 @@ function titleNode(entry) {
 const SHAPE_ASPECTS = { wide: '16 / 9', square: '1 / 1', portrait: '3 / 4', circle: '1 / 1' };
 
 /**
+ * Keeps each node to a number of lines, 1 to 10, ending in an ellipsis (base.css .urd-lines); any other number leaves them whole.
+ * @param {Iterable<HTMLElement>} nodes
+ * @param {number|undefined} lines
+ */
+export function clampLines(nodes, lines) {
+  const count = Math.round(Number(lines));
+  if (!(count >= 1 && count <= 10)) return;
+  for (const node of nodes) {
+    node.classList.add('urd-lines');
+    node.style.setProperty('--urd-lines', String(count));
+  }
+}
+
+/**
  * Draws an entry's picture with its settings (picture.js), its description, and the frame's shape and rounding; `node` is the frame or the img in it.
  */
 export function applyEntryImageStyle(node, entry) {
@@ -209,7 +223,7 @@ export const collectionBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el
-   * @param {{collection: string|null, view: string, limit: number, newestFirst: boolean}} props
+   * @param {{collection: string|null, view: string, limit: number, newestFirst: boolean, titleLines?: number, textLines?: number}} props
    * @param {object} ctx
    */
   render(el, props, ctx) {
@@ -243,6 +257,8 @@ export const collectionBlock = {
       // finally: the module globals are reset even when the view throws, so this collection's context never reaches the next block rendered.
       try {
         view(host, entries);
+        clampLines(host.querySelectorAll('.urd-collection-title'), props.titleLines);
+        clampLines(host.querySelectorAll('.urd-collection-text'), props.textLines);
       } finally {
         editCtx = null;
         pagesNow = [];

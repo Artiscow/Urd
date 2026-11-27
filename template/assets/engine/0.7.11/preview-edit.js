@@ -2987,6 +2987,8 @@ export function endTextEditing() {
   textEditEnd?.();
 }
 
+/** The levels the text bar sets and shows: a paragraph and the six headings. */
+const LEVELS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
 /** The commands whose state the selection holds as pressed or not (document.queryCommandState). */
 const TEXT_MARKS = ['bold', 'italic', 'underline', 'strikeThrough', 'superscript', 'subscript', 'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull', 'insertUnorderedList', 'insertOrderedList'];
 
@@ -3340,7 +3342,7 @@ function initTextToolbar() {
 
   /** The editor's bar's commands, by name: each on the selection kept here. */
   const COMMANDS = {
-    level: (value) => { if (['p', 'h1', 'h2', 'h3'].includes(value)) exec('formatBlock', value); },
+    level: (value) => { if (LEVELS.includes(value)) exec('formatBlock', value); },
     font: (value) => applyInlineStyle('fontFamily', value || null),
     size: (value) => {
       if (value === '' || value == null) { applyInlineStyle('fontSize', null); return; }
@@ -3405,6 +3407,8 @@ function initTextToolbar() {
   // The text being written and its block's id, by which it is found again when a change of props draws the section anew; cleared on a deliberate end.
   let activeText = null;
   let activeBlockId = null;
+  /** The text that carries `data-urd-writing`, by which a card's line clamp lets it show whole (preview.css). */
+  let markedText = null;
 
   /** The size the selection holds: the one where the caret stands, or the one every selected run shares; null for none or a mix. */
   const styledAncestor = (node) => {
@@ -3492,7 +3496,7 @@ function initTextToolbar() {
     let quote = false;
     try {
       const value = (document.queryCommandValue('formatBlock') || 'p').toLowerCase();
-      level = ['h1', 'h2', 'h3'].includes(value) ? value : 'p';
+      level = LEVELS.includes(value) ? value : 'p';
       quote = value === 'blockquote';
     } catch { /* some browsers refuse before the first command */ }
     const marks = {};
@@ -3514,6 +3518,12 @@ function initTextToolbar() {
       reportFrame = 0;
       if (activeBlockId && (!activeText || !activeText.isConnected)) {
         activeText = document.querySelector(`.urd-block[data-block-id="${activeBlockId}"] .urd-text[contenteditable="true"]`);
+      }
+      const writing = activeText?.isConnected ? activeText : null;
+      if (writing !== markedText) {
+        markedText?.removeAttribute('data-urd-writing');
+        writing?.setAttribute('data-urd-writing', '');
+        markedText = writing;
       }
       const block = activeText?.isConnected ? activeText.closest('.urd-block') ?? activeText : null;
       const box = block?.getBoundingClientRect();

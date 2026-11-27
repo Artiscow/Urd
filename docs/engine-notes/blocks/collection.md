@@ -32,6 +32,10 @@ Entry text: rich (a safe HTML subset, the same sanitizing as text blocks). The u
 Title: rich text (a safe HTML subset) with the full text editor in preview (the urd-text class
  gives the floating bar). With a link it renders as an anchor for visitors; in the editor the text is edited.
 
+## `clampLines`
+
+A card's title and text kept to the lines the block sets (`titleLines`, `textLines`, additive from 0.7.9.5), by a class and a custom property that base.css's `.urd-lines` draws with a line clamp. The whole text stays in the page; the collection clamps every view's titles and texts after the view is drawn, and the product block its cards' alone, its quick view showing them whole.
+
 ## `applyEntryImageStyle`
 
 An entry's picture with its settings (imageStyle, drawn by picture.js) and its description, and the frame's shape and rounding.

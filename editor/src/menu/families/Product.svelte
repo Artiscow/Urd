@@ -63,4 +63,19 @@
   {/snippet}
   <Fold id="product-grid" defaultOpen title={ta('group.grid')} value={selectedBlock.props.columns ? String(selectedBlock.props.columns) : ta('common.auto')}
     rows={pinned.left('columns')} group={groupOf('product-grid', { columns: 0 })}>{@render productGrid()}</Fold>
+  <!-- How many lines each card's title and text show -->
+  {#snippet productLines()}
+    <Setting key="titleLines">
+      <label title={ta('tip.cards.titleLines')}>{ta('lbl.titleLines')}
+        <input type="number" min="0" max="10" value={selectedBlock.props.titleLines || ''} placeholder={ta('common.all')}
+          onchange={(e) => { const n = Math.max(0, Math.min(10, Math.round(Number(e.target.value)) || 0)); setBlockProp('titleLines', n || null); e.target.value = n || ''; }} /></label>
+    </Setting>
+    <Setting key="textLines">
+      <label title={ta('tip.cards.textLines')}>{ta('lbl.textLines')}
+        <input type="number" min="0" max="10" value={selectedBlock.props.textLines || ''} placeholder={ta('common.all')}
+          onchange={(e) => { const n = Math.max(0, Math.min(10, Math.round(Number(e.target.value)) || 0)); setBlockProp('textLines', n || null); e.target.value = n || ''; }} /></label>
+    </Setting>
+  {/snippet}
+  <Fold id="product-lines" title={ta('group.textLines')} value={`${selectedBlock.props.titleLines || ta('common.all')} · ${selectedBlock.props.textLines || ta('common.all')}`}
+    group={groupOf('product-lines', { titleLines: null, textLines: null })}>{@render productLines()}</Fold>
 {/if}

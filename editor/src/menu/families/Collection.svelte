@@ -31,4 +31,20 @@
     </Setting>
   {/snippet}
   <Fold id="collection-source" defaultOpen title={ta('group.source')} value={collectionsView[selectedBlock.props.collection]?.name ?? ta('common.choose')} group={groupOf('collection-source', { limit: 6, newestFirst: true })}>{@render collectionSource()}</Fold>
+{:else if area === 'style'}
+  <!-- How many lines each entry's title and text show -->
+  {#snippet collectionLines()}
+    <Setting key="titleLines">
+      <label title={ta('tip.cards.titleLines')}>{ta('lbl.titleLines')}
+        <input type="number" min="0" max="10" value={selectedBlock.props.titleLines || ''} placeholder={ta('common.all')}
+          onchange={(e) => { const n = Math.max(0, Math.min(10, Math.round(Number(e.target.value)) || 0)); setBlockProp('titleLines', n || null); e.target.value = n || ''; }} /></label>
+    </Setting>
+    <Setting key="textLines">
+      <label title={ta('tip.cards.textLines')}>{ta('lbl.textLines')}
+        <input type="number" min="0" max="10" value={selectedBlock.props.textLines || ''} placeholder={ta('common.all')}
+          onchange={(e) => { const n = Math.max(0, Math.min(10, Math.round(Number(e.target.value)) || 0)); setBlockProp('textLines', n || null); e.target.value = n || ''; }} /></label>
+    </Setting>
+  {/snippet}
+  <Fold id="collection-lines" title={ta('group.textLines')} value={`${selectedBlock.props.titleLines || ta('common.all')} · ${selectedBlock.props.textLines || ta('common.all')}`}
+    group={groupOf('collection-lines', { titleLines: null, textLines: null })}>{@render collectionLines()}</Fold>
 {/if}

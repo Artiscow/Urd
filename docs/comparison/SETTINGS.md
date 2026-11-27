@@ -77,7 +77,7 @@ The WordPress libraries and Elementor give an element its cross-cutting settings
 - **Visibility:** elements shown only on the phone (Delivered 0.7.3.8); hiding on a tablet Not taken: Urd has two layouts ([ADR-0019](../adr/0019-synced-mobile-model.md)); a hidden section, and a hidden block beside it, in v0.8 AR-5.
 - **Pinning on the phone:** as a choice per block in the row grid, with the desktop's release (Delivered 0.7.3.10).
 - **Border, shadow and background on more blocks:** v0.8 ER-I, the box styles of the design gallery, and v0.8 DS-3, the component tokens.
-- **Typography:** a font weight and letter case in 0.7.9.
+- **Typography:** a font weight in v0.8 FO-4, and letter case with the text styles in v0.8 DS-2.
 - **A link on the whole element:** v0.8 ER-G, any block or group of blocks as a link.
 - **Reuse:** templates are copies; synced reuse is After v1.0: synced global blocks.
 - **Spacing:** n/a: free placement ([ADR-0001](../adr/0001-hybrid-editor-model.md), [ADR-0024](../adr/0024-content-push-on-the-desktop-canvas.md)).
@@ -92,7 +92,7 @@ Urd: the heading levels of the text block (ELEMENTS.md #22).
 
 | Setting | Offered by | Urd | Where |
 |---|---|---|---|
-| Heading level or tag, H1 to H6 | WP, EL, WS, PK, KB, SP, GB | Partial: H1 to H3 in the text toolbar | 0.7.9 (H4 to H6); v0.8 DS-2 (text styles) |
+| Heading level or tag, H1 to H6 | WP, EL, WS, PK, KB, SP, GB | Has: a paragraph and H1 to H6 in the text toolbar (0.7.9.5) | - |
 | Alignment | WP, EL, PK, KB, SP, GB | Has | - |
 | Size presets | EL, PK | Has: «Size» on the block, with a size of the phone's own (0.7.36.2), and a px size per selection | - |
 | Link colour | WP, EL, KB, SP, GB | Missing | v0.8 DS-2 (link styles) |
@@ -110,11 +110,11 @@ Urd: the text block (ELEMENTS.md #23 and #24).
 | Setting | Offered by | Urd | Where |
 |---|---|---|---|
 | Bold, italic, underline, strike and links in the text | WP, EL, GJ, PK | Has, with superscript, subscript, lists and a quote | - |
-| The tag (p, span, div) | EL, WS, ST, GB | Partial: paragraph, H1 to H3, lists and quote | 0.7.9 (H4 to H6); Not taken: span and div |
+| The tag (p, span, div) | EL, WS, ST, GB | Partial: paragraph, H1 to H6 (0.7.9.5), lists and quote; no span or div | Not taken: span and div |
 | Alignment | WP, EL, PK | Has, justify included | - |
 | Text and link colour | WP, EL, PK | Partial: a text colour and a highlight per selection; no link colour | v0.8 DS-2 (link styles) |
 | Drop cap | WP, EL | Missing | v0.8 DS-2 (a drop cap behind a gate) |
-| Columns with a gap | EL, ST | Missing | 0.7.9 (text in columns) |
+| Columns with a gap | EL, ST | Has: two to four columns with a gap on a plain text, fewer where the box is narrow (0.7.9.5) | - |
 
 ### Button
 
@@ -432,7 +432,7 @@ Urd: the collection block (ELEMENTS.md #14, #88, #252 and #254).
 | An offset | KB, SP, ST | Missing | v0.8 AR-3 |
 | Columns | KB, SP, ST | Missing: the cards fill the width | v0.8 ER-D (columns per view) |
 | Showing or hiding the parts (image, date, author, excerpt, read more) | WP, KB, SP, ST | Missing | v0.8 ER-D (the parts shown per view) |
-| The excerpt's length | WP, KB, SP, ST | Missing | ER-D |
+| The excerpt's length | WP, KB, SP, ST | Partial: «Text lines» keeps a card's text to its lines, ending in an ellipsis (0.7.9.5); no length in words | ER-D |
 | A read-more link | KB, SP, ST | Missing: the title is the link | v0.8 ER-D (the entry's link as a button) |
 | The image's size, ratio and position | WP, KB, SP | Partial: an image shape per collection | ER-D; v0.8 DS-3 component tokens (the image ratio) |
 | Pagination | WP, SP, GB | Missing | v0.8 ER-D (load more and pagination) |

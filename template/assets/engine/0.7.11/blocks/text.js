@@ -36,6 +36,19 @@ export function loadDocs() {
   return docsLoading;
 }
 
+/**
+ * The columns a plain text is drawn in, or null for one column.
+ * @param {{columns?: number, columnGap?: number}} props
+ * @param {string} design
+ * @returns {{columns: string, gap: string}|null}
+ */
+export function textColumns(props, design) {
+  const count = Math.round(Number(props.columns));
+  if (design !== 'plain' || !(count >= 2 && count <= 4)) return null;
+  const gap = typeof props.columnGap === 'number' ? props.columnGap : NaN;
+  return { columns: `${count} 14em`, gap: `${Number.isFinite(gap) && gap >= 0 ? Math.min(gap, 200) : 32}px` };
+}
+
 /** Readies a text block before the page is drawn (CORE_BLOCK_READY): a document design's drawing, nothing for plain text. */
 export const prepareText = (props) => (textDesign(props.design) === 'plain' ? null : loadDocs());
 
@@ -50,7 +63,7 @@ export const textBlock = {
   migrations: {},
   /**
    * @param {HTMLElement} el The block element (positioned by render.js)
-   * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number, design?: string, accent?: string, headingColor?: string, cardColor?: string, rules?: boolean, corners?: string, headingFont?: string}} props
+   * @param {{html: string, align: string, box?: boolean, boxStyle?: object, font?: string, size?: number, lineHeight?: number, letterSpacing?: number, design?: string, accent?: string, headingColor?: string, cardColor?: string, rules?: boolean, corners?: string, headingFont?: string, columns?: number, columnGap?: number}} props
    *   design: the design the text is drawn in, plain text for a text block and a document design (doc-look.js) for the terms block.
    * @param {object} ctx Render context
    * @param {string} [design] The design it is drawn in: plain text for a text block, unless one from before page v8 still holds a document design
@@ -84,6 +97,12 @@ export const textBlock = {
     if (props.lineHeight) content.style.lineHeight = String(props.lineHeight);
     if (typeof props.letterSpacing === 'number' && props.letterSpacing !== 0) {
       content.style.letterSpacing = `${props.letterSpacing}px`;
+    }
+    // Plain text in two to four columns, each at least 14em wide, so a narrow box draws fewer.
+    const columns = textColumns(props, design);
+    if (columns) {
+      content.style.columns = columns.columns;
+      content.style.columnGap = columns.gap;
     }
     // The words, rebuilt from the rich-text allowlist (sanitize.js): nothing executable reaches the page, and editing handles and buttons are left out.
     setRichHtml(content, props.html, ctx.site?.pages ?? [], { dropClasses: EDIT_HANDLES });

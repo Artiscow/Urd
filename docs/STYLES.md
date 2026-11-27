@@ -14,6 +14,14 @@ The default theme follows OS lightness where light-dark() is supported (Baseline
 
 The canvas background (behind body): on displays with fractional scaling 100vh rounds off and leaves a sub-pixel strip at the bottom where this layer shows. With surface the strip matches the footer and the panels, so it does not read as a dark line.
 
+### `h1, h2, h3, h4, h5, h6 : text-wrap-style`
+
+Headings wrap in balanced lines (DESIGN.md D8), so a two-line heading does not leave one word alone on its second line. The longhand sets only how lines break, never whether they may: the `text-wrap` shorthand would also reset `text-wrap-mode`, and a heading under a parent that keeps its words on one line would wrap again. An engine without it wraps as before.
+
+### `p, li`
+
+Body text wraps with `pretty` (DESIGN.md D8), which keeps a lone word off a paragraph's last line where the engine has it, and is dropped where it has not. The longhand, as for the headings, so a list item under a `nowrap` parent (the menu's links) still keeps to one line.
+
 ### `.urd-section`
 
 Section container: the positioning context for block frames. NEVER clips content: blocks may deliberately overhang the section boundary, and the editor and the published page must look identical. The content box carries the design height (the inline min-height render.js writes is a plain length, part of the compatibility surface plugin copies read and overwrite, see SCHEMA.md), and the padding carries the nav clearance (--urd-section-clear, set only on the first section under a menu outside the flow), so the surface keeps its height and the background fills all the way up behind the menu.
@@ -115,6 +123,10 @@ Each block where its slot stands (render.js placeStuck): its width and its share
 ### `.urd-text ul, .urd-text ol`
 
 Content inside text blocks: lists, quotes and links from the formatting bar (the global reset otherwise zeroes list indentation)
+
+### `.urd-text h4`
+
+Headings four to six in a text (the text toolbar's level list): the browser's own sizes put H5 and H6 below the body text, so H4 stands a step above the text, H5 at its size, and H6 at its size in small capitals with a little letter spacing, each in the heading font and its weight, with no margin of their own, as the other levels have none. A size per level belongs to the text styles (v0.8 DS-2).
 
 ### `.urd-text[data-urd-text]`
 
@@ -247,6 +259,10 @@ A collection or product block is busy while it fetches its entries; on the phone
 ### `.urd-collection-imgwrap`
 
 The image wrapper: the frame owns shape and rounding, and clips the zoom crop
+
+### `.urd-lines`
+
+A collection or product card's title or text kept to the lines its block sets (`titleLines`, `textLines`; `clampLines` in blocks/collection.js), its last line ending in an ellipsis. The whole text stays in the page, so a screen reader and a search read all of it, and the product's quick view shows it whole, as does the canvas while it is being written (preview.css). The prefixed form is the one every engine draws; the standard `line-clamp` stands beside it for an engine that has it.
 
 ### `:where(.urd-pic-turned, .urd-pic-look-vintage, .urd-pic-overlaid)`
 

@@ -22,6 +22,7 @@ group).
 
 The content is structured DATA: title and text are rich text through the same
 sanitizing as the collection block, everything else renders with textContent.
+Both are texts (`.urd-text`) in the editor and on the published page alike, and a card keeps them to the block's lines (`titleLines`, `textLines`; `clampLines` in blocks/collection.js), while the quick view shows them whole.
 
 ## `choiceRow`
 

@@ -2,6 +2,20 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.9.5): heading levels, text in columns and card lines
+
+- [ ] In a text, the text bar's level list offers Paragraph and Heading 1 to Heading 6; a line set to Heading 5 is an `<h5>` on the published page, and with the caret in it the list shows «Heading 5»
+- [ ] On the published page an H4 is a little larger than the body text, an H5 the same size, and an H6 the same size in small capitals; none is smaller than the body text
+- [ ] A long heading breaks into lines of even length, and a paragraph does not end on a lone word (in Chromium or Safari); the menu's links still stay on one line
+- [ ] A plain text set to 3 under «Columns» stands in three columns in a wide box, in fewer as the box is made narrower, and in one on a phone; «Space between columns» shows only with more than one column and changes the gap
+- [ ] Columns set 2, then 1, then 3 draw three columns with the gap «Space between columns» shows
+- [ ] A heading 5 or 6 at the top of a text stands at the box's top edge, without extra room above or below it
+- [ ] The «Terms of sale» block's menu offers no «Columns»
+- [ ] On a collection block and a product block, «Title lines» and «Text lines» under «Lines» in Style keep a card's title and text to that many lines, ending in an ellipsis; emptied, they show them whole
+- [ ] On the canvas, a clamped product title or text shows whole while it is typed in, also with the text bar's size field in use, and is clamped again after; the product's quick view shows the whole title and text
+- [ ] A collection entry's text of several paragraphs, clamped to 2 lines, shows two lines ending in an ellipsis in Chromium, Firefox and Safari
+- [ ] A heading 5 in a product's description is the same size in the editor and on the published page
+
 ### Test batch (0.7.0.109): text on the accent in the admin
 
 - [ ] With the admin theme set to Well or Gold in the top bar, the words on the accent read clearly: a chosen segment, the element menu's chosen chips, the «Done» button in the image editor, a badge and the mark picker's chosen tab; with Grey or Dusk they stay white

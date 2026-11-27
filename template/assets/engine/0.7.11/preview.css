@@ -507,6 +507,12 @@ body.urd-preview.urd-chrome-off .urd-nav-side-resize {
   opacity: 0.45;
 }
 
+/* A card's title or text kept to its lines shows whole while it is typed in */
+.urd-preview .urd-lines:is([contenteditable='true']:focus, [data-urd-writing]) {
+  -webkit-line-clamp: none;
+  line-clamp: none;
+}
+
 .urd-preview .urd-collection-image-edit {
   cursor: pointer;
 }

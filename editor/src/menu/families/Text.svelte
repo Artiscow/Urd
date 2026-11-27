@@ -7,7 +7,9 @@
   import Capability from '../../lib/rows/Capability.svelte';
   import Setting from '../../lib/rows/Setting.svelte';
   import BoxStyle from '../BoxStyle.svelte';
+  import SliderRow from '../../lib/rows/SliderRow.svelte';
   import { ta } from '$engine/i18n.js';
+  import { textDesign } from '$engine/doc-designs.js';
   import { makeGroupHelpers } from '../groups.js';
   const ed = getContext('urd-editor');
   const selectedBlock = $derived(ed.selectedBlock);
@@ -32,6 +34,20 @@
         options={[['', ta('opt.longWords.theme')], ['whole', ta('opt.longWords.whole')], ['hyphenate', ta('opt.longWords.hyphenate')]]}
         onchange={(v) => setBlockProp('words', v || null)} />
     </Setting>
+    {#if textDesign(selectedBlock.props.design) === 'plain'}
+      <!-- Text in columns, and the space between them while there is more than one -->
+      <Setting own={Boolean(selectedBlock.props.columns)} reset={() => setBlockProps('columns', { columns: null, columnGap: null })}>
+        <Choice stack label={ta('lbl.columns')} title={ta('tip.text.columns')} value={String(selectedBlock.props.columns ?? 1)}
+          options={['1', '2', '3', '4'].map((n) => [n, n])}
+          onchange={(v) => (v === '1' ? setBlockProps('columns', { columns: null, columnGap: null }) : setBlockProp('columns', Number(v)))} />
+      </Setting>
+      {#if selectedBlock.props.columns > 1}
+        <Setting own={selectedBlock.props.columnGap != null} reset={() => setBlockProp('columnGap', null)}>
+          <SliderRow label={ta('lbl.columnGap')} value={selectedBlock.props.columnGap ?? 32} min={8} max={96} step={4}
+            shown={`${selectedBlock.props.columnGap ?? 32} px`} oninput={(v) => setBlockProp('columnGap', v)} />
+        </Setting>
+      {/if}
+    {/if}
   {/snippet}
   {#snippet textBox()}
     <Setting key="box" pin="textBox">

@@ -90,7 +90,7 @@ export const BAR_GROUPS = {
     fold('checkout-payment', 'group.payment', 'content', 'card'),
     fold('checkout-seller', 'lbl.checkoutSeller', 'content', 'person'),
   ],
-  collection: [fold('collection-source', 'group.source', 'content', 'list')],
+  collection: [fold('collection-source', 'group.source', 'content', 'list'), fold('collection-lines', 'group.textLines', 'style', 'type')],
   contact: [fold('contact-parts', 'group.siteContact', 'content', 'person'), fold('contact-look', 'group.appearance', 'style', 'palette')],
   countdown: [fold('countdown-target', 'group.target', 'content', 'clock'), fold('countdown-look', 'group.appearance', 'style', 'palette')],
   // The card style belongs to the cards; the list's rows are bare (menu/families/Faq.svelte).
@@ -105,7 +105,7 @@ export const BAR_GROUPS = {
   image: [fold('img-image', 'blocks.image', 'content', 'picture'), fold('img-link', 'group.linkClick', 'content', 'link'), fold('img-look', 'group.appearance', 'style', 'palette')],
   map: [loose('content', CONTENT, 'pencil'), fold('map-place', 'group.place', 'content', 'place')],
   privacy: [loose('content', CONTENT, 'pencil'), fold('privacy-look', 'group.appearance', 'style', 'palette')],
-  product: [fold('product-catalog', 'group.catalog', 'content', 'list'), fold('product-shop', 'group.siteShop', 'content', 'cart'), fold('product-grid', 'group.grid', 'style', 'columns')],
+  product: [fold('product-catalog', 'group.catalog', 'content', 'list'), fold('product-shop', 'group.siteShop', 'content', 'cart'), fold('product-grid', 'group.grid', 'style', 'columns'), fold('product-lines', 'group.textLines', 'style', 'type')],
   quote: [fold('quote-words', 'group.quote', 'content', 'quote'), fold('quote-look', 'group.appearance', 'style', 'palette')],
   ribbon: [
     fold('ribbon-words', 'lbl.ribbonItems', 'content', 'list'),

@@ -46,6 +46,12 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--urd-font-heading);
   line-height: 1.15;
+  text-wrap-style: balance;
+}
+
+/* Body text without a lone word on its last line */
+p, li {
+  text-wrap-style: pretty;
 }
 
 img, video {
@@ -336,6 +342,20 @@ html {
 
 .urd-text a {
   color: var(--urd-color-accent);
+}
+
+/* Headings four to six, never smaller than the text */
+.urd-text h4 {
+  font-size: 1.1em;
+}
+
+.urd-text :is(h5, h6) {
+  font-size: 1em;
+}
+
+.urd-text h6 {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.04em;
 }
 
 /* Long words in a text block's words */
@@ -1121,6 +1141,15 @@ a.urd-collection-title:hover {
 .urd-collection-text {
   font-size: 0.9em;
   opacity: 0.85;
+}
+
+/* A card's title or text kept to its lines, ending in an ellipsis */
+.urd-lines {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--urd-lines);
+  line-clamp: var(--urd-lines);
+  overflow: hidden;
 }
 
 .urd-collection-list {
