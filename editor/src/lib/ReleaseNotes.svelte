@@ -4,7 +4,7 @@
   import { parseNotes, plainText } from './release-notes.js';
   import Fold from './rows/Fold.svelte';
 
-  let { text = '' } = $props();
+  let { text = '', large = false } = $props();
   const blocks = $derived(parseNotes(text));
 </script>
 
@@ -43,7 +43,7 @@
   {/each}
 {/snippet}
 
-<div class="release-notes">{@render body(blocks)}</div>
+<div class="release-notes" class:rn-large={large}>{@render body(blocks)}</div>
 
 <style>
   .release-notes {
@@ -52,6 +52,25 @@
     font-size: 0.78rem;
     line-height: 1.45;
     overflow-wrap: anywhere;
+  }
+
+  /* In a reading window the notes stand at the size of reading, their lines kept to a readable measure */
+  .release-notes.rn-large {
+    gap: 0.8rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .release-notes.rn-large :global(:is(p, ul, ol, blockquote)) {
+    max-width: 68ch;
+  }
+
+  .release-notes.rn-large :global(.rn-h1) {
+    font-size: 1.15rem;
+  }
+
+  .release-notes.rn-large :global(:is(.rn-h2, .rn-h3, .rn-h4)) {
+    font-size: 1rem;
   }
 
   .release-notes :global(:is(p, ul, ol, pre, hr, h3, h4, h5, h6, blockquote)) {

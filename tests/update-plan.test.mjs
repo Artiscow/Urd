@@ -372,7 +372,10 @@ test('the check offers an unedited _headers for the update and the run writes it
   const site = { ...SITE, _headers: 'h-old' };
   updateRepo({ site, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
   const check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
-  assert.deepEqual(check.headers, { state: 'unedited', text: NEW_HEADERS, added: [] });
+  const { state, text, added, site: own, from, edit } = check.headers;
+  assert.deepEqual({ state, text, added }, { state: 'unedited', text: NEW_HEADERS, added: [] });
+  assert.deepEqual([own, from], [OLD_HEADERS, OLD_HEADERS], 'the site\'s file and the release it is closest to, for the words');
+  assert.equal(edit, 'https://github.com/site/repo/edit/main/_headers', 'the file\'s page to edit on GitHub');
   assert.ok(!check.changes.some((c) => c.path === '_headers'), 'the file stands outside the plan of the other files');
 
   let seen = updateRepo({ site, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
@@ -400,7 +403,7 @@ test('the run carries the owner\'s added hosts into the new _headers, and leaves
   const merged = NEW_HEADERS.replace("connect-src 'self'", "connect-src 'self' https://script.google.com");
   updateRepo({ site: SITE, tags: TAGS, headers: { site: added, tags: HEADER_TAGS } });
   const check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
-  assert.deepEqual(check.headers, { state: 'added', text: merged, added: ['connect-src https://script.google.com'] });
+  assert.deepEqual({ ...check.headers, site: undefined, from: undefined, edit: undefined }, { state: 'added', text: merged, added: ['connect-src https://script.google.com'], site: undefined, from: undefined, edit: undefined });
   let seen = updateRepo({ site: SITE, tags: TAGS, headers: { site: added, tags: HEADER_TAGS } });
   await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: merged } }), env: UPDATE_ENV });
   assert.equal(headersEntry(seen).content, merged);
@@ -408,7 +411,9 @@ test('the run carries the owner\'s added hosts into the new _headers, and leaves
   const edited = OLD_HEADERS.replace('SAMEORIGIN', 'DENY');
   updateRepo({ site: SITE, tags: TAGS, headers: { site: edited, tags: HEADER_TAGS } });
   const by = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
-  assert.deepEqual(by.headers, { state: 'edited', text: NEW_HEADERS, added: [] }, 'the template\'s text, to copy by hand');
+  assert.deepEqual({ state: by.headers.state, text: by.headers.text, added: by.headers.added }, { state: 'edited', text: NEW_HEADERS, added: [] }, 'the template\'s text, to copy by hand');
+  assert.equal(by.headers.site, edited, 'with the site\'s own file');
+  assert.equal(by.headers.from, OLD_HEADERS, 'and the release it is closest to, which the edits by hand start from');
   seen = updateRepo({ site: SITE, tags: TAGS, headers: { site: edited, tags: HEADER_TAGS } });
   await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: NEW_HEADERS } }), env: UPDATE_ENV });
   assert.equal(headersEntry(seen), undefined, 'never written, whatever the run is sent');
@@ -418,7 +423,7 @@ test('at the installed version the check offers the site\'s _headers alone, and 
   updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
   const check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
   assert.equal(check.upToDate, true);
-  assert.deepEqual(check.headers, { state: 'unedited', text: NEW_HEADERS, added: [] }, 'a file from a release before the installed one');
+  assert.deepEqual({ state: check.headers.state, text: check.headers.text }, { state: 'unedited', text: NEW_HEADERS }, 'a file from a release before the installed one');
 
   for (const site of [NEW_HEADERS, NEW_HEADERS.replace('SAMEORIGIN', 'DENY')]) {
     updateRepo({ engine: '0.7.12', site: SITE, tags: TAGS, headers: { site, tags: HEADER_TAGS } });

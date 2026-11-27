@@ -257,7 +257,7 @@ test('a page switch writes the page left before the next page is read', () => {
   const page = editorFile('state/page.svelte.js');
   assert.match(page, /import \{[^}]*\bflushDrafts\b[^}]*\} from '\.\.\/lib\/draftStore\.js';/);
   const select = page.split('async function selectPage(id, { keepHistory = false } = {}) {')[1].split('\n}\n')[0];
-  assert.match(select, /^(?:\s*\/\/[^\n]*)*\s*flushDrafts\(\);/, 'the first thing it does');
+  assert.match(select, /^\s*(?:\/\/[^\n]*\n\s*)*flushDrafts\(\);/, 'the first thing it does');
   const flushed = select.indexOf('flushDrafts();');
   for (const step of ['pageId = id;', 'held.get(', 'fetch(', 'createDraftStore(']) {
     assert.ok(select.indexOf(step) > flushed, `before ${step}`);

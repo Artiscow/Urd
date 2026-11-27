@@ -2,6 +2,18 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.10.33): reading windows in Updates, and a test update on the local server
+
+- [ ] On the local server (`python3 dev-server.py`), Updates shows «Test update» with three cases made from the site's own files; «Update to …» asks its question and then says «A test update writes nothing», and no dot or pill outside the panel tells of the made-up version
+- [ ] «Read the release notes» opens a window with the release's name, its date, the Note box and the folds; Escape, the cross, Close and a press outside close it, and the focus returns to the button
+- [ ] «An update»: «Security headers» stands first under «Optional files» with its first change in words; «See what changes» opens the window with «What this update changes», «Kept from your file», the table of what the pages may load (the kept host marked «yours») and «Other rules»; «Show the file as written» shows the file, and «Show it in words» the words again
+- [ ] «By hand»: the amber card shows what the new file brings, and «See what to change» opens the window with «Yours, which stays» and three numbered steps; «Copy» copies the line and says «Copied»
+- [ ] «Headers only»: the card with «Update the security headers» stands under «This site runs the latest Urd version»
+- [ ] In nb and tr the cards and windows read in that language, the rules' sentences included
+- [ ] The file rows show their paths whole, broken after a slash, and «will be deleted» on one line; the Update button stands under «Engine files»; in the windows, Close and the Update button are the same size
+- [ ] On a published site, at the next release: the same cards and windows with the real check, «Open _headers on GitHub» opens the file for editing in the site's repository, and the panel never shows «Test update»
+- [ ] On a published site whose `_headers` holds a rule of its own and a word added to the HTTPS line: the steps by hand keep both, and ask for nothing the file already holds
+
 ### Test batch (0.7.0.110): the security headers in the update
 
 - [ ] A site on 0.7.12 whose `_headers` is the 0.7.11 release's: Updates shows the dot, its tooltip reads «The security headers can be updated: open Updates», and the panel offers «Update the security headers» under «Security headers»; after «Update» in the question, the site's `_headers` holds the HSTS line and the dot is gone

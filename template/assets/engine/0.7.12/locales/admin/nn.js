@@ -366,7 +366,6 @@ export default {
     'update.current': 'Installert: Urd {version}',
     'update.summary': '{writes} filer blir skrivne, {deletes} sletta',
     'update.atomGroup.title': 'Motoren, skalla og HTML-skalla høyrer saman og blir bytte i same commit',
-    'update.aboutVersion': 'Om {target}',
     'update.upToDate': 'Sida køyrer nyaste Urd-versjon',
     'update.headersTitle': 'Sikkerheitsheadere',
     'update.atomTitle': 'Motorfiler (blir bytte samla)',

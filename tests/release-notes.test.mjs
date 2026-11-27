@@ -99,7 +99,7 @@ test('the update function keeps the notes to the length the panel reads, and the
   assert.match(fn, new RegExp(`release\\.body\\.slice\\(0, ${NOTES_MAX}\\)`));
   assert.equal(parseNotes('a'.repeat(NOTES_MAX + 500))[0].inline[0].text.length, NOTES_MAX);
   const panel = readFileSync(new URL('../editor/src/panels/UpdatePanel.svelte', import.meta.url), 'utf8');
-  assert.match(panel, /<ReleaseNotes text=\{updateInfo\.notes\} \/>/);
+  assert.match(panel, /<ReleaseNotes text=\{updateInfo\.notes\} large \/>/, 'in the reading window, at the size of reading');
 });
 
 test('a release is named by its name where that holds its version, else by its version and its name', () => {
@@ -115,8 +115,9 @@ test('the update check names and links the release on offer and the one installe
   assert.match(fn, /if \(page\.protocol === 'https:' && page\.host === 'github\.com'\) url = page\.href;/);
   assert.match(fn, /const installed = await releaseOf\(token, config\.templateRepo, state\.target\);/, 'up to date: the installed version\'s release');
   assert.match(fn, /const offered = await releaseOf\(token, config\.templateRepo, state\.target\);/, 'an update: the one on offer');
-  assert.match(fn, /release: installed && \{ name: installed\.name, url: installed\.url \}/);
-  assert.match(fn, /notes: offered\?\.notes \?\? null, release: offered && \{ name: offered\.name, url: offered\.url \}/);
+  assert.match(fn, /release: installed && \{ name: installed\.name, url: installed\.url, date: installed\.date \}/);
+  assert.match(fn, /notes: offered\?\.notes \?\? null, release: offered && \{ name: offered\.name, url: offered\.url, date: offered\.date \}/);
+  assert.match(fn, /date: typeof release\.published_at === 'string' && !Number\.isNaN\(Date\.parse\(release\.published_at\)\) \? release\.published_at : null,/, 'the date it was published, where it reads as one');
   const action = readFileSync(new URL('../.github/workflows/release.yml', import.meta.url), 'utf8');
   assert.match(action, /NAME: \$\{\{ github\.event\.release\.name \}\}/);
   assert.match(action, /TITLE="\$\{NAME:-Urd \$TAG\}"/);

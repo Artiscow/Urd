@@ -292,7 +292,6 @@ export default {
     'update.current': 'Sajáiduhtton: Urd {version}',
     'update.summary': '{writes} fiilla čállojuvvojit, {deletes} sihkkojuvvojit',
     'update.atomGroup.title': 'Mohtor, skálžžut ja HTML-skálžžut gullet oktii ja lonuhuvvojit álo seamma commitas',
-    'update.aboutVersion': '{target} birra',
     'update.upToDate': 'Siidu vuodjá ođđaseamos Urd-veršuvnna',
     'update.headersTitle': 'Sihkkarvuođa-headerat',
     'update.atomTitle': 'Mohtorfiillat (lonuhuvvojit oktan)',

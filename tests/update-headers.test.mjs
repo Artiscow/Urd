@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { planHeaders, writesHeaders } from '../template/functions/_lib/update-headers.js';
+import { planHeaders, writesHeaders, closestRelease } from '../template/functions/_lib/update-headers.js';
 
 const TEMPLATE = readFileSync(new URL('../template/_headers', import.meta.url), 'utf8');
 const HSTS = '  Strict-Transport-Security: max-age=31536000\n';
@@ -135,6 +135,20 @@ test('a site file that holds the target\'s words in another order, or with other
   }
 });
 
+test('the release closest to a site\'s file is the one with the fewest lines between them', () => {
+  const own = edit(OLDER, "connect-src 'self'", "connect-src 'self' https://script.google.com");
+  assert.equal(closestRelease(own, [TEMPLATE, OLDER]), OLDER);
+  assert.equal(closestRelease(edit(TEMPLATE, 'X-Frame-Options: SAMEORIGIN', 'X-Frame-Options: DENY'), [OLDER, TEMPLATE]), TEMPLATE);
+  assert.equal(closestRelease(null, [TEMPLATE, OLDER]), TEMPLATE, 'a site without the file takes the newest');
+  assert.equal(closestRelease(own, []), null);
+  // The owner and the new release changed the same line: the release the file came from is closer by its words, not the target.
+  const target = edit(TEMPLATE, "frame-src 'self'", "frame-src 'self' https://maps.example.org");
+  const mine = edit(edit(TEMPLATE, "connect-src 'self'", "connect-src 'self' https://script.google.com"), '  X-Content-Type-Options: nosniff\n', '  X-Content-Type-Options: nosniff\n  Permissions-Policy: camera=()\n');
+  assert.equal(closestRelease(mine, [target, TEMPLATE]), TEMPLATE);
+  const [newer, older] = ['/*\n  X-B: new\n', '/*\n  X-B: old\n'];
+  assert.equal(closestRelease('/*\n  X-A: 1\n', [newer, older]), older, 'of two equally close, the older');
+});
+
 test('only the unedited and the added-to states write the file', () => {
   assert.deepEqual(['current', 'unedited', 'added', 'edited', undefined, null].map(writesHeaders), [false, true, true, false, false, false]);
 });
@@ -145,9 +159,13 @@ test('the Updates panel lists _headers first among the optional files and offers
   assert.match(PANEL, /skip: skipped, \.\.\.\(withHeaders \? \{ headers: headers\.text \} : \{\}\) \}/, 'the update sends the text the owner was shown, and the run writes only that');
   assert.match(PANEL, /body: JSON\.stringify\(\{ to: updateInfo\.target, expect: updateInfo\.head, headers: headers\.text \}\),/, 'the headers alone go through the same endpoint, at the installed version');
   const optional = PANEL.indexOf("<SubHeading text={ta('update.optionalTitle')} />");
-  const card = PANEL.indexOf("onchange={() => toggleUpdateSkip('_headers')}");
+  const card = PANEL.indexOf('{#if headersWritten}{@render headersCard(true)}{/if}');
   const rest = PANEL.indexOf('{#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}');
   assert.ok(optional > 0 && optional < card && card < rest, 'first among the optional files');
+  assert.match(PANEL, /\{#if headersWritten\}\{@render headersCard\(false\)\}\{\/if\}/, 'and at the installed version, with its own button');
+  const engine = PANEL.indexOf('<Fold id="engine"');
+  const run = PANEL.indexOf('<button class="primary update-run" onclick={runUpdate}');
+  assert.ok(engine > 0 && engine < run && run < optional, 'the update\'s button under the engine files, above the optional files');
   assert.match(PANEL, /headers\?\.state \? \(headers\.state === 'edited' \? headers\.text : null\) : headers\?\.upstream \?\? null/,
     'an updater without the plan sends the template\'s text alone, which stays a step by hand');
 });

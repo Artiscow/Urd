@@ -210,7 +210,7 @@ test('signing out renews a sign-in that can be renewed and revokes the new one, 
 test('the editor asks for the sign-in at the planned moment, before its other calls when it opens with a renewal due, and before publishing or saving drafts, one call at a time', () => {
   const shell = readFileSync(new URL('../editor/src/state/shell.svelte.js', import.meta.url), 'utf8');
   const init = shell.slice(shell.indexOf('async function init()'));
-  assert.match(init, /^async function init\(\) \{\n(?:\s*\/\/.*\n)*\s*const due = renewDue\(\);\n\s*const signedIn = checkAuth\(\);\n\s*if \(due\) await signedIn;/, 'a due renewal comes before the drafts, the plugins and the redirects are asked for');
+  assert.match(init, /^async function init\(\) \{\n\s*(?:\/\/.*\n\s*)*const due = renewDue\(\);\n\s*const signedIn = checkAuth\(\);\n\s*if \(due\) await signedIn;/, 'a due renewal comes before the drafts, the plugins and the redirects are asked for');
   assert.ok(init.indexOf('if (due) await signedIn;') < init.indexOf('savedState.meetOnLoad()'));
   assert.match(shell, /planRenewal\(data\.renewIn\);/);
   assert.match(shell, /const wait = typeof seconds === 'number' && seconds > 0 \? Math\.min\(seconds, RENEW_LONGEST\) : 0;/, 'a far time never overflows the timer');

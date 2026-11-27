@@ -4097,12 +4097,16 @@
     font-size: 0.78rem;
   }
 
+  /* A file's path is shown whole and wraps at any character; its mark beside it (a chip, a warning, a switch) keeps to one line */
   .update-path {
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .update-row > .chip,
+  .update-flags > .chip {
+    flex: none;
     white-space: nowrap;
-    direction: rtl; /* long paths are clipped at the START, the file name is what matters */
-    text-align: left;
   }
 
   .update-path.skipped {
@@ -4114,18 +4118,7 @@
 
   .update-warn { color: #e0b04a; display: inline-flex; }
 
-  .update-opt-head { margin-top: 0.2rem; }
-
-  .update-headers {
-    max-height: 10rem;
-    overflow: auto;
-    font-size: 0.7rem;
-    background: rgb(0 0 0 / 25%);
-    border-radius: 6px;
-    padding: 0.5rem;
-    user-select: all;
-    margin: 0;
-  }
+  .update-opt-head { margin-top: 0.4rem; }
 
   .update-run { margin-top: 0.5rem; width: 100%; }
 
@@ -4141,15 +4134,26 @@
   .update-headers-card .update-run { margin-top: 0.2rem; }
   .update-name { font-size: 0.8rem; font-weight: 600; overflow-wrap: anywhere; }
   .update-name.skipped { opacity: 0.45; text-decoration: line-through; }
-  .update-kept { display: grid; gap: 0.25rem; margin: 0; padding-left: 1rem; font-size: 0.72rem; }
-  .update-kept li::marker { color: var(--urd-color-accent, #7c5cff); }
-  .update-kept code {
-    padding: 0.05em 0.3em;
-    border-radius: 4px;
-    background: rgb(255 255 255 / 8%);
-    overflow-wrap: anywhere;
-    box-decoration-break: clone;
+  /* A card's short version: a line per change with its mark, and the button that opens the window */
+  .update-said { display: grid; gap: 0.35rem; margin: 0; padding: 0; list-style: none; font-size: 0.78rem; line-height: 1.4; }
+  .update-said li { display: flex; gap: 0.45rem; align-items: flex-start; }
+  .update-said-mark { display: inline-grid; flex: none; place-items: center; width: 1rem; height: 1rem; margin-top: 0.05rem; opacity: 0.8; }
+  .update-said-add, .update-said-kept { color: var(--urd-color-accent, #7c5cff); opacity: 1; }
+  .update-said-more { padding-left: 1.45rem; opacity: 0.7; }
+  .update-headers-hand { background: rgb(224 176 74 / 8%); border-color: rgb(224 176 74 / 45%); }
+  .update-read { display: inline-flex; gap: 0.45rem; align-items: center; justify-content: center; width: 100%; }
+  .update-notes-card { display: grid; gap: 0.45rem; padding: 0.55rem 0.6rem; border: 1px solid rgb(255 255 255 / 12%); border-radius: 8px; }
+  .update-excerpt {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
   }
+  .update-github { display: inline-flex; gap: 0.3rem; align-items: center; color: var(--urd-color-accent, #7c5cff); }
 
   /* A dialog's own words: a question's lines and the setup wizard's welcome, muted under the heading */
   .dialog-line {

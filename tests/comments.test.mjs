@@ -70,11 +70,11 @@ function commentsOf(file, src = readFileSync(file, 'utf8')) {
   // A Svelte file: its scripts through the parser, its styles and markup by pattern.
   const found = [];
   let markup = src;
-  for (const m of src.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)) {
+  for (const m of src.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script[^>]*>/gi)) {
     found.push(...scriptComments(m[1], m.index + m[0].indexOf(m[1])));
     markup = markup.replace(m[0], ' '.repeat(m[0].length));
   }
-  for (const m of src.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)) {
+  for (const m of src.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style[^>]*>/gi)) {
     found.push(...patternComments(m[1], CSS_COMMENT).map((c) => ({ ...c, at: c.at + m.index + m[0].indexOf(m[1]) })));
     markup = markup.replace(m[0], ' '.repeat(m[0].length));
   }

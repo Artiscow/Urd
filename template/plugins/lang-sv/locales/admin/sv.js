@@ -399,7 +399,6 @@ export default {
     'update.current': 'Installerad: Urd {version}',
     'update.summary': '{writes} filer skrivs, {deletes} raderas',
     'update.atomGroup.title': 'Motorn, skalen och HTML-skalen hör ihop och byts alltid i samma commit',
-    'update.aboutVersion': 'Om {target}',
     'update.upToDate': 'Sidan kör senaste Urd-versionen',
     'update.headersTitle': 'Säkerhetsheaders',
     'update.atomTitle': 'Motorfiler (byts samlat)',

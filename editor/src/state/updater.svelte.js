@@ -3,6 +3,7 @@
  */
 import { ta, taApiError } from '$engine/i18n.js';
 import { awaitServed, deployTargets } from '../lib/deploy-wait.js';
+import { TEST_CASES, testUpdate, runsLocally } from '../lib/test-update.js';
 import { shellState } from './shell.svelte.js';
 
 /**
@@ -108,12 +109,12 @@ let updateInfo = $state(null);
 let updateError = $state(null);
 
 /** A newer Urd is out, as the last check reported; its version is `updateTarget`. */
-const updateAvailable = $derived(Boolean(updateInfo && !updateInfo.upToDate));
+const updateAvailable = $derived(Boolean(updateInfo && !updateInfo.upToDate && !updateInfo.test));
 
 const updateTarget = $derived(updateInfo?.target ?? '');
 
 /** The site runs the latest Urd, and its `_headers` can be brought up to that version's, as the check offers. */
-const headersOffered = $derived(Boolean(updateInfo?.upToDate && ['unedited', 'added'].includes(updateInfo.headers?.state)));
+const headersOffered = $derived(Boolean(updateInfo?.upToDate && !updateInfo.test && ['unedited', 'added'].includes(updateInfo.headers?.state)));
 
 let updateBusy = $state(false);
 
@@ -122,6 +123,26 @@ let updateChecking = $state(false);
 
 /** Optional files the owner keeps their own version of, outside the engine atom group alone. */
 let updateSkip = $state(new Set());
+
+/** The test update's case, shown on the local server, which has no functions. */
+let updateTestCase = $state(TEST_CASES[0]);
+
+/** The test update made from the local site's own version and `_headers`. */
+async function localTestUpdate() {
+  const [site, headers] = await Promise.all([
+    fetch('/urd.json', { cache: 'no-store' }).then((res) => res.json()).catch(() => null),
+    fetch('/_headers', { cache: 'no-store' }).then((res) => (res.ok ? res.text() : '')).catch(() => ''),
+  ]);
+  return testUpdate(updateTestCase, { engine: site?.engine ?? '0.0.0', headers, notes: ta('update.test.notes'), name: ta('update.test.name') });
+}
+
+/** Another case of the test update, put in the shown one's place, so the panel and its choice stay where they are. */
+async function setUpdateTestCase(kind) {
+  if (!TEST_CASES.includes(kind) || !updateInfo?.test) return;
+  updateTestCase = kind;
+  updateInfo = await localTestUpdate();
+  updateSkip = new Set();
+}
 
 /** The check on its way, which a second call joins instead of starting another. */
 let checkRun = null;
@@ -137,8 +158,8 @@ async function runUpdateCheck() {
   updateInfo = null;
   try {
     const res = await fetch('/api/github/update');
-    const data = await res.json().catch(() => null);
-    if (res.ok) {
+    const data = runsLocally(res.status, res.headers.get('x-urd-local'), location.hostname) ? await localTestUpdate() : await res.json().catch(() => null);
+    if (res.ok || data?.test) {
       updateInfo = data;
       updateSkip = new Set();
     } else {
@@ -177,6 +198,8 @@ export const updaterState = {
   get updateBusy() { return updateBusy; },
   set updateBusy(v) { updateBusy = v; },
   get updateSkip() { return updateSkip; },
+  get updateTestCase() { return updateTestCase; },
+  setUpdateTestCase,
   set updateSkip(v) { updateSkip = v; },
   loadUpdateCheck,
 };

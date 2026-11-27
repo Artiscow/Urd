@@ -8,7 +8,13 @@
   import EmptyState from '../lib/rows/EmptyState.svelte';
   import ErrorLine from '../lib/rows/ErrorLine.svelte';
   import ReleaseNotes from '../lib/ReleaseNotes.svelte';
-  import { releaseLabel } from '../lib/release-notes.js';
+  import ReadingWindow from '../lib/ReadingWindow.svelte';
+  import Choice from '../lib/Choice.svelte';
+  import { TEST_CASES } from '../lib/test-update.js';
+  import HeadersWindow from './update/HeadersWindow.svelte';
+  import { releaseLabel, parseNotes, plainText } from '../lib/release-notes.js';
+  import { headerChanges, keptWords, handEdits } from '../lib/headers-words.js';
+  import { changeText, releaseDate } from '../lib/headers-text.js';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const auth = $derived(ed.auth);
@@ -49,6 +55,27 @@
   const headersWritten = $derived(['unedited', 'added'].includes(headers?.state));
   /** The template's `_headers` to copy by hand, where the update leaves the site's file as it is. */
   const headersByHand = $derived(headersWritten ? null : headers?.state ? (headers.state === 'edited' ? headers.text : null) : headers?.upstream ?? null);
+  /** What the headers window reads: the check's, or the template's text alone, which an updater without the plan sends. */
+  const headersView = $derived(headers?.state ? headers : headersByHand ? { state: 'edited', text: headersByHand, added: [] } : null);
+  /** The check sent the site's file and the release it came from, so the headers read in words. */
+  const headersWorded = $derived(typeof headers?.site === 'string' && typeof headers?.from === 'string');
+  /** The card's lines: what changes, and how many of the owner's additions are kept; by hand, what the new file brings. */
+  const headersSummary = $derived(!headersWorded ? [] : headersWritten ? headerChanges(headers.site, headers.text) : headersByHand ? headerChanges(headers.from, headers.text) : []);
+  /** The by-hand card stands only where there is something to do: edits to make, a site without the file, or a file that cannot be read in words. */
+  const handNeeded = $derived(Boolean(headersByHand) && (!headersWorded || handEdits(headers.from, headers.text, headers.site).length > 0));
+  const keptCount = $derived(headersWritten ? keptWords(headers.added).length : 0);
+  /** The update's buttons answer a publisher, or anyone in the test update the local server shows. */
+  const mayUpdate = $derived(Boolean(auth?.allowed || updateInfo?.test));
+  /** The window open over the editor: the release notes or the security headers. */
+  let reading = $state(null);
+  /** The notes' first paragraph, the card's short version of them. */
+  const excerpt = $derived.by(() => {
+    const para = parseNotes(updateInfo?.notes ?? '').find((block) => block.kind === 'para');
+    return para ? plainText(para.inline) : '';
+  });
+  const released = $derived(releaseDate(updateInfo?.release?.date));
+  const ADDS = new Set(['added', 'sourcesAdded']);
+  const TAKES = new Set(['removed', 'sourcesRemoved']);
 
   function toggleUpdateSkip(path) {
     const next = new Set(ed.updateSkip);
@@ -80,6 +107,10 @@
       cancelLabel: ta('confirm.cancel'),
     });
     if (!ok) return;
+    if (updateInfo.test) {
+      setStatus(ta('update.test.wrote'), 'ok');
+      return;
+    }
     ed.updateBusy = true;
     setStatus(ta('update.running', { target: updateInfo.target }));
     try {
@@ -125,6 +156,10 @@
       cancelLabel: ta('confirm.cancel'),
     });
     if (!ok) return;
+    if (updateInfo.test) {
+      setStatus(ta('update.test.wrote'), 'ok');
+      return;
+    }
     ed.updateBusy = true;
     setStatus(ta('update.headersRunning'));
     let check = false;
@@ -173,6 +208,11 @@
     <ErrorLine text={updateError} />
     <button class="ghost" onclick={loadUpdateCheck}>{ta('update.retry')}</button>
   {:else if updateInfo}
+    {#if updateInfo.test}
+      <!-- The test update on the local server, and the case it shows -->
+      <Choice label={ta('update.test.case')} title={ta('update.test.tip')} value={ed.updateTestCase}
+        options={TEST_CASES.map((kind) => [kind, ta(`update.test.case.${kind}`)])} onchange={(kind) => ed.setUpdateTestCase(kind)} />
+    {/if}
     <div class="update-versions">
       <span class="update-from">{ta('update.current', { version: updateInfo.current })}</span>
       {#if !updateInfo.upToDate}
@@ -188,50 +228,76 @@
     {:else if updateInfo.release?.name}
       <p class="update-release">{releaseLabel(updateInfo.release.name, updateInfo.target)}</p>
     {/if}
-    <!-- The site's new _headers: what of the owner's own it keeps, and the whole file folded away -->
-    {#snippet headersFile()}
-      {#if headers.added?.length}
-        <SubHeading text={ta('update.headersKept')} />
-        <ul class="update-kept">{#each headers.added as line (line)}<li><code>{line}</code></li>{/each}</ul>
+    <!-- A file's path, free to break after each slash -->
+    {#snippet pathText(path)}{#each path.split('/') as part, i (i)}{#if i}/<wbr />{/if}{part}{/each}{/snippet}
+    <!-- A headers card's lines: the first two changes in words, how many more, and how many of the owner's additions are kept -->
+    {#snippet headersLines()}
+      {#if headersSummary.length || keptCount}
+        <ul class="update-said">
+          {#each headersSummary.slice(0, 2) as change, i (i)}
+            <li><span class="update-said-mark" class:update-said-add={ADDS.has(change.kind)} aria-hidden="true">{@html ADDS.has(change.kind) ? ICONS.plus : TAKES.has(change.kind) ? ICONS.minus : ICONS.pencil}</span><span>{changeText(change)}</span></li>
+          {/each}
+          {#if headersSummary.length > 2}<li class="update-said-more">{ta('update.headersMore', { n: headersSummary.length - 2 })}</li>{/if}
+          {#if keptCount}
+            <li><span class="update-said-mark update-said-kept" aria-hidden="true">{@html ICONS.check}</span><span>{ta(keptCount === 1 ? 'update.headersKeptCount.one' : 'update.headersKeptCount', { n: keptCount })}</span></li>
+          {/if}
+        </ul>
       {/if}
-      <Fold id="headers-file" surface="update" title={ta('update.headersFile')} tip={ta('update.headersAuto')}>
-        <pre class="update-headers">{headers.text}</pre>
-      </Fold>
+    {/snippet}
+    <!-- The security headers the update writes: the first changes in words, what of the owner's is kept, and the window that reads them all -->
+    {#snippet headersCard(withKeep)}
+      <div class="update-headers-card">
+        <div class="update-row">
+          <span class="update-name" class:skipped={withKeep && ed.updateSkip.has('_headers')}>{ta('update.headersTitle')}</span>
+          {#if withKeep}
+            <span class="update-flags">
+              <input type="checkbox" checked={ed.updateSkip.has('_headers')}
+                onchange={() => toggleUpdateSkip('_headers')}
+                title={ta('update.keepMine.title')} aria-label={ta('update.keepMine')} />
+            </span>
+          {/if}
+        </div>
+        {@render headersLines()}
+        <button type="button" class="ghost update-read" onclick={() => (reading = 'headers')}>{@html ICONS.expand}{ta('update.seeChanges')}</button>
+        {#if !withKeep}
+          <button class="primary update-run" onclick={runHeaders}
+            disabled={ed.updateBusy || !mayUpdate}
+            title={mayUpdate ? undefined : ta('tip.history.needsAccess')}>{ta('update.headersRun')}</button>
+        {/if}
+      </div>
     {/snippet}
     {#if updateInfo.upToDate}
       <EmptyState text={ta('update.upToDate')} />
-      {#if headersWritten}
-        <!-- The latest Urd with the site's _headers behind its version's: offered on its own, marked -->
-        <div class="update-headers-card">
-          <SubHeading text={ta('update.headersTitle')} />
-          {@render headersFile()}
-          <button class="primary update-run" onclick={runHeaders}
-            disabled={ed.updateBusy || !auth?.allowed}
-            title={auth?.allowed ? undefined : ta('tip.history.needsAccess')}>{ta('update.headersRun')}</button>
-        </div>
-      {/if}
+      <!-- The latest Urd with the site's _headers behind its version's: offered on its own -->
+      {#if headersWritten}{@render headersCard(false)}{/if}
     {:else}
       <p class="update-summary">{ta('update.summary', {
         writes: updateInfo.changes.filter((c) => c.action === 'write').length + (headersWritten ? 1 : 0),
         deletes: updateInfo.changes.filter((c) => c.action === 'delete').length,
       })}</p>
       {#if updateInfo.notes}
-        <!-- The release's notes, written in Markdown on GitHub, drawn with their headings, lists and folds -->
-        <Fold id="notes" surface="update" title={ta('update.aboutVersion', { target: updateInfo.target })}>
-          <ReleaseNotes text={updateInfo.notes} />
-        </Fold>
+        <!-- The release's notes: their first paragraph, and the window that reads them whole -->
+        <section class="update-notes-card">
+          <SubHeading text={ta('update.whatsNew')} />
+          {#if excerpt}<p class="update-excerpt">{excerpt}</p>{/if}
+          <button type="button" class="ghost update-read" onclick={() => (reading = 'notes')}>{@html ICONS.book}{ta('update.readNotes')}</button>
+        </section>
       {/if}
-      {#if headersByHand}
-        <!-- The template's _headers where the owner changed the site's beyond adding to its rules, to copy by hand: marked as a warning while closed -->
-        <Fold id="headers" surface="update" title={ta('update.headersTitle')} tip={ta('update.headersByHand')}>
-          {#snippet value()}<span class="update-warn">{@html ICONS.warn}</span>{/snippet}
-          <pre class="update-headers">{headersByHand}</pre>
-        </Fold>
+      {#if handNeeded}
+        <!-- The security headers the owner changes by hand, as their file has rules of its own: what the new file brings, and the window with the steps -->
+        <div class="update-headers-card update-headers-hand">
+          <div class="update-row">
+            <span class="update-name">{ta('update.headersTitle')}</span>
+            <span class="update-warn" role="img" aria-label={ta(headers?.site === null ? 'update.headersMissingShort' : 'update.headersByHandShort')} title={ta(headers?.site === null ? 'update.headersMissingShort' : 'update.headersByHandShort')}>{@html ICONS.warn}</span>
+          </div>
+          {@render headersLines()}
+          <button type="button" class="ghost update-read" onclick={() => (reading = 'headers')}>{@html ICONS.expand}{ta('update.seeByHand')}</button>
+        </div>
       {/if}
       <!-- Hand-edited engine files stand in view; the rest of the atom group is one swap, folded away. -->
       {#each updateInfo.changes.filter((c) => c.atom && c.conflict) as c (c.path)}
         <div class="update-row">
-          <span class="update-path" title={c.path}>{c.path}</span>
+          <span class="update-path">{@render pathText(c.path)}</span>
           <span class="update-flags">
             {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
             <span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>
@@ -241,33 +307,27 @@
       <Fold id="engine" surface="update" title={ta('update.atomTitle')} tip={ta('update.atomGroup.title')} value={String(updateInfo.changes.filter((c) => c.atom).length)}>
         {#each updateInfo.changes.filter((c) => c.atom && !c.conflict) as c (c.path)}
           <div class="update-row">
-            <span class="update-path" title={c.path}>{c.path}</span>
+            <span class="update-path">{@render pathText(c.path)}</span>
             {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
           </div>
         {/each}
       </Fold>
+      <!-- The update itself under the engine files, above the optional files, which may run long -->
+      <button class="primary update-run" onclick={runUpdate}
+        disabled={ed.updateBusy || !mayUpdate}
+        title={mayUpdate ? ta('update.run.title') : ta('tip.history.needsAccess')}>
+        {ta('update.run', { target: updateInfo.target })}
+      </button>
       {#if headersWritten || updateInfo.changes.some((c) => !c.atom)}
         <div class="ctl-row update-opt-head">
           <SubHeading text={ta('update.optionalTitle')} />
           <span class="mini-label">{ta('update.keepMine')}</span>
         </div>
-        {#if headersWritten}
-          <!-- The site's _headers, written by the update as the owner never edited it or only added to it: first among the optional files, marked -->
-          <div class="update-headers-card">
-            <div class="update-row">
-              <span class="update-name" class:skipped={ed.updateSkip.has('_headers')}>{ta('update.headersTitle')}</span>
-              <span class="update-flags">
-                <input type="checkbox" checked={ed.updateSkip.has('_headers')}
-                  onchange={() => toggleUpdateSkip('_headers')}
-                  title={ta('update.keepMine.title')} aria-label={ta('update.keepMine')} />
-              </span>
-            </div>
-            {@render headersFile()}
-          </div>
-        {/if}
+        <!-- The site's _headers, written by the update as the owner never edited it or only added to it: first among the optional files -->
+        {#if headersWritten}{@render headersCard(true)}{/if}
         {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}
           <div class="update-row">
-            <span class="update-path" class:skipped={ed.updateSkip.has(c.path)} title={c.path}>{c.path}</span>
+            <span class="update-path" class:skipped={ed.updateSkip.has(c.path)}>{@render pathText(c.path)}</span>
             <span class="update-flags">
               {#if c.action === 'delete'}<span class="chip">{ta('update.actionDelete')}</span>{/if}
               {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
@@ -278,12 +338,28 @@
           </div>
         {/each}
       {/if}
-      <button class="primary update-run" onclick={runUpdate}
-        disabled={ed.updateBusy || !auth?.allowed}
-        title={auth?.allowed ? ta('update.run.title') : ta('tip.history.needsAccess')}>
-        {ta('update.run', { target: updateInfo.target })}
-      </button>
     {/if}
+  {/if}
+  {#if reading === 'notes' && updateInfo?.notes}
+    <ReadingWindow title={releaseLabel(updateInfo.release?.name, updateInfo.target)} onclose={() => (reading = null)}>
+      {#snippet lead()}
+        {#if released}<span>{ta('update.notes.released', { date: released })}</span>{/if}
+        {#if updateInfo.release?.url}<a class="update-github" href={updateInfo.release.url} target="_blank" rel="noopener noreferrer">{ta('update.notes.onGitHub')}{@html ICONS.external}</a>{/if}
+      {/snippet}
+      <ReleaseNotes text={updateInfo.notes} large />
+      {#snippet foot(close)}
+        <button type="button" class="ghost" onclick={() => close()}>{ta('ui.close')}</button>
+        {#if !updateInfo.upToDate}
+          <button type="button" class="primary" disabled={ed.updateBusy || !mayUpdate} title={mayUpdate ? undefined : ta('tip.history.needsAccess')} onclick={() => close(runUpdate)}>{ta('update.run', { target: updateInfo.target })}</button>
+        {/if}
+      {/snippet}
+    </ReadingWindow>
+  {/if}
+  {#if reading === 'headers' && headersView}
+    <HeadersWindow headers={headersView} onclose={() => (reading = null)}
+      primary={!headersWritten ? null : updateInfo.upToDate
+        ? { label: ta('update.headersRun'), run: runHeaders, disabled: ed.updateBusy || !mayUpdate, title: mayUpdate ? undefined : ta('tip.history.needsAccess') }
+        : { label: ta('update.run', { target: updateInfo.target }), run: runUpdate, disabled: ed.updateBusy || !mayUpdate, title: mayUpdate ? undefined : ta('tip.history.needsAccess') }} />
   {/if}
   <!-- The media files at the root of media/, and the tidy that moves them into the folders of their kind, while there is something to tidy -->
   {#if ed.mediaRootCount}

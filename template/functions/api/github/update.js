@@ -5,7 +5,7 @@ import { gh, ghGraphql, cleanBase64, commitTree, triggerDeploy } from '../../_li
 import { requirePublisher } from '../../_lib/auth.js';
 import { isPageIndexCopy } from '../../_lib/guard.js';
 import { planUpdate, highestVersionTag, isOlderTag, VERSION_TAG_RE, chunkEntries, blobBatch, travelsAsBlob } from '../../_lib/update-plan.js';
-import { planHeaders, writesHeaders } from '../../_lib/update-headers.js';
+import { planHeaders, writesHeaders, closestRelease } from '../../_lib/update-headers.js';
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -139,18 +139,19 @@ async function headersOf(token, config, state) {
   const texts = tags.map((tag, i) => textOf(data?.template?.[`t${i}`]));
   // A full page of tags may leave releases out, and a release not read may be the closest one: then only an exact match is written.
   const complete = listed.length < 100 && texts.every((text) => text !== null);
-  return planHeaders({
-    site: textOf(data?.site?.s),
-    target: texts[tags.indexOf(state.target)] ?? null,
-    released: [...new Set(texts.filter((text) => text !== null))],
-    complete,
-  });
+  const site = textOf(data?.site?.s);
+  const released = [...new Set(texts.filter((text) => text !== null))];
+  const plan = planHeaders({ site, target: texts[tags.indexOf(state.target)] ?? null, released, complete });
+  if (plan.state === 'current') return plan;
+  // The panel's words: the site's file, the release it is closest to, and the file's page to edit on GitHub.
+  const branch = config.branch.split('/').map(encodeURIComponent).join('/');
+  return { ...plan, site, from: closestRelease(site, released), edit: site === null ? null : `https://github.com/${config.repo}/edit/${branch}/${prefix}_headers` };
 }
 
 /**
  * The template repository's release of a version: its name, its page where that is on github.com, and its notes.
  * Null where there is none or it cannot be read.
- * @returns {Promise<{name: string|null, url: string|null, notes: string|null}|null>}
+ * @returns {Promise<{name: string|null, url: string|null, notes: string|null, date: string|null}|null>}
  */
 async function releaseOf(token, templateRepo, tag) {
   try {
@@ -164,6 +165,7 @@ async function releaseOf(token, templateRepo, tag) {
       name: typeof release.name === 'string' && release.name.trim() ? release.name.trim().slice(0, 200) : null,
       url,
       notes: typeof release.body === 'string' && release.body.trim() ? release.body.slice(0, 20000) : null,
+      date: typeof release.published_at === 'string' && !Number.isNaN(Date.parse(release.published_at)) ? release.published_at : null,
     };
   } catch {
     return null;
@@ -190,7 +192,7 @@ export async function onRequestGet({ request, env }) {
       return json({
         current: state.engine, target: state.target, head: state.head, upToDate: true, changes: [],
         ...(writesHeaders(headers?.state) ? { headers } : {}),
-        release: installed && { name: installed.name, url: installed.url },
+        release: installed && { name: installed.name, url: installed.url, date: installed.date },
       });
     }
     const { changes, upToDate } = planUpdate(state.baselineTree, state.targetTree, state.userTree);
@@ -198,7 +200,7 @@ export async function onRequestGet({ request, env }) {
     // The target's release (optional): its name and page, and its notes.
     const offered = await releaseOf(token, config.templateRepo, state.target);
 
-    return json({ current: state.engine, target: state.target, head: state.head, upToDate, changes, headers, notes: offered?.notes ?? null, release: offered && { name: offered.name, url: offered.url } });
+    return json({ current: state.engine, target: state.target, head: state.head, upToDate, changes, headers, notes: offered?.notes ?? null, release: offered && { name: offered.name, url: offered.url, date: offered.date } });
   } catch (err) {
     if (err.code) return json({ error: err.message, code: err.code, tag: err.tag, repo: err.repo, target: err.target, detail: err.detail }, 502);
     console.error('Urd update check:', err.message);

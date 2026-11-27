@@ -27,7 +27,7 @@ cd Urd
 # Se nettsiden lokalt (ingen Node nødvendig):
 python3 dev-server.py 8000
 # åpne http://localhost:8000/admin
-# dev-server.py serverer template/ med caching AV: uten den gjetter nettleseren fil-ferskhet og forhåndsvisningens motorfiler blir hengende igjen selv ved hard reload. Selve serveren er template/dev-server.py, som hvert nettsted får med malen (kjøres fra nettstedets mappe der); rotfilen starter den. En vanlig `python3 -m http.server` beholder gamle motorfiler til nettleserens cache tømmes. Serveren svarer bare denne maskinen og aldri en sti som starter med punktum (nettstedets .dev.vars og .git/ står i samme mappe); `--lan` deler den på nettverket, for å åpne siden på en telefon på samme Wi-Fi.
+# dev-server.py serverer template/ med caching AV: uten den gjetter nettleseren fil-ferskhet og forhåndsvisningens motorfiler blir hengende igjen selv ved hard reload. Selve serveren er template/dev-server.py, som hvert nettsted får med malen (kjøres fra nettstedets mappe der); rotfilen starter den. En vanlig `python3 -m http.server` beholder gamle motorfiler til nettleserens cache tømmes. Serveren svarer bare denne maskinen og aldri en sti som starter med punktum (nettstedets .dev.vars og .git/ står i samme mappe); `--lan` deler den på nettverket, for å åpne siden på en telefon på samme Wi-Fi. Hvert svar bærer `X-Urd-Local` (en eldre server, eller en åpnet som localhost, kjennes på navnet), og admins Oppdatering-panel viser da en testoppdatering laget av nettstedets egne filer (`lib/test-update.js`), i tre tilfeller, som ikke skriver noe.
 
 # Editor-utvikling (krever Node):
 cd editor

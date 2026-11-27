@@ -63,7 +63,7 @@ function adminRules() {
   const walk = (dir) => readdirSync(dir).flatMap((name) => (statSync(dir + name).isDirectory() ? walk(`${dir}${name}/`) : [dir + name]));
   const sheets = [['app.css', CSS]];
   for (const file of walk(src).filter((f) => f.endsWith('.svelte'))) {
-    const style = readFileSync(file, 'utf8').match(/<style[^>]*>([\s\S]*?)<\/style>/);
+    const style = readFileSync(file, 'utf8').match(/<style\b[^>]*>([\s\S]*?)<\/style[^>]*>/i);
     if (style) sheets.push([file.slice(src.length), style[1].replace(/\/\*[\s\S]*?\*\//g, '')]);
   }
   return sheets.flatMap(([file, css]) => [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body]) => ({ file, selector: selector.trim().replace(/\s+/g, ' '), body })));

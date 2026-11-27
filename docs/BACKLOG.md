@@ -156,8 +156,7 @@ An entry inherits the number of the backlog item the work belongs under, plus on
     Done when: a theme made from own colours in Urd settings colours the whole admin and survives a reload, and a theme whose text fails AA contrast is flagged.
   - [ ] A complete «Strip under the top bar» preset (moved from Suggestions 12 November 2026): a fifth admin design beside Floating menu, Small panels, Side panel and One column, built on the strip of panels under the top bar. The original: «A complete "Strip under the top bar" preset».
     Done when: the preset stands among the admin designs in Urd settings with its picture and its description in nb, en-GB and tr, and a press sets every part of it at once.
-  - [ ] The release notes in the Updates panel (moved from Suggestions 12 November 2026): the notes of a new Urd stand as plain text today; they are drawn with their headings, lists, links and folds, and open in a larger window to read. The original: «Admins Update panel to support syntax for when release notes are included - possibly possibility to open the release notes in a larger window».
-    Done when: a release note with headings, lists, links and folds reads formatted in the Updates panel and opens in a window of its own, and a script or a picture from another host in the note is never drawn.
+  - [x] The release notes in the Updates panel DELIVERED 0.7.0.93 and 0.7.10.33 (27 November 2026)
 - [x] **0.7.12 Forankringsrunden** DELIVERED 0.7.12 (22 September 2026)
 - [x] **0.7.14 Engelsk-renskingen** DELIVERED 0.7.14.1-.18 (30 August-11 September 2026)
 - [x] **0.7.15 Navigation bar sizing** DELIVERED 0.7.15 and 0.7.15.2 (17-18 September 2026)
@@ -588,10 +587,13 @@ An entry inherits the number of the backlog item the work belongs under, plus on
   Done when: a menu laid out in the editor from its own parts stands anywhere on the page, works by the keyboard and on touch, and survives an Urd update.
 
 ## Bugs, (bad) functions and stuff that needs fixing
-- [ ] Guidelines look shabby
+- [ ] Guidelines look shabby - use /design
 - [ ] Add "Cancel" button to image editor (as well as the already "X"). The chancel button should be in bottom right corner, next to "Done"
 - [ ] The Updates panel offers «Keep mine» on a new file under `functions/_lib/` that a function the update writes imports; kept, the import does not resolve and the site's functions stop deploying (push review of 0.7.0.110p, 27 November 2026). The plan needs to know which optional files go together.
   Done when: a new `_lib` module that a written function imports is updated with it, and «Keep mine» on it is not offered alone.
+- [ ] "Expand all group" button needs to be a bit larger
+- [ ] Add button to hide left hand panels in the left hand panels
+- [ ] "Fold the order away" button - the arrows need to be centered
 
 ## Suggestions, Ideas and Wishes
 - [ ] Static image as background - while you scroll, the image stays still

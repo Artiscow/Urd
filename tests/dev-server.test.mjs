@@ -55,6 +55,12 @@ test('the test server: this machine\'s names only, no dot path, and loopback add
     for (const host of [`evil.example:${port}`, 'evil.example', `192.168.1.10:${port}`, `localhost.evil.example:${port}`]) {
       assert.equal(await get('127.0.0.1', port, '/', host), 403, `Host «${host}»`);
     }
+    const local = await new Promise((resolve) => {
+      const req = request({ host: '127.0.0.1', port, path: '/api/github/update', headers: { host: `localhost:${port}` } }, (res) => { res.resume(); resolve([res.statusCode, res.headers['x-urd-local']]); });
+      req.on('error', () => resolve(null));
+      req.end();
+    });
+    assert.deepEqual(local, [404, '1'], 'the update check finds no function here, and the answer says it comes from this server, so the admin shows a test update');
     const v6 = await get('::1', port, '/', `[::1]:${port}`);
     assert.ok(v6 === 200 || v6 === null, 'the IPv6 loopback answers where the machine has one');
   } finally {

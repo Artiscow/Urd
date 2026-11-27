@@ -9,6 +9,7 @@ linger even across a hard reload. With this server a plain reload always
 holds.
 
 It answers this machine only (localhost), and never a path segment that starts with a dot, since the site's secrets (.dev.vars) and the repository (.git/) stand in the same folder.
+Every answer says it comes from this server (X-Urd-Local), and the admin's Updates panel then shows a test update, as there are no functions here.
 --lan shares it on the network, for a phone on the same Wi-Fi.
 
 Run from the site's folder (in the Urd repo, `python3 dev-server.py` from
@@ -75,7 +76,9 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         self._strip_conditional()
         super().do_HEAD()
 
+    # X-Urd-Local tells the admin it runs on this server, which has no functions: its Updates panel then shows a test update.
     def end_headers(self):
+        self.send_header('X-Urd-Local', '1')
         self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Expires', '0')

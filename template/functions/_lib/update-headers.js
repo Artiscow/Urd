@@ -157,3 +157,45 @@ export function planHeaders({ site, target, released, complete = true }) {
   const added = [...new Set(closest.additions.flatMap((a) => a.added.map(additionLabel)))];
   return { state: added.length ? 'added' : 'unedited', text: merged, added };
 }
+
+/** A text as the pieces it is compared by: each plain line, and each header line's rule, name, directives and words. */
+function piecesOf(text) {
+  const pieces = [];
+  for (const line of readLines(text).lines) {
+    if (!line.key) {
+      pieces.push(`L|${line.line}`);
+      continue;
+    }
+    pieces.push(`K|${line.key}`);
+    for (const [name, ...words] of directivesOf(line.value)) {
+      pieces.push(`K|${line.key}|${name.toLowerCase()}`);
+      for (const word of words) pieces.push(`K|${line.key}|${name.toLowerCase()}|${word}`);
+    }
+  }
+  return pieces;
+}
+
+/**
+ * The release text closest to a site's file, by the pieces one holds and the other lacks; of two equally close, the older. Null where none is given.
+ * @param {string|null} site
+ * @param {string[]} released The releases' texts, newest first
+ * @returns {string|null}
+ */
+export function closestRelease(site, released) {
+  if (typeof site !== 'string') return released[0] ?? null;
+  const own = piecesOf(site);
+  let best = null;
+  let bestDistance = Infinity;
+  for (const text of released) {
+    const left = [...own];
+    let distance = 0;
+    for (const piece of piecesOf(text)) {
+      const at = left.indexOf(piece);
+      if (at === -1) distance += 1;
+      else left.splice(at, 1);
+    }
+    distance += left.length;
+    if (distance <= bestDistance) [best, bestDistance] = [text, distance];
+  }
+  return best;
+}
