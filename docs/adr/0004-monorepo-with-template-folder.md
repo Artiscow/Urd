@@ -1,6 +1,6 @@
 # ADR-0004: Monorepo with a template folder, and a template repo synced from it
 
-**Status:** accepted (July 2026); the decision on the split amended August 2026 (the split carried out at the 0.6 phase release), earlier text in [amended/](amended/0004-monorepo-with-template-folder-until-2026-10-11.md). How a release is run is described in [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md#releases-automated-from-069).
+**Status:** accepted (July 2026); the decision on the split amended August 2026 (the split carried out at the 0.6 phase release), earlier text in [amended/](amended/0004-monorepo-with-template-folder.md). How a release is run is described in [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md#releases-automated-from-069).
 
 ## Context
 

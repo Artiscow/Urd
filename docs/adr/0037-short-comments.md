@@ -1,7 +1,7 @@
 # ADR-0037: Short comments
 
 Date: 26 November 2026
-Status: Accepted. Decided on 26 November 2026 for the URGENT item on comments; it widens to all code a site runs the limit [ADR-0002](0002-svelte-for-editor-readable-js-for-engine.md)'s addendum of 23 November 2026 set for the modules a visitor's page loads, whose notes it keeps. Decision 6 amended 27 November 2026 (the test holds every file the rule covers), earlier text in [amended/](amended/0037-short-comments-until-2026-11-27.md).
+Status: Accepted. Decided on 26 November 2026 for the URGENT item on comments; it widens to all code a site runs the limit [ADR-0002](0002-svelte-for-editor-readable-js-for-engine.md)'s addendum of 23 November 2026 set for the modules a visitor's page loads, whose notes it keeps. Decision 6 amended 27 November 2026 (the test holds every file the rule covers), earlier text in [amended/](amended/0037-short-comments.md).
 
 ## Context
 

@@ -1,6 +1,6 @@
 # ADR-0008: The help chip rule («?» on everything with special functions)
 
-Date: 19 July 2026. Status: accepted (v0.6 M3); the consequence on the card's texts amended 11 September 2026 (translation keys, ADR-0012 and ADR-0022), earlier text in [amended/](amended/0008-help-chip-rule-until-2026-10-11.md); decision 2 amended 10 November 2026 (a block's chip stands on its toolbar), earlier text in [amended/](amended/0008-help-chip-rule-until-2026-11-10.md). How the chip is attached is described in [ARCHITECTURE.md](../ARCHITECTURE.md) and [template/plugins/README.md](../../template/plugins/README.md).
+Date: 19 July 2026. Status: accepted (v0.6 M3); decision 2 amended 10 November 2026 (a block's chip stands on its toolbar), earlier text in [amended/](amended/0008-help-chip-rule.md). How the chip is attached is described in [ARCHITECTURE.md](../ARCHITECTURE.md) and [template/plugins/README.md](../../template/plugins/README.md).
 
 ## Context
 

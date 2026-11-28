@@ -8,7 +8,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   planUpdate, highestVersionTag, isOlderTag, VERSION_TAG_RE, isAtomPath, chunkEntries, blobBatch, BLOB_BATCH, BLOB_ROOM, travelsAsBlob,
+  importsOf, resolveImport, siteScriptPaths, tieChanges, heldNeed,
 } from '../template/functions/_lib/update-plan.js';
+import { keptAfter, pressedWith } from '../editor/src/lib/update-keep.js';
 import { engineImport } from './_engine.mjs';
 
 const { parseEngineVersion } = await engineImport('plugins.js');
@@ -167,9 +169,9 @@ test('blobBatch: a batch of the files the site does not hold, and all of them wi
   assert.equal(blobBatch(paths, new Set(paths.slice(BLOB_ROOM + 1))).commit, false);
   assert.deepEqual(blobBatch(paths, new Set(paths)), { batch: [], copied: 40, total: 40, commit: true });
   assert.deepEqual(blobBatch([], new Set()), { batch: [], copied: 0, total: 0, commit: true });
-  // Two subrequests a file beside the call's own (about 7 copying, 16 committing) stay under the free plan's 50; the function's own count is tested below.
-  assert.ok(2 * BLOB_BATCH + 7 <= 50);
-  assert.ok(2 * BLOB_ROOM + 16 <= 50);
+  // Two subrequests a file beside the call's own (about 8 copying, 17 committing) stay under the free plan's 50; the function's own count is tested below.
+  assert.ok(2 * BLOB_BATCH + 8 <= 50);
+  assert.ok(2 * BLOB_ROOM + 17 <= 50);
 });
 
 test('travelsAsBlob: only a blob GraphQL calls text and gives whole travels inline', () => {
@@ -196,9 +198,10 @@ afterEach(() => { globalThis.fetch = realFetch; });
  * A stand-in GitHub for the updater: the site's repository at HEAD `head` holding `site` (path -> blob sha, urd.json naming `engine`), and the template's trees by tag.
  * `binary` lists the target paths GraphQL calls binary, `held` the blob shas the site's repository holds, `release` answers the template's release of a tag.
  * `headers` holds the `_headers` texts: the site's at `site`, and each tag's under `tags`; `fail` makes their GraphQL read fail.
+ * `texts` gives the target's text of a path, for the files written inline and the functions whose imports the check reads; `scripts` the site's text of a blob sha.
  */
-function updateRepo({ engine = '0.7.11', site, tags, texts = {}, binary = [], held = [], headers = {}, release = () => reply({ message: 'Not Found' }, 404) }) {
-  const seen = { calls: [], trees: [], commits: [], refs: [], blobPosts: 0 };
+function updateRepo({ engine = '0.7.11', site, tags, texts = {}, scripts = {}, binary = [], held = [], headers = {}, release = () => reply({ message: 'Not Found' }, 404) }) {
+  const seen = { calls: [], trees: [], commits: [], refs: [], blobPosts: 0, scriptReads: 0 };
   globalThis.fetch = async (url, init = {}) => {
     const u = new URL(String(url));
     const path = u.pathname;
@@ -222,6 +225,17 @@ function updateRepo({ engine = '0.7.11', site, tags, texts = {}, binary = [], he
         const template = {};
         for (const m of query.matchAll(/(t\d+): object\(expression: "([^":]+):_headers"\)/g)) template[m[1]] = typeof headers.tags?.[m[2]] === 'string' ? { text: headers.tags[m[2]] } : null;
         return reply({ data: { template, site: { s: typeof headers.site === 'string' ? { text: headers.site } : null } } });
+      }
+      if (/\bscripts: repository/.test(query)) {
+        seen.scriptReads++;
+        const found = {};
+        for (const m of query.matchAll(/(s\d+): object\(oid: "([^"]+)"\)/g)) found[m[1]] = scripts[m[2]] === null ? null : typeof scripts[m[2]] === 'object' ? scripts[m[2]] : { text: scripts[m[2]] ?? '', isBinary: false, isTruncated: false };
+        return reply({ data: { scripts: found } });
+      }
+      if (/\bimports: repository/.test(query)) {
+        const imports = {};
+        for (const m of query.matchAll(/(i\d+): object\(expression: "[^":]+:([^"]+)"\)/g)) imports[m[1]] = { text: texts[m[2]] ?? `text of ${m[2]}` };
+        return reply({ data: { imports } });
       }
       if (query.includes('isBinary')) {
         const template = {};
@@ -490,11 +504,258 @@ test('a failed or partial read of the texts writes no _headers: the check offers
 
 test('a committing call with the most files it copies, and the headers, stays under the free plan\'s 50 subrequests', async () => {
   const designs = Array.from({ length: BLOB_ROOM }, (_, i) => `admin/designs/d${i}.webp`);
-  const tags = { 'v0.7.11': TAGS['v0.7.11'], 'v0.7.12': { ...TAGS['v0.7.12'], ...Object.fromEntries(designs.map((p, i) => [p, `design-${i}`])) } };
-  const seen = updateRepo({ site: SITE, tags, binary: designs, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
+  const tags = { 'v0.7.11': { ...TAGS['v0.7.11'], 'functions/_lib/old.js': 'old-1' }, 'v0.7.12': { ...TAGS['v0.7.12'], ...Object.fromEntries(designs.map((p, i) => [p, `design-${i}`])) } };
+  const seen = updateRepo({ site: { ...SITE, 'functions/_lib/old.js': 'old-1' }, tags, binary: designs, headers: { site: OLD_HEADERS, tags: HEADER_TAGS } });
   const res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', headers: NEW_HEADERS } }), env: UPDATE_ENV });
   assert.equal(res.status, 200);
   assert.equal(seen.blobPosts, BLOB_ROOM);
   assert.ok(headersEntry(seen), 'the headers are written in it');
+  assert.equal(seen.scriptReads, 1, 'and the site\'s scripts read for a function file it deletes');
   assert.ok(seen.calls.length + 1 <= 50, `${seen.calls.length} calls and the deploy hook`);
+});
+
+/* ---------- A function and the files it imports ---------- */
+
+test('importsOf and resolveImport: the relative modules a script names, as paths in the site', () => {
+  const text = [
+    "import { gh } from '../../_lib/github.js';",
+    'import plan from "./plan.mjs";',
+    "export { a } from '../_lib/a.js';",
+    "export * from '../_lib/b.js';",
+    "import './side.js';",
+    "const late = await import('../_lib/late.js');",
+    "import { readFileSync } from 'node:fs';",
+    "import x from 'https://example.com/x.js';",
+  ].join('\n');
+  assert.deepEqual(importsOf(text).sort(), ['../../_lib/github.js', '../_lib/a.js', '../_lib/b.js', '../_lib/late.js', './plan.mjs', './side.js']);
+  assert.equal(resolveImport('functions/api/github/update.js', '../../_lib/github.js'), 'functions/_lib/github.js');
+  assert.equal(resolveImport('functions/api/github/update.js', './plan.mjs'), 'functions/api/github/plan.mjs');
+  assert.equal(resolveImport('functions/api/a.js', './../_lib/./b.js'), 'functions/_lib/b.js');
+  assert.equal(resolveImport('functions/a.js', '../../x.js'), null, 'climbing out of the site');
+});
+
+/** A plan's changes: a written function, the new module it imports, an unchanged one it imports, the engine, and a function the update deletes. */
+const TIED = [
+  { path: 'assets/engine/0.7.12/boot.js', action: 'write', atom: true, conflict: null },
+  { path: 'functions/_lib/new.js', action: 'write', atom: false, conflict: null },
+  { path: 'functions/_lib/other.js', action: 'write', atom: false, conflict: null },
+  { path: 'functions/api/old.js', action: 'delete', atom: false, conflict: null },
+  { path: 'functions/api/pay.js', action: 'write', atom: false, conflict: 'edited' },
+  { path: 'robots.txt', action: 'write', atom: false, conflict: null },
+];
+const PAY = "import { a } from '../_lib/new.js';\nimport { b } from '../_lib/same.js';\nimport '../../assets/engine/0.7.12/boot.js';\nimport './pay.js';";
+
+test('tieChanges: a written function needs the files held back one by one among the changes that it imports, and only those', () => {
+  const tied = tieChanges(TIED, { 'functions/api/pay.js': PAY, 'functions/api/old.js': PAY, 'robots.txt': "import x from './functions/_lib/new.js';" });
+  assert.deepEqual(tied.find((c) => c.path === 'functions/api/pay.js').needs, ['functions/_lib/new.js'], 'not the unchanged module, the engine or itself');
+  assert.deepEqual(tied.filter((c) => c.needs).map((c) => c.path), ['functions/api/pay.js'], 'a deleted function and a file outside functions/ need nothing');
+  assert.deepEqual(tieChanges(TIED, {}), TIED, 'an unread text ties nothing');
+});
+
+test('heldNeed: a file a written function needs is held back only with that function', () => {
+  const tied = tieChanges(TIED, { 'functions/api/pay.js': PAY });
+  assert.equal(heldNeed(tied, ['functions/_lib/new.js']), 'functions/_lib/new.js');
+  assert.equal(heldNeed(tied, ['functions/_lib/new.js', 'functions/api/pay.js']), null, 'kept together');
+  assert.equal(heldNeed(tied, ['functions/api/pay.js']), null, 'the function kept alone writes a module nothing imports');
+  assert.equal(heldNeed(tied, ['functions/_lib/other.js', 'robots.txt']), null);
+  assert.equal(heldNeed(tied, []), null);
+});
+
+test('keptAfter: «Keep mine» on a needed file keeps the files that need it, and writing a file again writes what it needs', () => {
+  const changes = [
+    { path: 'functions/_lib/new.js' },
+    { path: 'functions/_lib/deep.js' },
+    { path: 'functions/_lib/mid.js', needs: ['functions/_lib/deep.js'] },
+    { path: 'functions/api/pay.js', needs: ['functions/_lib/mid.js', 'functions/_lib/new.js'] },
+    { path: 'functions/api/shop.js', needs: ['functions/_lib/new.js'] },
+    { path: 'robots.txt' },
+  ];
+  const sorted = (set) => [...set].sort();
+  assert.deepEqual(sorted(keptAfter(new Set(), changes, 'functions/_lib/new.js')), ['functions/_lib/new.js', 'functions/api/pay.js', 'functions/api/shop.js']);
+  assert.deepEqual(sorted(keptAfter(new Set(), changes, 'functions/_lib/deep.js')), ['functions/_lib/deep.js', 'functions/_lib/mid.js', 'functions/api/pay.js'], 'through a module that imports it');
+  assert.deepEqual(sorted(keptAfter(new Set(['robots.txt']), changes, 'functions/api/shop.js')), ['functions/api/shop.js', 'robots.txt'], 'a function is kept alone');
+  const all = new Set(changes.map((c) => c.path));
+  assert.deepEqual(sorted(keptAfter(all, changes, 'functions/api/pay.js')), ['functions/api/shop.js', 'robots.txt'], 'written again with all it needs');
+  assert.deepEqual(sorted(keptAfter(all, changes, 'functions/_lib/new.js')), sorted([...all].filter((p) => p !== 'functions/_lib/new.js')), 'a needed file is written alone');
+  assert.deepEqual(pressedWith(new Set(), changes, 'functions/_lib/new.js'), ['functions/api/pay.js', 'functions/api/shop.js'], 'the files a press keeps with it');
+  assert.deepEqual(pressedWith(all, changes, 'functions/api/pay.js'), ['functions/_lib/new.js', 'functions/_lib/deep.js', 'functions/_lib/mid.js'], 'and those it lets through with it, in the plan\'s order');
+  assert.deepEqual(pressedWith(new Set(), changes, 'robots.txt'), []);
+});
+
+test('the check ties a written function to the new module it imports, and the run refuses that module held back alone', async () => {
+  const tags = {
+    'v0.7.11': { ...TAGS['v0.7.11'], 'functions/api/pay.js': 'pay-1' },
+    'v0.7.12': { ...TAGS['v0.7.12'], 'functions/api/pay.js': 'pay-2', 'functions/_lib/new.js': 'new-1' },
+  };
+  const site = { ...SITE, 'functions/api/pay.js': 'pay-1' };
+  const texts = { 'functions/api/pay.js': "import { a } from '../_lib/new.js';" };
+  updateRepo({ site, tags, texts });
+  const check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.deepEqual(check.changes.find((c) => c.path === 'functions/api/pay.js').needs, ['functions/_lib/new.js']);
+  assert.equal(check.changes.find((c) => c.path === 'functions/_lib/new.js').needs, undefined);
+
+  let seen = updateRepo({ site, tags, texts });
+  const refused = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', skip: ['functions/_lib/new.js'] } }), env: UPDATE_ENV });
+  assert.equal(refused.status, 400);
+  assert.deepEqual(await refused.json(), { error: "The file 'functions/_lib/new.js' can only be held back together with the files it goes with", code: 'updateTiedSkip', path: 'functions/_lib/new.js' });
+  assert.equal(seen.commits.length, 0, 'nothing committed');
+
+  for (const [why, skip, written] of [
+    ['kept together', ['functions/_lib/new.js', 'functions/api/pay.js'], []],
+    ['the function kept alone', ['functions/api/pay.js'], ['functions/_lib/new.js']],
+    ['nothing kept', [], ['functions/_lib/new.js', 'functions/api/pay.js']],
+  ]) {
+    seen = updateRepo({ site, tags, texts });
+    const res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', skip } }), env: UPDATE_ENV });
+    assert.equal(res.status, 200, why);
+    const paths = seen.trees.flatMap((t) => t.tree).map((e) => e.path).filter((p) => p.startsWith('functions/'));
+    assert.deepEqual(paths.sort(), written, why);
+  }
+
+  // A check that cannot read the function's text still answers, untied; the run reads it with the rest and still refuses.
+  updateRepo({ site, tags, texts });
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => (init.body && /\bimports: repository/.test(JSON.parse(init.body).query) ? reply({ message: 'refused' }, 400) : real(url, init));
+  const untied = await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV });
+  assert.equal(untied.status, 200);
+  assert.ok((await untied.json()).changes.every((c) => !c.needs));
+  const still = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', skip: ['functions/_lib/new.js'] } }), env: UPDATE_ENV });
+  assert.equal(still.status, 400);
+  assert.equal((await still.json()).code, 'updateTiedSkip');
+});
+
+test('siteScriptPaths: the site\'s function scripts are read only where the update deletes a file one by one', () => {
+  const tree = { 'functions/api/pay.js': 'a', 'functions/_lib/x.mjs': 'b', 'functions/data.json': 'c', 'content/site.json': 'd', 'index.html': 'e' };
+  assert.deepEqual(siteScriptPaths(TIED.filter((c) => c.action === 'write'), tree), []);
+  assert.deepEqual(siteScriptPaths([{ path: 'assets/engine/0.7.11/boot.js', action: 'delete', atom: true }], tree), [], 'not for the engine swap');
+  assert.deepEqual(siteScriptPaths(TIED, tree), ['functions/_lib/x.mjs', 'functions/api/pay.js']);
+});
+
+test('tieChanges: a file deleted one by one goes with the changes whose site text imports it, and stays where the site\'s other scripts import it', () => {
+  const changes = [
+    { path: 'functions/_lib/gone.js', action: 'delete', atom: false, conflict: null },
+    { path: 'functions/_lib/old.js', action: 'delete', atom: false, conflict: null },
+    { path: 'functions/_lib/older.js', action: 'delete', atom: false, conflict: null },
+    { path: 'functions/_lib/under.js', action: 'delete', atom: false, conflict: null },
+    { path: 'functions/api/pay.js', action: 'write', atom: false, conflict: null },
+  ];
+  const site = {
+    'functions/api/pay.js': "import { a } from '../_lib/old.js';",
+    'functions/_lib/old.js': "export * from './older.js';",
+    'functions/api/mine.js': "import { g } from '../_lib/gone.js';",
+    'functions/_lib/gone.js': "import './under.js';",
+  };
+  const tied = tieChanges(changes, {}, site);
+  assert.deepEqual(tied.map((c) => c.path), ['functions/_lib/old.js', 'functions/_lib/older.js', 'functions/api/pay.js'], 'what a script outside the plan imports stays, through what it imports');
+  assert.deepEqual(tied.find((c) => c.path === 'functions/_lib/old.js').needs, ['functions/api/pay.js']);
+  assert.deepEqual(tied.find((c) => c.path === 'functions/_lib/older.js').needs, ['functions/_lib/old.js'], 'a deleted module kept imports too');
+  assert.equal(heldNeed(tied, ['functions/api/pay.js']), 'functions/api/pay.js', 'the old function kept alone loses its import');
+  assert.equal(heldNeed(tied, ['functions/api/pay.js', 'functions/_lib/old.js']), 'functions/_lib/old.js', 'and so does the module it imports');
+  assert.equal(heldNeed(tied, ['functions/api/pay.js', 'functions/_lib/old.js', 'functions/_lib/older.js']), null);
+  assert.equal(heldNeed(tied, ['functions/_lib/old.js']), 'functions/_lib/old.js', 'a deleted module kept keeps what it imports');
+  assert.equal(heldNeed(tied, ['functions/_lib/older.js']), null, 'one that imports nothing is kept alone');
+  assert.deepEqual([...keptAfter(new Set(), tied, 'functions/api/pay.js')].sort(), ['functions/_lib/old.js', 'functions/_lib/older.js', 'functions/api/pay.js']);
+  assert.deepEqual([...keptAfter(new Set(tied.map((c) => c.path)), tied, 'functions/_lib/older.js')], [], 'let through with all it needs');
+});
+
+test('the check ties a deleted module to the old function that imports it, the run refuses the function kept alone, and never deletes what the site\'s own scripts import', async () => {
+  const tags = {
+    'v0.7.11': { ...TAGS['v0.7.11'], 'functions/api/pay.js': 'pay-1', 'functions/_lib/old.js': 'old-1', 'functions/_lib/gone.js': 'gone-1' },
+    'v0.7.12': { ...TAGS['v0.7.12'], 'functions/api/pay.js': 'pay-2' },
+  };
+  const site = { ...SITE, 'functions/api/pay.js': 'pay-1', 'functions/_lib/old.js': 'old-1', 'functions/_lib/gone.js': 'gone-1', 'functions/api/mine.js': 'mine-1' };
+  const scripts = { 'pay-1': "import { a } from '../_lib/old.js';", 'mine-1': "import { g } from '../_lib/gone.js';" };
+  updateRepo({ site, tags, scripts });
+  const check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.deepEqual(check.changes.find((c) => c.path === 'functions/_lib/old.js').needs, ['functions/api/pay.js']);
+  assert.equal(check.changes.find((c) => c.path === 'functions/_lib/gone.js'), undefined, 'the owner\'s own function still imports it');
+
+  let seen = updateRepo({ site, tags, scripts });
+  const refused = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', skip: ['functions/api/pay.js'] } }), env: UPDATE_ENV });
+  assert.equal(refused.status, 400);
+  assert.deepEqual(await refused.json(), { error: "The file 'functions/api/pay.js' can only be held back together with the files it goes with", code: 'updateTiedSkip', path: 'functions/api/pay.js' });
+  assert.equal(seen.commits.length, 0);
+
+  for (const [why, skip, entries] of [
+    ['kept together', ['functions/api/pay.js', 'functions/_lib/old.js'], []],
+    ['nothing kept', [], [['functions/_lib/old.js', null], ['functions/api/pay.js', 'text of functions/api/pay.js']]],
+    ['a kept file the check could not tie', ['functions/_lib/gone.js'], [['functions/_lib/old.js', null], ['functions/api/pay.js', 'text of functions/api/pay.js']]],
+  ]) {
+    seen = updateRepo({ site, tags, scripts });
+    const res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', skip } }), env: UPDATE_ENV });
+    assert.equal(res.status, 200, why);
+    const got = seen.trees.flatMap((t) => t.tree).filter((e) => e.path.startsWith('functions/')).map((e) => [e.path, e.sha === null ? null : e.content]);
+    assert.deepEqual(got.sort(), entries, why);
+  }
+
+  // A read of the site's scripts that fails: the check answers untied, the run stops before it deletes anything.
+  updateRepo({ site, tags, scripts });
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => (init.body && /\bscripts: repository/.test(JSON.parse(init.body).query) ? reply({ message: 'refused' }, 400) : real(url, init));
+  const untied = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.ok(untied.changes.some((c) => c.path === 'functions/_lib/gone.js') && untied.changes.every((c) => !c.needs));
+  const stopped = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: UPDATE_ENV });
+  assert.equal(stopped.status, 502);
+  assert.equal((await stopped.json()).code, 'updateFailed');
+});
+
+test('tieChanges: an import written without an extension and a TypeScript function tie as the bundler resolves them', () => {
+  const changes = [
+    { path: 'functions/_lib/gone.js', action: 'delete', atom: false, conflict: null },
+    { path: 'functions/_lib/kit/index.js', action: 'delete', atom: false, conflict: null },
+    { path: 'functions/_lib/new.js', action: 'write', atom: false, conflict: null },
+    { path: 'functions/api/pay.js', action: 'write', atom: false, conflict: null },
+  ];
+  const tied = tieChanges(changes, { 'functions/api/pay.js': "import { a } from '../_lib/new';" }, {
+    'functions/api/mine.ts': "import { g } from '../_lib/gone';",
+    'functions/api/kit.js': "import { k } from '../_lib/kit';",
+  });
+  assert.deepEqual(tied.find((c) => c.path === 'functions/api/pay.js').needs, ['functions/_lib/new.js']);
+  assert.deepEqual(tied.map((c) => c.path), ['functions/_lib/new.js', 'functions/api/pay.js'], 'a TypeScript function and a folder import keep what they name');
+  assert.deepEqual(siteScriptPaths(changes, { 'functions/api/mine.ts': 'a', 'functions/api/kit.js': 'b' }), ['functions/api/kit.js', 'functions/api/mine.ts']);
+});
+
+test('the run stops where a site script cannot be read, and refuses a tie to the site\'s scripts before it copies anything', async () => {
+  const designs = Array.from({ length: BLOB_BATCH + 5 }, (_, i) => `admin/designs/d${i}.webp`);
+  const tags = {
+    'v0.7.11': { ...TAGS['v0.7.11'], 'functions/api/pay.js': 'pay-1', 'functions/_lib/old.js': 'old-1' },
+    'v0.7.12': { ...TAGS['v0.7.12'], 'functions/api/pay.js': 'pay-2', ...Object.fromEntries(designs.map((p, i) => [p, `design-${i}`])) },
+  };
+  const site = { ...SITE, 'functions/api/pay.js': 'pay-1', 'functions/_lib/old.js': 'old-1', 'functions/api/mine.js': 'mine-1' };
+  let seen = updateRepo({ site, tags, binary: designs, scripts: { 'pay-1': "import '../_lib/old.js';" } });
+  const refused = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head', skip: ['functions/api/pay.js'] } }), env: UPDATE_ENV });
+  assert.equal(refused.status, 400);
+  assert.equal((await refused.json()).code, 'updateTiedSkip');
+  assert.equal(seen.blobPosts, 0, 'nothing copied');
+
+  const unread = { 'pay-1': "import '../_lib/old.js';", 'mine-1': null };
+  updateRepo({ site, tags, binary: designs, scripts: unread });
+  const check = await (await updateCheck({ request: updateCall('GET'), env: UPDATE_ENV })).json();
+  assert.deepEqual(check.changes.find((c) => c.path === 'functions/_lib/old.js').needs, ['functions/api/pay.js'], 'the check ties what it read');
+  seen = updateRepo({ site, tags, binary: designs, scripts: unread });
+  const stopped = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: UPDATE_ENV });
+  assert.equal(stopped.status, 502);
+  assert.equal((await stopped.json()).code, 'updateFailed');
+  assert.equal(seen.blobPosts + seen.commits.length, 0, 'nothing copied or committed');
+});
+
+test('the run passes a binary site script by and stops at one whose text is cut; a written TypeScript function is read for its imports', async () => {
+  const tags = {
+    'v0.7.11': { ...TAGS['v0.7.11'], 'functions/_lib/old.js': 'old-1' },
+    'v0.7.12': { ...TAGS['v0.7.12'] },
+  };
+  const site = { ...SITE, 'functions/_lib/old.js': 'old-1', 'functions/api/mine.js': 'mine-1' };
+  let seen = updateRepo({ site, tags, scripts: { 'mine-1': { text: null, isBinary: true, isTruncated: false } } });
+  let res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: UPDATE_ENV });
+  assert.equal(res.status, 200, 'a binary script imports nothing');
+  assert.ok(seen.trees.flatMap((t) => t.tree).some((e) => e.path === 'functions/_lib/old.js' && e.sha === null));
+
+  seen = updateRepo({ site, tags, scripts: { 'mine-1': { text: "import { a } from './x.js';", isBinary: false, isTruncated: true } } });
+  res = await updateRun({ request: updateCall('POST', { body: { to: 'v0.7.12', expect: 'head' } }), env: UPDATE_ENV });
+  assert.equal(res.status, 502, 'a cut text may hide an import');
+  assert.equal(seen.commits.length, 0);
+
+  const ts = { path: 'functions/api/pay.ts', action: 'write', atom: false, conflict: null };
+  const tied = tieChanges([ts, { path: 'functions/_lib/new.ts', action: 'write', atom: false, conflict: null }], { 'functions/api/pay.ts': "import { a } from '../_lib/new';" });
+  assert.deepEqual(tied[0].needs, ['functions/_lib/new.ts']);
 });

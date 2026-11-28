@@ -1,7 +1,7 @@
 # ADR-0022: English as the canonical language, Norwegian as secondary
 
 Date: 11 September 2026
-Status: accepted; consequence 3 (the placement of the two language versions of the developer documents) amended 11 October 2026, earlier text in [amended/](amended/0022-english-canonical-norwegian-secondary-until-2026-10-11.md).
+Status: accepted; consequence 3 (the placement of the two language versions of the developer documents) amended 11 October 2026, earlier text in [amended/](amended/0022-english-canonical-norwegian-secondary.md).
 
 ## Context
 

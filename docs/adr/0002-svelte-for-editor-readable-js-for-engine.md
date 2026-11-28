@@ -1,6 +1,6 @@
 # ADR-0002: Svelte for the editor, hand-written readable JS for the engine
 
-**Status:** accepted (July 2026); the addendum's comment limit amended 26 November 2026 (a JSDoc tag's words count toward it, its type apart, [ADR-0037](0037-short-comments.md)), earlier text in [amended/](amended/0002-svelte-for-editor-readable-js-for-engine-until-2026-11-26.md)
+**Status:** accepted (July 2026); the addendum's comment limit amended 26 November 2026 (a JSDoc tag's words count toward it, its type apart, [ADR-0037](0037-short-comments.md)), earlier text in [amended/](amended/0002-svelte-for-editor-readable-js-for-engine.md)
 
 ## Context
 

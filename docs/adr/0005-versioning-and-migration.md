@@ -1,6 +1,6 @@
 # ADR-0005: Versioning and migration - the invariant
 
-**Status:** accepted (July 2026); the decisions on the pre-v1 period amended August 2026 (the phase release of v0.6), earlier text in [amended/](amended/0005-versioning-and-migration-until-2026-10-11.md). The contract's fields are in [SCHEMA.md](../SCHEMA.md#the-migration-contract).
+**Status:** accepted (July 2026); the decisions on the pre-v1 period amended August 2026 (the phase release of v0.6), earlier text in [amended/](amended/0005-versioning-and-migration.md). The contract's fields are in [SCHEMA.md](../SCHEMA.md#the-migration-contract).
 
 ## Context
 

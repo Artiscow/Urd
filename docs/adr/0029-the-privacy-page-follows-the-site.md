@@ -1,7 +1,7 @@
 # ADR-0029: The privacy page follows the site
 
 Date: 6 November 2026
-Status: Accepted. Decisions 1 and 3 amended 7 November 2026 (the page as served; each company's own terms on how long), earlier text in [amended/](amended/0029-the-privacy-page-follows-the-site-until-2026-11-07.md). Builds on the click-to-load frames of 0.7.24.1 (embed-cover.js) and the privacy page of 0.7.24.2 (`privacy-model.js`, `blocks/privacy.js`); the plugin hosts of [ADR-0006](0006-plugin-csp-needs-model.md) are named on the page with the consent work of 0.7.24.3.
+Status: Accepted. Decisions 1 and 3 amended 7 November 2026 (the page as served; each company's own terms on how long), earlier text in [amended/](amended/0029-the-privacy-page-follows-the-site.md). Builds on the click-to-load frames of 0.7.24.1 (embed-cover.js) and the privacy page of 0.7.24.2 (`privacy-model.js`, `blocks/privacy.js`); the plugin hosts of [ADR-0006](0006-plugin-csp-needs-model.md) are named on the page with the consent work of 0.7.24.3.
 
 ## Context
 

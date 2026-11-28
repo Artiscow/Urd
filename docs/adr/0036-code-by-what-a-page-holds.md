@@ -1,7 +1,7 @@
 # ADR-0036: Code by what a page holds
 
 Date: 21 November 2026
-Status: Accepted. Decided while building BACKLOG 0.7.37.3.4 on 21 November 2026, from finding V1 of the audit of 20 November 2026. It rewrites a consequence of [ADR-0013](0013-immutable-engine-versioning.md), whose deferral of per-page loading it takes up. Amended 23 November 2026 (0.7.37.3.16): a type's own CSS loads with its module (decision 7), earlier text in [amended/](amended/0036-code-by-what-a-page-holds-until-2026-11-23.md). Amended again 23 November 2026 (0.7.38.1): the boot's features load by what the site and page hold (decision 8), earlier text in [amended/](amended/0036-code-by-what-a-page-holds-until-2026-11-23-2.md). Amended a third time 23 November 2026 (0.7.38.2.1): a design's code and CSS load with the design (decision 9, and decision 7's exception for it), earlier text in [amended/](amended/0036-code-by-what-a-page-holds-until-2026-11-23-3.md). Amended 24 November 2026 (0.7.39.1): the editor's preview loads what the page it draws holds first and every other type in the background (decision 4, and decisions 8 and 9 with it), earlier text in [amended/](amended/0036-code-by-what-a-page-holds-until-2026-11-24.md).
+Status: Accepted. Decided while building BACKLOG 0.7.37.3.4 on 21 November 2026, from finding V1 of the audit of 20 November 2026. It rewrites a consequence of [ADR-0013](0013-immutable-engine-versioning.md), whose deferral of per-page loading it takes up. Amended 24 November 2026 (0.7.39.1): the editor's preview loads what the page it draws holds first and every other type in the background (decision 4, and decisions 8 and 9 with it), earlier text in [amended/](amended/0036-code-by-what-a-page-holds.md).
 
 ## Context
 

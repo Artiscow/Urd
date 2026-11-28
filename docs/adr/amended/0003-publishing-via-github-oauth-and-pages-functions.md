@@ -1,0 +1,87 @@
+# Amendments to ADR-0003: Publishing via GitHub OAuth and Cloudflare Pages Functions
+
+The earlier wording of [ADR-0003](../0003-publishing-via-github-oauth-and-pages-functions.md), newest first. Each section names an amendment and holds the wording it replaced: the whole ADR as it stood, for the amendments made until 27 November 2026, and the decisions that changed, for those made since.
+
+## Until 2026-11-23
+
+The OAuth decision, now the sign-in decision, amended 23 November 2026 (a GitHub App per site, the login asking for `offline_access`, and the sign-in renewed through the sign-in status).
+
+### ADR-0003: Publishing via GitHub OAuth and Cloudflare Pages Functions
+
+**Status:** accepted (July 2026); the protection decision amended 18 October 2026 (publishing may delete a plugin's whole folder, never write in it), earlier text in [amended/](0003-publishing-via-github-oauth-and-pages-functions.md#until-2026-10-18); the OAuth, protection and conflict decisions amended 20 November 2026 (signing out revokes the token, a page's copy is the repository's own index.html, and the undo of a publish sets back only what that publish changed), earlier text in [amended/](0003-publishing-via-github-oauth-and-pages-functions.md#until-2026-11-20)
+
+#### Context
+
+«Publish» is to be a single button in admin that turns the changes into a git commit - without the user having git installed, and without Urd operating a server. The pattern is validated in production in [ApeironLF](https://github.com/Apeiron-Linjeforening/ApeironLF).
+
+#### Decision
+
+Small serverless functions (`template/functions/api/github/`) ship with the repo and are run by the host (Cloudflare Pages Functions):
+
+- **OAuth:** the login flow exchanges the GitHub code for a token *server-side*; the token is stored in an httpOnly Secure cookie and never reaches browser JS. Signing out expires the cookie and revokes the token at GitHub, so a copy of the cookie stops working too.
+- **Commit:** one publish is ONE commit, created through the GitHub Git Data API.
+- **Protection:** the `ALLOWED_LOGINS` allowlist is enforced in all mutating endpoints, and a **path allowlist** limits publishing to user data (content, media and the plugin index): Urd-owned code, configuration and headers are never written through publishing. A plugin's folder is the owner's code: publishing may delete it whole, so a plugin removed in the editor leaves the repo, and never writes in it, since a deletion cannot plant code. A page's routing copy (`<slug>/index.html`) is written from the `index.html` the repository holds, never from what the request sends, so a request cannot plant other HTML there. The allowlist lives in `functions/_lib/guard.js`; `_redirects` is governed by ADR-0015.
+- **Conflict:** the editor can ask whether other people have published since load; `revert` does a forward revert of the last publish: a new commit that sets each file that publish changed back to how it stood before, and leaves every other file as it stands, so an Urd update or a change made by hand since is kept. History is never deleted.
+- **No admin password:** editing locally is harmless (draft in localStorage); the gate is GitHub login + allowlist at commit.
+
+#### Consequences
+
+- Zero operations, zero cost, and the security model is git ownership - the same one that governs the repo otherwise.
+- A hijacked editor session cannot plant code (path allowlist); at most it can delete a plugin, which the history restores.
+- The coupling is GitHub + Cloudflare specific; the `functions/_lib/` boundary is kept adapter-friendly so that GitLab/Gitea can be supported after v1.
+
+## Until 2026-11-20
+
+The OAuth, protection and conflict decisions amended 20 November 2026 (signing out revokes the token, a page's copy is the repository's own index.html, and the undo of a publish sets back only what that publish changed).
+
+### ADR-0003: Publishing via GitHub OAuth and Cloudflare Pages Functions
+
+**Status:** accepted (July 2026); the protection decision amended 18 October 2026 (publishing may delete a plugin's whole folder, never write in it), earlier text in [amended/](0003-publishing-via-github-oauth-and-pages-functions.md#until-2026-10-18)
+
+#### Context
+
+«Publish» is to be a single button in admin that turns the changes into a git commit - without the user having git installed, and without Urd operating a server. The pattern is validated in production in [ApeironLF](https://github.com/Apeiron-Linjeforening/ApeironLF).
+
+#### Decision
+
+Small serverless functions (`template/functions/api/github/`) ship with the repo and are run by the host (Cloudflare Pages Functions):
+
+- **OAuth:** the login flow exchanges the GitHub code for a token *server-side*; the token is stored in an httpOnly Secure cookie and never reaches browser JS.
+- **Commit:** one publish is ONE commit, created through the GitHub Git Data API.
+- **Protection:** the `ALLOWED_LOGINS` allowlist is enforced in all mutating endpoints, and a **path allowlist** limits publishing to user data (content, media and the plugin index): Urd-owned code, configuration and headers are never written through publishing. A plugin's folder is the owner's code: publishing may delete it whole, so a plugin removed in the editor leaves the repo, and never writes in it, since a deletion cannot plant code. The allowlist lives in `functions/_lib/guard.js`; `_redirects` is governed by ADR-0015.
+- **Conflict:** the editor can ask whether other people have published since load; `revert` does a forward revert (a new commit with the previous tree - history is never deleted).
+- **No admin password:** editing locally is harmless (draft in localStorage); the gate is GitHub login + allowlist at commit.
+
+#### Consequences
+
+- Zero operations, zero cost, and the security model is git ownership - the same one that governs the repo otherwise.
+- A hijacked editor session cannot plant code (path allowlist); at most it can delete a plugin, which the history restores.
+- The coupling is GitHub + Cloudflare specific; the `functions/_lib/` boundary is kept adapter-friendly so that GitLab/Gitea can be supported after v1.
+
+## Until 2026-10-18
+
+The protection decision amended 18 October 2026 (publishing may delete a plugin's whole folder, never write in it).
+
+### ADR-0003: Publishing via GitHub OAuth and Cloudflare Pages Functions
+
+**Status:** accepted (July 2026)
+
+#### Context
+
+«Publish» is to be a single button in admin that turns the changes into a git commit - without the user having git installed, and without Urd operating a server. The pattern is validated in production in [ApeironLF](https://github.com/Apeiron-Linjeforening/ApeironLF).
+
+#### Decision
+
+Small serverless functions (`template/functions/api/github/`) ship with the repo and are run by the host (Cloudflare Pages Functions):
+
+- **OAuth:** the login flow exchanges the GitHub code for a token *server-side*; the token is stored in an httpOnly Secure cookie and never reaches browser JS.
+- **Commit:** one publish is ONE commit, created through the GitHub Git Data API.
+- **Protection:** the `ALLOWED_LOGINS` allowlist is enforced in all mutating endpoints, and a **path allowlist** limits publishing to user data (content, media and the plugin index): Urd-owned code, configuration and headers are never written through publishing. The allowlist lives in `functions/_lib/guard.js`; `_redirects` is governed by ADR-0015.
+- **Conflict:** the editor can ask whether other people have published since load; `revert` does a forward revert (a new commit with the previous tree - history is never deleted).
+- **No admin password:** editing locally is harmless (draft in localStorage); the gate is GitHub login + allowlist at commit.
+
+#### Consequences
+
+- Zero operations, zero cost, and the security model is git ownership - the same one that governs the repo otherwise.
+- A hijacked editor session cannot plant code (path allowlist).
+- The coupling is GitHub + Cloudflare specific; the `functions/_lib/` boundary is kept adapter-friendly so that GitLab/Gitea can be supported after v1.

@@ -1,6 +1,6 @@
 # ADR-0011: Build components native/CSS-first
 
-Date: 27 July 2026. Status: accepted (v0.6, «Modernise to native/CSS»); decisions 1 and 2 amended 22 September 2026 (CSS anchor positioning and `contrast-color()` baseline), earlier text in [amended/](amended/0011-native-css-first-until-2026-10-11.md). How the components are built is described in [ARCHITECTURE.md](../ARCHITECTURE.md).
+Date: 27 July 2026. Status: accepted (v0.6, «Modernise to native/CSS»); decisions 1 and 2 amended 22 September 2026 (CSS anchor positioning and `contrast-color()` baseline), earlier text in [amended/](amended/0011-native-css-first.md). How the components are built is described in [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 ## Context
 

@@ -1,6 +1,6 @@
 # ADR-0013: Immutable engine versioning and the copy-refresh duty
 
-Date: 5 August 2026. Status: accepted (v0.6, milestone 0.6.9); decision 2 amended 7 October 2026, earlier text in [amended/](amended/0013-immutable-engine-versioning-until-2026-10-11.md); the consequence on per-page loading rewritten 21 November 2026 by [ADR-0036](0036-code-by-what-a-page-holds.md), earlier text in [amended/](amended/0013-immutable-engine-versioning-until-2026-11-21.md); decision 2 and the consequence on `_headers` rewritten 27 November 2026 with ADR-0014's decision 5, earlier text in [amended/](amended/0013-immutable-engine-versioning-until-2026-11-27.md). How the release writes the headers and what the tests hold is described in [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md#releases-automated-from-069).
+Date: 5 August 2026. Status: accepted (v0.6, milestone 0.6.9); decision 2 and the consequence on `_headers` rewritten 27 November 2026 with ADR-0014's decision 5, earlier text in [amended/](amended/0013-immutable-engine-versioning.md). How the release writes the headers and what the tests hold is described in [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md#releases-automated-from-069).
 
 ## Context
 

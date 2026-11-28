@@ -15,6 +15,7 @@
   import { releaseLabel, parseNotes, plainText } from '../lib/release-notes.js';
   import { headerChanges, keptWords, handEdits } from '../lib/headers-words.js';
   import { changeText, releaseDate } from '../lib/headers-text.js';
+  import { keptAfter, pressedWith } from '../lib/update-keep.js';
   const ed = getContext('urd-editor');
   const activePanel = $derived(ed.activePanel);
   const auth = $derived(ed.auth);
@@ -77,11 +78,9 @@
   const ADDS = new Set(['added', 'sourcesAdded']);
   const TAKES = new Set(['removed', 'sourcesRemoved']);
 
+  /** «Keep mine» pressed: a file is kept back with the files that need it, and let through with those it needs (update-keep.js). */
   function toggleUpdateSkip(path) {
-    const next = new Set(ed.updateSkip);
-    if (next.has(path)) next.delete(path);
-    else next.add(path);
-    ed.updateSkip = next;
+    ed.updateSkip = keptAfter(ed.updateSkip, updateInfo?.changes ?? [], path);
   }
 
   async function runUpdate() {
@@ -326,6 +325,7 @@
         <!-- The site's _headers, written by the update as the owner never edited it or only added to it: first among the optional files -->
         {#if headersWritten}{@render headersCard(true)}{/if}
         {#each updateInfo.changes.filter((c) => !c.atom) as c (c.path)}
+          {@const also = pressedWith(ed.updateSkip, updateInfo.changes, c.path)}
           <div class="update-row">
             <span class="update-path" class:skipped={ed.updateSkip.has(c.path)}>{@render pathText(c.path)}</span>
             <span class="update-flags">
@@ -333,7 +333,7 @@
               {#if c.conflict}<span class="update-warn" title={ta(`update.conflict.${c.conflict}`)}>{@html ICONS.warn}</span>{/if}
               <input type="checkbox" checked={ed.updateSkip.has(c.path)}
                 onchange={() => toggleUpdateSkip(c.path)}
-                title={ta('update.keepMine.title')} aria-label={ta('update.keepMine')} />
+                title={also.length ? ta(ed.updateSkip.has(c.path) ? 'update.keepMine.tiedIn' : 'update.keepMine.tied', { files: also.join(', ') }) : ta('update.keepMine.title')} aria-label={ta('update.keepMine')} />
             </span>
           </div>
         {/each}

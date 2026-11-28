@@ -21,6 +21,7 @@ import { PAGE_SETTINGS_LAYOUTS, pageSettingsLayoutOf } from '../lib/page-setting
 import { PRESS_FEELS, pressFeelOf, pressTarget, ripple } from '../lib/press-feel.js';
 import { COVER_LOOKS, coverLookOf } from '../lib/canvas-cover.js';
 import { TAB_MENU_STYLES, tabMenuStyleOf } from '../lib/panel-folds.js';
+import { folds } from '../lib/folds.svelte.js';
 import { collectionsState } from './collections.svelte.js';
 import { historyState } from './history.svelte.js';
 import { savedState } from './saved.svelte.js';
@@ -1044,15 +1045,54 @@ let panelAllOpen = $state(false);
 
 const allOpen = (list) => list.length > 0 && [...list].every((d) => d.open);
 
+/** What the panel showed when «Expand all» lifted «One at a time». */
+let spreadSubject = '';
+
+/** What the panel shows: its name and the block, or else the section, it is drawn for. */
+const panelSubject = () => {
+  const block = pageState.selectedBlock?.blockId;
+  return `${activePanel}:${block ? `b:${block}` : `s:${pageState.activeSectionId ?? pageState.selectedBlock?.sectionId ?? ''}`}`;
+};
+
+const shown = (d) => d.checkVisibility?.() ?? d.getClientRects().length > 0;
+
+/** Whether «One at a time» can come back without closing a fold in sight: no group shown holds two open folds, or the panel shows another thing. */
+function spreadDone() {
+  if (panelSubject() !== spreadSubject) return true;
+  const open = new Set();
+  for (const d of panelEl?.querySelectorAll('details.group[data-fold-group]') ?? []) {
+    if (!d.open || !shown(d)) continue;
+    if (open.has(d.dataset.foldGroup)) return false;
+    open.add(d.dataset.foldGroup);
+  }
+  return true;
+}
+
 function syncPanelFolds() {
   const groups = panelEl?.querySelectorAll('details.group') ?? [];
   panelHasGroups = groups.length > 0;
   panelAllOpen = allOpen(groups);
+  if (folds.spread) settleSpread();
 }
 
-function togglePanelGroups() {
+/** «One at a time» comes back once spreadDone holds and the folds have told of their toggles, asked again then, so none is drawn open from what it held. */
+function settleSpread() {
+  if (!spreadDone()) return;
+  requestAnimationFrame(() => setTimeout(() => {
+    if (folds.spread && spreadDone()) folds.spread = false;
+  }));
+}
+
+async function togglePanelGroups() {
   const open = !panelAllOpen;
-  panelEl?.querySelectorAll('details.group').forEach((d) => { d.open = open; });
+  // Folds that open one at a time share a name, and the browser closes the others as each opens: their names go first.
+  if (open && panelEl?.querySelector('details.group[data-fold-group]')) {
+    spreadSubject = panelSubject();
+    folds.spread = true;
+    await tick();
+  }
+  // A bare fold has no heading to open it again, so it stands open.
+  panelEl?.querySelectorAll('details.group:not(.bare)').forEach((d) => { d.open = open; });
   syncPanelFolds();
 }
 
@@ -1218,6 +1258,11 @@ export function effects() {
     tick().then(syncPanelFolds);
   });
 
+  // «Expand all» ends where another panel, block or section takes the panel's place.
+  $effect(() => {
+    if (folds.spread && panelSubject() !== spreadSubject) folds.spread = false;
+  });
+
   $effect(() => {
     const el = panelEl;
     if (!el) return;
@@ -1226,7 +1271,11 @@ export function effects() {
     // toggle does not bubble, so it is captured at the panel for the head button to follow folds opened by hand.
     el.addEventListener('toggle', syncPanelFolds, true);
     decorateSubFolds(el);
-    return () => { observer.disconnect(); el.removeEventListener('toggle', syncPanelFolds, true); };
+    return () => {
+      observer.disconnect();
+      el.removeEventListener('toggle', syncPanelFolds, true);
+      folds.spread = false;
+    };
   });
 }
 

@@ -25,7 +25,9 @@
   const onlyPanel = getContext('menu-only');
   const head = getContext('menu-head');
   const small = $derived(Boolean(onlyPanel?.only || head?.only));
-  const exclusive = $derived(inMenu && folded && menu.foldsPref === 'one' && !small ? area.group : undefined);
+  /** The group the fold opens one at a time in, kept as `data-fold-group` while «Expand all» lifts the name (folds.spread). */
+  const oneGroup = $derived(inMenu && folded && menu.foldsPref === 'one' && !small ? area.group : undefined);
+  const exclusive = $derived(folds.spread ? undefined : oneGroup);
 
   /* «Settings in a group» on «Added as needed», in the full menu only. */
   const menued = $derived(inMenu && folded && menu.extraPref === 'menu' && !small);
@@ -192,7 +194,7 @@
 </script>
 
 {#if rows !== 0}
-  <details class="group menu-group" data-fold={id} name={exclusive} class:bare={!folded} open={!folded || folds.isOpen(surface, id)}
+  <details class="group menu-group" data-fold={id} data-fold-group={oneGroup} name={exclusive} class:bare={!folded} open={!folded || folds.isOpen(surface, id)}
     ontoggle={(e) => {
       if (e.currentTarget.closest('.emenu-search')) return;
       ontoggle?.(e.currentTarget.open);

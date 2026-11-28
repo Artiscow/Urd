@@ -342,6 +342,7 @@ export default {
     'api.updateTemplateUnreachable': 'Fekk ikkje lese malrepoet {repo}: {detail}',
     'api.updateRace': 'Repoet endra seg medan oppdateringa gjekk føre seg. Last inn på nytt og prøv igjen.',
     'api.updateBadSkip': 'Fila {path} kan ikkje haldast tilbake frå oppdateringa',
+    'api.updateTiedSkip': 'Fila {path} kan berre haldast tilbake frå oppdateringa saman med filene ho høyrer saman med',
     'api.updateFailed': 'Oppdateringa feila: {detail}',
     'api.updateContinue': 'Kopierte {copied} av {total} filer frå malen. Start oppdateringa på nytt for å halde fram.',
     'api.photoFolderUnknown': 'Urd kjenner ikkje att den mappeadressa',

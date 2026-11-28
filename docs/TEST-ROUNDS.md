@@ -2,6 +2,14 @@
 
 What has been delivered and waits for manual testing, in production or locally. **Items are struck only by whoever tests**; the assistant adds new items when something is delivered, but never removes anything here unless asked. A new delivery gets a «Test batch» section of its own at the top (newest first), and the batches are gathered into the areas below when asked. [BACKLOG.md](BACKLOG.md) owns the tasks; this list owns the testing of what is already delivered. Where something has been removed, it was checked and solved, listed as a known bug, or replaced by a later change (gathered by area on 28 October 2026: items already confirmed by use, repeated in another item or covered by a broader one were removed, and the rest merged).
 
+### Test batch (0.7.0.112): «Expand all groups» with folds one at a time, «Keep mine» on files that go together, and one amended file per ADR
+
+- [ ] Urd settings, «The element menu», «Folds»: «One at a time». In Selection settings, «Expand all groups» opens every fold and its button turns; «Collapse all groups» closes them all; after that, opening a fold closes the one that was open, as before
+- [ ] With «One at a time», «Expand all groups» on one block and then a click on another block: the other block's folds open one at a time
+- [ ] At an update where a function imports a new file in `functions/_lib/`: «Keep mine» on that file ticks the function too, and the file's tooltip names it; unticking the function unticks the file, and the function's tooltip names the file before the press
+- [ ] At an update that deletes a file in `functions/` that a function you keep imports: «Keep mine» on the function ticks the deleted file too, and the function's tooltip names it
+- [ ] On GitHub, `docs/adr/amended/` holds one file per ADR, its newest section first; the «amended/» link in an ADR's status line opens that file, and a link to an amendment from CHANGELOG opens at its section
+
 ### Test batch (0.7.0.111): the guide lines, a drag's lines and their colours, and four admin fixes
 
 - [ ] With Guides on: eleven lines on the desktop, the quarters, thirds and half dashed and the rest dotted, each with its share once at the top of the page; a section with its own content width shows its own shares at its top; on the phone, the quarters

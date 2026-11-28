@@ -1,6 +1,6 @@
 # ADR-0010: Nav submenus follow the disclosure pattern (never role="menu")
 
-Date: 22 July 2026. Status: accepted (v0.6 M5); decision 4 amended 8 November 2026 (three submenu levels under the bar, the fourth level the menu's last), earlier text in [amended/](amended/0010-disclosure-navigation-until-2026-11-08.md).
+Date: 22 July 2026. Status: accepted (v0.6 M5); decision 4 amended 8 November 2026 (three submenu levels under the bar, the fourth level the menu's last), earlier text in [amended/](amended/0010-disclosure-navigation.md).
 
 ## Context
 

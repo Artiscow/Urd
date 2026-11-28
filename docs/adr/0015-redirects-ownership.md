@@ -1,6 +1,6 @@
 # ADR-0015: Redirects ownership - generated host file over a host-neutral data layer
 
-Date: 5 August 2026. Status: accepted; decisions 1 to 3 amended and decision 4 added 3 November 2026 (the list is `content/redirects.json`; `_redirects` is a user path publishing writes in a checked shape; the build is milestone 0.7.23 with the redirects offered where an address goes away; a file written by hand is read into the list first), earlier text in [amended/](amended/0015-redirects-ownership-until-2026-11-03.md). How it is built is described in [SCHEMA.md](../SCHEMA.md#contentredirectsjson-redirects) and [ARCHITECTURE.md](../ARCHITECTURE.md).
+Date: 5 August 2026. Status: accepted; decisions 1 to 3 amended and decision 4 added 3 November 2026 (the list is `content/redirects.json`; `_redirects` is a user path publishing writes in a checked shape; the build is milestone 0.7.23 with the redirects offered where an address goes away; a file written by hand is read into the list first), earlier text in [amended/](amended/0015-redirects-ownership.md). How it is built is described in [SCHEMA.md](../SCHEMA.md#contentredirectsjson-redirects) and [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 ## Context
 

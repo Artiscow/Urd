@@ -1,6 +1,6 @@
 # ADR-0023: Navigation bar sizing
 
-Date: 16 September 2026. Status: accepted (v0.7, milestone 0.7.15); decisions 1 to 5 restated 11 October 2026 with the build mechanics moved to ARCHITECTURE.md (no decision changed), earlier text in [amended/](amended/0023-navigation-bar-sizing-until-2026-10-11.md).
+Date: 16 September 2026. Status: accepted (v0.7, milestone 0.7.15); decisions 1 to 5 restated 11 October 2026 with the build mechanics moved to ARCHITECTURE.md (no decision changed), earlier text in [amended/](amended/0023-navigation-bar-sizing.md).
 
 ## Context
 

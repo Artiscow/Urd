@@ -1,7 +1,7 @@
 # ADR-0021: English code text and contract identifiers
 
 Date: 30 August 2026
-Status: accepted; text restructured 11 October 2026 (the name map and the audit inventories moved to SCHEMA.md and DEVELOPMENT-en-GB.md, no decision changed), earlier text in [amended/](amended/0021-english-code-text-and-contract-identifiers-until-2026-10-11.md).
+Status: accepted; text restructured 11 October 2026 (the name map and the audit inventories moved to SCHEMA.md and DEVELOPMENT-en-GB.md, no decision changed), earlier text in [amended/](amended/0021-english-code-text-and-contract-identifiers.md).
 
 ## Context
 

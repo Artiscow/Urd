@@ -1,6 +1,6 @@
 # ADR-0003: Publishing via GitHub OAuth and Cloudflare Pages Functions
 
-**Status:** accepted (July 2026); the protection decision amended 18 October 2026 (publishing may delete a plugin's whole folder, never write in it), earlier text in [amended/](amended/0003-publishing-via-github-oauth-and-pages-functions-until-2026-10-18.md); the OAuth, protection and conflict decisions amended 20 November 2026 (signing out revokes the token, a page's copy is the repository's own index.html, and the undo of a publish sets back only what that publish changed), earlier text in [amended/](amended/0003-publishing-via-github-oauth-and-pages-functions-until-2026-11-20.md); the OAuth decision, now the sign-in decision, amended 23 November 2026 (a GitHub App per site, the login asking for `offline_access`, and the sign-in renewed through the sign-in status), earlier text in [amended/](amended/0003-publishing-via-github-oauth-and-pages-functions-until-2026-11-23.md)
+**Status:** accepted (July 2026); the OAuth decision, now the sign-in decision, amended 23 November 2026 (a GitHub App per site, the login asking for `offline_access`, and the sign-in renewed through the sign-in status), earlier text in [amended/](amended/0003-publishing-via-github-oauth-and-pages-functions.md)
 
 ## Context
 

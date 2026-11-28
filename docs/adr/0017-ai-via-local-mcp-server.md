@@ -1,6 +1,6 @@
 # ADR-0017: Optional AI integration via a local MCP server
 
-Date: 10 August 2026. Status: accepted (v0.7; the read part is built in v0.8, the write part in v0.9); the consequence on `_headers` rewritten 27 November 2026 with ADR-0014's decision 5, earlier text in [amended/](amended/0017-ai-via-local-mcp-server-until-2026-11-27.md). How the server finds the engine and how it is tested is described in [ARCHITECTURE.md](../ARCHITECTURE.md) and [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md).
+Date: 10 August 2026. Status: accepted (v0.7; the read part is built in v0.8, the write part in v0.9); the consequence on `_headers` rewritten 27 November 2026 with ADR-0014's decision 5, earlier text in [amended/](amended/0017-ai-via-local-mcp-server.md). How the server finds the engine and how it is tested is described in [ARCHITECTURE.md](../ARCHITECTURE.md) and [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md).
 
 ## Context
 

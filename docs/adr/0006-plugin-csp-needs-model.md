@@ -1,6 +1,6 @@
 # ADR-0006: CSP needs model for plugins
 
-Date: 19 July 2026. Status: accepted (v0.6 M1); the motivating cases (calendar, map) moved into the core in September 2026, and the rule stays for third-party plugins; the consequence on the updater rewritten 27 November 2026 with ADR-0014's decision 5, earlier text in [amended/](amended/0006-plugin-csp-needs-model-until-2026-11-27.md).
+Date: 19 July 2026. Status: accepted (v0.6 M1); the motivating cases (calendar, map) moved into the core in September 2026, and the rule stays for third-party plugins; the consequence on the updater rewritten 27 November 2026 with ADR-0014's decision 5, earlier text in [amended/](amended/0006-plugin-csp-needs-model.md).
 
 ## Context
 

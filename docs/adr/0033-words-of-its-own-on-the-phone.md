@@ -1,7 +1,7 @@
 # ADR-0033: Words of its own on the phone
 
 Date: 13 November 2026
-Status: Accepted. Extends the synced mobile model ([ADR-0019](0019-synced-mobile-model.md)), whose per-block override held the placement only, with the words a block says on the phone. Chosen in the design pass of BACKLOG 0.7.3.16 on 13 November 2026; decision 5 amended 14 November 2026 (the review names the block whose desktop words changed, with ADR-0019 decision 5 narrowed), earlier text in [amended/](amended/0033-words-of-its-own-on-the-phone-until-2026-11-14.md).
+Status: Accepted. Extends the synced mobile model ([ADR-0019](0019-synced-mobile-model.md)), whose per-block override held the placement only, with the words a block says on the phone. Chosen in the design pass of BACKLOG 0.7.3.16 on 13 November 2026; decision 5 amended 14 November 2026 (the review names the block whose desktop words changed, with ADR-0019 decision 5 narrowed), earlier text in [amended/](amended/0033-words-of-its-own-on-the-phone.md).
 
 ## Context
 

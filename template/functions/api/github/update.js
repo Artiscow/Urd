@@ -4,7 +4,7 @@
 import { gh, ghGraphql, cleanBase64, commitTree, triggerDeploy } from '../../_lib/github.js';
 import { requirePublisher } from '../../_lib/auth.js';
 import { isPageIndexCopy } from '../../_lib/guard.js';
-import { planUpdate, highestVersionTag, isOlderTag, VERSION_TAG_RE, chunkEntries, blobBatch, travelsAsBlob } from '../../_lib/update-plan.js';
+import { planUpdate, highestVersionTag, isOlderTag, VERSION_TAG_RE, chunkEntries, blobBatch, travelsAsBlob, readsImports, siteScriptPaths, tieChanges, heldNeed } from '../../_lib/update-plan.js';
 import { planHeaders, writesHeaders, closestRelease } from '../../_lib/update-headers.js';
 
 const json = (body, status = 200) =>
@@ -121,6 +121,35 @@ async function loadState(token, config, toParam) {
   }
 }
 
+/** The target's text of each function script the update writes, read in one GraphQL call for its imports (tieChanges); a text the reply leaves out is left out. */
+async function importTexts(token, config, ref, changes) {
+  const paths = changes.filter(readsImports).map((c) => c.path);
+  if (!paths.length) return {};
+  const [owner, name] = config.templateRepo.split('/');
+  const fields = paths.map((p, i) => `i${i}: object(expression: ${JSON.stringify(`${ref}:${p}`)}) { ... on Blob { text } }`);
+  const data = await ghGraphql(token, `{ imports: repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(name)}) { ${fields.join(' ')} } }`, 1, { partial: true });
+  return Object.fromEntries(paths.map((p, i) => [p, data?.imports?.[`i${i}`]?.text]).filter(([, text]) => typeof text === 'string'));
+}
+
+/** The site's whole text of the scripts siteScriptPaths names, in one GraphQL call; with `strict`, one left unread or cut that is not binary stops the update. */
+async function siteScripts(token, config, state, changes, strict) {
+  const paths = siteScriptPaths(changes, state.userTree);
+  if (!paths.length) return {};
+  const [owner, name] = config.repo.split('/');
+  const fields = paths.map((p, i) => `s${i}: object(oid: ${JSON.stringify(state.userTree[p])}) { ... on Blob { text isBinary isTruncated } }`);
+  const data = await ghGraphql(token, `{ scripts: repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(name)}) { ${fields.join(' ')} } }`, 1, { partial: !strict });
+  const texts = {};
+  paths.forEach((p, i) => {
+    const blob = data?.scripts?.[`s${i}`];
+    if (typeof blob?.text === 'string' && !blob.isTruncated) texts[p] = blob.text;
+    else if (strict && blob?.isBinary !== true) throw new Error(`The site's ${p} could not be read whole`);
+  });
+  return texts;
+}
+
+/** The answer to a run that holds back a file without the files it goes with (heldNeed). */
+const tiedRefusal = (path) => json({ error: `The file '${path}' can only be held back together with the files it goes with`, code: 'updateTiedSkip', path }, 400);
+
 /** What the update does with the site's `_headers` (update-headers.js), its text, the target's and each release's up to it read in one GraphQL call. */
 async function headersOf(token, config, state) {
   const listed = state.tagNames ?? (await gh(token, `/repos/${config.templateRepo}/tags?per_page=100`)).map((t) => t.name);
@@ -195,7 +224,13 @@ export async function onRequestGet({ request, env }) {
         release: installed && { name: installed.name, url: installed.url, date: installed.date },
       });
     }
-    const { changes, upToDate } = planUpdate(state.baselineTree, state.targetTree, state.userTree);
+    const { changes: planned, upToDate } = planUpdate(state.baselineTree, state.targetTree, state.userTree);
+    // Each change with the files it goes with, so the panel keeps them back only together; an unread text ties nothing here, and the run reads again.
+    const [texts, scripts] = await Promise.all([
+      importTexts(token, config, state.target, planned).catch(() => ({})),
+      siteScripts(token, config, state, planned, false).catch(() => ({})),
+    ]);
+    const changes = tieChanges(planned, texts, scripts);
 
     // The target's release (optional): its name and page, and its notes.
     const offered = await releaseOf(token, config.templateRepo, state.target);
@@ -255,15 +290,21 @@ export async function onRequestPost({ request, env }) {
 
     // The plan is recomputed server-side; the client may only opt out of files OUTSIDE the engine atom group (ADR-0014), and of _headers.
     const plan = planUpdate(state.baselineTree, state.targetTree, state.userTree);
-    const planned = new Map(plan.changes.map((c) => [c.path, c]));
+    // A file the site's own scripts still import is never deleted (tieChanges); a script left unread stops the run.
+    const scripts = await siteScripts(token, config, state, plan.changes, true);
+    const known = new Map(plan.changes.map((c) => [c.path, c]));
+    const planned = new Map(tieChanges(plan.changes, {}, scripts).map((c) => [c.path, c]));
     for (const path of skip ?? []) {
       if (path === '_headers') continue;
-      const change = planned.get(path);
+      const change = known.get(path);
       if (!change || change.atom) {
         return json({ error: `The file '${path}' cannot be held back from the update`, code: 'updateBadSkip', path }, 400);
       }
       planned.delete(path);
     }
+    // The ties to the site's own scripts are known before anything is copied; those to the target's scripts once their texts are read below.
+    const parted = heldNeed(tieChanges(plan.changes, {}, scripts), skip ?? []);
+    if (parted) return tiedRefusal(parted);
 
     const writes = [...planned.values()].filter((c) => c.action === 'write');
     const deletes = [...planned.values()].filter((c) => c.action === 'delete');
@@ -321,6 +362,9 @@ export async function onRequestPost({ request, env }) {
         texts[textPaths[i]] = text;
       }
     }
+    // Refuses a skip that holds back a file a change the update makes needs.
+    const needed = heldNeed(tieChanges(plan.changes, texts, scripts), skip ?? []);
+    if (needed) return tiedRefusal(needed);
     const blobEntries = Object.fromEntries(blobPaths.map((p) => [p, state.targetTree[p]]));
     const headers = await headersEntry();
 

@@ -98,6 +98,97 @@ export function planUpdate(baselineTree, targetTree, userTree) {
 }
 
 /**
+ * The relative modules a script names in its imports and re-exports, as written.
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function importsOf(text) {
+  const named = new Set();
+  for (const pattern of [/\bfrom\s*(['"])(\.{1,2}\/[^'"\n]+)\1/g, /\bimport\s*(?:\(\s*)?(['"])(\.{1,2}\/[^'"\n]+)\1/g]) {
+    for (const m of String(text).matchAll(pattern)) named.add(m[2]);
+  }
+  return [...named];
+}
+
+/** A relative import's path in the site, from the importing file's path; null where it climbs out of the site. */
+export function resolveImport(from, spec) {
+  const parts = from.split('/').slice(0, -1);
+  for (const part of spec.split('/')) {
+    if (part === '..') {
+      if (!parts.length) return null;
+      parts.pop();
+    } else if (part !== '.' && part !== '') parts.push(part);
+  }
+  return parts.join('/');
+}
+
+const isScript = (path) => /^functions\/.+\.(?:m?js|ts)$/.test(path);
+
+/** Whether a change is a function's script the update writes, whose imports the plan reads in the target. */
+export const readsImports = (change) => !change.atom && change.action === 'write' && isScript(change.path);
+
+/** The site's function scripts whose own text the plan reads for their imports: all of them where the update deletes a file one by one, none otherwise. */
+export function siteScriptPaths(changes, userTree) {
+  return changes.some((c) => !c.atom && c.action === 'delete') ? Object.keys(userTree).filter(isScript).sort() : [];
+}
+
+/** The files an import written without an extension may name, as the bundler resolves it. */
+const EXTENSIONLESS = ['', '.ts', '.js', '.mjs', '/index.ts', '/index.js', '/index.mjs'];
+
+/** The site paths a script's relative imports may name, each extensionless import in every form, itself left out. */
+const importsAt = (path, text) => importsOf(text)
+  .map((spec) => resolveImport(path, spec))
+  .filter(Boolean)
+  .flatMap((p) => (/\.[a-z]+$/i.test(p.split('/').pop()) ? [p] : EXTENSIONLESS.map((end) => p + end)))
+  .filter((p) => p !== path);
+
+/**
+ * Each change with what it `needs` by the imports in the target's `texts` and the site's `siteTexts`, less the deletions a script outside the changes imports.
+ * @param {Array<{path: string, action: string, atom: boolean}>} changes
+ * @param {Record<string, string>} texts
+ * @param {Record<string, string>} [siteTexts]
+ * @returns {Array<object>}
+ */
+export function tieChanges(changes, texts, siteTexts = {}) {
+  const optional = new Set(changes.filter((c) => !c.atom).map((c) => c.path));
+  const deleted = new Set(changes.filter((c) => !c.atom && c.action === 'delete').map((c) => c.path));
+  const stays = new Set();
+  const outside = (path) => !optional.has(path) || stays.has(path);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const [path, text] of Object.entries(siteTexts)) {
+      if (!outside(path)) continue;
+      for (const p of importsAt(path, text)) {
+        if (deleted.has(p) && !stays.has(p)) {
+          stays.add(p);
+          grew = true;
+        }
+      }
+    }
+  }
+  const needs = new Map();
+  const tie = (from, to) => needs.set(from, (needs.get(from) ?? new Set()).add(to));
+  for (const c of changes) {
+    if (readsImports(c) && typeof texts[c.path] === 'string') for (const p of importsAt(c.path, texts[c.path])) if (optional.has(p)) tie(c.path, p);
+  }
+  for (const [path, text] of Object.entries(siteTexts)) {
+    if (!outside(path)) for (const p of importsAt(path, text)) if (deleted.has(p) && !stays.has(p)) tie(p, path);
+  }
+  return changes.filter((c) => !stays.has(c.path)).map((c) => (needs.has(c.path) ? { ...c, needs: [...needs.get(c.path)].sort() } : c));
+}
+
+/** The first file held back that a change the update makes needs, or null where every change goes with what it needs. */
+export function heldNeed(changes, skip) {
+  const held = new Set(skip);
+  for (const c of changes) {
+    if (held.has(c.path)) continue;
+    const need = (c.needs ?? []).find((p) => held.has(p));
+    if (need) return need;
+  }
+  return null;
+}
+
+/**
  * Splits tree entries into groups for chained base_tree calls (one commit either way).
  * The limit is entries per call, well under GitHub's payload cap.
  */
@@ -110,7 +201,7 @@ export function chunkEntries(entries, size = 300) {
 /** The template files one update call copies at most as blobs of their own, two subrequests each, under the free plan's cap of 50 (ADR-0014 decision 6). */
 export const BLOB_BATCH = 18;
 
-/** The files a call copies and still commits in: two subrequests each beside the committing call's own (about 16). */
+/** The files a call copies and still commits in: two subrequests each beside the committing call's own (about 17). */
 export const BLOB_ROOM = 10;
 
 /**

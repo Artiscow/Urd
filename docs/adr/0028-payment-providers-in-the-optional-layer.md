@@ -1,7 +1,7 @@
 # ADR-0028: Payment providers in the optional layer
 
 Date: 23 October 2026
-Status: Accepted. Builds on [ADR-0020](0020-optional-payment-layer-vipps-checkout.md) (the model of the layer: a site function, a hosted redirect, secrets in Cloudflare, nothing stored) and amends its decisions 1, 2 and 5 (the block's payment settings, the function path per provider, the secrets per provider); the shop of v1.1 ([ADR-0027](0027-a-shop-without-a-database.md)) builds on every provider alike. Decisions 1, 4 and 7 amended later on 23 October 2026 (PayPal takes the money at the order, since its hold is honoured for 3 days and a later capture needs server code; the block's capture setting is Stripe's alone; PayPal's optional API base), earlier text in [amended/](amended/0028-payment-providers-in-the-optional-layer-until-2026-10-23.md).
+Status: Accepted. Builds on [ADR-0020](0020-optional-payment-layer-vipps-checkout.md) (the model of the layer: a site function, a hosted redirect, secrets in Cloudflare, nothing stored) and amends its decisions 1, 2 and 5 (the block's payment settings, the function path per provider, the secrets per provider); the shop of v1.1 ([ADR-0027](0027-a-shop-without-a-database.md)) builds on every provider alike. Decisions 1, 4 and 7 amended later on 23 October 2026 (PayPal takes the money at the order, since its hold is honoured for 3 days and a later capture needs server code; the block's capture setting is Stripe's alone; PayPal's optional API base), earlier text in [amended/](amended/0028-payment-providers-in-the-optional-layer.md).
 
 ## Context
 

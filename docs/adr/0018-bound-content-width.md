@@ -1,6 +1,6 @@
 # ADR-0018: Bound content width
 
-Date: 10 August 2026. Status: accepted (v0.7, milestone 0.7.2 the width change); the preview consequence amended 16 September 2026 and the scaling consequence 23 September 2026, earlier text in [amended/](amended/0018-bound-content-width-until-2026-10-11.md); the preview consequence amended again 2 November 2026 (the Phone and the Screen at real sizes in their fold-outs, each size named by its aspect ratio and the common ratios offered beside them, the Tablet and the Laptop devices folded into them, a dragged width), earlier text in [amended/](amended/0018-bound-content-width-until-2026-11-02.md). What happens to the blocks below the design width is decided in ADR-0024 (the content push); how the editor measures the canvas is described in [ARCHITECTURE.md](../ARCHITECTURE.md).
+Date: 10 August 2026. Status: accepted (v0.7, milestone 0.7.2 the width change); the preview consequence amended 2 November 2026 (the Phone and the Screen at real sizes in their fold-outs, each size named by its aspect ratio and the common ratios offered beside them, the Tablet and the Laptop devices folded into them, a dragged width), earlier text in [amended/](amended/0018-bound-content-width.md). What happens to the blocks below the design width is decided in ADR-0024 (the content push); how the editor measures the canvas is described in [ARCHITECTURE.md](../ARCHITECTURE.md).
 
 ## Context
 

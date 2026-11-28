@@ -23,6 +23,8 @@ const open = new SvelteSet(kept.open);
 const seen = new Set(kept.seen);
 /** Counts the first showings forgotten, read where a fold asks for its first showing, so a fold drawn asks again. */
 let forgotten = $state(0);
+/** Whether «Expand all» stands every fold open at once, lifting «One at a time» until the folds are collapsed again. */
+let spread = $state(false);
 
 // The folds are written as the admin is left (a reload or a closed tab), not at every fold.
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
@@ -42,6 +44,8 @@ const revealed = new Set();
 const added = [];
 
 export const folds = {
+  get spread() { return spread; },
+  set spread(on) { spread = on; },
   /** Whether the fold stands open. */
   isOpen: (surface, id) => open.has(keyOf(surface, id)),
   /** Opens or closes the fold. */

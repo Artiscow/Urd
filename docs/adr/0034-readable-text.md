@@ -1,7 +1,7 @@
 # ADR-0034: Readable text
 
 Date: 14 November 2026
-Status: Accepted. Makes the phone's floor for words (0.7.3.14.1, the row grid of [ADR-0019](0019-synced-mobile-model.md)) a setting, and gives the desktop a measure for a text's lines. Chosen in the design pass of BACKLOG 0.7.3.20 on 14 November 2026; decision 5 amended 14 November 2026 (the dragged block greys and the editor's notice line says why, in the place of a mark on the block aimed at), earlier text in [amended/](amended/0034-readable-text-until-2026-11-14.md); decision 3 amended 19 November 2026 (the desktop's setting also hands a section to its phone layout under the window width where its text would stand narrower than the floor, weighed in BACKLOG 0.7.3.29 on 18 November 2026), earlier text in [amended/](amended/0034-readable-text-until-2026-11-19.md).
+Status: Accepted. Makes the phone's floor for words (0.7.3.14.1, the row grid of [ADR-0019](0019-synced-mobile-model.md)) a setting, and gives the desktop a measure for a text's lines. Chosen in the design pass of BACKLOG 0.7.3.20 on 14 November 2026; decision 3 amended 19 November 2026 (the desktop's setting also hands a section to its phone layout under the window width where its text would stand narrower than the floor, weighed in BACKLOG 0.7.3.29 on 18 November 2026), earlier text in [amended/](amended/0034-readable-text.md).
 
 ## Context
 

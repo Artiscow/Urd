@@ -1,7 +1,7 @@
 # ADR-0030: Admin designs
 
 Date: 9 November 2026
-Status: Accepted. Builds on the row kit of [ADR-0016](0016-panel-language.md) (0.7.30), which draws every surface from shared parts, so a design can change the frame around the rows without changing the rows. The designs and their parts were chosen on the Admin Designs canvas on 7 November 2026 and named on 8 November 2026 (BACKLOG 0.7.33.1 and 0.7.33.2). Decision 2 amended 11 November 2026 (a part whose default changes has its earlier default read once per browser), earlier text in [amended/](amended/0030-admin-designs-until-2026-11-11.md).
+Status: Accepted. Builds on the row kit of [ADR-0016](0016-panel-language.md) (0.7.30), which draws every surface from shared parts, so a design can change the frame around the rows without changing the rows. The designs and their parts were chosen on the Admin Designs canvas on 7 November 2026 and named on 8 November 2026 (BACKLOG 0.7.33.1 and 0.7.33.2). Decision 2 amended 11 November 2026 (a part whose default changes has its earlier default read once per browser), earlier text in [amended/](amended/0030-admin-designs.md).
 
 ## Context
 

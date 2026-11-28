@@ -1,6 +1,6 @@
 # ADR-0012: Multilingual via pure ES module locales, two registries and native Intl
 
-Date: 3 August 2026. Status: accepted (v0.6, milestone 0.6.8); decision 10 amended 6 August 2026 (the core language model), earlier text in [amended/](amended/0012-multilingual-until-2026-10-11.md). How the dictionaries are loaded is described in [ARCHITECTURE.md](../ARCHITECTURE.md), and the parity test in [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md).
+Date: 3 August 2026. Status: accepted (v0.6, milestone 0.6.8); decision 10 amended 6 August 2026 (the core language model), earlier text in [amended/](amended/0012-multilingual.md). How the dictionaries are loaded is described in [ARCHITECTURE.md](../ARCHITECTURE.md), and the parity test in [DEVELOPMENT-en-GB.md](../languages/DEVELOPMENT-en-GB.md).
 
 ## Context
 
