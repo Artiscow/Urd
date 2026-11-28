@@ -24,7 +24,7 @@
   import { blockDesigns, phoneDesignName, phoneDesignOf, pictureList, calendarDesignSource, SAME_DESIGN } from '../lib/design-sources.js';
   import { ta } from '$engine/i18n.js';
   import { FIT_BY_WIDTH, SIZE, SIZE_BY_FRAME, DRAWS_NOTHING, blockSize, sizeRange } from '$engine/push-model.js';
-  import { ribbonMotions, colorTokens } from './options.js';
+  import { ribbonMotions } from './options.js';
   import { menu, quickChoice, setQuickChoice, chooseArea, MENU_AREAS } from './state.svelte.js';
   import { quickIds, choiceChanged, NO_CHOICE } from '../lib/quick-row.js';
   import { matchWords } from '$engine/palette-search.js';
@@ -167,7 +167,7 @@
         items.push({ id: 'speed', label: ta('lbl.ribbonSpeed'), tip: ta('tip.ribbon.speed'), kind: 'slider', min: 10, max: 300, step: 5, value: p.speed ?? 60, shown: String(p.speed ?? 60), input: (v) => setBlockProp('speed', v), ...standard('speed', 60) });
       }
     } else if (b.type === 'shape') {
-      items.push({ id: 'shapeColor', label: ta('lbl.color'), tip: ta('tip.shape.color'), kind: 'select', value: p.color ?? 'accent', options: colorTokens(), set: (v) => setBlockProp('color', v), ...standard('color', 'accent') });
+      items.push({ id: 'shapeColor', label: ta('lbl.color'), tip: ta('tip.shape.color'), kind: 'color', value: p.color ?? 'accent', set: (v) => setBlockProp('color', v), ...standard('color', 'accent') });
       // The thickness only where the shape draws a stroke, as in Style.
       if (['line', 'arrow'].includes(p.kind) || (['circle', 'rect'].includes(p.kind) && !p.fill)) items.push({ id: 'thickness', label: ta('lbl.thickness'), tip: ta('tip.shape.thickness'), kind: 'number', min: 1, max: 40, value: p.thickness ?? 2, set: (v) => setBlockProp('thickness', Math.max(1, Math.min(40, Number(v) || 2))), ...standard('thickness', 2) });
     } else if (b.type === 'table') {

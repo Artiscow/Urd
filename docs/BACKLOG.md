@@ -47,6 +47,7 @@ An entry inherits the number of the backlog item the work belongs under, plus on
     Decided 27 November 2026: H4 to H6 are never smaller than the body text (H4 a step above it, H5 at its size, H6 at its size in small capitals), a size per level staying with v0.8 DS-2; the columns keep a least width, so a narrow block and a phone get fewer by CSS alone; the clamp is «Title lines» and «Text lines» on the collection and product cards, the whole text staying in the page, and a clamp on any text goes with v0.8 DS-2's text styles.
     Done when: a text set to H5 from the text toolbar is an `<h5>` on the published page, and an H6 is never smaller than the body text; a two-column text shows so on the published page; and a card title clamped to two lines ends in an ellipsis.
   - [ ] **0.7.9.6 Lines**: line styles for the line shape (dashed, dotted, double), an icon or ornament in the middle of the line, and an own colour beside the four theme colours. In place: a word in the middle of the line (`label`, 0.7.13.11).
+    On hold 28 November 2026 until the admin is designed again (0.7.10): its settings are drawn on the «Line Patterns» canvas, and its menu is laid out on the new design.
     Decided 27 November 2026: the icon is decoration, hidden from assistive technology, in the line's colour and the word's size, before the word when both stand; the shape menu's one colour row takes an own colour for all five shapes.
     Done when: a dashed line with an icon in its middle and a colour of its own shows on the published page.
   - [ ] **0.7.9.7 Small settings** from the settings read from source (22 October 2026): the FAQ's colour for an open item's title and icon; a separator between the countdown's units; an icon's colour on hover; the quote's text alignment and its portrait's place in the card; the timeline line's thickness and the gap between its items. In place: the quote's large spread in a card (`quote.card`, 0.7.13.11).
@@ -64,6 +65,8 @@ An entry inherits the number of the backlog item the work belongs under, plus on
   - [x] Resizing a block from every edge DELIVERED 0.7.10.2 (23 October 2026)
   - [x] The grid and the guide lines reworked DELIVERED 0.7.26.3 (14 October 2026)
   - [x] The command palette (Cmd+K) and the drop indicators DELIVERED 0.7.10.16 (30 October 2026)
+  - [ ] **The admin designed again** (decided 28 November 2026): the whole admin, its shell and panels, the element settings, the bars on the canvas, the pickers (the design picker above all) and its look, redesigned before more features are added, for the person who builds and keeps a site. The research is the survey «Designing the admin» ([comparison/SURVEYS.md](comparison/SURVEYS.md#designing-the-admin-how-editors-stay-calm-with-many-settings-28-november-2026)) and [comparison/ELEMENTS.md](comparison/ELEMENTS.md#open) E47 to E63. Next: the design round on a Design canvas, which first decides the rules the research would change (every look through the shared full-screen picker, the floating menu as the default, no mark on a changed setting, the dark-only admin themes, words in the phone view, title tooltips), then draws the shell, the element settings, the bar on the selection, the pickers sized to their choices, the site's look and the visual language.
+    Done when: the design round's choices are made on the canvas and written into the ADRs they change, and this item is split into stages with a done-when line each.
   - [x] The shop's blocks shown only where the shop is on DELIVERED 0.7.10.17 (30 October 2026)
   - [x] The collections' date field as a themed date picker DELIVERED 0.7.10.17 (31 October 2026)
   - [x] A clear surface outside the page in the device views FOUND DONE in the review of 23 October 2026
@@ -115,7 +118,7 @@ An entry inherits the number of the backlog item the work belongs under, plus on
   - [ ] Page duplication in the Pages panel and a section duplicated in place (C123); plugins able to register commands in the command palette; the «shop is on» gating above widened into an element manager that hides unused block types (Bricks)
     Done when: a duplicated page opens as a draft with its own slug, a duplicated section lands directly below the original with fresh ids, and a block type switched off is gone from the palette and the slash menu.
     Checked 3 November 2026: the comparison's Duplicate row holds Ctrl+D on a block or a set and names the section and the page as missing; C40 and C123 point here; the research records Squarespace's copy going outside the menu with «(Copy)» in its name and a running number on its slug. Chosen 3 November 2026: the page is duplicated from its row's menu in the Pages panel, titled «<title> (copy)» with the slug `<id>-2` (the next free number), opened as a draft and left out of the menu, which the Nav panel adds it to; the section from its toolbar and its right-click menu, landing directly below the original with fresh ids and its anchor names made free, selected, in one undo step; the re-id is the template insertion's (`cloneSectionForInsert`, `clonePageForInsert`).
-    DELIVERED 0.7.10.29 (3 November 2026): the page and the section (`lib/duplicate.js`, `duplicatePage` in site.svelte.js, `handleDuplicateSection` in bridge.svelte.js, the toolbar button and the right-click item in preview-edit.js); the palette commands for plugins and the element manager remain.
+    DELIVERED 0.7.10.29 (3 November 2026): the page and the section (`lib/duplicate.js`, `duplicatePage` in site.svelte.js, `handleDuplicateSection` in bridge.svelte.js, the toolbar button and the right-click item in preview-edit.js); the palette commands for plugins came with 0.7.10.16 (`Urd.commands`, `provides.commands` in the manifest), so the element manager remains.
   - [x] Page settings in the Pages panel DELIVERED 0.7.10.31 (3 November 2026)
   - [x] Collections panel housekeeping DELIVERED 0.7.10.26 (2 November 2026)
   - [x] Sizes from presets and the buyer's quantity DELIVERED 0.7.10.26 (2 November 2026)
@@ -596,6 +599,7 @@ An entry inherits the number of the backlog item the work belongs under, plus on
 - [ ] plugins with various api support
 - [ ] Expand image editor - add images, image layering etc
 - [ ] Image editor needs a UI overhaul 
+- [ ] Design picker: if it is kept as its own menu, make it the size of the floating menu (if the floating menu is kept)
 
 ## URGENT
 

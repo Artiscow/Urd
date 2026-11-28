@@ -43,6 +43,9 @@ Every claim about a builder, a library, a law or the platform carries a link and
 | (primary) | The vendor's own pages, documentation, changelog or plan table; the law, the regulator or the standards body |
 | (secondary) | A blog, a review, a news site or another third party |
 | (code) | Read in the source code of the project named |
+| (primary, search extract) | The vendor's own page, read through a search engine's extract because the page itself could not be fetched |
+| (walked through) | Done step by step in the running editor, without an account, on the date given; the steps and screenshots are kept outside the repo |
+| (research) | A peer-reviewed study or paper, cited by its authors and year, with its DOI or the authors' copy |
 | (measured) | Measured on a live site on 11 October 2026, or on the date given beside it |
 | (earlier survey, verified July 2026, no URL) | A fact the July 2026 map cross-checked against vendor documentation with three independent checkers, whose URL was not recorded |
 | (earlier survey, no URL) or «earlier maps» | A fact kept from the maps of July to September 2026 whose source was not checked again; treat it as unverified until it is |

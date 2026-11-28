@@ -84,7 +84,7 @@ test('footerThumb: the two designs draw their own cards', () => {
 test('the line with a label draws the word between two strokes, as text', () => {
   const made = [];
   const node = (tag) => {
-    const el = { tag, className: '', style: { setProperty(k, v) { this[k] = v; } }, children: [], textContent: '', appendChild(child) { this.children.push(child); } };
+    const el = { tag, className: '', style: { setProperty(k, v) { this[k] = v; } }, attrs: {}, children: [], textContent: '', innerHTML: '', setAttribute(k, v) { this.attrs[k] = v; }, appendChild(child) { this.children.push(child); } };
     made.push(el);
     return el;
   };
@@ -95,8 +95,37 @@ test('the line with a label draws the word between two strokes, as text', () => 
     const row = host.children[0];
     assert.equal(row.className, 'urd-shape-chapter');
     assert.equal(row.style['--urd-shape-t'], '3px');
-    assert.equal(row.children[0].className, 'urd-shape-chapter-label');
-    assert.equal(row.children[0].textContent, '<b>Kapittel 2</b>');
+    assert.equal(row.style['--urd-shape-style'], 'solid');
+    const mid = row.children[0];
+    assert.equal(mid.className, 'urd-shape-chapter-mid');
+    assert.equal(mid.children[0].className, 'urd-shape-chapter-label');
+    assert.equal(mid.children[0].textContent, '<b>Kapittel 2</b>');
+    // A mark stands before the word, hidden from assistive technology: a drawn icon of Urd's set, else a character.
+    const marked = node('div');
+    shapeBlock.render(marked, { kind: 'line', color: '#c0ffee', thickness: 2, fill: null, label: 'Del 1', icon: 'star', glyph: '§', lineStyle: 'dashed' }, {});
+    const [mark, word] = marked.children[0].children[0].children;
+    assert.equal(mark.className, 'urd-shape-chapter-mark');
+    assert.equal(mark.attrs['aria-hidden'], 'true');
+    assert.match(mark.innerHTML, /^<svg/);
+    assert.equal(word.textContent, 'Del 1');
+    assert.equal(marked.children[0].style.color, '#c0ffee', 'a colour of its own');
+    assert.equal(marked.children[0].style['--urd-shape-style'], 'dashed');
+    const glyphOnly = node('div');
+    shapeBlock.render(glyphOnly, { kind: 'line', color: 'accent', thickness: 1, fill: null, glyph: ' § ', icon: 'no-such-icon', lineStyle: 'double' }, {});
+    const lone = glyphOnly.children[0];
+    assert.equal(lone.children[0].children.length, 1, 'a mark alone, no word');
+    assert.equal(lone.children[0].children[0].textContent, '§');
+    assert.equal(lone.style['--urd-shape-t'], '3px', 'a double line takes at least 3 px');
+    // A line and an arrow's shaft are drawn as a top border in their style, solid where it is absent or unknown.
+    for (const [lineStyle, drawn] of [[undefined, '2px solid'], ['dotted', '2px dotted'], ['wavy', '2px solid'], ['double', '3px double']]) {
+      const plain = node('div');
+      shapeBlock.render(plain, { kind: 'line', color: 'accent', thickness: 2, fill: null, lineStyle }, {});
+      assert.match(plain.children[0].style.cssText, new RegExp(`border-top:${drawn} var\\(--urd-color-accent\\)`), String(lineStyle));
+    }
+    const shaft = node('div');
+    shapeBlock.render(shaft, { kind: 'arrow', color: 'accent', thickness: 2, fill: null, lineStyle: 'dashed', glyph: '§' }, {});
+    assert.match(shaft.children[0].style.cssText, /border-top:2px dashed/);
+    assert.equal(shaft.children.length, 2, 'an arrow carries no mark');
     // An arrow, and a line with an empty label, are drawn as before.
     const arrow = node('div');
     shapeBlock.render(arrow, { kind: 'arrow', color: 'accent', thickness: 3, fill: null, label: 'x' }, {});
@@ -108,4 +137,11 @@ test('the line with a label draws the word between two strokes, as text', () => 
   } finally {
     delete globalThis.document;
   }
+});
+
+test('the menu offers the line styles the engine draws', async () => {
+  const { LINE_STYLES } = await engineImport('blocks/shape.js');
+  const options = readFileSync(new URL('../editor/src/menu/options.js', import.meta.url), 'utf8');
+  const listed = options.match(/export const lineStyles = \(\) => \[([^\]]+)\]/)?.[1].match(/'([a-z]+)'/g).map((s) => s.slice(1, -1));
+  assert.deepEqual(listed, LINE_STYLES);
 });

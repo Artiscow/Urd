@@ -35,6 +35,8 @@ export const RIBBON_SEP_ICONS = {
   custom: sepSvg('<path d="M5 8h14M5 12h9M5 16h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>'),
 };
 
+/** The styles a line and an arrow's shaft are drawn in, as the engine's LINE_STYLES (blocks/shape.js). */
+export const lineStyles = () => ['solid', 'dashed', 'dotted', 'double'].map((id) => [id, ta(`opt.lineStyle.${id}`)]);
 export const shapeKinds = () => [
   ['line', ta('shape.line')], ['arrow', ta('shape.arrow')], ['circle', ta('shape.circle')],
   ['rect', ta('shape.rect')], ['triangle', ta('shape.triangle')],

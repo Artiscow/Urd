@@ -1270,7 +1270,15 @@ Soft unfolding where the browser supports ::details-content + interpolate-size (
 
 ### `.urd-shape-chapter`
 
-The chapter divider (a line shape with a label): the word in the middle and the line on both sides of it, at the line's own thickness.
+The chapter divider (a line shape with a label or a mark): the word and the mark in the middle and the line on both sides of it, at the line's own thickness. The two strokes are top borders in the line's style (`--urd-shape-style`), so a solid one draws as a filled bar.
+
+### `.urd-shape-chapter-mid`
+
+The mark and the word between the strokes, as one item of the row, so the gap between the two is smaller than the gap to the strokes. It sets the word's size, which the mark is measured from.
+
+### `.urd-shape-chapter-mark`
+
+The mark before the word, a quarter larger than the word so a drawn icon reads beside capitals; an icon from Urd's set is sized to one em of it.
 
 # blocks/timeline.css, rule by rule
 

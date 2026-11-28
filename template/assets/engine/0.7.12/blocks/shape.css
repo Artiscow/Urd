@@ -15,16 +15,33 @@
 .urd-shape-chapter::after {
   content: '';
   flex: 1;
-  height: var(--urd-shape-t, 2px);
-  background: currentColor;
+  border-top: var(--urd-shape-t, 2px) var(--urd-shape-style, solid) currentColor;
+}
+
+/* The mark and the word between the strokes */
+.urd-shape-chapter-mid {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.78rem;
+  line-height: 1;
 }
 
 .urd-shape-chapter-label {
-  flex: none;
-  font-size: 0.78rem;
   font-weight: 600;
-  line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.urd-shape-chapter-mark {
+  display: flex;
+  font-size: 1.25em;
+}
+
+.urd-shape-chapter-mark svg {
+  display: block;
+  width: 1em;
+  height: 1em;
 }
